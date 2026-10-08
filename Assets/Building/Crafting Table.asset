@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 708d1cad608e4e74887028bdb66fb773, type: 3}
+  m_Name: Crafting Table
+  m_EditorClassIdentifier: 
+  displayName: CraftingTable
+  description: 
+  prefab: {fileID: 1778195942811895585, guid: c5354342d5948e7478e6e3acaefeeb8c, type: 3}
+  autoIcon: 1
+  icon: {fileID: 0}
+  recipe:
+  - item: {fileID: 11400000, guid: 3531b718bb76535458623a98976a16c7, type: 2}
+    amount: 6
