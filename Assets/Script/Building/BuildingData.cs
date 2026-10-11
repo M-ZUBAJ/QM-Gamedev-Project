@@ -22,7 +22,7 @@ Purpose: One thing the player can build: its name, description, picture, prefab 
          The recipe is what it costs, in items from the inventory (each line points to the material's Item Data).
          It doesn't have to match the shapes of the prefab.
 Requirement: BuildingData.cs x-> IconCapture.cs, IconSource.cs, Recipe.cs, PlayerInventory.cs
-             BuildingData.cs <-x Blueprint.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingTools.cs, BuildMenu.cs, BuildMenuAutoList.cs, BuildMenuUIBuilder.cs, ItemTools.cs
+             BuildingData.cs <-x Blueprint.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingTools.cs, BuildMenu.cs, BuildMenuAutoList.cs, BuildMenuUIBuilder.cs, ItemTools.cs, PlayerStats.cs
 */
 
 using System.Collections.Generic;

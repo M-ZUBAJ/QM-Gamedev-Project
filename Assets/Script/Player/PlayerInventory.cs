@@ -255,6 +255,14 @@ public class PlayerInventory : MonoBehaviour, IHand
         return true;
     }
 
+    // Empties every slot and the cursor stack at once (e.g. everything was dropped on death).
+    public void ClearAll()
+    {
+        foreach (Slot slot in slots) slot.Clear();
+        held.Clear();
+        Changed?.Invoke();
+    }
+
     // Takes items away from the held stack (e.g. they were dropped into the world).
     public void RemoveFromHeld(int amount)
     {

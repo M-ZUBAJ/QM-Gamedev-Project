@@ -14,6 +14,7 @@ Purpose: Jump with Space, only when standing on something (no jumping again in t
          With a PlayerStamina on the player, each jump uses stamina and there's no jumping while tired.
 Requirement: PlayerJump.cs x-> KeyBindings.cs, MenuState.cs, Rigidbody (Unity), Collider (Unity)
              PlayerJump.cs o-> PlayerStamina.cs
+             PlayerJump.cs <-o PlayerStats.cs
 */
 
 using UnityEngine;
@@ -46,6 +47,9 @@ public class PlayerJump : MonoBehaviour
     float lastPressedTime = -10f;
 
     public bool IsGrounded { get; private set; }   // other scripts can read it (e.g. a landing sound later)
+
+    // Fired each time the player jumps. E.g. PlayerStats counts jumps.
+    public event System.Action Jumped;
 
     // ===== Unity messages (Unity calls these) =====
 
@@ -87,6 +91,7 @@ public class PlayerJump : MonoBehaviour
         rb.velocity = v;
 
         if (stamina != null) stamina.SpendJump();
+        Jumped?.Invoke();
 
         // Used up: no second jump from the same press, nor from the same bit of coyote time.
         lastPressedTime = -10f;

@@ -13,6 +13,7 @@ Purpose: Eat / drink the item in hand, like Minecraft: right click with food sel
          A missing stat script (e.g. no PlayerStamina) just skips that stat.
 Requirement: ItemConsumer.cs x-> PlayerInventory.cs, ItemData.cs, Consumable.cs, KeyBindings.cs, MenuState.cs, ClickClaim.cs
              ItemConsumer.cs o-> PlayerHealth.cs, PlayerHunger.cs, PlayerStamina.cs
+             ItemConsumer.cs <-x PlayerStats.cs
 */
 
 using UnityEngine;
@@ -25,6 +26,9 @@ public class ItemConsumer : MonoBehaviour
     // ===== Fields =====
     [Tooltip("Called every time something is eaten, with its Item Data. E.g. a crunch sound.")]
     [SerializeField] UnityEvent<ItemData> onConsumed;
+
+    // Fired each time something is eaten (for scripts, e.g. PlayerStats counts it). onConsumed is the Inspector version.
+    public event System.Action<ItemData> Consumed;
 
     PlayerInventory inv;
     PlayerHealth health;     // each can be missing: that stat is just skipped
@@ -72,6 +76,7 @@ public class ItemConsumer : MonoBehaviour
         inv.TakeOneFromHand();
         Apply(data.Consumable);
         onConsumed?.Invoke(data);
+        Consumed?.Invoke(data);
         return true;
     }
 

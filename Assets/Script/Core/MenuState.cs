@@ -10,7 +10,7 @@ Purpose: One place to check "is any menu open?" (menus free the cursor and pause
          and a new menu only has to call SetOpen; every script that asks follows by itself.
          KeysCaptured = a menu is reading EVERY key right now (e.g. the key binding menu waiting for a new key),
          so gameplay must ignore the keyboard.
-Requirement: MenuState.cs <-x BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, HeldItemView.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemDropper.cs, ItemGrabber.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs
+Requirement: MenuState.cs <-x BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, DeathScreen.cs, HeldItemView.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemDropper.cs, ItemGrabber.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs
 */
 
 using System.Collections.Generic;

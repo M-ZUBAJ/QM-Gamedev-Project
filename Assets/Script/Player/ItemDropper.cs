@@ -1,6 +1,6 @@
 /*
 First Date: 9/10/2026
-Date: 9/10/2026
+Date: 11/10/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerInventory).
         Tools > UI > Add Inventory Scripts adds it for you.
@@ -8,11 +8,15 @@ Unity Editor: Drop Style = how dropped items look: Icon (the item's picture floa
               or Bundle (a small box with the picture and amount on its sides). Tune the sizes / color below it.
               Needs an EventSystem in the scene (the inventory has one), so it can tell clicks on the UI from clicks outside.
               Testing: Play, Tab, click a stack so it sticks to the cursor, then click outside the inventory window.
+              Death drop: with the GameRule Keep Inventory off (the default), PlayerHealth's ⋮ menu > "Test: Die".
 Purpose: Like Minecraft: while the inventory is open and a stack is on the cursor, clicking outside the window
          throws it in front of the player. Left click = the whole stack, right click = just one.
          The stack lands as ONE DroppedStack (no lag from 64 objects) that gives the whole amount back when picked up,
          the way its Item Data says (F, or touch for AutoPickup items, which wait a moment first).
-Requirement: ItemDropper.cs x-> PlayerInventory.cs, DroppedStack.cs, ItemPickup.cs, MenuState.cs
+         When the player dies (PlayerHealth) and the GameRule Keep Inventory is off, EVERY stack (inventory, hotbar,
+         cursor) is thrown out around the body, and the inventory is emptied.
+Requirement: ItemDropper.cs x-> PlayerInventory.cs, DroppedStack.cs, ItemPickup.cs, MenuState.cs, GameRules.cs
+             ItemDropper.cs o-> PlayerHealth.cs
              ItemDropper.cs <-x InventoryUIBuilder.cs
 */
 
@@ -66,7 +70,13 @@ public class ItemDropper : MonoBehaviour
     [Tooltip("The camera whose facing is \"in front\". Empty = the Main Camera.")]
     [SerializeField] Transform cameraTransform;
 
+    [Header("Dying (GameRule Keep Inventory off)")]
+    [Range(0f, 10f)]
+    [Tooltip("How fast the items fly out in every direction when the player dies. 0 = just fall where the player was.")]
+    [SerializeField] float deathScatterSpeed = 3f;
+
     PlayerInventory inv;
+    PlayerHealth health;   // can be missing: then nothing drops on death
 
     public DropStyle Style => dropStyle;
 
@@ -75,6 +85,17 @@ public class ItemDropper : MonoBehaviour
     void Awake()
     {
         inv = GetComponent<PlayerInventory>();
+        health = GetComponent<PlayerHealth>();
+    }
+
+    void OnEnable()
+    {
+        if (health != null) health.Died += OnDied;
+    }
+
+    void OnDisable()
+    {
+        if (health != null) health.Died -= OnDied;
     }
 
     void Start()
@@ -111,6 +132,48 @@ public class ItemDropper : MonoBehaviour
         dropped.GetComponent<Rigidbody>().velocity = forward * throwSpeed + Vector3.up;   // forward and a little up
 
         inv.RemoveFromHeld(count);
+    }
+
+    // The player died: drop everything, unless the GameRule Keep Inventory is on.
+    void OnDied()
+    {
+        if (GameRules.KeepInventory) return;
+        DropEverything();
+    }
+
+    // Throws every stack (inventory, hotbar and the one on the cursor) out around the player, then empties the inventory.
+    public void DropEverything()
+    {
+        Vector3 center = transform.position + Vector3.up * 0.5f;
+        DroppedStack.Look look = CurrentLook();
+        int dropped = 0;
+
+        foreach (PlayerInventory.Slot slot in inv.Slots)
+        {
+            if (DropAround(slot, center, look)) dropped++;
+        }
+        if (DropAround(inv.Held, center, look)) dropped++;
+
+        inv.ClearAll();
+        if (dropped > 0) Debug.Log("Dropped " + dropped + " stack(s) on death (GameRule Keep Inventory is off).");
+    }
+
+    // Throws one whole stack in a random direction around "center". False if the slot was empty.
+    bool DropAround(PlayerInventory.Slot stack, Vector3 center, DroppedStack.Look look)
+    {
+        if (stack.IsEmpty) return false;
+
+        // A random flat direction, so the stacks spread out in a ring instead of piling up on one spot.
+        Vector2 dir = Random.insideUnitCircle.normalized;
+        Vector3 flat = new Vector3(dir.x, 0f, dir.y);
+
+        // 0.8 m out: just outside a 1 m wide player, so it doesn't start inside the body and get shoved.
+        DroppedStack dropped = DroppedStack.Spawn(stack, stack.count, center + flat * 0.8f, look);
+        if (dropped == null) return false;
+
+        dropped.GetComponent<ItemPickup>().BlockAutoCollect(pickupDelay);
+        dropped.GetComponent<Rigidbody>().velocity = flat * deathScatterSpeed + Vector3.up * 2f;   // out and a little up
+        return true;
     }
 
     // The Inspector settings, packed for DroppedStack.

@@ -1,15 +1,18 @@
 /*
 First Date: 3/10/2026
-Date: 7/10/2026
+Date: 11/10/2026
 Author: Tony
 Use by: Drag this script onto the Player sphere.
 Unity Editor: The HealthBar (StatBar) finds this by itself. "On Changed" is only for extra things
               (e.g. a hurt sound): click +, drag in the object and pick a method from "Dynamic float, float".
-              Testing: in Play mode, change "Health" in the Inspector, or right-click the component's
-              title and choose "Test: Take Damage" / "Test: Heal" (uses "Test Amount").
+              "On Died" works the same way, for extras like a death sound.
+              Testing: in Play mode, change "Health" in the Inspector (0 = die), or right-click the component's
+              title and choose "Test: Take Damage" / "Test: Heal" / "Test: Die" (uses "Test Amount").
 Purpose: Holds the player's health. TakeDamage / Heal change it and fire On Changed (current, max).
-         At 0 health the player dies (only a log for now).
-Requirement: PlayerHealth.cs <-o ItemConsumer.cs, PlayerHunger.cs, StatBar.cs
+         At 0 health the player dies: the Died event fires once (PlayerRespawn listens to it and brings the
+         player back). Revive fills health back up.
+Requirement: PlayerHealth.cs <-x DeathScreen.cs, PlayerRespawn.cs
+             PlayerHealth.cs <-o AutoCollector.cs, ItemConsumer.cs, ItemDropper.cs, PlayerHunger.cs, PlayerStats.cs, StatBar.cs
 */
 
 using UnityEngine;
@@ -30,10 +33,18 @@ public class PlayerHealth : MonoBehaviour
     [Tooltip("Called with (current, max) whenever health changes, and once at the start. E.g. a hurt sound. (The health bar doesn't need this.)")]
     [SerializeField] UnityEvent<float, float> onChanged;
 
+    [Tooltip("Called once when the player dies (health reaches 0). E.g. a death sound. (Respawning doesn't need this.)")]
+    [SerializeField] UnityEvent onDied;
+
     [Header("Testing")]
     [Tooltip("How much the right-click test menu damages / heals.")]
     [Min(0f)]
     [SerializeField] float testAmount = 10f;
+
+    bool dead;   // already died (so Died fires only once per death)
+
+    // Fired once when health reaches 0. Scripts subscribe in code, e.g. PlayerRespawn: health.Died += Respawn;
+    public event System.Action Died;
 
     public float Health => health;         // other scripts can read but not set it
     public float MaxHealth => maxHealth;
@@ -51,6 +62,9 @@ public class PlayerHealth : MonoBehaviour
     {
         health = Mathf.Clamp(health, 0f, maxHealth);   // keep it between 0 and max
         UpdateBar();
+
+        // Typing 0 into Health while playing counts as dying, so respawning can be tested that way too.
+        if (Application.isPlaying && IsDead && !dead) Die();
     }
 
     // ===== My methods =====
@@ -75,6 +89,15 @@ public class PlayerHealth : MonoBehaviour
         if (amount <= 0f) return;
 
         health = Mathf.Min(health + amount, maxHealth);
+        if (!IsDead) dead = false;   // healed from 0 = alive again
+        UpdateBar();
+    }
+
+    // Back to life with full health (PlayerRespawn calls this).
+    public void Revive()
+    {
+        health = maxHealth;
+        dead = false;
         UpdateBar();
     }
 
@@ -85,7 +108,12 @@ public class PlayerHealth : MonoBehaviour
 
     void Die()
     {
-        Debug.Log(gameObject.name + " died.");   // TODO: real death / respawn
+        if (dead) return;   // only once per death
+        dead = true;
+
+        Debug.Log(gameObject.name + " died.");
+        onDied?.Invoke();
+        Died?.Invoke();     // e.g. PlayerRespawn brings the player back
     }
 
     // Right-click the component title in the Inspector to run these (Play mode).
@@ -99,5 +127,11 @@ public class PlayerHealth : MonoBehaviour
     void TestHeal()
     {
         Heal(testAmount);
+    }
+
+    [ContextMenu("Test: Die")]
+    void TestDie()
+    {
+        TakeDamage(health);   // all remaining health
     }
 }

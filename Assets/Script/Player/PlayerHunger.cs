@@ -1,6 +1,6 @@
 /*
 First Date: 3/10/2026
-Date: 9/10/2026
+Date: 11/10/2026
 Author: Tony
 Use by: Drag this script onto the Player sphere (next to PlayerController, PlayerHealth and ObjectLevitator).
 Unity Editor: The HungerBar (StatBar) finds this by itself. "On Changed" is only for extra things
@@ -13,7 +13,7 @@ Purpose: Holds the player's food (full = not hungry). It goes down over time:
          At 0 the player starves (if a PlayerHealth is on the same object):
          dies at once ("Instant Death" on) or loses health over time (off).
 Requirement: PlayerHunger.cs o-> PlayerController.cs, PlayerHealth.cs, ObjectLevitator.cs
-             PlayerHunger.cs <-o ItemConsumer.cs, StatBar.cs
+             PlayerHunger.cs <-o ItemConsumer.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
 */
 
 using UnityEngine;
@@ -110,7 +110,8 @@ public class PlayerHunger : MonoBehaviour
     // plus levitateExtra while levitating.
     void Drain()
     {
-        if (IsStarving) return;   // already empty
+        if (IsStarving) return;                          // already empty
+        if (health != null && health.IsDead) return;     // no getting hungry while dead (e.g. on the death screen)
 
         float multiplier = IsSprinting() ? sprintMultiplier
                          : IsWalking() ? walkMultiplier
