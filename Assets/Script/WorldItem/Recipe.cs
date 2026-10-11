@@ -1,10 +1,10 @@
 /*
 First Date: 7/10/2026
-Date: 7/10/2026
+Date: 11/10/2026
 Author: Tony
 Use by: Nothing to set up (code only, no component).
 Unity Editor: You never add this yourself. It is the "Recipe" list you fill in on an Item Data or a Building Data:
-              click + for each material, drag in its Item Data (Assets/Items) and set the amount.
+              click + for each material, drag in its Item Data (Assets/Config/Items) and set the amount.
 Purpose: Everything about recipes in ONE place, shared by every config that costs materials
          (Building Data: what a building costs, Item Data: what crafting an item costs).
          - Ingredient: one recipe line = which material (Item Data) and how many.
@@ -22,7 +22,7 @@ using UnityEngine;
 [System.Serializable]
 public class Ingredient
 {
-    [Tooltip("The material: drag in its Item Data config file (from Assets/Items, e.g. Wood).")]
+    [Tooltip("The material: drag in its Item Data config file (from Assets/Config/Items, e.g. Wood).")]
     public ItemData item;
 
     [Min(1)]

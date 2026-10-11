@@ -1,9 +1,11 @@
 /*
 First Date: 5/10/2026
-Date: 8/10/2026
+Date: 11/10/2026
 Author: Tony
 Use by: This is an ASSET (a config file in the Project window), not a script you put on an object.
-Unity Editor: 1. First make the building prefab (the finished building, made from shapes),
+Unity Editor: Easiest: select the building (in the scene, or its prefab) > menu Tools > Building > Make Building From Selection,
+              then fill in its Recipe. By hand:
+              1. First make the building prefab (the finished building, made from shapes),
                  and an Item Data config file for every material it needs (see Docs/Item Setup.md).
               2. Project window: open a folder (e.g. Assets/Building), right click > Create > Building > Building Data.
                  Rename the new file, e.g. "Furnace".
@@ -13,14 +15,14 @@ Unity Editor: 1. First make the building prefab (the finished building, made fro
                  Prefab       = drag the building PREFAB from the Project window (what it looks like when built).
                  Icon         = choose ONE: Capture (a photo of the prefab), Static (drag in a PNG sprite)
                                 or Animated (drag in an .aseprite file). Only that one's field shows.
-                 Recipe       = click + for each material: drag its Item Data (Assets/Items) into "Item", set "Amount".
+                 Recipe       = click + for each material: drag its Item Data (Assets/Config/Items) into "Item", set "Amount".
               4. It appears in the build menu (B) by itself (BuildMenuAutoList).
               Full steps: Docs/Build Menu Setup.md
 Purpose: One thing the player can build: its name, description, picture, prefab and recipe.
          The recipe is what it costs, in items from the inventory (each line points to the material's Item Data).
          It doesn't have to match the shapes of the prefab.
 Requirement: BuildingData.cs x-> IconCapture.cs, IconSource.cs, Recipe.cs, PlayerInventory.cs
-             BuildingData.cs <-x Blueprint.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildMenu.cs, BuildMenuAutoList.cs, BuildMenuUIBuilder.cs, ItemTools.cs
+             BuildingData.cs <-x Blueprint.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingTools.cs, BuildMenu.cs, BuildMenuAutoList.cs, BuildMenuUIBuilder.cs, ItemTools.cs
 */
 
 using System.Collections.Generic;
@@ -46,7 +48,7 @@ public class BuildingData : ScriptableObject
     [SerializeField] IconSource icon = new IconSource();
 
     [Header("Recipe")]
-    [Tooltip("What it costs. Click + for each material, drag in its Item Data (Assets/Items) and set the amount. " +
+    [Tooltip("What it costs. Click + for each material, drag in its Item Data (Assets/Config/Items) and set the amount. " +
              "Empty = free.")]
     [SerializeField] List<Ingredient> recipe = new List<Ingredient>();
 

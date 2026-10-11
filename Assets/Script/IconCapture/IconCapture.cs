@@ -12,7 +12,7 @@ Purpose: Takes a "photo" of a 3D object and turns it into a Sprite for UI icons.
          so MakeModel can give a fresh copy later, e.g. for the item in the player's hand (HeldItemView),
          even though the real item was destroyed when it was picked up.
 Requirement: IconCapture.cs o-> ShapeColor.cs
-             IconCapture.cs <-x BuildingData.cs, HeldItemView.cs, ItemData.cs, ItemDropper.cs, ItemPickup.cs
+             IconCapture.cs <-x BuildingData.cs, HeldItemView.cs, ItemData.cs, ItemPickup.cs
 */
 
 using System.Collections.Generic;

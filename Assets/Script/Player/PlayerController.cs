@@ -1,15 +1,19 @@
 /*
 First Date: 29/9/2026
-Date: 8/10/2026
+Date: 11/10/2026
 Author: Tony
 Use by: Drag this script onto the player shape (any shape: Capsule, Cube, Sphere...). A Rigidbody is added automatically.
 Unity Editor: The shape needs a Collider (3D Objects come with one).
+              Testing sprint: Play, hold W and Left Shift (the Sprint key, set in KeyBindings).
 Purpose: Move the player with W A S D (or the arrow keys, both set in KeyBindings), relative to the camera:
          W always moves the way the camera is facing.
+         Hold Sprint (Left Shift) to run faster (Sprint Multiplier), forward only like Minecraft (Sprint Forward Only).
+         With a PlayerStamina on the player, sprinting uses stamina and stops when the player is tired.
          No speed-up or slow-down: full speed the moment a key is pressed, stops the moment it is let go.
          The shape never tips over or rolls. Gravity still works (it falls off edges).
          The player's collider has no friction (Slippery Body), so it never sticks to walls in the air.
 Requirement: PlayerController.cs x-> KeyBindings.cs, MenuState.cs, Rigidbody (Unity)
+             PlayerController.cs o-> PlayerStamina.cs
              PlayerController.cs <-o HeldItemView.cs, PlayerHunger.cs
 */
 
@@ -23,6 +27,17 @@ public class PlayerController : MonoBehaviour
     [Range(0f, 20f)]
     [SerializeField] float speed = 5f;
 
+    [Header("Sprint")]
+    [Tooltip("Walking speed is multiplied by this while sprinting (the Sprint key, Left Shift). " +
+             "Minecraft: 5.6 / 4.3 = about 1.3.")]
+    [Range(1f, 3f)]
+    [SerializeField] float sprintMultiplier = 1.3f;
+
+    [Tooltip("Ticked (like Minecraft): sprinting only works while moving forward (W). " +
+             "Unticked: any direction.")]
+    [SerializeField] bool sprintForwardOnly = true;
+
+    [Header("Other")]
     [Tooltip("W moves the way this camera faces. Leave empty to use the Main Camera.")]
     [SerializeField] Transform cameraTransform;
 
@@ -31,16 +46,24 @@ public class PlayerController : MonoBehaviour
     [SerializeField] bool slipperyBody = true;
 
     Rigidbody rb;          // the physics component: keeps gravity and collisions working
+    PlayerStamina stamina; // sprinting uses it up (can be missing = sprint forever)
     Vector2 moveInput;     // x = left/right (A/D), y = forward/back (W/S)
+    bool sprintHeld;       // the Sprint key is held down
 
     // True while the player is pressing a move key (PlayerHunger uses it: walking burns more food).
     public bool IsMoving => moveInput.sqrMagnitude > 0f;
+
+    // True while really sprinting: the key is held, the player moves (forward, if Sprint Forward Only)
+    // and isn't too tired (only if there's a PlayerStamina).
+    public bool IsSprinting => sprintHeld && IsMoving && (!sprintForwardOnly || moveInput.y > 0f)
+                               && (stamina == null || stamina.CanSprint);
 
     // ===== Unity messages (Unity calls these) =====
 
     void Awake()
     {
         rb = GetComponent<Rigidbody>();   // cache it once
+        stamina = GetComponent<PlayerStamina>();
         rb.freezeRotation = true;         // physics never turns the shape, so it can't tip over or roll
         if (slipperyBody) MakeSlippery();
 
@@ -56,6 +79,7 @@ public class PlayerController : MonoBehaviour
     {
         // Keys pressed in the key binding menu shouldn't move the player.
         moveInput = MenuState.KeysCaptured ? Vector2.zero : ReadMoveInput();   // a menu reads every key (e.g. rebinding)
+        sprintHeld = !MenuState.KeysCaptured && Input.GetKey(KeyBindings.Sprint);
     }
 
     // FixedUpdate runs at the physics rate: the best place to move physics objects.
@@ -78,7 +102,11 @@ public class PlayerController : MonoBehaviour
 
         // Set the speed directly (no pushing), so there is no speed-up or slow-down.
         // Only the sideways speed is set: the up/down speed is kept, so gravity and falling still work.
-        Vector3 move = (forward * moveInput.y + right * moveInput.x) * speed;
+        bool sprinting = IsSprinting;
+        if (sprinting && stamina != null) stamina.SpendSprint(Time.fixedDeltaTime);   // per second, not per step
+
+        float currentSpeed = sprinting ? speed * sprintMultiplier : speed;
+        Vector3 move = (forward * moveInput.y + right * moveInput.x) * currentSpeed;
         rb.velocity = new Vector3(move.x, rb.velocity.y, move.z);
     }
 

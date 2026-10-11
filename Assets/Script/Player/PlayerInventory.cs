@@ -1,6 +1,6 @@
 /*
 First Date: 30/9/2026
-Date: 7/10/2026
+Date: 11/10/2026
 Author: Tony
 Use by: Drag this script onto the PlayerSphere.
 Purpose: Stores the player's items. Items with the same Item Id stack in one slot.
@@ -12,7 +12,7 @@ Purpose: Stores the player's items. Items with the same Item Id stack in one slo
          Other scripts add items with PlayerInventory.Instance.Add(...)
          and listen to PlayerInventory.Changed to update the UI.
 Requirement: PlayerInventory.cs x-> IHand.cs, ItemData.cs
-             PlayerInventory.cs <-x AutoCollector.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingData.cs, HeldItemUI.cs, HeldItemView.cs, HotbarSelector.cs, ItemData.cs, ItemDropper.cs, ItemGrabber.cs, Recipe.cs, SlotGroup.cs, SlotUI.cs, UIBuildHelper.cs
+             PlayerInventory.cs <-x AutoCollector.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingData.cs, DroppedStack.cs, HeldItemUI.cs, HeldItemView.cs, HotbarSelector.cs, ItemConsumer.cs, ItemData.cs, ItemDropper.cs, ItemGrabber.cs, Recipe.cs, SlotGroup.cs, SlotUI.cs, UIBuildHelper.cs
 */
 
 using System.Collections.Generic;
@@ -238,6 +238,19 @@ public class PlayerInventory : MonoBehaviour, IHand
         held.count -= 1;
         if (held.IsEmpty) held.Clear();
 
+        Changed?.Invoke();
+        return true;
+    }
+
+    // Takes 1 item out of the selected hotbar slot (the item in hand), e.g. when it is eaten.
+    // Returns false if nothing is in hand.
+    public bool TakeOneFromHand()
+    {
+        Slot hand = ActiveItem;
+        if (hand == null || hand.IsEmpty) return false;
+
+        hand.count -= 1;
+        if (hand.IsEmpty) hand.Clear();
         Changed?.Invoke();
         return true;
     }

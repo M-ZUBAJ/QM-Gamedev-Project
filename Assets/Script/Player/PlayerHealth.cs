@@ -9,7 +9,7 @@ Unity Editor: The HealthBar (StatBar) finds this by itself. "On Changed" is only
               title and choose "Test: Take Damage" / "Test: Heal" (uses "Test Amount").
 Purpose: Holds the player's health. TakeDamage / Heal change it and fire On Changed (current, max).
          At 0 health the player dies (only a log for now).
-Requirement: PlayerHealth.cs <-o PlayerHunger.cs, StatBar.cs
+Requirement: PlayerHealth.cs <-o ItemConsumer.cs, PlayerHunger.cs, StatBar.cs
 */
 
 using UnityEngine;

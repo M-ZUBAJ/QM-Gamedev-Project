@@ -37,6 +37,21 @@ Ctrl + Z removes it from the scene again. Save the scene (**Ctrl + S**) to keep 
 
 Every building is one **Building Data** file. It says what the building looks like and what it costs.
 
+### Quick way: one click
+
+1. Build it in the scene from shapes: right click in the Hierarchy > **Create Empty**, name it (e.g. **Furnace**),
+   then right click it > **3D Object > Cube** (Sphere, Cylinder...) as many times as you need, and move / scale them.
+2. Select its **top object** (Furnace), then menu **Tools > Building > Make Building From Selection**. This makes:
+   - **Assets/Prefabs/Building/Furnace.prefab**: the prefab (your scene object becomes a copy of it, blue)
+   - **Assets/Config/Building/Furnace.asset**: the Building Data with **Prefab** filled in (it gets selected for you)
+3. In the Building Data's Inspector, set the **Recipe** (and Display Name, Description, Icon if you like). See the table below.
+4. Delete the Furnace from the scene if you don't want a built one there, and save the scene (**Ctrl + S**).
+
+It's in the build menu (B) straight away. It also works on a prefab you already have (select it in the Project window).
+If a Building Data already uses that prefab or has that name (in any folder), it is reused, not made twice.
+
+### By hand
+
 ### 1. The building prefab (what it looks like)
 
 1. Build it in the scene from shapes: right click in the Hierarchy > **Create Empty**, name it (e.g. **Furnace**),
@@ -47,7 +62,7 @@ Every building is one **Building Data** file. It says what the building looks li
 ### 2. An Item Data for each material (what it costs)
 
 The recipe uses the same items the player picks up. Each material needs an **Item Data** config file in
-**Assets/Items** (e.g. Wood, Stone). See [Item Setup](Item%20Setup.md): select the item object, then
+**Assets/Config/Items** (e.g. Wood, Stone). See [Item Setup](Item%20Setup.md): select the item object, then
 **Tools > Items > Make Item From Selection**.
 
 Every object with ItemPickup pointing to the same Item Data counts as that material.
@@ -64,7 +79,7 @@ Every object with ItemPickup pointing to the same Item Data counts as that mater
    | Description | What it does. |
    | **Prefab** | Drag in the building prefab from step 1. |
    | Icon | Choose **one**: **Capture** = a photo of the prefab. **Static** = a PNG (empty = name only). **Animated** = an **.aseprite** file (it plays on the button). Only the chosen one's field shows. |
-   | **Recipe** | Click **+** once per material. **Item** = drag in the material's **Item Data** from Assets/Items. **Amount** = how many. |
+   | **Recipe** | Click **+** once per material. **Item** = drag in the material's **Item Data** from Assets/Config/Items. **Amount** = how many. |
 
 3. That's it: the build menu lists every Building Data by itself (when it's made, deleted or moved, and each time scripts compile). **Tools > Building > Update Build Menu List** does the same by hand if you ever need it.
 

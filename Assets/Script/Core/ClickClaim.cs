@@ -9,7 +9,7 @@ Purpose: Several scripts use the same mouse buttons (e.g. right click = levitate
          Instead of every script knowing every other one, the script that is using the mouse "claims" it here,
          and the others simply step aside. So e.g. ObjectLevitator works in another project without the building scripts.
          Claimed stays true for the frame the claim ends too, so the click that ended it isn't used twice.
-Requirement: ClickClaim.cs <-x BlueprintPlacer.cs, HotbarSelector.cs, ObjectLevitator.cs
+Requirement: ClickClaim.cs <-x BlueprintPlacer.cs, HotbarSelector.cs, ItemConsumer.cs, ObjectLevitator.cs
 */
 
 using UnityEngine;
