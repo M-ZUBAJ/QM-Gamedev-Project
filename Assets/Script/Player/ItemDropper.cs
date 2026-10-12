@@ -1,6 +1,6 @@
 /*
 First Date: 9/10/2026
-Date: 11/10/2026
+Date: 12/10/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerInventory).
         Tools > UI > Add Inventory Scripts adds it for you.
@@ -12,7 +12,7 @@ Unity Editor: Drop Style = how dropped items look: Icon (the item's picture floa
 Purpose: Like Minecraft: while the inventory is open and a stack is on the cursor, clicking outside the window
          throws it in front of the player. Left click = the whole stack, right click = just one.
          The stack lands as ONE DroppedStack (no lag from 64 objects) that gives the whole amount back when picked up,
-         the way its Item Data says (F, or touch for AutoPickup items, which wait a moment first).
+         with F, or by walking near it when the GameRule Auto Pickup Drops is on (after a short wait, Pickup Delay).
          When the player dies (PlayerHealth) and the GameRule Keep Inventory is off, EVERY stack (inventory, hotbar,
          cursor) is thrown out around the body, and the inventory is emptied.
 Requirement: ItemDropper.cs x-> PlayerInventory.cs, DroppedStack.cs, ItemPickup.cs, MenuState.cs, GameRules.cs

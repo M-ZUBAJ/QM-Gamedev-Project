@@ -1619,7 +1619,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2b0b73d7800ce748b422e111fd58c79, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dropStyle: 0
+  dropStyle: 1
   iconSize: 0.4
   bundleSize: 0.4
   bundleColor: {r: 0.62, g: 0.45, b: 0.28, a: 1}
@@ -1792,6 +1792,7 @@ MonoBehaviour:
   doDaylightCycle: 1
   worldInteraction: 0
   keepInventory: 0
+  autoPickupDrops: 0
 --- !u!4 &1690935958
 Transform:
   m_ObjectHideFlags: 0

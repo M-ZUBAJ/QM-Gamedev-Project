@@ -30,7 +30,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [CameraController.cs](<Assets/Script/Camera/CameraController.cs>) | Camera | KeyBindings.cs, MenuState.cs | HeldItemView.cs (optional) |
 | [ShapeColor.cs](<Assets/Script/Color & Material/ShapeColor.cs>) | Color & Material | - | IconCapture.cs (optional) |
 | [ClickClaim.cs](<Assets/Script/Core/ClickClaim.cs>) | Core | - | BlueprintPlacer.cs, HotbarSelector.cs, ItemConsumer.cs, ObjectLevitator.cs |
-| [GameRules.cs](<Assets/Script/Core/GameRules.cs>) | Core | - | DaylightCycle.cs, ItemDropper.cs |
+| [GameRules.cs](<Assets/Script/Core/GameRules.cs>) | Core | - | AutoCollector.cs, DaylightCycle.cs, ItemDropper.cs |
 | [IHand.cs](<Assets/Script/Core/IHand.cs>) | Core | - | ObjectLevitator.cs, PlayerInventory.cs |
 | [InteractionGate.cs](<Assets/Script/Core/InteractionGate.cs>) | Core | - | BlueprintPlacer.cs, ItemGrabber.cs, ObjectLevitator.cs |
 | [MenuState.cs](<Assets/Script/Core/MenuState.cs>) | Core | - | BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, DeathScreen.cs, HeldItemView.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemDropper.cs, ItemGrabber.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs |
@@ -48,7 +48,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [UIBuildHelper.cs](<Assets/Script/Editor/UIBuildHelper.cs>) | Editor | PlayerInventory.cs | BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, InventoryUIBuilder.cs |
 | [IconCapture.cs](<Assets/Script/IconCapture/IconCapture.cs>) | IconCapture | ShapeColor.cs (optional) | BuildingData.cs, HeldItemView.cs, ItemData.cs, ItemPickup.cs |
 | [KeyBindings.cs](<Assets/Script/Input/KeyBindings.cs>) | Input | - | BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemGrabber.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs |
-| [AutoCollector.cs](<Assets/Script/Player/AutoCollector.cs>) | Player | PlayerInventory.cs, ItemPickup.cs, ItemData.cs, PlayerHealth.cs (optional) | - |
+| [AutoCollector.cs](<Assets/Script/Player/AutoCollector.cs>) | Player | PlayerInventory.cs, ItemPickup.cs, ItemData.cs, GameRules.cs, PlayerHealth.cs (optional) | - |
 | [HeldItemView.cs](<Assets/Script/Player/HeldItemView.cs>) | Player | PlayerInventory.cs, IconCapture.cs, MenuState.cs, PlayerController.cs (optional), CameraController.cs (optional) | - |
 | [HotbarSelector.cs](<Assets/Script/Player/HotbarSelector.cs>) | Player | PlayerInventory.cs, KeyBindings.cs, MenuState.cs, ClickClaim.cs | InventoryUIBuilder.cs |
 | [ItemConsumer.cs](<Assets/Script/Player/ItemConsumer.cs>) | Player | PlayerInventory.cs, ItemData.cs, Consumable.cs, KeyBindings.cs, MenuState.cs, ClickClaim.cs, PlayerHealth.cs (optional), PlayerHunger.cs (optional), PlayerStamina.cs (optional) | PlayerStats.cs |

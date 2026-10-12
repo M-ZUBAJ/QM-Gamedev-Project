@@ -104,7 +104,9 @@ Menu **Tools > Items > Convert Tagged Objects To Items** turns every tagged obje
 
 1. Press **Play**. Aim at the item: the crosshair turns **yellow** (Pickup) or **green** (AutoPickup, when close).
 2. Press **F** (or walk into an AutoPickup item). Press **Tab**: it's in the inventory.
-3. Drop it (hold it on the cursor, click outside the window): its prefab is thrown in front of you.
+3. Drop it (hold it on the cursor, click outside the window): it's thrown in front of you as a dropped stack.
+   Pick it up again with **F**. Or tick **Auto Pickup Drops** on the **GameRules** object: then walking near a
+   dropped stack (1.5 m, AutoCollector's Drop Pickup Radius) collects it by itself.
 
 ### If something doesn't work
 

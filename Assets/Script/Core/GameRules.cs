@@ -1,6 +1,6 @@
 /*
 First Date: 4/10/2026
-Date: 11/10/2026
+Date: 12/10/2026
 Author: Tony
 Use by: Create an empty GameObject called "GameRules" in the scene and add this script.
         (If you forget to add this script, one is created by itself with the default rules.)
@@ -12,8 +12,10 @@ Purpose: On / off rules for the world, like Minecraft's /gamerule.
            without being inside an InteractionMachine's radius.
          - KeepInventory (default off): off = dying drops every item where the player died (ItemDropper),
            on = the player keeps everything.
+         - AutoPickupDrops (default off): on = DROPPED items (thrown from the inventory or dropped on death) fly into
+           the inventory when the player comes near them (AutoCollector); off = they need aiming + F.
          Adding a rule = new GameRule entry + bool field + a case in Get and Set + static property.
-Requirement: GameRules.cs <-x DaylightCycle.cs, ItemDropper.cs
+Requirement: GameRules.cs <-x AutoCollector.cs, DaylightCycle.cs, ItemDropper.cs
 */
 
 using UnityEngine;
@@ -24,6 +26,7 @@ public enum GameRule
     DoDaylightCycle,
     WorldInteraction,
     KeepInventory,
+    AutoPickupDrops,
 }
 
 [DisallowMultipleComponent]   // only one GameRules per scene
@@ -40,6 +43,10 @@ public class GameRules : MonoBehaviour
     [Tooltip("On: the player keeps all items when dying. Off (like Minecraft): every item drops where the player died.")]
     [SerializeField] bool keepInventory = false;
 
+    [Tooltip("On: dropped items are collected by walking near them (AutoCollector's Drop Pickup Radius). " +
+             "Off: dropped items need aiming + F, like any Pickup item.")]
+    [SerializeField] bool autoPickupDrops = false;
+
     static GameRules instance;   // the one GameRules in the scene
 
     // Other scripts subscribe to this to be told when any rule changes.
@@ -49,6 +56,7 @@ public class GameRules : MonoBehaviour
     public static bool DoDaylightCycle  => Get(GameRule.DoDaylightCycle);
     public static bool WorldInteraction => Get(GameRule.WorldInteraction);
     public static bool KeepInventory    => Get(GameRule.KeepInventory);
+    public static bool AutoPickupDrops  => Get(GameRule.AutoPickupDrops);
 
     // Finds the GameRules in the scene. If there isn't one, makes one with the default rules.
     static GameRules Current
@@ -102,6 +110,7 @@ public class GameRules : MonoBehaviour
             case GameRule.DoDaylightCycle:  return r.doDaylightCycle;
             case GameRule.WorldInteraction: return r.worldInteraction;
             case GameRule.KeepInventory:    return r.keepInventory;
+            case GameRule.AutoPickupDrops:  return r.autoPickupDrops;
         }
         return false;   // a new GameRule with no field yet
     }
@@ -115,6 +124,7 @@ public class GameRules : MonoBehaviour
             case GameRule.DoDaylightCycle:  r.doDaylightCycle = value;  break;
             case GameRule.WorldInteraction: r.worldInteraction = value; break;
             case GameRule.KeepInventory:    r.keepInventory = value;    break;
+            case GameRule.AutoPickupDrops:  r.autoPickupDrops = value;  break;
         }
 
         Changed?.Invoke();   // tell every listening script (if there are any)

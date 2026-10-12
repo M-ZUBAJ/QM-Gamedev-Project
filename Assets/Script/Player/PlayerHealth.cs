@@ -1,6 +1,6 @@
 /*
 First Date: 3/10/2026
-Date: 11/10/2026
+Date: 12/10/2026
 Author: Tony
 Use by: Drag this script onto the Player sphere.
 Unity Editor: The HealthBar (StatBar) finds this by itself. "On Changed" is only for extra things
@@ -41,7 +41,8 @@ public class PlayerHealth : MonoBehaviour
     [Min(0f)]
     [SerializeField] float testAmount = 10f;
 
-    bool dead;   // already died (so Died fires only once per death)
+    bool dead;           // already died (so Died fires only once per death)
+    bool dieNextFrame;   // 0 was typed into Health in the Inspector: die in the next Update (see OnValidate)
 
     // Fired once when health reaches 0. Scripts subscribe in code, e.g. PlayerRespawn: health.Died += Respawn;
     public event System.Action Died;
@@ -64,7 +65,16 @@ public class PlayerHealth : MonoBehaviour
         UpdateBar();
 
         // Typing 0 into Health while playing counts as dying, so respawning can be tested that way too.
-        if (Application.isPlaying && IsDead && !dead) Die();
+        // Not right here: Unity doesn't allow making objects inside OnValidate (dying drops items),
+        // so only remember it and die in the next Update.
+        if (Application.isPlaying && IsDead && !dead) dieNextFrame = true;
+    }
+
+    void Update()
+    {
+        if (!dieNextFrame) return;
+        dieNextFrame = false;
+        if (IsDead) Die();   // still 0 (it may have been typed back up already)
     }
 
     // ===== My methods =====

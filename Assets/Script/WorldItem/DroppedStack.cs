@@ -1,6 +1,6 @@
 /*
 First Date: 9/10/2026
-Date: 9/10/2026
+Date: 12/10/2026
 Author: Tony
 Use by: Nothing to set up. ItemDropper makes these with DroppedStack.Spawn(...) when the player drops items.
 Unity Editor: Nothing to set. Its look is chosen on the player's ItemDropper (Drop Style and the sizes / colors).
@@ -8,7 +8,8 @@ Unity Editor: Nothing to set. Its look is chosen on the player's ItemDropper (Dr
 Purpose: A dropped stack lying in the world, made in code (no prefab needed). Two looks:
          - Icon (like Minecraft): the item's picture floating above the ground, always facing the camera,
            bobbing up and down, with the amount under it.
-         - Bundle: a small colored box with the item's picture and the amount on its four sides. It tumbles when thrown.
+         - Bundle: a small colored box with the item's picture and the amount (bottom middle) on its four sides.
+           It tumbles when thrown.
          The whole stack is ONE object: picking it up (F, or touching it for AutoPickup items) gives the whole amount.
          Two stacks of the same item that lie close together merge into one (like Minecraft).
          It can disappear by itself after a while (Despawn), like Minecraft's 5 minutes.
@@ -118,6 +119,7 @@ public class DroppedStack : MonoBehaviour
         // Last: ItemPickup's Awake thickens a too-thin collider, so the collider must already be there.
         dropped.pickup = root.AddComponent<ItemPickup>();
         dropped.pickup.Setup(stack.data, count);
+        dropped.pickup.MarkAsDrop();          // F to pick up, or by walking near it if the GameRule Auto Pickup Drops is on
         dropped.pickup.SetIcon(stack.icon);   // the inventory picture stays the same when it's picked up again
         dropped.RefreshCount();
         return dropped;
@@ -159,7 +161,7 @@ public class DroppedStack : MonoBehaviour
         block.SetColor("_BaseColor", look.bundleColor);   // URP
         body.GetComponent<Renderer>().SetPropertyBlock(block);
 
-        // One face per side: picture in the middle, amount in the bottom right corner.
+        // One face per side: picture in the middle, amount at the bottom middle.
         counts = new TextMeshPro[4];
         for (int i = 0; i < 4; i++)
         {
@@ -169,7 +171,7 @@ public class DroppedStack : MonoBehaviour
             face.localPosition = face.localRotation * new Vector3(0f, 0f, -size * 0.5f - 0.002f);   // just outside the box
 
             AddPicture(face, icon, size * 0.7f, Vector3.zero, 0);
-            counts[i] = AddCount(face, size, new Vector3(size * 0.3f, -size * 0.32f, -0.001f), 1);
+            counts[i] = AddCount(face, size, new Vector3(0f, -size * 0.32f, -0.001f), 1, TextAlignmentOptions.Bottom);
         }
     }
 
@@ -190,7 +192,9 @@ public class DroppedStack : MonoBehaviour
     }
 
     // The amount as 3D text (TextMeshPro), sized to the picture.
-    static TextMeshPro AddCount(Transform parent, float size, Vector3 localPos, int order)
+    // align = where the number sits in its box: BottomRight (Icon, like Minecraft) or Bottom = bottom middle (Bundle).
+    static TextMeshPro AddCount(Transform parent, float size, Vector3 localPos, int order,
+                                TextAlignmentOptions align = TextAlignmentOptions.BottomRight)
     {
         GameObject label = new GameObject("Count");
         label.transform.SetParent(parent, false);
@@ -198,7 +202,7 @@ public class DroppedStack : MonoBehaviour
 
         TextMeshPro text = label.AddComponent<TextMeshPro>();
         text.fontSize = 3f * size;   // 3D text: font size 1 is about 0.1 m tall
-        text.alignment = TextAlignmentOptions.BottomRight;
+        text.alignment = align;
         text.color = Color.white;
         text.outlineWidth = 0.25f;   // dark edge, readable on any ground
         text.outlineColor = Color.black;
