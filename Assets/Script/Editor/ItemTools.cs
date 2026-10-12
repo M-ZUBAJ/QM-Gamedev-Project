@@ -1,13 +1,15 @@
 /*
 First Date: 7/10/2026
-Date: 8/10/2026
+Date: 11/10/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Tools > Items > Make Item From Selection
-                Select item objects (in the scene, or prefabs in the Project window), then click it. For each one it makes
-                (or reuses) Assets/Items/<Name>.asset (Item Data), makes sure there is a prefab (new ones go in
-                Assets/Prefabs/Items), puts ItemPickup on it pointing to the Item Data, and points recipes to it.
-                Then click the new Item Data and choose its Pickup (Pickup or AutoPickup).
+                Select item objects (in the scene, or prefabs in the Project window), then click it. For each one it
+                reuses the Item Data with the same name (searched in the WHOLE project, so moving Item Data files to
+                another folder is fine) or makes a new one in Assets/Config/Items, makes sure there is a prefab
+                (new ones go in Assets/Prefabs/Item), puts ItemPickup on it pointing to the Item Data,
+                and points recipes to it.
+                Then click the Item Data and choose its Pickup and Item Type.
               Tools > Items > Convert Tagged Objects To Items
                 One-time switch from tags: every object in the open scene and every prefab tagged "PickUp" or
                 "AutoPickUp" becomes an item as above (AutoPickUp tag = AutoPickup), is untagged,
@@ -26,8 +28,8 @@ using UnityEngine;
 public static class ItemTools
 {
     // ===== Fields =====
-    const string ItemFolder = "Assets/Items";             // the Item Data config files
-    const string PrefabFolder = "Assets/Prefabs/Items";   // prefabs made from scene objects
+    const string ItemFolder = "Assets/Config/Items";     // where NEW Item Data files go (existing ones are found anywhere)
+    const string PrefabFolder = "Assets/Prefabs/Item";   // prefabs made from scene objects
     static readonly string[] OldTags = { "PickUp", "AutoPickUp" };
 
     // ===== Menu (Unity calls these) =====
@@ -106,16 +108,16 @@ public static class ItemTools
     static ItemData MakeItem(GameObject go, PickupType? pickup)
     {
         if (go == null) return null;
-        MakeFolders(ItemFolder);
 
         string id = ItemPickup.CleanName(go.name);   // "Wood (2)" -> "Wood"
-        string dataPath = ItemFolder + "/" + id + ".asset";
 
-        ItemData data = AssetDatabase.LoadAssetAtPath<ItemData>(dataPath);
+        // Reuse the Item Data with this name wherever it is, so a moved file isn't made twice.
+        ItemData data = FindItemData(id);
         if (data == null)
         {
+            MakeFolders(ItemFolder);
             data = ScriptableObject.CreateInstance<ItemData>();
-            AssetDatabase.CreateAsset(data, dataPath);
+            AssetDatabase.CreateAsset(data, ItemFolder + "/" + id + ".asset");
         }
 
         // The prefab: the selected prefab itself, the prefab a scene copy came from, the one the Item Data
@@ -141,6 +143,18 @@ public static class ItemTools
 
         PointRecipesTo(prefab, data);
         return data;
+    }
+
+    // The Item Data whose file name is exactly "id", in any folder, or null if there is none.
+    // (FindAssets matches parts of names too, e.g. "Apple" finds "AppleSeed", so the name is checked again.)
+    static ItemData FindItemData(string id)
+    {
+        foreach (string guid in AssetDatabase.FindAssets("t:ItemData " + id))
+        {
+            ItemData found = AssetDatabase.LoadAssetAtPath<ItemData>(AssetDatabase.GUIDToAssetPath(guid));
+            if (found != null && found.name == id) return found;
+        }
+        return null;
     }
 
     // The prefab file behind this object: itself if it is one, the source of a scene copy, or null.
@@ -277,7 +291,7 @@ public static class ItemTools
         catch { return ""; }
     }
 
-    // Makes every missing folder in a path like "Assets/Prefabs/Items".
+    // Makes every missing folder in a path like "Assets/Prefabs/Item".
     static void MakeFolders(string path)
     {
         string[] parts = path.Split('/');

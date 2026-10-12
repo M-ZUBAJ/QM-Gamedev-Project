@@ -252,6 +252,8 @@ SlotUI and HeldItemUI find their Icon and Count by name, so keep those names.
 
 7. Holding a stack, click **outside** the window (not on any UI): it's thrown in front of you.
    Left click = the whole stack (as one object), right click = one. Grab it again with **F**.
+   How it looks is the Player's **ItemDropper > Drop Style**: **Icon** (the item's picture floating on the floor with the amount, like Minecraft)
+   or **Bundle** (a small box with the picture and amount on its sides). Same items lying close together merge into one stack.
 8. Close the window while holding a stack: it goes back into the inventory.
 9. Press **1 - 8** or turn the mouse wheel: the selected hotbar slot changes color.
 

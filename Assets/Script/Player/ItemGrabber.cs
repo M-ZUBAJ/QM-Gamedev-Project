@@ -1,6 +1,6 @@
 /*
 First Date: 30/9/2026
-Date: 7/10/2026
+Date: 11/10/2026
 Author: Tony
 Use by: Drag this script onto the PlayerSphere (PlayerInventory is added automatically).
 Unity Editor: Needs the Crosshair script in the scene. The item must be inside an InteractionMachine's area
@@ -67,7 +67,8 @@ public class ItemGrabber : MonoBehaviour
     {
         // Measure to the nearest point on the object, so big items aren't harder to reach.
         Collider col = target.GetComponent<Collider>();
-        Vector3 nearest = col != null ? col.ClosestPoint(transform.position) : target.transform.position;
+        // BoundsUtil.NearestPoint works for every collider (also a non-Convex Mesh Collider).
+        Vector3 nearest = col != null ? BoundsUtil.NearestPoint(col, transform.position) : target.transform.position;
         return Vector3.Distance(transform.position, nearest) <= grabRange;
     }
 

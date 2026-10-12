@@ -38,7 +38,7 @@ MonoBehaviour:
     color: {r: 0, g: 0, b: 0, a: 0.08}
   separator:
     enabled: 1
-    startString: =
+    startString: =====
     color: {r: 0.08414149, g: 1, b: 0, a: 0.15}
   tree:
     enabled: 1

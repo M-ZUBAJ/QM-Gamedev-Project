@@ -1,6 +1,6 @@
 /*
 First Date: 2/10/2026
-Date: 8/10/2026
+Date: 11/10/2026
 Author: Tony
 Use by: Create an empty GameObject called "KeyBindings" in the scene and add this script.
         The keys in the Inspector are the DEFAULT keys. The player can change them in game
@@ -10,7 +10,7 @@ Purpose: One place to change every key in the game.
          Other scripts ask for a key like this: Input.GetKeyDown(KeyBindings.Grab)
          Note: KeyCode only works with the old Input Manager
          (Project Settings → Player → Active Input Handling = "Input Manager (Old)" or "Both").
-Requirement: KeyBindings.cs <-x BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, HotbarSelector.cs, InventoryWindow.cs, ItemGrabber.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs
+Requirement: KeyBindings.cs <-x BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemGrabber.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs
 */
 
 using UnityEngine;
@@ -23,6 +23,7 @@ public enum KeyAction
     MoveLeft, MoveLeftAlt,
     MoveRight, MoveRightAlt,
     Jump,
+    Sprint,
     Grab,
     Inventory,
     ToggleView,
@@ -31,6 +32,7 @@ public enum KeyAction
     KeyMenu,
     Levitate,
     Swing,
+    Consume,
     Build, Interact, PlaceBuilding, CancelBuilding, AutoPlace,
     Hotbar1, Hotbar2, Hotbar3, Hotbar4, Hotbar5, Hotbar6, Hotbar7, Hotbar8,   // keep them in order: HotbarKey() counts from Hotbar1
 }
@@ -63,6 +65,9 @@ public class KeyBindings : MonoBehaviour
     [Tooltip("Jump.")]
     [SerializeField] KeyCode jump = KeyCode.Space;
 
+    [Tooltip("Hold to sprint (run faster).")]
+    [SerializeField] KeyCode sprint = KeyCode.LeftShift;
+
     [Header("Actions (default keys)")]
     [Tooltip("Pick up the item under the crosshair.")]
     [SerializeField] KeyCode grab = KeyCode.F;
@@ -78,6 +83,10 @@ public class KeyBindings : MonoBehaviour
 
     [Tooltip("Swing the tool in the selected hotbar slot (the swing animation). Mouse0 = left mouse button.")]
     [SerializeField] KeyCode swing = KeyCode.Mouse0;
+
+    [Tooltip("Eat / drink the food in the selected hotbar slot (like Minecraft). Mouse1 = right mouse button. " +
+             "Shares the button with Levitate: levitating only works with an empty hand, eating only with food in hand.")]
+    [SerializeField] KeyCode consume = KeyCode.Mouse1;
 
     [Header("Building (default keys)")]
     [Tooltip("Open / close the build panel.")]
@@ -131,11 +140,13 @@ public class KeyBindings : MonoBehaviour
     public static KeyCode MoveRight      => Get(KeyAction.MoveRight);
     public static KeyCode MoveRightAlt   => Get(KeyAction.MoveRightAlt);
     public static KeyCode Jump           => Get(KeyAction.Jump);
+    public static KeyCode Sprint         => Get(KeyAction.Sprint);
     public static KeyCode Grab           => Get(KeyAction.Grab);
     public static KeyCode Inventory      => Get(KeyAction.Inventory);
     public static KeyCode KeyMenu        => Get(KeyAction.KeyMenu);
     public static KeyCode Levitate       => Get(KeyAction.Levitate);
     public static KeyCode Swing          => Get(KeyAction.Swing);
+    public static KeyCode Consume        => Get(KeyAction.Consume);
     public static KeyCode Build          => Get(KeyAction.Build);
     public static KeyCode Interact       => Get(KeyAction.Interact);
     public static KeyCode PlaceBuilding  => Get(KeyAction.PlaceBuilding);
@@ -276,11 +287,13 @@ public class KeyBindings : MonoBehaviour
             case KeyAction.MoveRight:      return moveRight;
             case KeyAction.MoveRightAlt:   return moveRightAlt;
             case KeyAction.Jump:           return jump;
+            case KeyAction.Sprint:         return sprint;
             case KeyAction.Grab:           return grab;
             case KeyAction.Inventory:      return inventory;
             case KeyAction.KeyMenu:        return keyMenu;
             case KeyAction.Levitate:       return levitate;
             case KeyAction.Swing:          return swing;
+            case KeyAction.Consume:        return consume;
             case KeyAction.Build:          return build;
             case KeyAction.Interact:       return interact;
             case KeyAction.PlaceBuilding:  return placeBuilding;

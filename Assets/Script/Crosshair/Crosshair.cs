@@ -1,6 +1,6 @@
 /*
 First Date: 30/9/2026
-Date: 7/10/2026
+Date: 11/10/2026
 Author: Tony
 Use by: Drag this script onto the Crosshair Image in the HUD Canvas.
         Set the Player sphere's Layer to "Ignore Raycast" so the crosshair looks past the ball.
@@ -11,7 +11,7 @@ Purpose: Shows the crosshair in the center of the screen while the mouse turns t
          Other scripts can read Crosshair.Target to know what the player is aiming at,
          and Crosshair.HitPoint for the exact point on it.
 Requirement: Crosshair.cs <-> ItemGrabber.cs
-             Crosshair.cs x-> ItemPickup.cs, ItemData.cs, Image (Unity)
+             Crosshair.cs x-> ItemPickup.cs, ItemData.cs, BoundsUtil.cs, Image (Unity)
              Crosshair.cs <-x ObjectLevitator.cs
 */
 
@@ -126,7 +126,7 @@ public class Crosshair : MonoBehaviour
 
         // Measure to the nearest point on the object, so big objects aren't harder to reach.
         Collider col = go.GetComponent<Collider>();
-        Vector3 nearest = col != null ? col.ClosestPoint(from) : go.transform.position;
+        Vector3 nearest = col != null ? BoundsUtil.NearestPoint(col, from) : go.transform.position;   // works for any collider
         return Vector3.Distance(from, nearest) <= autoRange;
     }
 
