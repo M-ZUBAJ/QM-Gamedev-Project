@@ -1,6 +1,6 @@
 /*
 First Date: 9/10/2026
-Date: 12/10/2026
+Date: 13/10/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerInventory).
         Tools > UI > Add Inventory Scripts adds it for you.
@@ -15,6 +15,7 @@ Purpose: Like Minecraft: while the inventory is open and a stack is on the curso
          with F, or by walking near it when the GameRule Auto Pickup Drops is on (after a short wait, Pickup Delay).
          When the player dies (PlayerHealth) and the GameRule Keep Inventory is off, EVERY stack (inventory, hotbar,
          cursor) is thrown out around the body, and the inventory is emptied.
+         With the GameRule Clear Item On Dead on, the items are deleted instead (nothing drops).
 Requirement: ItemDropper.cs x-> PlayerInventory.cs, DroppedStack.cs, ItemPickup.cs, MenuState.cs, GameRules.cs
              ItemDropper.cs o-> PlayerHealth.cs
              ItemDropper.cs <-x InventoryUIBuilder.cs
@@ -134,10 +135,20 @@ public class ItemDropper : MonoBehaviour
         inv.RemoveFromHeld(count);
     }
 
-    // The player died: drop everything, unless the GameRule Keep Inventory is on.
+    // The player died. GameRules decide what happens to the items:
+    // Keep Inventory on = keep everything (Clear Item On Dead doesn't matter then),
+    // Clear Item On Dead on = everything is gone, otherwise = everything drops around the body.
     void OnDied()
     {
         if (GameRules.KeepInventory) return;
+
+        if (GameRules.ClearItemOnDead)
+        {
+            inv.ClearAll();   // inventory, hotbar and the stack on the cursor: all gone, nothing on the ground
+            Debug.Log("All items are gone (GameRule Clear Item On Dead is on).");
+            return;
+        }
+
         DropEverything();
     }
 

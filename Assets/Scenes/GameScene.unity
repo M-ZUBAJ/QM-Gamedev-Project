@@ -1311,6 +1311,7 @@ GameObject:
   - component: {fileID: 1576947602}
   - component: {fileID: 1576947600}
   - component: {fileID: 1576947604}
+  - component: {fileID: 1576947605}
   - component: {fileID: 1576947603}
   m_Layer: 0
   m_Name: Player
@@ -1703,6 +1704,19 @@ MonoBehaviour:
   foodEaten: 0
   itemsEaten: 0
   buildingsBuilt: 0
+--- !u!114 &1576947605
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1576947584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8d178a4213cc7543a6ba504f8484161, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dropPickupRadius: 1.5
 --- !u!1001 &1630347209
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1792,7 +1806,8 @@ MonoBehaviour:
   doDaylightCycle: 1
   worldInteraction: 0
   keepInventory: 0
-  autoPickupDrops: 0
+  clearItemOnDead: 1
+  autoPickupDrops: 1
 --- !u!4 &1690935958
 Transform:
   m_ObjectHideFlags: 0
@@ -3599,7 +3614,7 @@ SceneRoots:
   - {fileID: 1991518994}
   - {fileID: 1769243941}
   - {fileID: 230181733}
-  - {fileID: 2396411}
   - {fileID: 751114479}
   - {fileID: 20767281}
   - {fileID: 807166203}
+  - {fileID: 2396411}
