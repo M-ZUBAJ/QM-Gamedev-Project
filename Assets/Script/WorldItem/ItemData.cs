@@ -1,21 +1,25 @@
 /*
 First Date: 7/10/2026
-Date: 8/10/2026
+Date: 11/10/2026
 Author: Tony
-Use by: This is an ASSET (a config file in the Project window, kept in Assets/Items), not a script you put on an object.
+Use by: This is an ASSET (a config file in the Project window, kept in Assets/Config/Items), not a script you put on an object.
 Unity Editor: Easiest: select an item object (in the scene or a prefab) > menu Tools > Items > Make Item From Selection.
-              By hand: Assets/Items > right click > Create > Items > Item Data, name the file after the item (e.g. "Wood"),
+              By hand: Assets/Config/Items > right click > Create > Items > Item Data, name the file after the item (e.g. "Wood"),
               drag the item's prefab into Prefab, choose Pickup. Then put ItemPickup on the prefab and drag this file into its "Data".
               Icon: choose ONE: Capture (a photo of the prefab), Static (a PNG sprite) or Animated (an .aseprite file).
+              Item Type: Material (Wood, Stone: can't be eaten) or Consumable (food / drink: right click to eat).
+              Choosing Consumable shows its Health / Hunger / Stamina fields (see Consumable.cs).
+              Both types can be used in crafting and building recipes.
               Full steps: Docs/Item Setup.md
-Purpose: One kind of item (a material like Wood or Stone): what it looks like, how the player picks it up,
-         and its crafting recipe (what it is made from, how many, and where: Crafting page, Furnace...;
+Purpose: One kind of item (a material like Wood or Stone, or food like an Apple): what it looks like,
+         how the player picks it up, what eating it does (Consumable type only), and its crafting recipe
+         (what it is made from, how many, and where: Crafting page, Furnace...;
          for the crafting system later; empty recipe = can't be crafted, a raw material).
          The FILE is the item: its file name is the Item Id the inventory stacks by, recipes point to this file,
          and every object in the world with ItemPickup pointing here is this item. No tags, no typed ids.
 Requirement: ItemData.cs <-> Recipe.cs
-             ItemData.cs x-> IconCapture.cs, IconSource.cs, PlayerInventory.cs
-             ItemData.cs <-x AutoCollector.cs, Crosshair.cs, ItemDropper.cs, ItemPickup.cs, ItemTools.cs, PlayerInventory.cs
+             ItemData.cs x-> Consumable.cs, IconCapture.cs, IconSource.cs, PlayerInventory.cs
+             ItemData.cs <-x AutoCollector.cs, Crosshair.cs, ItemConsumer.cs, ItemDataEditor.cs, ItemPickup.cs, ItemTools.cs, PlayerInventory.cs, PlayerStats.cs
 */
 
 using System.Collections.Generic;
@@ -26,6 +30,14 @@ public enum PickupType
 {
     Pickup,       // aim with the crosshair and press Grab (F)
     AutoPickup,   // collected as soon as the player touches it (F works too)
+}
+
+// What kind of item it is. New kinds (a tool, armor...) get a new line here, and then show in the dropdown.
+// Every kind can be used in crafting and building recipes.
+public enum ItemType
+{
+    Material,     // used to make things (Wood, Stone). Can't be eaten.
+    Consumable,   // food / drink: right click to eat, changes the player's stats (Apple, Bread)
 }
 
 // Where an item is made. New places (an anvil, a cooking pot...) get a new line here, and then show in the dropdown.
@@ -53,6 +65,15 @@ public class ItemData : ScriptableObject
     [Tooltip("The inventory picture. Capture = a photo of the prefab, Static = a PNG, Animated = an .aseprite file.")]
     [SerializeField] IconSource icon = new IconSource();
 
+    [Tooltip("Material = used to make things, can't be eaten. Consumable = food / drink, right click to eat. " +
+             "Both can be used in recipes.")]
+    [SerializeField] ItemType itemType = ItemType.Material;
+
+    // Only shown when Item Type = Consumable (Editor/ItemDataEditor.cs hides it otherwise).
+    [Header("Consumable (food / drink)")]
+    [Tooltip("What eating it does to the player's stats. Positive = gives, negative = takes away.")]
+    [SerializeField] Consumable consumable = new Consumable();
+
     [Header("Crafting (for the crafting system, coming later)")]
     [Tooltip("What crafting this item costs. Click + for each material, drag in its Item Data and set the amount. " +
              "Empty = can't be crafted (a raw material found in the world, like Wood).")]
@@ -71,6 +92,10 @@ public class ItemData : ScriptableObject
     public GameObject Prefab => prefab;
     public PickupType Pickup => pickup;
     public IconSource Icon => icon;   // where the picture comes from (Capture / Static / Animated)
+    public ItemType Type => itemType;
+    public Consumable Consumable => consumable;
+    // Can be eaten: Consumable type with at least one stat set (a Material never can, whatever its numbers say).
+    public bool IsConsumable => itemType == ItemType.Consumable && consumable != null && consumable.IsConsumable;
     public IReadOnlyList<Ingredient> Recipe => recipe;
     public int CraftAmount => craftAmount;
     public CraftStation CraftedAt => craftedAt;
@@ -83,6 +108,7 @@ public class ItemData : ScriptableObject
     {
 #if UNITY_EDITOR
         if (icon == null) icon = new IconSource();
+        if (consumable == null) consumable = new Consumable();
         icon.EditorRefresh(this);
 #endif
     }

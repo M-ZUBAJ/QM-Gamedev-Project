@@ -1,6 +1,6 @@
 /*
 First Date: 8/10/2026
-Date: 8/10/2026
+Date: 11/10/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerController). A Rigidbody is added automatically.
 Unity Editor: The jump key is set in KeyBindings (Jump, default Space).
@@ -11,7 +11,10 @@ Purpose: Jump with Space, only when standing on something (no jumping again in t
          - Coyote Time: you can still jump a moment after walking off an edge.
          - Jump Buffer: pressing Space a moment before landing still jumps when you land.
          Doesn't jump while a menu is open.
+         With a PlayerStamina on the player, each jump uses stamina and there's no jumping while tired.
 Requirement: PlayerJump.cs x-> KeyBindings.cs, MenuState.cs, Rigidbody (Unity), Collider (Unity)
+             PlayerJump.cs o-> PlayerStamina.cs
+             PlayerJump.cs <-o PlayerStats.cs
 */
 
 using UnityEngine;
@@ -39,10 +42,14 @@ public class PlayerJump : MonoBehaviour
 
     Rigidbody rb;
     Collider body;           // the player's shape, to find where its feet are
+    PlayerStamina stamina;   // each jump uses some (can be missing = jump forever)
     float lastGroundedTime = -10f;
     float lastPressedTime = -10f;
 
     public bool IsGrounded { get; private set; }   // other scripts can read it (e.g. a landing sound later)
+
+    // Fired each time the player jumps. E.g. PlayerStats counts jumps.
+    public event System.Action Jumped;
 
     // ===== Unity messages (Unity calls these) =====
 
@@ -50,6 +57,7 @@ public class PlayerJump : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         body = GetComponentInChildren<Collider>();
+        stamina = GetComponent<PlayerStamina>();
     }
 
     // Update: read the key every frame, so a quick tap is never missed.
@@ -67,7 +75,8 @@ public class PlayerJump : MonoBehaviour
 
         bool pressedRecently = Time.time - lastPressedTime <= jumpBuffer;
         bool groundedRecently = Time.time - lastGroundedTime <= coyoteTime;
-        if (pressedRecently && groundedRecently) Jump();
+        bool enoughStamina = stamina == null || stamina.CanJump;
+        if (pressedRecently && groundedRecently && enoughStamina) Jump();
     }
 
     // ===== My methods =====
@@ -80,6 +89,9 @@ public class PlayerJump : MonoBehaviour
         Vector3 v = rb.velocity;
         v.y = speed;   // replace (not add), so jumping while still falling a little goes just as high
         rb.velocity = v;
+
+        if (stamina != null) stamina.SpendJump();
+        Jumped?.Invoke();
 
         // Used up: no second jump from the same press, nor from the same bit of coyote time.
         lastPressedTime = -10f;

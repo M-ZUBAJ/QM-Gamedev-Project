@@ -1,6 +1,6 @@
 /*
 First Date: 3/10/2026
-Date: 7/10/2026
+Date: 11/10/2026
 Author: Tony
 Use by: Drag this script onto the Player sphere (next to PlayerController, PlayerHealth and ObjectLevitator).
 Unity Editor: The HungerBar (StatBar) finds this by itself. "On Changed" is only for extra things
@@ -8,12 +8,12 @@ Unity Editor: The HungerBar (StatBar) finds this by itself. "On Changed" is only
               Testing: in Play mode, change "Hunger" in the Inspector, or click the component's ⋮ menu
               and choose "Test: Eat" / "Test: Lose Food" (uses "Test Amount").
 Purpose: Holds the player's food (full = not hungry). It goes down over time:
-         1x while idle, 2x while walking (a move key is held), and +1x while levitating an object
-         (idle + levitating = 2x, walking + levitating = 3x).
+         1x while idle, 2x while walking (a move key is held), 3x while sprinting (Left Shift),
+         and +1x while levitating an object (idle + levitating = 2x, walking + levitating = 3x).
          At 0 the player starves (if a PlayerHealth is on the same object):
          dies at once ("Instant Death" on) or loses health over time (off).
 Requirement: PlayerHunger.cs o-> PlayerController.cs, PlayerHealth.cs, ObjectLevitator.cs
-             PlayerHunger.cs <-o StatBar.cs
+             PlayerHunger.cs <-o ItemConsumer.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
 */
 
 using UnityEngine;
@@ -38,6 +38,11 @@ public class PlayerHunger : MonoBehaviour
     [Tooltip("How many times faster food drains while walking.")]
     [Min(1f)]
     [SerializeField] float walkMultiplier = 2f;
+
+    [Tooltip("How many times faster food drains while sprinting (used instead of Walk Multiplier). " +
+             "Sprinting burns the most food, like Minecraft.")]
+    [Min(1f)]
+    [SerializeField] float sprintMultiplier = 3f;
 
     [Tooltip("Added on top while levitating an object (ObjectLevitator). 1 = idle 2x, walking 3x.")]
     [Min(0f)]
@@ -101,12 +106,16 @@ public class PlayerHunger : MonoBehaviour
 
     // ===== My methods =====
 
-    // Lose food over time: 1x idle, walkMultiplier x while walking, plus levitateExtra while levitating.
+    // Lose food over time: 1x idle, walkMultiplier x while walking, sprintMultiplier x while sprinting,
+    // plus levitateExtra while levitating.
     void Drain()
     {
-        if (IsStarving) return;   // already empty
+        if (IsStarving) return;                          // already empty
+        if (health != null && health.IsDead) return;     // no getting hungry while dead (e.g. on the death screen)
 
-        float multiplier = IsWalking() ? walkMultiplier : 1f;
+        float multiplier = IsSprinting() ? sprintMultiplier
+                         : IsWalking() ? walkMultiplier
+                         : 1f;
         if (IsLevitating()) multiplier += levitateExtra;   // added, not multiplied: walking 2x + 1x = 3x
 
         // Time.deltaTime = seconds since last frame, so the drain is per second, not per frame.
@@ -131,6 +140,11 @@ public class PlayerHunger : MonoBehaviour
     bool IsWalking()
     {
         return controller != null && controller.IsMoving;
+    }
+
+    bool IsSprinting()
+    {
+        return controller != null && controller.IsSprinting;
     }
 
     bool IsLevitating()

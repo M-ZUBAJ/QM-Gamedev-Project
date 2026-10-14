@@ -1,17 +1,19 @@
 /*
 First Date: 30/9/2026
-Date: 8/10/2026
+Date: 12/10/2026
 Author: Tony
 Use by: Drag this script onto any object the player can pick up (best: onto the item's prefab).
         Tools > Items > Make Item From Selection adds it and makes the config file for you.
-Unity Editor: Data = the item's config file (Item Data in Assets/Items). It decides the item and how it is picked up.
+Unity Editor: Data = the item's config file (Item Data in Assets/Config/Items). It decides the item and how it is picked up.
               No tag needed. Amount = how many the player gets from this one object.
 Purpose: Marks an object as an item. Its Item Data says which item it is and how it is picked up
          (Pickup = crosshair + F, AutoPickup = by touch).
          Very thin Box Colliders are made thicker so physics doesn't miss them.
          (No Data: it still works as a "Pickup" item named after the object, so old objects don't break.)
+         Stacks the player DROPPED (IsDrop) ignore the Item Data's Pickup: F, or walking near them when the
+         GameRule Auto Pickup Drops is on.
 Requirement: ItemPickup.cs x-> ItemData.cs, IconCapture.cs
-             ItemPickup.cs <-x AutoCollector.cs, Crosshair.cs, ItemDropper.cs, ItemGrabber.cs, ItemTools.cs
+             ItemPickup.cs <-x AutoCollector.cs, BuildingTools.cs, Crosshair.cs, DroppedStack.cs, ItemDropper.cs, ItemGrabber.cs, ItemTools.cs
 */
 
 using System.Text.RegularExpressions;   // Regex: find and replace text by a pattern
@@ -21,7 +23,7 @@ using UnityEngine;
 public class ItemPickup : MonoBehaviour
 {
     // ===== Fields =====
-    [Tooltip("The item's config file (Item Data, in Assets/Items). Decides which item this is and how it is picked up.")]
+    [Tooltip("The item's config file (Item Data, in Assets/Config/Items). Decides which item this is and how it is picked up.")]
     [SerializeField] ItemData data;
 
     [Range(1, 999)]
@@ -31,11 +33,17 @@ public class ItemPickup : MonoBehaviour
     const float MinColliderThickness = 0.01f;   // colliders thinner than this get missed by physics
 
     float blockedUntil;   // game time until which touching doesn't collect it (just dropped)
+    Sprite iconOverride;  // a picture given by code (a dropped stack keeps its inventory picture), null = none
+    bool isDrop;          // dropped by the player (a DroppedStack), not placed in the world
 
     public ItemData Data => data;
     public string ItemId => data != null ? data.Id : CleanName(gameObject.name);
     public string DisplayName => data != null ? data.DisplayName : ItemId;
-    public PickupType Pickup => data != null ? data.Pickup : PickupType.Pickup;
+
+    // True for stacks the player dropped. Those ignore the Item Data's Pickup: they need F, or are collected
+    // by walking near them when the GameRule Auto Pickup Drops is on (AutoCollector).
+    public bool IsDrop => isDrop;
+    public PickupType Pickup => isDrop || data == null ? PickupType.Pickup : data.Pickup;
     public int Amount => amount;
 
     // False for a moment after the player dropped it, so touching doesn't collect it straight back.
@@ -67,8 +75,21 @@ public class ItemPickup : MonoBehaviour
     // else a photo of this object (taken once per item, then remembered). Call it before the object is destroyed.
     public Sprite GetIcon()
     {
+        if (iconOverride != null) return iconOverride;   // e.g. a dropped stack: no need for a new photo
         if (data != null && !data.Icon.IsCapture) return data.Icon.Still;
         return IconCapture.GetIcon(ItemId, gameObject);
+    }
+
+    // Gives this object a ready-made inventory picture (e.g. a dropped stack keeps the one it had in the inventory).
+    public void SetIcon(Sprite icon)
+    {
+        iconOverride = icon;
+    }
+
+    // Marks this as a stack the player dropped (DroppedStack calls it). See IsDrop.
+    public void MarkAsDrop()
+    {
+        isDrop = true;
     }
 
     // Touching won't collect it for this many seconds (e.g. right after it was dropped).

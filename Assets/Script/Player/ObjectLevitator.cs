@@ -1,6 +1,6 @@
 /*
 First Date: 4/10/2026
-Date: 6/10/2026
+Date: 11/10/2026
 Author: Tony
 Use by: 1. Hierarchy: select PlayerSphere > Add Component > ObjectLevitator.
         2. Needs the Crosshair script in the scene (it tells what you aim at).
@@ -175,7 +175,7 @@ public class ObjectLevitator : MonoBehaviour
         if (!InteractionGate.CanInteractWith(col)) return;   // not allowed here (e.g. outside every machine's area)
 
         // Measure to the nearest point, so big objects aren't harder to reach.
-        Vector3 nearest = col != null ? col.ClosestPoint(transform.position) : rb.position;
+        Vector3 nearest = col != null ? BoundsUtil.NearestPoint(col, transform.position) : rb.position;   // works for any collider
         if (Vector3.Distance(transform.position, nearest) > pickRange) return;
 
         held = rb;

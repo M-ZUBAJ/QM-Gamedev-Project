@@ -1,6 +1,6 @@
 /*
 First Date: 5/10/2026
-Date: 8/10/2026
+Date: 11/10/2026
 Author: Tony
 Use by: Hierarchy: select PlayerSphere > Add Component > BlueprintPlacer (only one, on the player).
 Unity Editor: Nothing to connect: the build menu (B) starts it with BlueprintPlacer.Begin(buildingData).
@@ -21,7 +21,7 @@ Purpose: Moves a new blueprint with the crosshair until the player puts it down.
          inside something, in the air, or the player doesn't have the recipe's materials.
          Placing it takes the materials from the inventory and builds the real building right away.
 Requirement: BlueprintPlacer.cs x-> Blueprint.cs, BuildingData.cs, BoundsUtil.cs, ClickClaim.cs, InteractionGate.cs, KeyBindings.cs, MenuState.cs, PlayerInventory.cs
-             BlueprintPlacer.cs <-x BuildMenu.cs, BuildMenuUIBuilder.cs, BuildModeHUD.cs
+             BlueprintPlacer.cs <-x BuildMenu.cs, BuildMenuUIBuilder.cs, BuildModeHUD.cs, PlayerStats.cs
 */
 
 using UnityEngine;
@@ -58,6 +58,9 @@ public class BlueprintPlacer : MonoBehaviour
     // While placing, this script owns the mouse through ClickClaim, so other scripts using the same buttons
     // (levitate, swing, hotbar wheel) step aside without knowing about building.
     public static bool IsPlacing { get; private set; }
+
+    // Fired each time a building is really built (paid for and placed), with its Building Data. E.g. PlayerStats counts them.
+    public event System.Action<BuildingData> Built;
 
     // ===== Unity messages (Unity calls these) =====
 
@@ -175,9 +178,11 @@ public class BlueprintPlacer : MonoBehaviour
             return;
         }
 
+        BuildingData built = ghost.Data;
         ghost.Build();
         ghost = null;
         Stop();
+        Built?.Invoke(built);
     }
 
     void Cancel()

@@ -1,18 +1,23 @@
 /*
-First Date: 7/10/2026
-Date: 7/10/2026
+First Date: 9/10/2026
+Date: 13/10/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerInventory).
         Tools > UI > Add Inventory Scripts adds it for you.
-Unity Editor: Needs an EventSystem in the scene (the inventory has one), so it can tell clicks on the UI from clicks outside.
+Unity Editor: Drop Style = how dropped items look: Icon (the item's picture floating on the floor, like Minecraft)
+              or Bundle (a small box with the picture and amount on its sides). Tune the sizes / color below it.
+              Needs an EventSystem in the scene (the inventory has one), so it can tell clicks on the UI from clicks outside.
               Testing: Play, Tab, click a stack so it sticks to the cursor, then click outside the inventory window.
+              Death drop: with the GameRule Keep Inventory off (the default), PlayerHealth's ⋮ menu > "Test: Die".
 Purpose: Like Minecraft: while the inventory is open and a stack is on the cursor, clicking outside the window
          throws it in front of the player. Left click = the whole stack, right click = just one.
-         A whole stack drops as ONE object that gives the whole amount back when picked up (no lag from 64 objects).
-         The dropped object is the item's Prefab from its Item Data (real shape and collider). Items without
-         Item Data use their look-only copy (IconCapture.MakeModel) with a box collider instead.
-         It is picked up again the way its Item Data says (AutoPickup items wait a moment first).
-Requirement: ItemDropper.cs x-> PlayerInventory.cs, ItemPickup.cs, ItemData.cs, IconCapture.cs, MenuState.cs
+         The stack lands as ONE DroppedStack (no lag from 64 objects) that gives the whole amount back when picked up,
+         with F, or by walking near it when the GameRule Auto Pickup Drops is on (after a short wait, Pickup Delay).
+         When the player dies (PlayerHealth) and the GameRule Keep Inventory is off, EVERY stack (inventory, hotbar,
+         cursor) is thrown out around the body, and the inventory is emptied.
+         With the GameRule Clear Item On Dead on, the items are deleted instead (nothing drops).
+Requirement: ItemDropper.cs x-> PlayerInventory.cs, DroppedStack.cs, ItemPickup.cs, MenuState.cs, GameRules.cs
+             ItemDropper.cs o-> PlayerHealth.cs
              ItemDropper.cs <-x InventoryUIBuilder.cs
 */
 
@@ -24,6 +29,23 @@ using UnityEngine.EventSystems;   // EventSystem: is the mouse over UI?
 public class ItemDropper : MonoBehaviour
 {
     // ===== Fields =====
+    [Header("Look")]
+    [Tooltip("Icon: the item's picture floating on the floor with the amount (like Minecraft). " +
+             "Bundle: a small box with the picture and amount on its sides.")]
+    [SerializeField] DropStyle dropStyle = DropStyle.Icon;
+
+    [Range(0.1f, 2f)]
+    [Tooltip("Icon: how wide the floating picture is, in meters.")]
+    [SerializeField] float iconSize = 0.4f;
+
+    [Range(0.1f, 2f)]
+    [Tooltip("Bundle: how wide the box is, in meters.")]
+    [SerializeField] float bundleSize = 0.4f;
+
+    [Tooltip("Bundle: the box's color.")]
+    [SerializeField] Color bundleColor = new Color(0.62f, 0.45f, 0.28f);   // cardboard brown
+
+    [Header("Throwing")]
     [Range(0.5f, 5f)]
     [Tooltip("How far in front of the player dropped items appear, in meters.")]
     [SerializeField] float dropDistance = 1.5f;
@@ -37,16 +59,44 @@ public class ItemDropper : MonoBehaviour
              "(else it comes straight back the moment it lands).")]
     [SerializeField] float pickupDelay = 1.5f;
 
+    [Header("On the floor")]
+    [Range(0f, 3f)]
+    [Tooltip("Stacks of the same item this close together merge into one, in meters. 0 = never merge.")]
+    [SerializeField] float mergeRadius = 1f;
+
+    [Range(0f, 30f)]
+    [Tooltip("Minutes before a dropped stack disappears. Minecraft = 5. 0 = never.")]
+    [SerializeField] float despawnMinutes = 5f;
+
     [Tooltip("The camera whose facing is \"in front\". Empty = the Main Camera.")]
     [SerializeField] Transform cameraTransform;
 
+    [Header("Dying (GameRule Keep Inventory off)")]
+    [Range(0f, 10f)]
+    [Tooltip("How fast the items fly out in every direction when the player dies. 0 = just fall where the player was.")]
+    [SerializeField] float deathScatterSpeed = 3f;
+
     PlayerInventory inv;
+    PlayerHealth health;   // can be missing: then nothing drops on death
+
+    public DropStyle Style => dropStyle;
 
     // ===== Unity messages (Unity calls these) =====
 
     void Awake()
     {
         inv = GetComponent<PlayerInventory>();
+        health = GetComponent<PlayerHealth>();
+    }
+
+    void OnEnable()
+    {
+        if (health != null) health.Died += OnDied;
+    }
+
+    void OnDisable()
+    {
+        if (health != null) health.Died -= OnDied;
     }
 
     void Start()
@@ -67,84 +117,88 @@ public class ItemDropper : MonoBehaviour
 
     // ===== My methods =====
 
+    // Throws "count" of the stack on the cursor in front of the player.
     void Drop(int count)
     {
-        PlayerInventory.Slot held = inv.Held;
-
         // In front of the player, the way the camera looks (flat, so it isn't thrown into the ground).
         Vector3 forward = cameraTransform != null ? cameraTransform.forward : transform.forward;
         forward.y = 0f;
         forward = forward.sqrMagnitude > 0.001f ? forward.normalized : transform.forward;
         Vector3 dropPoint = transform.position + forward * dropDistance + Vector3.up * 0.5f;
 
-        GameObject item = held.data != null && held.data.Prefab != null
-            ? FromPrefab(held.data, dropPoint)
-            : FromModel(held, dropPoint);
-        if (item == null)
-        {
-            Debug.Log("Can't drop " + held.name + ": it has no Item Data prefab, and its look wasn't saved.");
-            return;
-        }
+        DroppedStack dropped = DroppedStack.Spawn(inv.Held, count, dropPoint, CurrentLook());
+        if (dropped == null) return;
 
-        ItemPickup pickup = item.GetComponent<ItemPickup>();
-        pickup.Setup(held.data, count);
-        pickup.BlockAutoCollect(pickupDelay);
-
-        Rigidbody rb = item.GetComponent<Rigidbody>();
-        if (rb == null) rb = item.AddComponent<Rigidbody>();   // it needs physics to fall and be thrown
-        rb.isKinematic = false;
-        rb.interpolation = RigidbodyInterpolation.Interpolate;   // smooth on screen
-        rb.velocity = forward * throwSpeed + Vector3.up;         // thrown forward and a little up
+        dropped.GetComponent<ItemPickup>().BlockAutoCollect(pickupDelay);
+        dropped.GetComponent<Rigidbody>().velocity = forward * throwSpeed + Vector3.up;   // forward and a little up
 
         inv.RemoveFromHeld(count);
     }
 
-    // The real prefab from the item's config file.
-    static GameObject FromPrefab(ItemData data, Vector3 point)
+    // The player died. GameRules decide what happens to the items:
+    // Keep Inventory on = keep everything (Clear Item On Dead doesn't matter then),
+    // Clear Item On Dead on = everything is gone, otherwise = everything drops around the body.
+    void OnDied()
     {
-        GameObject item = Instantiate(data.Prefab, point, data.Prefab.transform.rotation);
-        item.name = data.Id;   // without "(Clone)"
+        if (GameRules.KeepInventory) return;
 
-        if (item.GetComponentInChildren<Collider>() == null) AddBoxCollider(item);   // so it can land and be aimed at
-        if (item.GetComponent<ItemPickup>() == null) item.AddComponent<ItemPickup>();
-        return item;
+        if (GameRules.ClearItemOnDead)
+        {
+            inv.ClearAll();   // inventory, hotbar and the stack on the cursor: all gone, nothing on the ground
+            Debug.Log("All items are gone (GameRule Clear Item On Dead is on).");
+            return;
+        }
+
+        DropEverything();
     }
 
-    // No config file (an older item): its look-only copy, made solid.
-    static GameObject FromModel(PlayerInventory.Slot held, Vector3 point)
+    // Throws every stack (inventory, hotbar and the one on the cursor) out around the player, then empties the inventory.
+    public void DropEverything()
     {
-        GameObject item = IconCapture.MakeModel(held.id);   // kept when the item was first picked up
-        if (item == null) return null;
+        Vector3 center = transform.position + Vector3.up * 0.5f;
+        DroppedStack.Look look = CurrentLook();
+        int dropped = 0;
 
-        item.name = held.id;   // ItemPickup without Data uses the object name as its Item Id
-        item.transform.SetPositionAndRotation(point, Quaternion.identity);
-        foreach (Transform t in item.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = 0;   // Default layer
+        foreach (PlayerInventory.Slot slot in inv.Slots)
+        {
+            if (DropAround(slot, center, look)) dropped++;
+        }
+        if (DropAround(inv.Held, center, look)) dropped++;
 
-        AddBoxCollider(item);
-        item.AddComponent<ItemPickup>();   // after the collider: its Awake thickens a too-thin collider
-        return item;
+        inv.ClearAll();
+        if (dropped > 0) Debug.Log("Dropped " + dropped + " stack(s) on death (GameRule Keep Inventory is off).");
     }
 
-    // One box around all its visible parts.
-    static void AddBoxCollider(GameObject item)
+    // Throws one whole stack in a random direction around "center". False if the slot was empty.
+    bool DropAround(PlayerInventory.Slot stack, Vector3 center, DroppedStack.Look look)
     {
-        BoxCollider box = item.AddComponent<BoxCollider>();
-        Bounds world = RendererBounds(item);
-        Vector3 scale = item.transform.lossyScale;
-        box.center = item.transform.InverseTransformPoint(world.center);
-        box.size = new Vector3(world.size.x / Mathf.Abs(scale.x), world.size.y / Mathf.Abs(scale.y),
-                               world.size.z / Mathf.Abs(scale.z));   // the box is in the item's own (scaled) units
+        if (stack.IsEmpty) return false;
+
+        // A random flat direction, so the stacks spread out in a ring instead of piling up on one spot.
+        Vector2 dir = Random.insideUnitCircle.normalized;
+        Vector3 flat = new Vector3(dir.x, 0f, dir.y);
+
+        // 0.8 m out: just outside a 1 m wide player, so it doesn't start inside the body and get shoved.
+        DroppedStack dropped = DroppedStack.Spawn(stack, stack.count, center + flat * 0.8f, look);
+        if (dropped == null) return false;
+
+        dropped.GetComponent<ItemPickup>().BlockAutoCollect(pickupDelay);
+        dropped.GetComponent<Rigidbody>().velocity = flat * deathScatterSpeed + Vector3.up * 2f;   // out and a little up
+        return true;
     }
 
-    // The box around every visible part, in world space.
-    static Bounds RendererBounds(GameObject go)
+    // The Inspector settings, packed for DroppedStack.
+    DroppedStack.Look CurrentLook()
     {
-        Renderer[] rends = go.GetComponentsInChildren<Renderer>();
-        if (rends.Length == 0) return new Bounds(go.transform.position, Vector3.one * 0.2f);
-
-        Bounds b = rends[0].bounds;
-        for (int i = 1; i < rends.Length; i++) b.Encapsulate(rends[i].bounds);
-        return b;
+        return new DroppedStack.Look
+        {
+            style = dropStyle,
+            iconSize = iconSize,
+            bundleSize = bundleSize,
+            bundleColor = bundleColor,
+            mergeRadius = mergeRadius,
+            despawnSeconds = despawnMinutes * 60f,
+        };
     }
 
     // True if the mouse is over any UI (the inventory window, a slot, the hotbar...).

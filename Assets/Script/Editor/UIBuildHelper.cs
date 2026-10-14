@@ -9,7 +9,7 @@ Purpose: The small building blocks every UI builder tool needs, kept in one plac
          and put a script on the player.
          A builder writes "using static UIBuildHelper;" and can then call e.g. NewUI(...) directly.
 Requirement: UIBuildHelper.cs x-> PlayerInventory.cs
-             UIBuildHelper.cs <-x BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, InventoryUIBuilder.cs
+             UIBuildHelper.cs <-x BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, InventoryUIBuilder.cs
 */
 
 using TMPro;
