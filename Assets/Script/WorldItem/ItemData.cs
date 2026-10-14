@@ -19,7 +19,7 @@ Purpose: One kind of item (a material like Wood or Stone, or food like an Apple)
          and every object in the world with ItemPickup pointing here is this item. No tags, no typed ids.
 Requirement: ItemData.cs <-> Recipe.cs
              ItemData.cs x-> Consumable.cs, IconCapture.cs, IconSource.cs, PlayerInventory.cs
-             ItemData.cs <-x AutoCollector.cs, Crosshair.cs, ItemConsumer.cs, ItemDataEditor.cs, ItemPickup.cs, ItemTools.cs, PlayerInventory.cs, PlayerStats.cs
+             ItemData.cs <-x AutoCollector.cs, Crosshair.cs, ItemConsumer.cs, ItemDataEditor.cs, ItemPickup.cs, ItemTools.cs, PlayerInventory.cs, PlayerStats.cs, ResourceNode.cs
 */
 
 using System.Collections.Generic;
