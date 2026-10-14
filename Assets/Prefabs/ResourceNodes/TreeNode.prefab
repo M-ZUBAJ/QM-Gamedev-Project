@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6604158898732166424}
   - component: {fileID: 994265055265060129}
   - component: {fileID: 2962278684664453714}
+  - component: {fileID: 4281035387118049223}
   m_Layer: 0
   m_Name: TreeNode
   m_TagString: Untagged
@@ -64,7 +65,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31417cfdfa2cf4ccba4ab8631788debf, type: 2}
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -126,6 +127,19 @@ MonoBehaviour:
   dropMin: 3
   dropMax: 5
   currentHealth: 0
+--- !u!114 &4281035387118049223
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3245735666504203572}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dad87f947bd960746acd559812ec2c9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  color: {r: 0.47843137, g: 0.29411766, b: 0.16470589, a: 1}
 --- !u!1 &4194975562138314518
 GameObject:
   m_ObjectHideFlags: 0
@@ -137,6 +151,7 @@ GameObject:
   - component: {fileID: 8566121389396020928}
   - component: {fileID: 3711779293917948075}
   - component: {fileID: 7773425305467365331}
+  - component: {fileID: 8787050024178882282}
   m_Layer: 0
   m_Name: Leaves
   m_TagString: Untagged
@@ -187,7 +202,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 37b6f0f49b2be40f8b50377e3ce165d7, type: 2}
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -209,3 +224,16 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &8787050024178882282
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4194975562138314518}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dad87f947bd960746acd559812ec2c9e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  color: {r: 0.18039216, g: 0.54509807, b: 0.22745098, a: 1}

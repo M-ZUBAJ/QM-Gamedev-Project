@@ -5,6 +5,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 ## Warnings
 
 - ResourceNode.cs has no /* */ header at the top.
+- Wander.cs has no /* */ header at the top.
 - PlayerStats.cs: can't read this Requirement line: "ItemConsumer.cs, BlueprintPlacer.cs, PlayerRespawn.cs"
 - ItemDataEditor.cs uses Consumable.cs in its code, but its Requirement doesn't list it. Add: ItemDataEditor.cs x-> Consumable.cs
 - ObjectLevitator.cs uses BoundsUtil.cs in its code, but its Requirement doesn't list it. Add: ObjectLevitator.cs x-> BoundsUtil.cs
@@ -48,6 +49,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [ScriptMapTool.cs](<Assets/Script/Editor/ScriptMapTool.cs>) | Editor | MenuOrder.cs | - |
 | [UIBuildHelper.cs](<Assets/Script/Editor/UIBuildHelper.cs>) | Editor | PlayerInventory.cs | BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, InventoryUIBuilder.cs |
 | [ResourceNode.cs](<Assets/Script/Gathering/ResourceNode.cs>) | Gathering | - | - |
+| [Wander.cs](<Assets/Script/Gathering/Wander.cs>) | Gathering | - | - |
 | [IconCapture.cs](<Assets/Script/IconCapture/IconCapture.cs>) | IconCapture | ShapeColor.cs (optional) | BuildingData.cs, HeldItemView.cs, ItemData.cs, ItemPickup.cs |
 | [KeyBindings.cs](<Assets/Script/Input/KeyBindings.cs>) | Input | - | BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemGrabber.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs |
 | [AutoCollector.cs](<Assets/Script/Player/AutoCollector.cs>) | Player | PlayerInventory.cs, ItemPickup.cs, ItemData.cs, GameRules.cs, PlayerHealth.cs (optional) | - |
