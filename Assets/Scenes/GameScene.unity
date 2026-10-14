@@ -863,6 +863,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: HUDCanvas
       objectReference: {fileID: 0}
+    - target: {fileID: 982934069203096306, guid: 25c7b9a89adb9b142a40a239806afc13, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5590729262165456725, guid: 25c7b9a89adb9b142a40a239806afc13, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -3619,10 +3623,10 @@ SceneRoots:
   - {fileID: 740488707}
   - {fileID: 587644294}
   - {fileID: 822656766}
-  - {fileID: 1991518994}
   - {fileID: 1769243941}
   - {fileID: 230181733}
   - {fileID: 751114479}
   - {fileID: 20767281}
   - {fileID: 807166203}
   - {fileID: 1989858131}
+  - {fileID: 2396411}
