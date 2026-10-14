@@ -38,8 +38,8 @@ public class EnemyAttack : MonoBehaviour
 
     void Attack()
     {   // line below will be replaced once player sphere is in the game.
-        TestPlayerHealth playerHealth =
-            target.GetComponent<TestPlayerHealth>();
+        PlayerHealth playerHealth =
+            target.GetComponent<PlayerHealth>();
 
         if (playerHealth != null)
         {
