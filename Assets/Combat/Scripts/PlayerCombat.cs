@@ -10,6 +10,16 @@ public class PlayerCombat : MonoBehaviour
     public float handDamage = 10f;
     public float swordDamage = 25f;
 
+    [Header("Stamina")]
+    public float attackStaminaCost = 10f;
+    private PlayerStamina playerStamina;
+
+    // finds the stamina component on the same Player Object
+    void Awake()
+    {
+        playerStamina = GetComponent<PlayerStamina>();
+    }
+
     void Update()
     {
         if (Input.GetMouseButtonDown(0)) // if the player presses the left click
@@ -20,6 +30,18 @@ public class PlayerCombat : MonoBehaviour
 
     void Attack()
     {
+        // if the player stamina field exists and it is <=0
+        if (playerStamina != null && playerStamina.Stamina <= 0f)
+        {
+            Debug.Log("Attack Failed: Not Enough Stamina !");
+            return; // dont attack
+        }
+
+        if (playerStamina != null)
+        {
+            playerStamina.Use(attackStaminaCost);
+        }
+
         // fires and invisible ray from the centre of the camera (where the crosshair is)
         Ray ray = playerCamera.ViewportPointToRay(
             new Vector3(0.5f, 0.5f, 0f)

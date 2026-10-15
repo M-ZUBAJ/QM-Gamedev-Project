@@ -1741,6 +1741,7 @@ MonoBehaviour:
   attackRange: 2.5
   handDamage: 10
   swordDamage: 25
+  attackStaminaCost: 15
 --- !u!114 &1576947607
 MonoBehaviour:
   m_ObjectHideFlags: 0
