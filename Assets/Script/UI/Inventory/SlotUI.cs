@@ -32,6 +32,8 @@ public class SlotUI : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, 
     [Tooltip("The amount text. Empty = the child named \"Count\".")]
     [SerializeField] TMP_Text count;
 
+    [SerializeField] TMP_Text itemName; /// displays text with the name of item if no icon is used
+
     [Tooltip("Box color of the selected hotbar slot (the item in hand). " +
              "The normal color is the slot Image's own Color, so set that on the Image as usual.")]
     [SerializeField] Color selectedColor = new Color(1f, 0.85f, 0.4f);
@@ -54,6 +56,9 @@ public class SlotUI : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, 
         normalColor = frame.color;   // remember the color you chose, before this script ever changes it
         if (icon == null) icon = FindChild<Image>("Icon");
         if (count == null) count = FindChild<TMP_Text>("Count");
+
+        if (itemName == null)
+            itemName = FindChild<TMP_Text>("ItemName");
     }
 
     void OnEnable()
@@ -131,6 +136,20 @@ public class SlotUI : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, 
         PlayerInventory.Slot slot = inv != null && index >= 0 && index < inv.Slots.Count ? inv.Slots[index] : null;
 
         Show(slot, icon, count);
+
+        //////////////////////////////////////////////////////////
+        /// added by marko to make Inventory slot UI display text 
+        /// for items that you dont pick up and that have no icon yet
+
+        bool isSword = slot != null && !slot.IsEmpty
+                    && slot.id == "Sword";
+
+        if (itemName != null)
+        {
+            itemName.text = isSword ? "SWORD" : "";
+            itemName.gameObject.SetActive(isSword);
+        }
+        //////////////////////////// end of code added 
 
         bool selected = inv != null && inv.ActiveHotbar != PlayerInventory.NoHotbar
                         && index == inv.HotbarStart + inv.ActiveHotbar;
