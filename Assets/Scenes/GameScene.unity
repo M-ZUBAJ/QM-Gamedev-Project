@@ -2026,6 +2026,10 @@ PrefabInstance:
       propertyPath: maxHealth
       value: 50
       objectReference: {fileID: 0}
+    - target: {fileID: 2785439227072835551, guid: 2b63b750837ade044beab41b0607592b, type: 3}
+      propertyPath: missChance
+      value: 15
+      objectReference: {fileID: 0}
     - target: {fileID: 8126748673568211758, guid: 2b63b750837ade044beab41b0607592b, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
