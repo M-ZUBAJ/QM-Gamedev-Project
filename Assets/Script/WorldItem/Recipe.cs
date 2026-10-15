@@ -12,7 +12,7 @@ Purpose: Everything about recipes in ONE place, shared by every config that cost
          The same material twice in one recipe is added up (2 Stone + 3 Stone = 5 Stone).
 Requirement: Recipe.cs <-> ItemData.cs
              Recipe.cs x-> PlayerInventory.cs
-             Recipe.cs <-x BuildingButton.cs, BuildingData.cs
+             Recipe.cs <-x BuildingButton.cs, BuildingData.cs, CraftingMenu.cs
 */
 
 using System.Collections.Generic;

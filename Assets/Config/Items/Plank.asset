@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a7f3d5fd2bbcd4dab390231f45945a, type: 3}
+  m_Name: Plank
+  m_EditorClassIdentifier: 
+  displayName: 
+  prefab: {fileID: 5591268333796744987, guid: 70377c52c35284f05a949a8a6d1b6c59, type: 3}
+  pickup: 0
+  icon:
+    mode: 0
+    image: {fileID: 0}
+    aseprite: {fileID: 0}
+    asepriteTag: 
+    frames: []
+    durations: []
+  itemType: 0
+  consumable:
+    health: 0
+    hunger: 0
+    stamina: 0
+  recipe:
+  - item: {fileID: 11400000, guid: 3531b718bb76535458623a98976a16c7, type: 2}
+    amount: 1
+  craftAmount: 2
+  craftedAt: 0

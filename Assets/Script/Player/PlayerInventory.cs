@@ -12,7 +12,7 @@ Purpose: Stores the player's items. Items with the same Item Id stack in one slo
          Other scripts add items with PlayerInventory.Instance.Add(...)
          and listen to PlayerInventory.Changed to update the UI.
 Requirement: PlayerInventory.cs x-> IHand.cs, ItemData.cs
-             PlayerInventory.cs <-x AutoCollector.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingData.cs, DroppedStack.cs, HeldItemUI.cs, HeldItemView.cs, HotbarSelector.cs, ItemConsumer.cs, ItemData.cs, ItemDropper.cs, ItemGrabber.cs, Recipe.cs, ResourceNode.cs, SlotGroup.cs, SlotUI.cs, UIBuildHelper.cs
+             PlayerInventory.cs <-x AutoCollector.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingData.cs, CraftingMenu.cs, DroppedStack.cs, HeldItemUI.cs, HeldItemView.cs, HotbarSelector.cs, ItemConsumer.cs, ItemData.cs, ItemDropper.cs, ItemGrabber.cs, Recipe.cs, ResourceNode.cs, SlotGroup.cs, SlotUI.cs, UIBuildHelper.cs
 */
 
 using System.Collections.Generic;

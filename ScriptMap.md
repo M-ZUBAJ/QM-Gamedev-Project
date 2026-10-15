@@ -4,6 +4,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 
 ## Warnings
 
+- CraftingMenu.cs has no /* */ header at the top.
 - ResourceNode.cs has no /* */ header at the top.
 - Wander.cs has no /* */ header at the top.
 - PlayerStats.cs: can't read this Requirement line: "ItemConsumer.cs, BlueprintPlacer.cs, PlayerRespawn.cs"
@@ -35,7 +36,8 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [GameRules.cs](<Assets/Script/Core/GameRules.cs>) | Core | - | AutoCollector.cs, DaylightCycle.cs, ItemDropper.cs |
 | [IHand.cs](<Assets/Script/Core/IHand.cs>) | Core | - | ObjectLevitator.cs, PlayerInventory.cs |
 | [InteractionGate.cs](<Assets/Script/Core/InteractionGate.cs>) | Core | - | BlueprintPlacer.cs, ItemGrabber.cs, ObjectLevitator.cs |
-| [MenuState.cs](<Assets/Script/Core/MenuState.cs>) | Core | - | BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, DeathScreen.cs, HeldItemView.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemDropper.cs, ItemGrabber.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs |
+| [MenuState.cs](<Assets/Script/Core/MenuState.cs>) | Core | - | BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, DeathScreen.cs, HeldItemView.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemDropper.cs, ItemGrabber.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs |
+| [CraftingMenu.cs](<Assets/Script/Crafting/CraftingMenu.cs>) | Crafting | - | - |
 | [Crosshair.cs](<Assets/Script/Crosshair/Crosshair.cs>) | Crosshair | ItemGrabber.cs (each other), ItemPickup.cs, ItemData.cs, BoundsUtil.cs, Image (Unity) | ItemGrabber.cs (each other), ObjectLevitator.cs |
 | [BuildingTools.cs](<Assets/Script/Editor/BuildingTools.cs>) | Editor | BuildingData.cs, ItemPickup.cs, UIBuildHelper.cs, MenuOrder.cs | - |
 | [BuildMenuAutoList.cs](<Assets/Script/Editor/BuildMenuAutoList.cs>) | Editor | BuildMenuUIBuilder.cs, BuildingData.cs | - |
@@ -63,7 +65,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [PlayerController.cs](<Assets/Script/Player/PlayerController.cs>) | Player | KeyBindings.cs, MenuState.cs, Rigidbody (Unity), PlayerStamina.cs (optional) | HeldItemView.cs (optional), PlayerHunger.cs (optional), PlayerStats.cs (optional) |
 | [PlayerHealth.cs](<Assets/Script/Player/PlayerHealth.cs>) | Player | - | AutoCollector.cs (optional), DeathScreen.cs, ItemConsumer.cs (optional), ItemDropper.cs (optional), PlayerHunger.cs (optional), PlayerRespawn.cs, PlayerStats.cs (optional), StatBar.cs (optional) |
 | [PlayerHunger.cs](<Assets/Script/Player/PlayerHunger.cs>) | Player | PlayerController.cs (optional), PlayerHealth.cs (optional), ObjectLevitator.cs (optional) | ItemConsumer.cs (optional), PlayerRespawn.cs (optional), PlayerStats.cs (optional), StatBar.cs (optional) |
-| [PlayerInventory.cs](<Assets/Script/Player/PlayerInventory.cs>) | Player | IHand.cs, ItemData.cs | AutoCollector.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingData.cs, DroppedStack.cs, HeldItemUI.cs, HeldItemView.cs, HotbarSelector.cs, ItemConsumer.cs, ItemData.cs, ItemDropper.cs, ItemGrabber.cs, Recipe.cs, ResourceNode.cs, SlotGroup.cs, SlotUI.cs, UIBuildHelper.cs |
+| [PlayerInventory.cs](<Assets/Script/Player/PlayerInventory.cs>) | Player | IHand.cs, ItemData.cs | AutoCollector.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingData.cs, CraftingMenu.cs, DroppedStack.cs, HeldItemUI.cs, HeldItemView.cs, HotbarSelector.cs, ItemConsumer.cs, ItemData.cs, ItemDropper.cs, ItemGrabber.cs, Recipe.cs, ResourceNode.cs, SlotGroup.cs, SlotUI.cs, UIBuildHelper.cs |
 | [PlayerJump.cs](<Assets/Script/Player/PlayerJump.cs>) | Player | KeyBindings.cs, MenuState.cs, Rigidbody (Unity), Collider (Unity), PlayerStamina.cs (optional) | PlayerStats.cs (optional) |
 | [PlayerRespawn.cs](<Assets/Script/Player/PlayerRespawn.cs>) | Player | PlayerHealth.cs, PlayerHunger.cs (optional), PlayerStamina.cs (optional), Rigidbody (Unity) (optional) | DeathScreen.cs, PlayerStats.cs |
 | [PlayerStamina.cs](<Assets/Script/Player/PlayerStamina.cs>) | Player | - | ItemConsumer.cs (optional), PlayerController.cs (optional), PlayerJump.cs (optional), PlayerRespawn.cs (optional), PlayerStats.cs (optional), StatBar.cs (optional) |
@@ -87,6 +89,6 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [DaylightCycle.cs](<Assets/Script/World/DaylightCycle.cs>) | World | GameRules.cs, Light (Unity) | - |
 | [Consumable.cs](<Assets/Script/WorldItem/Consumable.cs>) | WorldItem | - | ItemConsumer.cs, ItemData.cs, ItemDataEditor.cs |
 | [DroppedStack.cs](<Assets/Script/WorldItem/DroppedStack.cs>) | WorldItem | ItemPickup.cs, PlayerInventory.cs | ItemDropper.cs |
-| [ItemData.cs](<Assets/Script/WorldItem/ItemData.cs>) | WorldItem | Recipe.cs (each other), Consumable.cs, IconCapture.cs, IconSource.cs, PlayerInventory.cs | AutoCollector.cs, Crosshair.cs, ItemConsumer.cs, ItemDataEditor.cs, ItemPickup.cs, ItemTools.cs, PlayerInventory.cs, PlayerStats.cs, Recipe.cs (each other), ResourceNode.cs |
+| [ItemData.cs](<Assets/Script/WorldItem/ItemData.cs>) | WorldItem | Recipe.cs (each other), Consumable.cs, IconCapture.cs, IconSource.cs, PlayerInventory.cs | AutoCollector.cs, CraftingMenu.cs, Crosshair.cs, ItemConsumer.cs, ItemDataEditor.cs, ItemPickup.cs, ItemTools.cs, PlayerInventory.cs, PlayerStats.cs, Recipe.cs (each other), ResourceNode.cs |
 | [ItemPickup.cs](<Assets/Script/WorldItem/ItemPickup.cs>) | WorldItem | ItemData.cs, IconCapture.cs | AutoCollector.cs, BuildingTools.cs, Crosshair.cs, DroppedStack.cs, ItemDropper.cs, ItemGrabber.cs, ItemTools.cs |
-| [Recipe.cs](<Assets/Script/WorldItem/Recipe.cs>) | WorldItem | ItemData.cs (each other), PlayerInventory.cs | BuildingButton.cs, BuildingData.cs, ItemData.cs (each other) |
+| [Recipe.cs](<Assets/Script/WorldItem/Recipe.cs>) | WorldItem | ItemData.cs (each other), PlayerInventory.cs | BuildingButton.cs, BuildingData.cs, CraftingMenu.cs, ItemData.cs (each other) |
