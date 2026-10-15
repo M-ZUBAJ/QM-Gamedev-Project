@@ -8,6 +8,7 @@ public class PlayerCombat : MonoBehaviour
 
     public float attackRange = 2.5f; // from how far away player can attack
     public float handDamage = 10f;
+    public float swordDamage = 25f;
 
     void Update()
     {
@@ -34,8 +35,23 @@ public class PlayerCombat : MonoBehaviour
             // if the enemy is found, deal damage
             if (enemy != null)
             {
-                enemy.TakeDamage(handDamage);
+                float damage = handDamage;
+
+                // check if the player has another weapon equipped
+                // if yes, use the damage of that weapon instead
+                PlayerInventory inventory = PlayerInventory.Instance;
+
+                if (inventory != null &&
+                    inventory.ActiveItem != null &&
+                    !inventory.ActiveItem.IsEmpty &&
+                    inventory.ActiveItem.id == "Sword")
+                {
+                    damage = swordDamage;
+                }
+
+                enemy.TakeDamage(damage);
             }
+
         }
     }
 }

@@ -1739,7 +1739,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerCamera: {fileID: 766544976}
   attackRange: 2.5
-  handDamage: 35
+  handDamage: 10
+  swordDamage: 25
 --- !u!114 &1576947607
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2022,7 +2023,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2785439227072835551, guid: 2b63b750837ade044beab41b0607592b, type: 3}
       propertyPath: maxHealth
-      value: 100
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 8126748673568211758, guid: 2b63b750837ade044beab41b0607592b, type: 3}
       propertyPath: m_LocalPosition.x
