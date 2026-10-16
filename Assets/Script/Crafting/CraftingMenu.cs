@@ -7,8 +7,8 @@ public class CraftingMenu : MonoBehaviour
 {
     [Tooltip("The items listed in the menu. Drag in Item Data files that have a recipe.")]
     [SerializeField] List<ItemData> craftables = new List<ItemData>();
-    [Tooltip("Key that opens and closes the menu.")]
-    [SerializeField] KeyCode openKey = KeyCode.C;
+    
+    // From Tony I move and edit Turaki code to KeyBindings.cs .The key that opens and closes the menu is KeyBindings.Crafting (default C), set on the KeyBindings object.
 
     [Header("UI (already filled in on the prefab)")]
     [SerializeField] GameObject panel;    // the dark box that shows and hides
@@ -27,7 +27,7 @@ public class CraftingMenu : MonoBehaviour
     {
         if (MenuState.KeysCaptured) return;
 
-        if (Input.GetKeyDown(openKey))
+        if (Input.GetKeyDown(KeyBindings.Crafting)) //[Tony] see Crafting in KeyBindings.cs 
         {
             if (isOpen) Close();
             else if (!MenuState.OthersOpen(this)) Open();   // not on top of another menu

@@ -187,6 +187,7 @@ In these tables, `health`, `stamina`, `daylight`, `player`… are the variables 
 | Make a new item | Select the object, **Tools > Items > Make Item From Selection** (see `Docs/Item Setup.md`) |
 | Make an item that heals / feeds | Item Data > **Item Type = Consumable**, fill Health / Hunger / Stamina. Right click eats it (already works) |
 | Open / close a crafting window | `MenuState.SetOpen(this, true/false)` + free the cursor (see section 4) |
+| The crafting menu's key | `Input.GetKeyDown(KeyBindings.Crafting)` (default **C**, change it on the KeyBindings object). `CraftingMenu` already uses it; its old `openKey` field is gone |
 
 **Example: crafting one item**
 

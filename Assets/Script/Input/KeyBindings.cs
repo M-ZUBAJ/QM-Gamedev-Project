@@ -1,16 +1,18 @@
 /*
 First Date: 2/10/2026
-Date: 11/10/2026
+Date: 16/10/2026
 Author: Tony
 Use by: Create an empty GameObject called "KeyBindings" in the scene and add this script.
         The keys in the Inspector are the DEFAULT keys. The player can change them in game
         with a key binding menu, and their choices are saved (PlayerPrefs) for next time.
         (If you forget to add this script, one is created by itself with the default keys.)
+Unity Editor: Testing: change a key in the Inspector while playing; it works at once (only for that play session
+              if you change it in Play mode, like every Inspector change).
 Purpose: One place to change every key in the game.
          Other scripts ask for a key like this: Input.GetKeyDown(KeyBindings.Grab)
          Note: KeyCode only works with the old Input Manager
          (Project Settings → Player → Active Input Handling = "Input Manager (Old)" or "Both").
-Requirement: KeyBindings.cs <-x BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemGrabber.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs
+Requirement: KeyBindings.cs <-x BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemGrabber.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs
 */
 
 using UnityEngine;
@@ -26,6 +28,7 @@ public enum KeyAction
     Sprint,
     Grab,
     Inventory,
+    Crafting,
     ToggleView,
     UnlockCursor,
     LockCursor,
@@ -74,6 +77,9 @@ public class KeyBindings : MonoBehaviour
 
     [Tooltip("Open / close the inventory.")]
     [SerializeField] KeyCode inventory = KeyCode.Tab;
+
+    [Tooltip("Open / close the crafting menu (CraftingMenu).")]
+    [SerializeField] KeyCode crafting = KeyCode.C;
 
     [Tooltip("Open / close the key binding menu.")]
     [SerializeField] KeyCode keyMenu = KeyCode.K;
@@ -127,6 +133,9 @@ public class KeyBindings : MonoBehaviour
     // The keys being used right now (default or chosen by the player), one per KeyAction.
     KeyCode[] keys;
 
+    // The Inspector (default) keys as they were last time we looked, to spot one being changed while playing.
+    KeyCode[] inspectorKeys;
+
     // Other scripts subscribe to this to be told when any key changes (e.g. to redraw a menu).
     public static event System.Action Changed;
 
@@ -143,6 +152,7 @@ public class KeyBindings : MonoBehaviour
     public static KeyCode Sprint         => Get(KeyAction.Sprint);
     public static KeyCode Grab           => Get(KeyAction.Grab);
     public static KeyCode Inventory      => Get(KeyAction.Inventory);
+    public static KeyCode Crafting       => Get(KeyAction.Crafting);
     public static KeyCode KeyMenu        => Get(KeyAction.KeyMenu);
     public static KeyCode Levitate       => Get(KeyAction.Levitate);
     public static KeyCode Swing          => Get(KeyAction.Swing);
@@ -202,6 +212,26 @@ public class KeyBindings : MonoBehaviour
         Changed = null;
     }
 
+    // Unity calls this when a key is changed in the Inspector. While playing, the game uses a COPY of the keys
+    // (made in Awake), so copy the changed one over too: it then works straight away, no restart needed.
+    void OnValidate()
+    {
+        if (!Application.isPlaying || instance != this || keys == null || inspectorKeys == null) return;
+
+        bool anyChanged = false;
+        for (int i = 0; i < keys.Length; i++)
+        {
+            KeyCode now = DefaultKey((KeyAction)i);
+            if (now == inspectorKeys[i]) continue;   // this one wasn't touched
+
+            inspectorKeys[i] = now;
+            keys[i] = now;                           // use it right away (not saved: it's the default key)
+            anyChanged = true;
+        }
+
+        if (anyChanged) Changed?.Invoke();           // e.g. a key menu redraws
+    }
+
     // ===== My methods =====
 
     // The key used right now for this action.
@@ -247,11 +277,13 @@ public class KeyBindings : MonoBehaviour
     {
         int count = System.Enum.GetValues(typeof(KeyAction)).Length;
         keys = new KeyCode[count];
+        inspectorKeys = new KeyCode[count];
 
         for (int i = 0; i < count; i++)
         {
             KeyAction action = (KeyAction)i;
-            keys[i] = (KeyCode)PlayerPrefs.GetInt(SaveName(action), (int)DefaultKey(action));
+            inspectorKeys[i] = DefaultKey(action);
+            keys[i] = (KeyCode)PlayerPrefs.GetInt(SaveName(action), (int)inspectorKeys[i]);
         }
     }
 
@@ -290,6 +322,7 @@ public class KeyBindings : MonoBehaviour
             case KeyAction.Sprint:         return sprint;
             case KeyAction.Grab:           return grab;
             case KeyAction.Inventory:      return inventory;
+            case KeyAction.Crafting:       return crafting;
             case KeyAction.KeyMenu:        return keyMenu;
             case KeyAction.Levitate:       return levitate;
             case KeyAction.Swing:          return swing;
