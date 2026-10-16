@@ -552,6 +552,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   craftables:
   - {fileID: 11400000, guid: d524931321f754afdaeefd6219e3fa3c, type: 2}
+  - {fileID: 11400000, guid: c374a096ef8724ae6b4d421791ecabb8, type: 2}
+  - {fileID: 11400000, guid: b7f49c0b400c640b99130a4daad2a765, type: 2}
   openKey: 99
   panel: {fileID: 2942019593944188666}
   rows: {fileID: 7494012006072683705}
