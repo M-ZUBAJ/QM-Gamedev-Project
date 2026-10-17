@@ -41,9 +41,25 @@ public class EnemyCombat : MonoBehaviour
         }
     }
 
+
     void Die()
     {
         Debug.Log("Enemy defeated!");
+
+        int coinsEarned = Random.Range(1, 4);// player can get 1-3 coins per kill
+
+        if (PlayerCoins.Instance != null) // if the player has a PlayerCoins component
+        {
+            PlayerCoins.Instance.AddCoins(coinsEarned);
+        }
+        else
+        {
+            Debug.LogWarning(
+                "Enemy defeated, but PlayerCoins was not found!"
+            );
+        }
+
         Destroy(gameObject);
     }
+
 }
