@@ -70,7 +70,8 @@ public class EnemySpawner : MonoBehaviour
             randomDirection.Normalize();
 
             spawnPosition = player.position + randomDirection * spawnDistance;
-            spawnPosition.y = transform.position.y;
+            //spawnPosition.y = transform.position.y;
+            spawnPosition.y = 0.5f;
         }
 
         GameObject enemy = Instantiate(
