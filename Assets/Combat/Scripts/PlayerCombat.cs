@@ -54,24 +54,32 @@ public class PlayerCombat : MonoBehaviour
             EnemyCombat enemy =
                 hit.collider.GetComponentInParent<EnemyCombat>(); // lookds for enemy's health script
 
+            ResourceNode resource =
+                hit.collider.GetComponentInParent<ResourceNode>();// looks for ResourceNodes Health
+
+            float damage = handDamage;
+
+            // check if the player has another weapon equipped
+            // if yes, use the damage of that weapon instead
+            PlayerInventory inventory = PlayerInventory.Instance;
+
+            if (inventory != null &&
+                inventory.ActiveItem != null &&
+                !inventory.ActiveItem.IsEmpty &&
+                inventory.ActiveItem.id == "Sword")
+            {
+                damage = swordDamage;
+            }
+
             // if the enemy is found, deal damage
             if (enemy != null)
             {
-                float damage = handDamage;
-
-                // check if the player has another weapon equipped
-                // if yes, use the damage of that weapon instead
-                PlayerInventory inventory = PlayerInventory.Instance;
-
-                if (inventory != null &&
-                    inventory.ActiveItem != null &&
-                    !inventory.ActiveItem.IsEmpty &&
-                    inventory.ActiveItem.id == "Sword")
-                {
-                    damage = swordDamage;
-                }
-
                 enemy.TakeDamage(damage);
+            }
+
+            else if (resource != null)
+            {
+                resource.TakeDamage(damage);
             }
 
         }

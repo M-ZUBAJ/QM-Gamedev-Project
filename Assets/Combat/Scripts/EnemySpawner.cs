@@ -79,10 +79,25 @@ public class EnemySpawner : MonoBehaviour
             Quaternion.identity
         );
 
-        // Connect the enemy to the player.
-        // Uncomment this when the player's Transform is available.
-        // enemy.GetComponent<EnemyMovement>().target = player;
-        // enemy.GetComponent<EnemyAttack>().target = player;
+        // Connect the spawned enemy to the player.
+        if (player != null)
+        {
+            EnemyMovement movement = enemy.GetComponent<EnemyMovement>();
+            if (movement != null)
+            {
+                movement.target = player;
+            }
+
+            EnemyAttack attack = enemy.GetComponent<EnemyAttack>();
+            if (attack != null)
+            {
+                attack.target = player;
+            }
+        }
+        else
+        {
+            Debug.LogWarning("EnemySpawner has no Player assigned!");
+        }
 
         spawnedEnemies.Add(enemy);
     }
