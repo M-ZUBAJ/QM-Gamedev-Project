@@ -80,6 +80,27 @@ public class EnemySpawner : MonoBehaviour
             Quaternion.identity
         );
 
+        // Scale enemy strength according to the current day.
+        int currentDay = DaylightCycle.Current != null
+            ? DaylightCycle.Current.Day
+            : 1;
+
+        int daysPassed = Mathf.Max(0, currentDay - 1);
+
+        EnemyCombat enemyCombat = enemy.GetComponent<EnemyCombat>();
+        if (enemyCombat != null)
+        {
+            enemyCombat.maxHealth = 50f + (daysPassed * 10f);
+            enemyCombat.currentHealth = enemyCombat.maxHealth;
+        }
+
+        EnemyAttack enemyAttack = enemy.GetComponent<EnemyAttack>();
+        if (enemyAttack != null)
+        {
+            enemyAttack.attackDamage = 10f + (daysPassed * 2f);
+        }
+
+
         // Connect the spawned enemy to the player.
         if (player != null)
         {
