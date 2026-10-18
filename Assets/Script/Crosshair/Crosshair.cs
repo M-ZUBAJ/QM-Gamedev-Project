@@ -12,7 +12,7 @@ Purpose: Shows the crosshair in the center of the screen while the mouse turns t
          and Crosshair.HitPoint for the exact point on it.
 Requirement: Crosshair.cs <-> ItemGrabber.cs
              Crosshair.cs x-> ItemPickup.cs, ItemData.cs, BoundsUtil.cs, Image (Unity)
-             Crosshair.cs <-x ObjectLevitator.cs
+             Crosshair.cs <-x HUDBuilder.cs, ObjectLevitator.cs
 */
 
 using UnityEngine;

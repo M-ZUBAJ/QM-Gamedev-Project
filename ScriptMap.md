@@ -22,6 +22,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 - PlayerStats.cs uses ItemConsumer.cs in its code, but its Requirement doesn't list it. Add: PlayerStats.cs x-> ItemConsumer.cs
 - PlayerStats.cs uses ItemData.cs in its code, but its Requirement doesn't list it. Add: PlayerStats.cs x-> ItemData.cs
 - PlayerStats.cs uses PlayerRespawn.cs in its code, but its Requirement doesn't list it. Add: PlayerStats.cs x-> PlayerRespawn.cs
+- CoinCounter.cs lists PlayerCoins.cs, but there is no script with that name in Assets/Script.
 
 ## Scripts
 
@@ -38,18 +39,20 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [InteractionGate.cs](<Assets/Script/Core/InteractionGate.cs>) | Core | - | BlueprintPlacer.cs, ItemGrabber.cs, ObjectLevitator.cs |
 | [MenuState.cs](<Assets/Script/Core/MenuState.cs>) | Core | - | BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, DeathScreen.cs, HeldItemView.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemDropper.cs, ItemGrabber.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs |
 | [CraftingMenu.cs](<Assets/Script/Crafting/CraftingMenu.cs>) | Crafting | - | - |
-| [Crosshair.cs](<Assets/Script/Crosshair/Crosshair.cs>) | Crosshair | ItemGrabber.cs (each other), ItemPickup.cs, ItemData.cs, BoundsUtil.cs, Image (Unity) | ItemGrabber.cs (each other), ObjectLevitator.cs |
+| [Crosshair.cs](<Assets/Script/Crosshair/Crosshair.cs>) | Crosshair | ItemGrabber.cs (each other), ItemPickup.cs, ItemData.cs, BoundsUtil.cs, Image (Unity) | HUDBuilder.cs, ItemGrabber.cs (each other), ObjectLevitator.cs |
 | [BuildingTools.cs](<Assets/Script/Editor/BuildingTools.cs>) | Editor | BuildingData.cs, ItemPickup.cs, UIBuildHelper.cs, MenuOrder.cs | - |
 | [BuildMenuAutoList.cs](<Assets/Script/Editor/BuildMenuAutoList.cs>) | Editor | BuildMenuUIBuilder.cs, BuildingData.cs | - |
 | [BuildMenuUIBuilder.cs](<Assets/Script/Editor/BuildMenuUIBuilder.cs>) | Editor | UIBuildHelper.cs, BuildMenu.cs, BuildingButton.cs, BuildingData.cs, BlueprintPlacer.cs, BuildModeHUD.cs, UIAnimatedImage.cs, MenuOrder.cs | BuildMenuAutoList.cs |
 | [BuildModeUIBuilder.cs](<Assets/Script/Editor/BuildModeUIBuilder.cs>) | Editor | UIBuildHelper.cs, BuildModeHUD.cs, UIAnimatedImage.cs, MenuOrder.cs | - |
+| [CoinCounterEditor.cs](<Assets/Script/Editor/CoinCounterEditor.cs>) | Editor | CoinCounter.cs | - |
+| [HUDBuilder.cs](<Assets/Script/Editor/HUDBuilder.cs>) | Editor | UIBuildHelper.cs, StatBar.cs, Crosshair.cs, DayCounter.cs, TimeCounter.cs, CoinCounter.cs, MenuOrder.cs | - |
 | [IconSourceDrawer.cs](<Assets/Script/Editor/IconSourceDrawer.cs>) | Editor | IconSource.cs | - |
 | [InventoryUIBuilder.cs](<Assets/Script/Editor/InventoryUIBuilder.cs>) | Editor | UIBuildHelper.cs, TabGroup.cs, InventoryWindow.cs, SlotUI.cs, SlotGroup.cs, HeldItemUI.cs, HotbarSelector.cs, ItemDropper.cs, MenuOrder.cs | - |
 | [ItemDataEditor.cs](<Assets/Script/Editor/ItemDataEditor.cs>) | Editor | ItemData.cs | - |
 | [ItemTools.cs](<Assets/Script/Editor/ItemTools.cs>) | Editor | ItemData.cs, ItemPickup.cs, BuildingData.cs, MenuOrder.cs | - |
-| [MenuOrder.cs](<Assets/Script/Editor/MenuOrder.cs>) | Editor | - | BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, ScriptMapTool.cs |
+| [MenuOrder.cs](<Assets/Script/Editor/MenuOrder.cs>) | Editor | - | BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, ScriptMapTool.cs |
 | [ScriptMapTool.cs](<Assets/Script/Editor/ScriptMapTool.cs>) | Editor | MenuOrder.cs | - |
-| [UIBuildHelper.cs](<Assets/Script/Editor/UIBuildHelper.cs>) | Editor | PlayerInventory.cs | BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, InventoryUIBuilder.cs |
+| [UIBuildHelper.cs](<Assets/Script/Editor/UIBuildHelper.cs>) | Editor | PlayerInventory.cs | BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs |
 | [ResourceNode.cs](<Assets/Script/Gathering/ResourceNode.cs>) | Gathering | - | - |
 | [Wander.cs](<Assets/Script/Gathering/Wander.cs>) | Gathering | - | - |
 | [IconCapture.cs](<Assets/Script/IconCapture/IconCapture.cs>) | IconCapture | ShapeColor.cs (optional) | BuildingData.cs, HeldItemView.cs, ItemData.cs, ItemPickup.cs |
@@ -71,13 +74,16 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [PlayerStamina.cs](<Assets/Script/Player/PlayerStamina.cs>) | Player | - | ItemConsumer.cs (optional), PlayerController.cs (optional), PlayerJump.cs (optional), PlayerRespawn.cs (optional), PlayerStats.cs (optional), StatBar.cs (optional) |
 | [PlayerStats.cs](<Assets/Script/Player/PlayerStats.cs>) | Player | PlayerController.cs (optional), PlayerJump.cs (optional), PlayerHealth.cs (optional), PlayerHunger.cs (optional), PlayerStamina.cs (optional) | DeathScreen.cs (optional) |
 | [RespawnOnFall.cs](<Assets/Script/Player/RespawnOnFall.cs>) | Player | - | - |
-| [AsepriteFrames.cs](<Assets/Script/UI/AsepriteFrames.cs>) | UI | - | IconSource.cs, UIAnimatedImage.cs |
+| [AsepriteFrames.cs](<Assets/Script/UI/AsepriteFrames.cs>) | UI | - | CoinCounter.cs, IconSource.cs, UIAnimatedImage.cs |
 | [BuildingButton.cs](<Assets/Script/UI/Building/BuildingButton.cs>) | UI/Building | BuildingData.cs, Recipe.cs, PlayerInventory.cs, UIAnimatedImage.cs, Button (Unity) | BuildMenu.cs, BuildMenuUIBuilder.cs |
 | [BuildMenu.cs](<Assets/Script/UI/Building/BuildMenu.cs>) | UI/Building | BuildingButton.cs, BuildingData.cs, BlueprintPlacer.cs, KeyBindings.cs, MenuState.cs | BuildMenuUIBuilder.cs |
 | [BuildModeHUD.cs](<Assets/Script/UI/Building/BuildModeHUD.cs>) | UI/Building | BlueprintPlacer.cs, Canvas (Unity) | BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs |
 | [DeathScreen.cs](<Assets/Script/UI/Death/DeathScreen.cs>) | UI/Death | PlayerHealth.cs, PlayerRespawn.cs, MenuState.cs, Canvas (Unity), PlayerStats.cs (optional) | - |
 | [FitToText.cs](<Assets/Script/UI/FitToText.cs>) | UI | RectTransform (Unity) | - |
-| [StatBar.cs](<Assets/Script/UI/HUD/StatBar.cs>) | UI/HUD | PlayerHealth.cs (optional), PlayerHunger.cs (optional), PlayerStamina.cs (optional) | - |
+| [CoinCounter.cs](<Assets/Script/UI/HUD/CoinCounter.cs>) | UI/HUD | PlayerCoins.cs, AsepriteFrames.cs | CoinCounterEditor.cs, HUDBuilder.cs |
+| [DayCounter.cs](<Assets/Script/UI/HUD/DayCounter.cs>) | UI/HUD | DaylightCycle.cs, TextMeshProUGUI (Unity) | HUDBuilder.cs |
+| [StatBar.cs](<Assets/Script/UI/HUD/StatBar.cs>) | UI/HUD | PlayerHealth.cs (optional), PlayerHunger.cs (optional), PlayerStamina.cs (optional) | HUDBuilder.cs |
+| [TimeCounter.cs](<Assets/Script/UI/HUD/TimeCounter.cs>) | UI/HUD | DaylightCycle.cs, TextMeshProUGUI (Unity) | HUDBuilder.cs |
 | [IconSource.cs](<Assets/Script/UI/IconSource.cs>) | UI | AsepriteFrames.cs | BuildingData.cs, IconSourceDrawer.cs, ItemData.cs, SlotUI.cs, UIAnimatedImage.cs |
 | [HeldItemUI.cs](<Assets/Script/UI/Inventory/HeldItemUI.cs>) | UI/Inventory | PlayerInventory.cs, SlotUI.cs | InventoryUIBuilder.cs |
 | [InventoryWindow.cs](<Assets/Script/UI/Inventory/InventoryWindow.cs>) | UI/Inventory | KeyBindings.cs, MenuState.cs | InventoryUIBuilder.cs |
@@ -86,7 +92,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [TabGroup.cs](<Assets/Script/UI/Tabs/TabGroup.cs>) | UI/Tabs | - | InventoryUIBuilder.cs |
 | [UIAnimatedImage.cs](<Assets/Script/UI/UIAnimatedImage.cs>) | UI | AsepriteFrames.cs, IconSource.cs, Image (Unity) | BuildingButton.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, SlotUI.cs |
 | [BoundsUtil.cs](<Assets/Script/Utility/BoundsUtil.cs>) | Utility | - | BlueprintPlacer.cs, Crosshair.cs, ItemGrabber.cs, ObjectLevitator.cs |
-| [DaylightCycle.cs](<Assets/Script/World/DaylightCycle.cs>) | World | GameRules.cs, Light (Unity) | - |
+| [DaylightCycle.cs](<Assets/Script/World/DaylightCycle.cs>) | World | GameRules.cs, Light (Unity) | DayCounter.cs, TimeCounter.cs |
 | [Consumable.cs](<Assets/Script/WorldItem/Consumable.cs>) | WorldItem | - | ItemConsumer.cs, ItemData.cs, ItemDataEditor.cs |
 | [DroppedStack.cs](<Assets/Script/WorldItem/DroppedStack.cs>) | WorldItem | ItemPickup.cs, PlayerInventory.cs | ItemDropper.cs |
 | [ItemData.cs](<Assets/Script/WorldItem/ItemData.cs>) | WorldItem | Recipe.cs (each other), Consumable.cs, IconCapture.cs, IconSource.cs, PlayerInventory.cs | AutoCollector.cs, CraftingMenu.cs, Crosshair.cs, ItemConsumer.cs, ItemDataEditor.cs, ItemPickup.cs, ItemTools.cs, PlayerInventory.cs, PlayerStats.cs, Recipe.cs (each other), ResourceNode.cs |

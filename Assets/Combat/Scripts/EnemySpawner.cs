@@ -16,6 +16,39 @@ public class EnemySpawner : MonoBehaviour
 
     private List<GameObject> spawnedEnemies = new List<GameObject>();
 
+    // [Tony] added (18/10/2026): spawn enemies when night starts and remove them when day starts,
+    // using Tony's DaylightCycle events. Nothing of Marko's code was removed or changed.
+    // To undo: delete every line marked [Tony] in this file.
+    [Tooltip("[Tony] On: enemies spawn when night starts (DaylightCycle.NightStarted) and are removed when day starts.")]
+    public bool spawnAtNight = true;                                          // [Tony] added
+    [Tooltip("[Tony] How many enemies spawn each night.")]
+    public int enemiesPerNight = 3;                                           // [Tony] added
+
+    void OnEnable()                                                           // [Tony] added
+    {                                                                         // [Tony] added
+        DaylightCycle.NightStarted += OnNightStarted;                         // [Tony] added
+        DaylightCycle.DayStarted += OnDayStarted;                             // [Tony] added
+    }                                                                         // [Tony] added
+
+    void OnDisable()                                                          // [Tony] added
+    {                                                                         // [Tony] added
+        DaylightCycle.NightStarted -= OnNightStarted;                         // [Tony] added
+        DaylightCycle.DayStarted -= OnDayStarted;                             // [Tony] added
+    }                                                                         // [Tony] added
+
+    // [Tony] added: night started (day = the day number), spawn this night's enemies.
+    void OnNightStarted(int day)                                              // [Tony] added
+    {                                                                         // [Tony] added
+        if (!spawnAtNight) return;                                            // [Tony] added
+        for (int i = 0; i < enemiesPerNight; i++) SpawnEnemy();               // [Tony] added
+    }                                                                         // [Tony] added
+
+    // [Tony] added: morning, remove the night's enemies (only the ones this spawner made).
+    void OnDayStarted(int day)                                                // [Tony] added
+    {                                                                         // [Tony] added
+        if (spawnAtNight) DespawnEnemies();                                   // [Tony] added
+    }                                                                         // [Tony] added
+
     public void SpawnEnemy()
     {
         if (enemyPrefab == null)

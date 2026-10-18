@@ -1,6 +1,6 @@
 /*
 First Date: 8/10/2026
-Date: 11/10/2026
+Date: 18/10/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: To reorder the Tools menu, change the numbers below and save. Unity updates the menu after it compiles
@@ -11,7 +11,7 @@ Purpose: The order of every item in our Tools menu, in ONE place.
          - Numbers more than 10 apart = a separator line between them (a new group).
          - A submenu (UI, Building, Items...) sits where its smallest number is.
          Each tool's [MenuItem] uses one of these numbers, e.g. [MenuItem("Tools/UI/Build Inventory UI", false, MenuOrder.BuildInventoryUI)].
-Requirement: MenuOrder.cs <-x BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, ScriptMapTool.cs
+Requirement: MenuOrder.cs <-x BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, ScriptMapTool.cs
 */
 
 public static class MenuOrder
@@ -27,6 +27,9 @@ public static class MenuOrder
     // Build mode (while placing)
     public const int BuildBuildModeUI = 140;
     public const int AddBuildModeScripts = 141;
+    // --- line ---
+    // HUD (bars, crosshair, day / time / coin counters)
+    public const int BuildHUD = 160;
 
     // ===== Tools > Building =====
     public const int MakeBuildingFromSelection = 200;

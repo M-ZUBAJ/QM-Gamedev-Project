@@ -10,7 +10,7 @@ Purpose: Reads the frames of an .aseprite file and how long each one shows, in O
          for everything that plays Aseprite animations (UIAnimatedImage, IconSource on Item / Building Data).
          - From the importer's animation clip (Aseprite's own timing), the tag asked for or the first one.
          - No clip: all its sprites in name order, with no timing (0 = the player's fallback speed).
-Requirement: AsepriteFrames.cs <-x IconSource.cs, UIAnimatedImage.cs
+Requirement: AsepriteFrames.cs <-x CoinCounter.cs, IconSource.cs, UIAnimatedImage.cs
 */
 
 using System.Collections.Generic;

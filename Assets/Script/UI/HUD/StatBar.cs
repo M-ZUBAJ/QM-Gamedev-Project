@@ -10,6 +10,7 @@ Unity Editor: Pick which value to show in "Stat". Nothing else to wire: the bar 
               Testing: in Play mode, change "Health" / "Hunger" / "Stamina" on the Player and watch the bar move.
 Purpose: Shows the player's health, hunger or stamina as a bar that fills from 0 to max.
 Requirement: StatBar.cs o-> PlayerHealth.cs, PlayerHunger.cs, PlayerStamina.cs
+             StatBar.cs <-x HUDBuilder.cs
 */
 
 using UnityEngine;

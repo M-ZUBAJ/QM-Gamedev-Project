@@ -216,8 +216,11 @@ The inventory's **Crafting** tab (`InventoryCanvas > InventoryWindow > Pages > C
 | Know when the player dies | `health.Died += OnPlayerDied;` (fires once per death) |
 | Know when the player comes back | `player.GetComponent<PlayerRespawn>().Respawned += OnRespawn;` (e.g. despawn enemies) |
 | Spend stamina (attack, dodge) | `if (stamina.Stamina >= cost && !stamina.IsTired) stamina.Use(cost);` |
-| Is it night? | `daylight.IsNight` (find it with `FindFirstObjectByType<DaylightCycle>()`) |
-| Time of day | `daylight.TimeOfDay` (0 = midnight, 0.25 = sunrise, 0.5 = noon, 0.75 = sunset) |
+| Is it night? | `DaylightCycle.Current.IsNight` (night = 0.77 to 0.23 Time Of Day, set on the sun) |
+| Spawn enemies when night starts | `DaylightCycle.NightStarted += OnNight;` (gets the day number). **Already wired** into your `EnemySpawner` by Tony (lines marked `[Tony]`, see `Docs/TonyEditMate/18-10-2026Edit.md`) |
+| Which day / night it is | `DaylightCycle.Current.Day` (for "more enemies each night") |
+| Time of day | `DaylightCycle.Current.TimeOfDay` (0 = midnight, 0.25 = sunrise, 0.5 = noon, 0.75 = sunset) |
+| Show your coins on the HUD | Already done: `CoinCounter` reads `PlayerCoins.Instance.Coins` and `CoinsChanged` (your file isn't changed) |
 | Drop food / items from an animal | see the example below |
 | What the player aims at | `Crosshair.Target` (a GameObject, or null) and `Crosshair.HitPoint` |
 | Is a menu open (don't attack / dodge then) | `MenuState.AnyOpen` |
@@ -374,12 +377,34 @@ Read: `if (GameRules.KeepInventory) …`. Change: `GameRules.Set(GameRule.KeepIn
 
 ### DaylightCycle (on the Directional Light)
 
-Get it: `daylight = FindFirstObjectByType<DaylightCycle>();`
+Get it: `DaylightCycle.Current` (no searching; null if there's no sun in the scene).
 
 | Member | What it is |
 |---|---|
 | `float TimeOfDay` | 0 = midnight, 0.25 = sunrise, 0.5 = noon, 0.75 = sunset |
-| `bool IsNight` | the sun is below the horizon |
+| `int Day` | which day it is: starts at 1, +1 when Dawn starts (so "Day 8 - Night" = the night after day 8) |
+| `DayPhase Phase` | `Night`, `Dawn`, `Morning`, `Noon`, `Afternoon` or `Dusk` |
+| `bool IsNight` | `Phase == Night`: from **0.77** (18:28) to **0.23** (05:31); set in the sun's Inspector ("Parts Of The Day") |
+| `string ClockText` / `int Hour`, `Minute` | the clock, e.g. "14:30" |
+| `float SecondsUntilNight` / `SecondsUntilMorning` | real seconds left (0 if it's already night / day) |
+| `static event Action<int> NightStarted` | night starts (the day number). **Use this to spawn enemies** |
+| `static event Action<int> DayStarted` | night ends, a new day starts (the new day number) |
+| `static event Action<DayPhase> PhaseChanged` | any part of the day starts |
+
+The events are **static**: subscribe from anywhere, any time, no need to find the sun first.
+They also fire once when the game starts (NightStarted if it starts at night, DayStarted if in the day).
+
+```csharp
+void OnEnable()  { DaylightCycle.NightStarted += OnNight; }
+void OnDisable() { DaylightCycle.NightStarted -= OnNight; }
+void OnNight(int day) { /* spawn more enemies on later nights, e.g. 2 + day */ }
+```
+
+### HUD counters (top right)
+
+`DayCounter` ("DAY 5 - Noon"), `TimeCounter` ("14:30 - Night in 2:15") and `CoinCounter` (reads Marko's
+`PlayerCoins.Instance.Coins` and redraws on `CoinsChanged`). Nothing to call: they find what they need.
+**Tools > UI > Build HUD** rebuilds the whole HUD if it's deleted. Guide: `Docs/HUD Setup.md`.
 
 ### BuildingData, BlueprintPlacer
 
