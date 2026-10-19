@@ -11,6 +11,18 @@ public class ResourceNode : MonoBehaviour
     [Tooltip("How much damage it takes before it breaks.")]
     public float maxHealth = 30f;
 
+    //// below was added by marko ////////
+    public enum ResourceType
+    {
+        Tree,
+        Stone,
+        Animal
+    }
+    // end of code added ////////////////
+
+
+    public ResourceType resourceType;
+
     [Tooltip("Fewest items it drops.")]
     [SerializeField] int dropMin = 3;
 

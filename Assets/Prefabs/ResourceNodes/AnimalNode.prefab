@@ -85,6 +85,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dropItem: {fileID: 11400000, guid: e1c50c13e0c9f47ddbce85109c1cbc2f, type: 2}
   maxHealth: 100
+  resourceType: 2
   dropMin: 1
   dropMax: 3
   currentHealth: 0
