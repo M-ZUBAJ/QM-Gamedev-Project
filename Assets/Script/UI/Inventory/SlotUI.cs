@@ -141,14 +141,27 @@ public class SlotUI : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, 
         /// added by marko to make Inventory slot UI display text 
         /// for items that you dont pick up and that have no icon yet
 
-        bool isSword = slot != null && !slot.IsEmpty
-                    && slot.id == "Sword";
+
+        bool hasItem = slot != null && !slot.IsEmpty;
+
+        string label = "";
+
+        if (hasItem)
+        {
+            if (slot.id == "Sword")
+                label = "SWORD";
+            else if (slot.id == "Axe")
+                label = "AXE";
+            else if (slot.id == "PickAxe")
+                label = "PICKAXE";
+        }
 
         if (itemName != null)
         {
-            itemName.text = isSword ? "SWORD" : "";
-            itemName.gameObject.SetActive(isSword);
+            itemName.text = label;
+            itemName.gameObject.SetActive(label != "");
         }
+
         //////////////////////////// end of code added 
 
         bool selected = inv != null && inv.ActiveHotbar != PlayerInventory.NoHotbar

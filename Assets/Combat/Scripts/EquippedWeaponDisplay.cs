@@ -1,10 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
+
 using UnityEngine;
 
 public class EquippedWeaponDisplay : MonoBehaviour
 {
     public GameObject swordModel;
+    public GameObject axeModel;
+    public GameObject pickAxeModel;
 
     void Start()
     {
@@ -16,23 +17,29 @@ public class EquippedWeaponDisplay : MonoBehaviour
         UpdateWeaponDisplay();
     }
 
-    // checks if the currently selected hotbar item and turns the sword model on or off
-    // depending on if it is equipped.
     void UpdateWeaponDisplay()
     {
         if (PlayerInventory.Instance == null)
         {
             swordModel.SetActive(false);
+            axeModel.SetActive(false);
+            pickAxeModel.SetActive(false);
             return;
         }
 
         PlayerInventory.Slot item = PlayerInventory.Instance.ActiveItem;
 
         bool swordEquipped =
-            item != null &&
-            !item.IsEmpty &&
-            item.id == "Sword"; // must be exact name 
+            item != null && !item.IsEmpty && item.id == "Sword";
+
+        bool axeEquipped =
+            item != null && !item.IsEmpty && item.id == "Axe";
+
+        bool pickAxeEquipped =
+            item != null && !item.IsEmpty && item.id == "PickAxe";
 
         swordModel.SetActive(swordEquipped);
+        axeModel.SetActive(axeEquipped);
+        pickAxeModel.SetActive(pickAxeEquipped);
     }
 }
