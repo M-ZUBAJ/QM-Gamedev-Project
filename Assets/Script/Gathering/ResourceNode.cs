@@ -29,6 +29,16 @@ public class ResourceNode : MonoBehaviour
     [Tooltip("Most items it drops.")]
     [SerializeField] int dropMax = 5;
 
+    [Header("Bonus drop (optional)")]
+    [Tooltip("An extra item it may also give, e.g. Apple from a tree. Leave empty for none.")]
+    [SerializeField] ItemData bonusItem;
+    [Tooltip("Chance of the bonus, from 0 (never) to 1 (always). 0.3 = 30%.")]
+    [Range(0f, 1f)][SerializeField] float bonusChance = 0.3f;
+    [Tooltip("Fewest bonus items.")]
+    [SerializeField] int bonusMin = 1;
+    [Tooltip("Most bonus items.")]
+    [SerializeField] int bonusMax = 2;
+
     public float currentHealth;
 
     // ===== Unity messages (Unity calls these) =====
@@ -49,31 +59,30 @@ public class ResourceNode : MonoBehaviour
         if (currentHealth <= 0f) Break();
     }
 
-    // Right click the component in Play mode to test without a player attack.
-    [ContextMenu("Test Damage 10")]
-    void TestDamage()
-    {
-        TakeDamage(10f);
-    }
-
     // Gives the drop to the player, then removes the node.
     void Break()
     {
         PlayerInventory inv = PlayerInventory.Instance;
-
         if (inv == null || dropItem == null)
         {
             Debug.LogWarning(name + " broke but has no Drop Item or there is no PlayerInventory in the scene.");
         }
         else
         {
-            int amount = Random.Range(dropMin, dropMax + 1);   // the top number is not included, so +1
-            if (!inv.Add(dropItem.Id, dropItem.DisplayName, dropItem.GetIcon(), amount, dropItem))
-            {
-                Debug.Log("Inventory is full, the drop was lost.");
-            }
-        }
+            Give(inv, dropItem, dropMin, dropMax);   // the normal drop, always
 
+            // Random.value is a random number from 0 to 1. Below the chance = the bonus drops.
+            if (bonusItem != null && Random.value < bonusChance)
+                Give(inv, bonusItem, bonusMin, bonusMax);
+        }
         Destroy(gameObject);
+    }
+
+    // Puts a random amount (min to max) of an item into the inventory.
+    void Give(PlayerInventory inv, ItemData item, int min, int max)
+    {
+        int amount = Random.Range(min, max + 1);
+        if (!inv.Add(item.Id, item.DisplayName, item.GetIcon(), amount, item))
+            Debug.Log("Inventory is full, the drop was lost.");
     }
 }
