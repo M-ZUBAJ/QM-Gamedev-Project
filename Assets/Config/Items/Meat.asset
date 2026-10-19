@@ -24,7 +24,7 @@ MonoBehaviour:
     durations: []
   itemType: 1
   consumable:
-    health: 0
+    health: 15
     hunger: 30
     stamina: 0
   recipe: []
