@@ -500,7 +500,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh-2844
+  m_Name: pb_Mesh-18372
   serializedVersion: 11
   m_SubMeshes:
   - serializedVersion: 2
@@ -2428,6 +2428,14 @@ MonoBehaviour:
   attackRange: 2.5
   handDamage: 10
   swordDamage: 25
+  axeDamage: 10
+  pickAxeDamage: 10
+  handResourceDamage: 5
+  swordResourceDamage: 7
+  axeTreeDamage: 25
+  axeStoneDamage: 5
+  pickAxeTreeDamage: 5
+  pickAxeStoneDamage: 25
   attackStaminaCost: 15
 --- !u!114 &1576947607
 MonoBehaviour:
@@ -3153,7 +3161,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1252835696509185658, guid: 7c7e95ebfdb19a04c84c8543f6287b72, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.568
+      value: -0.402
       objectReference: {fileID: 0}
     - target: {fileID: 1252835696509185658, guid: 7c7e95ebfdb19a04c84c8543f6287b72, type: 3}
       propertyPath: m_LocalPosition.z
@@ -4722,43 +4730,43 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7847183327421737157, guid: 49b076427d0dd1544abedd7a0e440e70, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.691
+      value: 0.86764973
       objectReference: {fileID: 0}
     - target: {fileID: 7847183327421737157, guid: 49b076427d0dd1544abedd7a0e440e70, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.397
+      value: -0.25
       objectReference: {fileID: 0}
     - target: {fileID: 7847183327421737157, guid: 49b076427d0dd1544abedd7a0e440e70, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.4200001
+      value: 1.4418392
       objectReference: {fileID: 0}
     - target: {fileID: 7847183327421737157, guid: 49b076427d0dd1544abedd7a0e440e70, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.98767215
+      value: 0.0050496957
       objectReference: {fileID: 0}
     - target: {fileID: 7847183327421737157, guid: 49b076427d0dd1544abedd7a0e440e70, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.13002947
+      value: -0.085575536
       objectReference: {fileID: 0}
     - target: {fileID: 7847183327421737157, guid: 49b076427d0dd1544abedd7a0e440e70, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.011376109
+      value: 0.9877247
       objectReference: {fileID: 0}
     - target: {fileID: 7847183327421737157, guid: 49b076427d0dd1544abedd7a0e440e70, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.08641016
+      value: 0.13058038
       objectReference: {fileID: 0}
     - target: {fileID: 7847183327421737157, guid: 49b076427d0dd1544abedd7a0e440e70, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
-      value: 15
+      value: -15
       objectReference: {fileID: 0}
     - target: {fileID: 7847183327421737157, guid: 49b076427d0dd1544abedd7a0e440e70, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
+      value: 180.734
       objectReference: {fileID: 0}
     - target: {fileID: 7847183327421737157, guid: 49b076427d0dd1544abedd7a0e440e70, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 10
+      value: -10
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4880,7 +4888,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6767260759255505826, guid: 9dbf4c420356ef144a410eaa75adf8b0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.408
+      value: -0.294
       objectReference: {fileID: 0}
     - target: {fileID: 6767260759255505826, guid: 9dbf4c420356ef144a410eaa75adf8b0, type: 3}
       propertyPath: m_LocalPosition.z
