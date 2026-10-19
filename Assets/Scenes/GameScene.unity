@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028331, g: 0.2257133, b: 0.3069217, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -500,7 +500,7 @@ Mesh:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: pb_Mesh-18372
+  m_Name: pb_Mesh-1586
   serializedVersion: 11
   m_SubMeshes:
   - serializedVersion: 2
@@ -717,7 +717,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6886829397219067714, guid: b3dc32d39a95c8c4b8b07bf52634534d, type: 3}
       propertyPath: m_Name
-      value: Arch
+      value: Cave
       objectReference: {fileID: 0}
     - target: {fileID: 6966231881470935008, guid: b3dc32d39a95c8c4b8b07bf52634534d, type: 3}
       propertyPath: m_Mesh
@@ -728,6 +728,92 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b3dc32d39a95c8c4b8b07bf52634534d, type: 3}
+--- !u!1 &408319590
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 408319592}
+  - component: {fileID: 408319591}
+  m_Layer: 0
+  m_Name: Scatter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &408319591
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 408319590}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29cf459d682f49a418699ea1785d662d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  terrain: {fileID: 926687756}
+  rules:
+  - name: Trees
+    prefab: {fileID: 3245735666504203572, guid: 586d1bc6a3cce44eb9b011b8d05ebd30, type: 3}
+    count: 200
+    yOffset: 2
+    terrainLayer: 0
+    minStrength: 0.7
+    maxSlope: 25
+    minSpacing: 10
+  - name: Berry Bushes
+    prefab: {fileID: 7130859634448903079, guid: 9971bb9f1c2414bb1a41350ae31fb88e, type: 3}
+    count: 30
+    yOffset: 0.6
+    terrainLayer: 0
+    minStrength: 0.6
+    maxSlope: 20
+    minSpacing: 20
+  - name: Forest Rocks
+    prefab: {fileID: 1640357401124442, guid: 512245daca745f64693d790c6c69d575, type: 3}
+    count: 70
+    yOffset: 0
+    terrainLayer: 0
+    minStrength: 0.5
+    maxSlope: 30
+    minSpacing: 20
+  - name: Desert Rocks
+    prefab: {fileID: 1293430722865970, guid: 473537c058b2b4c478082268e7026d93, type: 3}
+    count: 70
+    yOffset: 0
+    terrainLayer: 1
+    minStrength: 0.5
+    maxSlope: 30
+    minSpacing: 20
+  - name: Animals
+    prefab: {fileID: 4751970237220195241, guid: 2b75195a1c5074c5b84e2d44200215c5, type: 3}
+    count: 40
+    yOffset: 0.6
+    terrainLayer: 0
+    minStrength: 0.6
+    maxSlope: 20
+    minSpacing: 20
+--- !u!4 &408319592
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 408319590}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1471.0448, y: -133.67627, z: 1495.698}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &409148192 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7974673571770277781, guid: 9dbf4c420356ef144a410eaa75adf8b0, type: 3}
@@ -1041,6 +1127,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0b930af1fe6f2e849aebe8689ecf9174, type: 3}
+--- !u!218 &926687756 stripped
+Terrain:
+  m_CorrespondingSourceObject: {fileID: 1218942490350229038, guid: 0b930af1fe6f2e849aebe8689ecf9174, type: 3}
+  m_PrefabInstance: {fileID: 926687755}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &990279279
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2095,7 +2186,7 @@ Transform:
   m_GameObject: {fileID: 1576947584}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.5, z: 0}
+  m_LocalPosition: {x: 1701, y: 6.1, z: 1617}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2140,8 +2231,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ac3b7eaa1622624a897416e6219176b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 4
-  sprintMultiplier: 1.6
+  speed: 17
+  sprintMultiplier: 2.5
   sprintForwardOnly: 1
   cameraTransform: {fileID: 766544977}
   slipperyBody: 1
@@ -4946,6 +5037,7 @@ SceneRoots:
   - {fileID: 766544977}
   - {fileID: 2051221348}
   - {fileID: 1563395027}
+  - {fileID: 408319592}
   - {fileID: 926687755}
   - {fileID: 1830301841}
   - {fileID: 252145641}
