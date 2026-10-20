@@ -347,9 +347,9 @@ public class PlayerController : MonoBehaviour
 
         // The keys are chosen in KeyBindings. Each direction has a main key and a second key.
         if (Held(KeyBindings.MoveForward, KeyBindings.MoveForwardAlt)) input.y += 1f;
-        if (Held(KeyBindings.MoveBack,    KeyBindings.MoveBackAlt))    input.y -= 1f;
-        if (Held(KeyBindings.MoveRight,   KeyBindings.MoveRightAlt))   input.x += 1f;
-        if (Held(KeyBindings.MoveLeft,    KeyBindings.MoveLeftAlt))    input.x -= 1f;
+        if (Held(KeyBindings.MoveBack, KeyBindings.MoveBackAlt)) input.y -= 1f;
+        if (Held(KeyBindings.MoveRight, KeyBindings.MoveRightAlt)) input.x += 1f;
+        if (Held(KeyBindings.MoveLeft, KeyBindings.MoveLeftAlt)) input.x -= 1f;
 
         // Stop diagonal movement (e.g. W + D) from being faster than straight movement.
         return Vector2.ClampMagnitude(input, 1f);
@@ -360,4 +360,20 @@ public class PlayerController : MonoBehaviour
     {
         return Input.GetKey(key) || Input.GetKey(altKey);
     }
+
+
+
+    // method added by Marko to accomodate Perk System
+
+    public void IncreaseMoveSpeed(float percentage)
+    {
+        if (percentage <= 0f) return;
+
+        float speedIncrease = speed * percentage;
+        speed += speedIncrease;
+
+        Debug.Log("Movement speed increased to " + speed);
+    }
+
+
 }

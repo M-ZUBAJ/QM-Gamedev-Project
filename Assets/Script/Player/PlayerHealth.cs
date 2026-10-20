@@ -93,6 +93,26 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
+
+
+    /// method below added by Marko to accomodate the Perk System. 
+    public void IncreaseMaxHealth(float percentage)
+    {
+        if (percentage <= 0f || IsDead) return;
+
+        float healthIncrease = maxHealth * percentage;
+
+        maxHealth += healthIncrease;
+        health += healthIncrease;
+
+        UpdateBar();
+
+        Debug.Log("Maximum health increased to " + maxHealth);
+    }
+
+
+
+
     // Get health back, never above max.
     public void Heal(float amount)
     {
