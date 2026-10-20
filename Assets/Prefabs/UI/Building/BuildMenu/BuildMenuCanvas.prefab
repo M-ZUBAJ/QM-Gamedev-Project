@@ -121,6 +121,7 @@ MonoBehaviour:
   buildings:
   - {fileID: 11400000, guid: 8d9762e6912c1cd4494217474cea0046, type: 2}
   - {fileID: 11400000, guid: 7da42f87118607b44a89309467bf3820, type: 2}
+  - {fileID: 11400000, guid: 97ae8f8341a79f8409e760b3226c62ed, type: 2}
 --- !u!1 &458524328916367795
 GameObject:
   m_ObjectHideFlags: 0
