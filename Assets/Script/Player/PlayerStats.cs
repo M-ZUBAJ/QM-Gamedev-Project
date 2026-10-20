@@ -14,7 +14,7 @@ Purpose: Counts what the player did in this life (since the start, or since the 
          Any missing script is just not counted (e.g. no BlueprintPlacer = 0 buildings).
 Requirement: PlayerStats.cs o-> PlayerController.cs, PlayerJump.cs, PlayerHealth.cs, PlayerHunger.cs, PlayerStamina.cs,
              ItemConsumer.cs, BlueprintPlacer.cs, PlayerRespawn.cs
-             PlayerStats.cs <-o DeathScreen.cs
+             PlayerStats.cs <-o DeathScreen.cs, VictoryScreen.cs
 */
 
 using UnityEngine;

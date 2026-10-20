@@ -1,6 +1,6 @@
 /*
 First Date: 4/10/2026
-Date: 18/10/2026
+Date: 20/10/2026
 Author: Tony
 Use by: Drag this script onto the Directional Light (the sun) in the scene.
 Unity Editor: For a sky that turns orange at sunset and dark at night, use the default Procedural Skybox
@@ -13,8 +13,11 @@ Purpose: Day and night. Turns the sun around the world and changes its brightnes
          Counts the days (Day 1, 2, 3... a new day starts at Dawn) and names the part of the day (Noon, Night...).
          Tells other scripts when night and day start (NightStarted / DayStarted), e.g. to spawn enemies at night.
          Only moves while the GameRule "DoDaylightCycle" is on (off = time stops, like Minecraft).
+         When the player dies (PlayerHealth), the day, time and light go back to how the game started
+         (Reset On Player Death).
 Requirement: DaylightCycle.cs x-> GameRules.cs, Light (Unity)
-             DaylightCycle.cs <-x DayCounter.cs, TimeCounter.cs
+             DaylightCycle.cs o-> PlayerHealth.cs
+             DaylightCycle.cs <-x DayCounter.cs, TimeCounter.cs, VictoryScreen.cs
 */
 
 using UnityEngine;
@@ -94,9 +97,17 @@ public class DaylightCycle : MonoBehaviour
     [Tooltip("Ambient light at night. Not 0, or the night is pitch black.")]
     [SerializeField] float nightAmbient = 0.2f;
 
+    [Header("Player Death")]
+    [Tooltip("On: when the player dies, the day, the time and the light go back to how the game started " +
+             "(the Day and Time Of Day set here before pressing Play). Off: time just carries on.")]
+    [SerializeField] bool resetOnPlayerDeath = true;
+
     Light sun;
     DayPhase lastPhase;
     bool phaseKnown;   // false until the first Update, so the starting part of the day is announced once too
+    float startTimeOfDay;   // how the game started, to go back to when the player dies
+    int startDay;
+    PlayerHealth playerHealth;   // found by itself, can be missing (then dying resets nothing)
 
     // The one in the scene (null if there is none), e.g. DaylightCycle.Current.Day
     public static DaylightCycle Current { get; private set; }
@@ -112,6 +123,14 @@ public class DaylightCycle : MonoBehaviour
     public DayPhase Phase => PhaseAt(timeOfDay);
     public bool IsNight => Phase == DayPhase.Night;
     public float DayLengthSeconds => dayLengthMinutes * 60f;
+
+    // When each part of the day starts (Time Of Day, 0 - 1), e.g. for a "win at dawn" rule.
+    public float DawnStart => dawnStart;
+    public float MorningStart => morningStart;
+    public float NoonStart => noonStart;
+    public float AfternoonStart => afternoonStart;
+    public float DuskStart => duskStart;
+    public float NightStart => nightStart;
 
     // The clock: 0.5 -> 12:00, 0.77 -> 18:28.
     public int Hour => Mathf.FloorToInt(timeOfDay * 24f) % 24;
@@ -129,10 +148,20 @@ public class DaylightCycle : MonoBehaviour
         Current = this;
         sun = GetComponent<Light>();
         if (RenderSettings.sun == null) RenderSettings.sun = sun;   // the procedural sky follows this light
+
+        startTimeOfDay = timeOfDay;   // remember the start, to go back to it when the player dies
+        startDay = day;
+    }
+
+    void Start()
+    {
+        playerHealth = FindFirstObjectByType<PlayerHealth>();
+        if (playerHealth != null) playerHealth.Died += OnPlayerDied;
     }
 
     void OnDestroy()
     {
+        if (playerHealth != null) playerHealth.Died -= OnPlayerDied;
         if (Current != this) return;
 
         Current = null;   // static values outlive the scene, so clear them
@@ -190,6 +219,21 @@ public class DaylightCycle : MonoBehaviour
         bool isNight = now == DayPhase.Night;
         if (isNight && (first || !wasNight)) NightStarted?.Invoke(day);
         else if (!isNight && (first || wasNight)) DayStarted?.Invoke(day);
+    }
+
+    void OnPlayerDied()
+    {
+        if (resetOnPlayerDeath) ResetToStart();
+    }
+
+    // Back to how the game started: the starting day, time of day and light. Listening scripts hear about it
+    // (e.g. dying at night = DayStarted, so Marko's EnemySpawner removes the night's enemies).
+    public void ResetToStart()
+    {
+        timeOfDay = startTimeOfDay;
+        day = startDay;
+        ApplyLight();   // the sun and sky change right away, not next frame
+        CheckPhase();
     }
 
     // Which part of the day a Time Of Day is.

@@ -17,6 +17,9 @@ Purpose: On / off rules for the world, like Minecraft's /gamerule.
            the inventory when the player comes near them (AutoCollector); off = they need aiming + F.
          - ClearItemOnDead (default off): on = dying deletes every item (nothing drops); off = they drop (ItemDropper).
            No effect while KeepInventory is on.
+         - DropItem (default off): off = the player can't throw items out of the inventory (clicking outside the
+           window with a stack on the cursor does nothing). On = they can (ItemDropper). Dying still drops items
+           (that's KeepInventory / ClearItemOnDead).
          - OverwriteItemIcon (default off): off = every item shows its own icon (its Item Data's Icon).
            On = every item is shown the same way, chosen in Item Icon Style (ItemIconRules does the work):
              Auto Icon          = a photo of the item's prefab
@@ -39,6 +42,7 @@ public enum GameRule
     AutoPickupDrops,
     ClearItemOnDead,
     OverwriteItemIcon,
+    DropItem,
 }
 
 // How every item is shown while the rule Overwrite Item Icon is on. One at a time (a dropdown).
@@ -72,6 +76,11 @@ public class GameRules : MonoBehaviour
              "Off: dropped items need aiming + F, like any Pickup item.")]
     [SerializeField] bool autoPickupDrops = false;
 
+    [Tooltip("On: the player can throw items out of the inventory (click outside the window with a stack on the cursor). " +
+             "Off: they can't; the stack stays on the cursor and goes back into the inventory when it closes. " +
+             "Dying still drops items (see Keep Inventory).")]
+    [SerializeField] bool dropItem = false;
+
     [Header("Item Icons")]
     [Tooltip("Off: every item shows its own icon (set in its Item Data). " +
              "On: every item is shown the same way, chosen in Item Icon Style below.")]
@@ -94,6 +103,7 @@ public class GameRules : MonoBehaviour
     public static bool AutoPickupDrops  => Get(GameRule.AutoPickupDrops);
     public static bool ClearItemOnDead  => Get(GameRule.ClearItemOnDead);
     public static bool OverwriteItemIcon => Get(GameRule.OverwriteItemIcon);
+    public static bool DropItem         => Get(GameRule.DropItem);
 
     // The dropdown under Overwrite Item Icon (only used while that rule is on).
     public static ItemIconStyle ItemIconStyle => Current.itemIconStyle;
@@ -153,6 +163,7 @@ public class GameRules : MonoBehaviour
             case GameRule.AutoPickupDrops:  return r.autoPickupDrops;
             case GameRule.ClearItemOnDead:  return r.clearItemOnDead;
             case GameRule.OverwriteItemIcon: return r.overwriteItemIcon;
+            case GameRule.DropItem:         return r.dropItem;
         }
         return false;   // a new GameRule with no field yet
     }
@@ -169,6 +180,7 @@ public class GameRules : MonoBehaviour
             case GameRule.AutoPickupDrops:  r.autoPickupDrops = value;  break;
             case GameRule.ClearItemOnDead:  r.clearItemOnDead = value;  break;
             case GameRule.OverwriteItemIcon: r.overwriteItemIcon = value; break;
+            case GameRule.DropItem:         r.dropItem = value;          break;
         }
 
         Changed?.Invoke();   // tell every listening script (if there are any)
