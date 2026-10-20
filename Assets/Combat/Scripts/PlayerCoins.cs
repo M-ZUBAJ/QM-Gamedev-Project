@@ -32,4 +32,26 @@ public class PlayerCoins : MonoBehaviour
 
         CoinsChanged?.Invoke(Coins);
     }
+
+
+    public bool SpendCoins(int amount)
+    {
+        if (amount <= 0) return false;
+
+        if (Coins < amount)
+        {
+            Debug.Log("Not enough coins!");
+            return false;
+        }
+
+        Coins -= amount;
+
+        Debug.Log("Coins spent: " + amount +
+                " | Total coins: " + Coins);
+
+        CoinsChanged?.Invoke(Coins);
+
+        return true;
+    }
+
 }

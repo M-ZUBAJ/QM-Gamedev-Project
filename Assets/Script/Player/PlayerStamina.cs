@@ -121,6 +121,27 @@ public class PlayerStamina : MonoBehaviour
         UpdateBar();
     }
 
+
+    // Method below added by Marko to support Perk system
+    public void IncreaseMaxStamina(float amount)
+    {
+        if (amount <= 0f) return;
+
+        maxStamina += amount;
+        stamina += amount;
+
+        if (stamina >= Mathf.Min(recoverTo, maxStamina))
+            tired = false;
+
+        UpdateBar();
+
+        Debug.Log("Maximum stamina increased to " + maxStamina);
+    }
+
+
+
+
+
     // Fill back up after resting for regenDelay seconds.
     void Regen()
     {
