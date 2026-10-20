@@ -40,7 +40,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [IHand.cs](<Assets/Script/Core/IHand.cs>) | Core | - | ObjectLevitator.cs, PlayerInventory.cs |
 | [InteractionGate.cs](<Assets/Script/Core/InteractionGate.cs>) | Core | - | BlueprintPlacer.cs, ItemGrabber.cs, ObjectLevitator.cs |
 | [MenuState.cs](<Assets/Script/Core/MenuState.cs>) | Core | - | BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, DeathScreen.cs, HeldItemView.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemDropper.cs, ItemGrabber.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs |
-| [CraftingMenu.cs](<Assets/Script/Crafting/CraftingMenu.cs>) | Crafting | - | - |
+| [CraftingMenu.cs](<Assets/Script/Crafting/CraftingMenu.cs>) | Crafting | - | InventoryUIBuilder.cs |
 | [Crosshair.cs](<Assets/Script/Crosshair/Crosshair.cs>) | Crosshair | ItemGrabber.cs (each other), ItemPickup.cs, ItemData.cs, BoundsUtil.cs, Image (Unity) | HUDBuilder.cs, ItemGrabber.cs (each other), ObjectLevitator.cs |
 | [BuildingTools.cs](<Assets/Script/Editor/BuildingTools.cs>) | Editor | BuildingData.cs, ItemPickup.cs, UIBuildHelper.cs, MenuOrder.cs | - |
 | [BuildMenuAutoList.cs](<Assets/Script/Editor/BuildMenuAutoList.cs>) | Editor | BuildMenuUIBuilder.cs, BuildingData.cs | - |
@@ -50,7 +50,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [GameRulesEditor.cs](<Assets/Script/Editor/GameRulesEditor.cs>) | Editor | GameRules.cs | - |
 | [HUDBuilder.cs](<Assets/Script/Editor/HUDBuilder.cs>) | Editor | UIBuildHelper.cs, StatBar.cs, Crosshair.cs, DayCounter.cs, TimeCounter.cs, CoinCounter.cs, MenuOrder.cs | - |
 | [IconSourceDrawer.cs](<Assets/Script/Editor/IconSourceDrawer.cs>) | Editor | IconSource.cs | - |
-| [InventoryUIBuilder.cs](<Assets/Script/Editor/InventoryUIBuilder.cs>) | Editor | UIBuildHelper.cs, TabGroup.cs, InventoryWindow.cs, SlotUI.cs, SlotGroup.cs, HeldItemUI.cs, HotbarSelector.cs, ItemDropper.cs, MenuOrder.cs | - |
+| [InventoryUIBuilder.cs](<Assets/Script/Editor/InventoryUIBuilder.cs>) | Editor | UIBuildHelper.cs, TabGroup.cs, InventoryWindow.cs, SlotUI.cs, SlotGroup.cs, HeldItemUI.cs, HotbarSelector.cs, ItemDropper.cs, CraftingMenu.cs, MenuOrder.cs | - |
 | [ItemDataEditor.cs](<Assets/Script/Editor/ItemDataEditor.cs>) | Editor | ItemData.cs | - |
 | [ItemTools.cs](<Assets/Script/Editor/ItemTools.cs>) | Editor | ItemData.cs, ItemPickup.cs, BuildingData.cs, MenuOrder.cs | - |
 | [MenuOrder.cs](<Assets/Script/Editor/MenuOrder.cs>) | Editor | - | BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, ScriptMapTool.cs |

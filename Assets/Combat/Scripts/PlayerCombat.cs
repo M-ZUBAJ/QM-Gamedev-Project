@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;   // [Tony] added: EventSystem, to know if the mouse is over a menu / button
 
 public class PlayerCombat : MonoBehaviour
 {
@@ -37,6 +38,16 @@ public class PlayerCombat : MonoBehaviour
 
     void Update()
     {
+        // [Tony] added (20/10/2026): a left click on a menu is not an attack. Before this, clicking inventory slots,
+        // tabs, crafting rows, build buttons or the Respawn button attacked too and used 10 stamina each time.
+        // Skip while a menu is open (inventory, crafting, build menu, death screen), while another mode owns the mouse
+        // (e.g. placing a building), or when the free mouse is over any UI. (While aiming the mouse is locked in the
+        // middle of the screen, on the crosshair picture, so the UI check only runs while the mouse is free.)
+        // To undo: delete the lines marked [Tony].
+        if (MenuState.AnyOpen || ClickClaim.Claimed) return;                                                  // [Tony] added
+        if (Cursor.lockState != CursorLockMode.Locked && EventSystem.current != null &&                       // [Tony] added
+            EventSystem.current.IsPointerOverGameObject()) return;                                            // [Tony] added
+
         if (Input.GetMouseButtonDown(0)) // if the player presses the left click
         {
             Attack();
