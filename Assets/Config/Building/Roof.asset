@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 708d1cad608e4e74887028bdb66fb773, type: 3}
+  m_Name: Roof
+  m_EditorClassIdentifier: 
+  displayName: 
+  description: 
+  prefab: {fileID: 4101565349730177515, guid: 76ee742435d670e42b92b7dcf852dadc, type: 3}
+  icon:
+    mode: 0
+    image: {fileID: 0}
+    aseprite: {fileID: 0}
+    asepriteTag: 
+    frames: []
+    durations: []
+  recipe:
+  - item: {fileID: 11400000, guid: 3531b718bb76535458623a98976a16c7, type: 2}
+    amount: 8
