@@ -12,7 +12,7 @@ Purpose: Holds the player's health. TakeDamage / Heal change it and fire On Chan
          At 0 health the player dies: the Died event fires once (PlayerRespawn listens to it and brings the
          player back). Revive fills health back up.
 Requirement: PlayerHealth.cs <-x DeathScreen.cs, PlayerRespawn.cs
-             PlayerHealth.cs <-o AutoCollector.cs, ItemConsumer.cs, ItemDropper.cs, PlayerHunger.cs, PlayerStats.cs, StatBar.cs
+             PlayerHealth.cs <-o AutoCollector.cs, DaylightCycle.cs, ItemConsumer.cs, ItemDropper.cs, PlayerHunger.cs, PlayerStats.cs, StatBar.cs
 */
 
 using UnityEngine;

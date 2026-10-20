@@ -14,6 +14,7 @@ Unity Editor: Nothing to connect: it finds the first TextMeshPro text and the fi
 Purpose: Makes the box as tall as its text (plus Padding), so the background panel always covers all the text,
          however many lines there are. The panel fills the whole box, behind the text.
 Requirement: FitToText.cs x-> RectTransform (Unity)
+             FitToText.cs <-x GameEndUIBuilder.cs
 */
 
 using TMPro;            // TMP_Text

@@ -118,7 +118,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dad87f947bd960746acd559812ec2c9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  color: {r: 0.6132076, g: 0.3178056, b: 0.09641625, a: 1}
+  color: {r: 0.5176471, g: 0.32941177, b: 0.21960784, a: 1}
 --- !u!1 &6304948577469792479
 GameObject:
   m_ObjectHideFlags: 0
@@ -129,7 +129,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4935023849747890337}
   m_Layer: 0
-  m_Name: Floor
+  m_Name: WoodenFloor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

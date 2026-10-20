@@ -373,6 +373,7 @@ Get it: nothing to find, write `GameRules.KeepInventory` etc. directly
 | `GameRules.KeepInventory` | off | on = keep all items on death |
 | `GameRules.ClearItemOnDead` | off | on = items are deleted on death (ignored if Keep Inventory is on) |
 | `GameRules.AutoPickupDrops` | off | on = dropped items are collected by walking near them |
+| `GameRules.DropItem` | off | on = the player can throw items out of the inventory; off = they can't (dying still drops items, see Keep Inventory) |
 | `GameRules.OverwriteItemIcon` + `GameRules.ItemIconStyle` | off / Auto Icon | on = every item in the inventory, hotbar, cursor and build menu is shown the same way: **Auto Icon** (photo of the prefab), **Label** (the prefab name in capitals, e.g. "SWORD", like Marko's tool slots), **Static Image** or **Aseprite Animation** (the item's own; falls back to Auto Icon). Code: `ItemIconRules.Resolve(...)`, `ItemIconRules.Label(slot)` |
 | `GameRules.WorldInteraction` | off | old rule for grabbing / levitating anywhere |
 
@@ -393,6 +394,7 @@ Get it: `DaylightCycle.Current` (no searching; null if there's no sun in the sce
 | `static event Action<int> NightStarted` | night starts (the day number). **Use this to spawn enemies** |
 | `static event Action<int> DayStarted` | night ends, a new day starts (the new day number) |
 | `static event Action<DayPhase> PhaseChanged` | any part of the day starts |
+| `void ResetToStart()` | back to the starting day, time and light. Happens by itself when the player dies (Reset On Player Death, on by default); dying at night fires DayStarted, so night enemies are removed |
 
 The events are **static**: subscribe from anywhere, any time, no need to find the sun first.
 They also fire once when the game starts (NightStarted if it starts at night, DayStarted if in the day).
@@ -402,6 +404,19 @@ void OnEnable()  { DaylightCycle.NightStarted += OnNight; }
 void OnDisable() { DaylightCycle.NightStarted -= OnNight; }
 void OnNight(int day) { /* spawn more enemies on later nights, e.g. 2 + day */ }
 ```
+
+### VictoryScreen (on GameEndCanvas): winning the game
+
+Surviving **5 days and nights** wins: when Day 6 starts, the game freezes (`Time.timeScale = 0`) and the victory page
+shows; **Play Again** reloads the scene. Dying resets the days (DaylightCycle), so it must be one life.
+
+| Member | What it is |
+|---|---|
+| `static event Action Won` | fired once when the player wins (e.g. stop spawning, victory music) |
+| `bool HasWon`, `int DaysToWin`, `WinTime WinTime` | find it with `FindFirstObjectByType<VictoryScreen>()`. Win = survive Days To Win days, then the next Win Time (Dawn / Morning / Midday / Afternoon / Dusk / Night / Midnight) |
+| `void Win()` | wins right away (for testing, or another win condition) |
+
+Built by **Tools > UI > Build Game End Screen**. Guide: `Docs/Game End Setup.md`.
 
 ### HUD counters (top right)
 

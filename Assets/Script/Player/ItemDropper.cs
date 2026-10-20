@@ -1,13 +1,15 @@
 /*
 First Date: 9/10/2026
-Date: 13/10/2026
+Date: 20/10/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerInventory).
         Tools > UI > Add Inventory Scripts adds it for you.
 Unity Editor: Drop Style = how dropped items look: Icon (the item's picture floating on the floor, like Minecraft)
               or Bundle (a small box with the picture and amount on its sides). Tune the sizes / color below it.
               Needs an EventSystem in the scene (the inventory has one), so it can tell clicks on the UI from clicks outside.
-              Testing: Play, Tab, click a stack so it sticks to the cursor, then click outside the inventory window.
+              Throwing items away only works with the GameRule Drop Item ticked (off by default).
+              Testing: tick Drop Item on GameRules, Play, Tab, click a stack so it sticks to the cursor,
+              then click outside the inventory window.
               Death drop: with the GameRule Keep Inventory off (the default), PlayerHealth's ⋮ menu > "Test: Die".
 Purpose: Like Minecraft: while the inventory is open and a stack is on the cursor, clicking outside the window
          throws it in front of the player. Left click = the whole stack, right click = just one.
@@ -109,6 +111,7 @@ public class ItemDropper : MonoBehaviour
         // Only while a menu (the inventory) is open, a stack is on the cursor, and the mouse is NOT over any UI
         // (clicks on slots and the window belong to them).
         if (!MenuState.AnyOpen || MenuState.KeysCaptured) return;
+        if (!GameRules.DropItem) return;   // GameRule Drop Item off: no throwing items away (the stack stays on the cursor)
         if (inv.Held.IsEmpty || PointerOverUI()) return;
 
         if (Input.GetMouseButtonDown(0)) Drop(inv.Held.count);   // 0 = left: the whole stack

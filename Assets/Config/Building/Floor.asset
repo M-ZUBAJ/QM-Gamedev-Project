@@ -22,4 +22,6 @@ MonoBehaviour:
     asepriteTag: 
     frames: []
     durations: []
-  recipe: []
+  recipe:
+  - item: {fileID: 11400000, guid: 3531b718bb76535458623a98976a16c7, type: 2}
+    amount: 5
