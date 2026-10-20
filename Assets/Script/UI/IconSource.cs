@@ -11,7 +11,7 @@ Unity Editor: Choose ONE in the Icon dropdown; only that one's field shows (Icon
 Purpose: Where an item's or building's picture comes from, as one choice instead of several tick boxes.
          Animated icons really move in the inventory, on the cursor and in the build menu (UIAnimatedImage).
 Requirement: IconSource.cs x-> AsepriteFrames.cs
-             IconSource.cs <-x BuildingData.cs, IconSourceDrawer.cs, ItemData.cs, SlotUI.cs, UIAnimatedImage.cs
+             IconSource.cs <-x BuildingButton.cs, BuildingData.cs, IconSourceDrawer.cs, ItemData.cs, ItemIconRules.cs, SlotUI.cs, UIAnimatedImage.cs
 */
 
 using UnityEngine;

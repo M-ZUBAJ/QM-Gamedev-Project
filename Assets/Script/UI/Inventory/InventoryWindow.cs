@@ -11,7 +11,7 @@ Purpose: Opens and closes the inventory window.
          Open: the mouse cursor shows (to click slots and tabs) and the camera stops turning.
          Closed: the cursor hides again and the camera follows the mouse.
 Requirement: InventoryWindow.cs x-> KeyBindings.cs, MenuState.cs
-             InventoryWindow.cs <-x InventoryUIBuilder.cs
+             InventoryWindow.cs <-x CraftingMenu.cs, InventoryUIBuilder.cs
 */
 
 using UnityEngine;

@@ -1,6 +1,6 @@
 /*
 First Date: 8/10/2026
-Date: 11/10/2026
+Date: 20/10/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerController). A Rigidbody is added automatically.
 Unity Editor: The jump key is set in KeyBindings (Jump, default Space).
@@ -12,9 +12,11 @@ Purpose: Jump with Space, only when standing on something (no jumping again in t
          - Jump Buffer: pressing Space a moment before landing still jumps when you land.
          Doesn't jump while a menu is open.
          With a PlayerStamina on the player, each jump uses stamina and there's no jumping while tired.
+         A too-steep slope (steeper than PlayerController's Max Slope Angle) doesn't count as ground,
+         so the player can't hop their way up a cliff.
 Requirement: PlayerJump.cs x-> KeyBindings.cs, MenuState.cs, Rigidbody (Unity), Collider (Unity)
-             PlayerJump.cs o-> PlayerStamina.cs
-             PlayerJump.cs <-o PlayerStats.cs
+             PlayerJump.cs o-> PlayerStamina.cs, PlayerController.cs
+             PlayerJump.cs <-o PlayerController.cs, PlayerStats.cs
 */
 
 using UnityEngine;
@@ -43,6 +45,7 @@ public class PlayerJump : MonoBehaviour
     Rigidbody rb;
     Collider body;           // the player's shape, to find where its feet are
     PlayerStamina stamina;   // each jump uses some (can be missing = jump forever)
+    PlayerController controller;   // its Max Slope Angle says what's too steep to jump from (can be missing = any)
     float lastGroundedTime = -10f;
     float lastPressedTime = -10f;
 
@@ -58,6 +61,7 @@ public class PlayerJump : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         body = GetComponentInChildren<Collider>();
         stamina = GetComponent<PlayerStamina>();
+        controller = GetComponent<PlayerController>();
     }
 
     // Update: read the key every frame, so a quick tap is never missed.
@@ -117,6 +121,7 @@ public class PlayerJump : MonoBehaviour
         {
             if (hit.collider.attachedRigidbody == rb) continue;   // our own shape
             if (hit.distance <= 0f) continue;                      // already overlapping at the start (not "below")
+            if (controller != null && Vector3.Angle(hit.normal, Vector3.up) > controller.MaxSlopeAngle) continue;   // a cliff, not ground
             return true;
         }
         return false;

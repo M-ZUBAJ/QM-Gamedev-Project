@@ -1,16 +1,19 @@
 /*
 First Date: 7/10/2026
-Date: 7/10/2026
+Date: 20/10/2026
 Author: Tony
 Use by: On "HeldItem", a child of InventoryWindow. Tools > UI > Add Inventory Scripts makes it for you.
 Unity Editor: Icon and Count are found by themselves (children named "Icon" and "Count").
+              Optional: a TextMeshPro child named "ItemName" shows the item's name when
+              GameRules > Item Icon Style = Label (without it, the picture keeps showing).
+              Its position doesn't matter: in Label mode it's laid out on the held stack (like a slot) and follows the mouse.
               It adds its own Canvas when the game runs, so it draws on top of the hotbar and every other UI
               (raise "Sorting Order" if something still covers it).
               Testing: Play, Tab, click a slot with items: the stack follows the mouse. Click another slot to put it down.
 Purpose: Shows the stack picked up with the mouse (PlayerInventory.Held) at the mouse pointer, above all other UI.
          It never blocks clicks, so the slot under it still gets them.
          When the inventory closes, a stack still on the mouse goes back into the inventory.
-Requirement: HeldItemUI.cs x-> PlayerInventory.cs, SlotUI.cs
+Requirement: HeldItemUI.cs x-> PlayerInventory.cs, SlotUI.cs, ItemIconRules.cs, GameRules.cs
              HeldItemUI.cs <-x InventoryUIBuilder.cs
 */
 
@@ -28,10 +31,16 @@ public class HeldItemUI : MonoBehaviour
     [Tooltip("The amount text. Empty = the child named \"Count\".")]
     [SerializeField] TMP_Text count;
 
+    [Tooltip("Optional: the item's name, shown instead of the picture when GameRules > Item Icon Style = Label. " +
+             "Empty = the child named \"ItemName\" (if there is one).")]
+    [SerializeField] TMP_Text itemName;
+
     [Tooltip("Draw order: higher = on top. Must be higher than every other canvas (HUD, hotbar...).")]
     [SerializeField] int sortingOrder = 100;
 
     Canvas ownCanvas;   // its own layer, so it draws above things that come later in the Hierarchy (e.g. the Hotbar)
+    SlotUI.TextLayout countLayout;   // where Count was set up, put back when Label mode ends
+    bool labelLayout;                // the texts are laid out for Label mode right now
 
     // ===== Unity messages (Unity calls these) =====
 
@@ -39,6 +48,8 @@ public class HeldItemUI : MonoBehaviour
     {
         if (icon == null) icon = FindChild<Image>("Icon");
         if (count == null) count = FindChild<TMP_Text>("Count");
+        if (itemName == null) itemName = FindChild<TMP_Text>("ItemName");
+        if (count != null) countLayout = SlotUI.TextLayout.Of(count);
 
         // Clicks must go through to the slot under the mouse, not hit the held picture.
         foreach (Graphic g in GetComponentsInChildren<Graphic>(true)) g.raycastTarget = false;
@@ -56,6 +67,7 @@ public class HeldItemUI : MonoBehaviour
         ownCanvas.sortingOrder = sortingOrder;
 
         PlayerInventory.Changed += Refresh;
+        GameRules.Changed += Refresh;   // GameRules > Item Icons switched
         Refresh();
     }
 
@@ -63,6 +75,7 @@ public class HeldItemUI : MonoBehaviour
     void OnDisable()
     {
         PlayerInventory.Changed -= Refresh;
+        GameRules.Changed -= Refresh;
 
         PlayerInventory inv = PlayerInventory.Instance;
         if (inv != null) inv.ReturnHeld();
@@ -79,7 +92,23 @@ public class HeldItemUI : MonoBehaviour
     void Refresh()
     {
         PlayerInventory inv = PlayerInventory.Instance;
-        SlotUI.Show(inv != null ? inv.Held : null, icon, count);
+        SlotUI.Show(inv != null ? inv.Held : null, icon, count, itemName);
+
+        // Not in Label mode: the name is only for Label, so hide it.
+        if (itemName != null && !ItemIconRules.UseLabel) itemName.gameObject.SetActive(false);
+
+        UseLabelLayout(itemName != null && ItemIconRules.UseLabel);
+    }
+
+    // Label mode: the name sits ON the held stack (same layout as a slot), so it follows the cursor with it,
+    // wherever ItemName was placed in the editor. Off: the amount goes back to where it was set up.
+    void UseLabelLayout(bool on)
+    {
+        if (on == labelLayout) return;
+        labelLayout = on;
+
+        if (on) SlotUI.ApplyLabelLayout(itemName, count, countLayout.size);
+        else if (count != null) countLayout.ApplyTo(count);
     }
 
     T FindChild<T>(string childName) where T : Component

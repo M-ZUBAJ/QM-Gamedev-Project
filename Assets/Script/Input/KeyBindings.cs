@@ -1,6 +1,6 @@
 /*
 First Date: 2/10/2026
-Date: 16/10/2026
+Date: 20/10/2026
 Author: Tony
 Use by: Create an empty GameObject called "KeyBindings" in the scene and add this script.
         The keys in the Inspector are the DEFAULT keys. The player can change them in game
@@ -180,10 +180,11 @@ public class KeyBindings : MonoBehaviour
     {
         get
         {
-            if (instance == null)
-            {
-                instance = new GameObject("KeyBindings").AddComponent<KeyBindings>();
-            }
+            // The scene's KeyBindings may not have run its Awake yet (a script asked while the scene is still loading).
+            // Look for it first: making a new one then would win, and the scene's one (with your keys) would be removed.
+            if (instance == null) instance = FindFirstObjectByType<KeyBindings>();
+            if (instance == null) instance = new GameObject("KeyBindings").AddComponent<KeyBindings>();
+            if (instance.keys == null) instance.LoadKeys();   // found before its Awake: load the keys now
             return instance;
         }
     }

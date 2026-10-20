@@ -1,10 +1,11 @@
 /*
 First Date: 4/10/2026
-Date: 13/10/2026
+Date: 20/10/2026
 Author: Tony
 Use by: Create an empty GameObject called "GameRules" in the scene and add this script.
         (If you forget to add this script, one is created by itself with the default rules.)
 Unity Editor: Tick / untick the rules in the Inspector (also works while playing).
+              Item Icon Style only shows while Overwrite Item Icon is ticked (GameRulesEditor).
 Purpose: On / off rules for the world, like Minecraft's /gamerule.
          Other scripts ask for a rule like this: if (GameRules.DoDaylightCycle) ...
          - DoDaylightCycle (default on): time of day moves (DaylightCycle). Off = time stops.
@@ -16,8 +17,15 @@ Purpose: On / off rules for the world, like Minecraft's /gamerule.
            the inventory when the player comes near them (AutoCollector); off = they need aiming + F.
          - ClearItemOnDead (default off): on = dying deletes every item (nothing drops); off = they drop (ItemDropper).
            No effect while KeepInventory is on.
+         - OverwriteItemIcon (default off): off = every item shows its own icon (its Item Data's Icon).
+           On = every item is shown the same way, chosen in Item Icon Style (ItemIconRules does the work):
+             Auto Icon          = a photo of the item's prefab
+             Label              = no picture, the item's prefab name in capitals (like Marko's "SWORD" slots)
+             Static Image       = the item's own still picture (its Item Data > Icon > Image)
+             Aseprite Animation = the item's own Aseprite animation (its Item Data > Icon > Aseprite)
+           An item without that picture / animation falls back to Auto Icon.
          Adding a rule = new GameRule entry + bool field + a case in Get and Set + static property.
-Requirement: GameRules.cs <-x AutoCollector.cs, DaylightCycle.cs, ItemDropper.cs
+Requirement: GameRules.cs <-x AutoCollector.cs, DaylightCycle.cs, GameRulesEditor.cs, HeldItemUI.cs, ItemDropper.cs, ItemIconRules.cs, SlotUI.cs
 */
 
 using UnityEngine;
@@ -30,6 +38,16 @@ public enum GameRule
     KeepInventory,
     AutoPickupDrops,
     ClearItemOnDead,
+    OverwriteItemIcon,
+}
+
+// How every item is shown while the rule Overwrite Item Icon is on. One at a time (a dropdown).
+public enum ItemIconStyle
+{
+    AutoIcon,            // a photo of the item's prefab
+    Label,               // the item's prefab name as text, e.g. "SWORD" (good for a prototype without art)
+    StaticImage,         // the item's own still picture
+    AsepriteAnimation,   // the item's own Aseprite animation
 }
 
 [DisallowMultipleComponent]   // only one GameRules per scene
@@ -54,7 +72,15 @@ public class GameRules : MonoBehaviour
              "Off: dropped items need aiming + F, like any Pickup item.")]
     [SerializeField] bool autoPickupDrops = false;
 
-    
+    [Header("Item Icons")]
+    [Tooltip("Off: every item shows its own icon (set in its Item Data). " +
+             "On: every item is shown the same way, chosen in Item Icon Style below.")]
+    [SerializeField] bool overwriteItemIcon = false;
+
+    [Tooltip("How every item is shown while Overwrite Item Icon is on: Auto Icon = a photo of its prefab, " +
+             "Label = its prefab name as text, Static Image / Aseprite Animation = its own picture / animation " +
+             "(items without one get Auto Icon).")]
+    [SerializeField] ItemIconStyle itemIconStyle = ItemIconStyle.AutoIcon;
 
     static GameRules instance;   // the one GameRules in the scene
 
@@ -67,16 +93,20 @@ public class GameRules : MonoBehaviour
     public static bool KeepInventory    => Get(GameRule.KeepInventory);
     public static bool AutoPickupDrops  => Get(GameRule.AutoPickupDrops);
     public static bool ClearItemOnDead  => Get(GameRule.ClearItemOnDead);
+    public static bool OverwriteItemIcon => Get(GameRule.OverwriteItemIcon);
+
+    // The dropdown under Overwrite Item Icon (only used while that rule is on).
+    public static ItemIconStyle ItemIconStyle => Current.itemIconStyle;
 
     // Finds the GameRules in the scene. If there isn't one, makes one with the default rules.
     static GameRules Current
     {
         get
         {
-            if (instance == null)
-            {
-                instance = new GameObject("GameRules").AddComponent<GameRules>();
-            }
+            // The scene's GameRules may not have run its Awake yet (e.g. a menu asks while the scene is still loading).
+            // Look for it first: making a new one then would win, and the scene's one (with your settings) would be removed.
+            if (instance == null) instance = FindFirstObjectByType<GameRules>();
+            if (instance == null) instance = new GameObject("GameRules").AddComponent<GameRules>();
             return instance;
         }
     }
@@ -122,6 +152,7 @@ public class GameRules : MonoBehaviour
             case GameRule.KeepInventory:    return r.keepInventory;
             case GameRule.AutoPickupDrops:  return r.autoPickupDrops;
             case GameRule.ClearItemOnDead:  return r.clearItemOnDead;
+            case GameRule.OverwriteItemIcon: return r.overwriteItemIcon;
         }
         return false;   // a new GameRule with no field yet
     }
@@ -137,8 +168,16 @@ public class GameRules : MonoBehaviour
             case GameRule.KeepInventory:    r.keepInventory = value;    break;
             case GameRule.AutoPickupDrops:  r.autoPickupDrops = value;  break;
             case GameRule.ClearItemOnDead:  r.clearItemOnDead = value;  break;
+            case GameRule.OverwriteItemIcon: r.overwriteItemIcon = value; break;
         }
 
         Changed?.Invoke();   // tell every listening script (if there are any)
+    }
+
+    // Changes the Item Icon Style dropdown from code (e.g. a settings menu later).
+    public static void SetItemIconStyle(ItemIconStyle style)
+    {
+        Current.itemIconStyle = style;
+        Changed?.Invoke();
     }
 }

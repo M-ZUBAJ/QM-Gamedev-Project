@@ -1,6 +1,6 @@
 /*
 First Date: 7/10/2026
-Date: 8/10/2026
+Date: 20/10/2026
 Author: Tony
 Use by: On the BuildingButton prefab. BuildMenu makes one per building, so don't put it in the scene yourself.
         Tools > UI > Build Build Menu UI makes the prefab for you.
@@ -9,7 +9,7 @@ Unity Editor: The parts are found by name: children "Icon" (Image), "Name" (Text
               Enough / Missing Color = the color of a material's amount when you have enough / not enough.
 Purpose: One building in the build menu: its picture, name and recipe ("Stone 2/3" = have 2, need 3).
          The amounts update as the inventory changes. The button only works when you have every material.
-Requirement: BuildingButton.cs x-> BuildingData.cs, Recipe.cs, PlayerInventory.cs, UIAnimatedImage.cs, Button (Unity)
+Requirement: BuildingButton.cs x-> BuildingData.cs, Recipe.cs, PlayerInventory.cs, UIAnimatedImage.cs, ItemIconRules.cs, Button (Unity)
              BuildingButton.cs <-x BuildMenu.cs, BuildMenuUIBuilder.cs
 */
 
@@ -119,8 +119,10 @@ public class BuildingButton : MonoBehaviour
             Image rowIcon = FindChild<Image>(row.transform, "Icon");
             if (rowIcon != null)
             {
-                // The same picture the inventory uses for this item (a photo is remembered by Item Id).
-                UIAnimatedImage.ShowIcon(rowIcon, ing.item.GetIcon(), ing.item.Icon);
+                // The same picture the inventory uses for this item (a photo is remembered by Item Id),
+                // or the one GameRules > Item Icons says. Label: no picture (the row's text already has the name).
+                ItemIconRules.Resolve(ing.item, ing.item.GetIcon(), out Sprite still, out IconSource animation);
+                UIAnimatedImage.ShowIcon(rowIcon, still, animation);
                 rowIcon.enabled = rowIcon.sprite != null;
             }
 

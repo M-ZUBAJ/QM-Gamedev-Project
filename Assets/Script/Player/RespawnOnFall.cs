@@ -18,7 +18,7 @@ public class RespawnOnFall : MonoBehaviour
     [SerializeField] float deathHeight = -10f;
 
     [Tooltip("Where the sphere comes back after dying.")]
-    [SerializeField] Vector3 spawnPosition = new Vector3(0f, 0f, 0f);
+    [SerializeField] Vector3 spawnPosition = new Vector3(1701f, 6.1f, 1617f);
 
     Rigidbody rb;
 

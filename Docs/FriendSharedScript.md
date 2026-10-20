@@ -188,6 +188,7 @@ In these tables, `health`, `stamina`, `daylight`, `player`… are the variables 
 | Make an item that heals / feeds | Item Data > **Item Type = Consumable**, fill Health / Hunger / Stamina. Right click eats it (already works) |
 | Open / close a crafting window | `MenuState.SetOpen(this, true/false)` + free the cursor (see section 4) |
 | The crafting menu's key | `Input.GetKeyDown(KeyBindings.Crafting)` (default **C**, change it on the KeyBindings object). `CraftingMenu` already uses it; its old `openKey` field is gone |
+| Crafting inside the inventory | A CraftingCanvas under `InventoryWindow > Pages > CraftingPage` now shows itself whenever the Crafting tab is open (Tony's `[Tony]` lines in `CraftingMenu`, see `Docs/TonyEditMate/20-10-2026Edit.md`). The scene-root CraftingCanvas still opens with C |
 
 **Example: crafting one item**
 
@@ -301,8 +302,9 @@ Get them: `controller = FindFirstObjectByType<PlayerController>();`, `jump = Fin
 
 | Member | What it is |
 |---|---|
-| `bool IsMoving`, `bool IsSprinting` | PlayerController: moving / sprinting (Left Shift) right now |
-| `bool IsGrounded` | PlayerJump: standing on something |
+| `bool IsMoving`, `bool IsSprinting` | PlayerController: moving / sprinting (Left Shift) right now. Sprinting only counts on the ground |
+| `bool IsGrounded` | PlayerController: standing on walkable ground (not in the air, not on a too-steep slope). PlayerJump has one too (standing on something not too steep) |
+| `float MaxSlopeAngle` | PlayerController: the steepest slope the player can walk up (default 45 degrees); steeper = a wall |
 | `event Action Jumped` | PlayerJump: fired on every jump |
 
 ### PlayerRespawn (on the Player)
@@ -371,6 +373,7 @@ Get it: nothing to find, write `GameRules.KeepInventory` etc. directly
 | `GameRules.KeepInventory` | off | on = keep all items on death |
 | `GameRules.ClearItemOnDead` | off | on = items are deleted on death (ignored if Keep Inventory is on) |
 | `GameRules.AutoPickupDrops` | off | on = dropped items are collected by walking near them |
+| `GameRules.OverwriteItemIcon` + `GameRules.ItemIconStyle` | off / Auto Icon | on = every item in the inventory, hotbar, cursor and build menu is shown the same way: **Auto Icon** (photo of the prefab), **Label** (the prefab name in capitals, e.g. "SWORD", like Marko's tool slots), **Static Image** or **Aseprite Animation** (the item's own; falls back to Auto Icon). Code: `ItemIconRules.Resolve(...)`, `ItemIconRules.Label(slot)` |
 | `GameRules.WorldInteraction` | off | old rule for grabbing / levitating anywhere |
 
 Read: `if (GameRules.KeepInventory) …`. Change: `GameRules.Set(GameRule.KeepInventory, true);`.

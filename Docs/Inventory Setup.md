@@ -22,12 +22,14 @@ Gear and Crafting pages are placeholders until their designs are ready.
    (If it asks for TMP Essentials: **Window > TextMeshPro > Import TMP Essential Resources**, Import, then try again.)
 3. Press **Play** and test it (see [Step 13](#step-13--test)).
 
-This builds everything below for you: the prefabs `Assets/Prefab/UI/Slot.prefab` and
-`Assets/Prefab/UI/InventoryCanvas.prefab`, the InventoryCanvas in the scene, and an EventSystem if needed,
-with every script added and filled in (and HotbarSelector on the player). Ctrl + Z removes it from the scene again.
+This builds everything below for you: the prefabs `Assets/Prefabs/UI/Inventory/Slot.prefab` and
+`Assets/Prefabs/UI/Inventory/InventoryCanvas.prefab` (found by name if you moved them), the InventoryCanvas in the
+scene, and an EventSystem if needed, with every script added and filled in (and HotbarSelector + ItemDropper on the
+player). The Crafting page gets Turki's **CraftingCanvas** (the crafting list). If the scene already has an
+InventoryCanvas, it asks whether to replace it. Ctrl + Z removes it from the scene again.
 
-**Built it before the slots could show items?** Use **Tools > UI > Add Inventory Scripts** instead.
-It adds the newer scripts to the prefabs you already have, without rebuilding them.
+**Built it before?** Use **Tools > UI > Add Inventory Scripts** instead. It adds only what's missing to the
+prefabs you already have (SlotUI, SlotGroup, HeldItem, the ItemName texts, the crafting list), without rebuilding them.
 
 The steps below do the same thing by hand. Read them to understand how it is put together,
 or to change it later.
@@ -49,13 +51,16 @@ InventoryCanvas            Canvas + InventoryWindow script
 │   │   ├── InventoryPage  Grid Layout Group + SlotGroup script
 │   │   │   ├── Slot       (20 of them) SlotUI script
 │   │   │   │   ├── Icon
-│   │   │   │   └── Count
+│   │   │   │   ├── Count
+│   │   │   │   └── ItemName   (hidden) the item's name, e.g. "SWORD"
 │   │   │   └── ...
 │   │   ├── GearPage
 │   │   └── CraftingPage
+│   │       └── CraftingCanvas  Turki's crafting list (CraftingMenu), shows when the tab is open
 │   └── HeldItem           HeldItemUI script: the stack on the mouse (LAST child = drawn on top)
 │       ├── Icon
-│       └── Count
+│       ├── Count
+│       └── ItemName       (hidden) the name in Label mode
 └── Hotbar                 Horizontal Layout Group + SlotGroup script (NOT inside InventoryWindow)
     ├── Slot               (8 of them)
     └── ...
@@ -169,20 +174,28 @@ A prefab is a saved object you can reuse. Change the prefab once, and every slot
    - Anchor Presets: **Alt + Shift** + **bottom right**. Width **80**, Height **40**.
    - Delete the text "New Text" (leave it empty). Font Size **28**. Alignment: **right** and **bottom**.
    - Extra Settings: untick **Raycast Target**.
-4. Project window: right click **Assets** > **Create > Folder**, name it **Prefab** (skip if it exists).
-   Inside it make a folder **UI**.
-5. Drag **Slot** from the Hierarchy into **Assets/Prefab/UI**.
+   - Right click **Slot** > **UI > Text - TextMeshPro** again. Rename it **ItemName** (the item's name, e.g. "SWORD").
+     Anchor Presets: **Alt + Shift** + **stretch stretch**, Left / Top / Right / Bottom **4**. Empty text, **Bold**,
+     Alignment **center** and **middle**, **Auto Size** on (Min 10, Max 18), untick Raycast Target.
+     Then **untick the object** at the top of the Inspector (hidden until needed: tools without a picture, and
+     every item when GameRules > Item Icon Style = Label).
+4. Project window: make the folders **Assets/Prefabs/UI/Inventory** (right click > **Create > Folder**, skip the ones
+   that exist).
+5. Drag **Slot** from the Hierarchy into **Assets/Prefabs/UI/Inventory**.
    It turns **blue** in the Hierarchy: it is now a prefab.
 6. Select **Slot** in the Hierarchy and press **Ctrl + D** 19 times → **20 slots** in a 5 x 4 grid.
 
 To change all slots later: double click the Slot prefab in the Project window, edit, then click the arrow at the top left of the Hierarchy to go back.
 
-## Step 8 – The Gear and Crafting pages (placeholders)
+## Step 8 – The Gear and Crafting pages
 
 1. Right click **Pages** > **Create Empty**. Rename it **GearPage**.
    Anchor Presets: **Alt + Shift** + **stretch stretch**.
-2. Right click **GearPage** > **UI > Text - TextMeshPro**. Text: **Gear (coming soon)**.
-3. Do the same for **CraftingPage** with the text **Crafting (coming soon)**.
+2. Right click **GearPage** > **UI > Text - TextMeshPro**. Text: **Gear (coming soon)** (a placeholder).
+3. Make **CraftingPage** the same way (empty, stretch stretch), then drag Turki's **CraftingCanvas** prefab
+   (`Assets/Prefabs/UI`) onto it. Nothing else to set: when the game runs it fills the page, fixes its size
+   (the prefab is saved at scale 0) and shows itself whenever the Crafting tab is open.
+   (The CraftingCanvas at the top of the scene is a separate copy that opens with **C**. Keep it if you want both.)
 
 ## Step 9 – The hotbar
 
@@ -194,7 +207,7 @@ To change all slots later: double click the Slot prefab in the Project window, e
    - Control Child Size: **untick** both. Child Force Expand: **untick** both.
 
    (So the slots keep their own 120 x 120 size.)
-4. Drag the **Slot** prefab from **Assets/Prefab/UI** onto **Hotbar** in the Hierarchy.
+4. Drag the **Slot** prefab from **Assets/Prefabs/UI/Inventory** onto **Hotbar** in the Hierarchy.
    Select it and press **Ctrl + D** 7 times → **8 slots**.
 
 ## Step 10 – Make the tabs work
@@ -219,7 +232,7 @@ You don't need to hide the window yourself: the script closes it when the game s
 
 ## Step 12 – Make the slots show items
 
-1. Project window: double click the **Slot** prefab (Assets/Prefab/UI) to open it.
+1. Project window: double click the **Slot** prefab (Assets/Prefabs/UI/Inventory) to open it.
    Add Component > **SlotUI**. Click the arrow at the top left of the Hierarchy to go back.
    (Every slot now has it, because they are all copies of the prefab.)
 2. Select **InventoryPage**. Add Component > **SlotGroup**. Leave **Is Hotbar** unticked.
@@ -227,12 +240,12 @@ You don't need to hide the window yourself: the script closes it when the game s
 4. The item on the mouse: right click **InventoryWindow** > **Create Empty**, rename it **HeldItem**.
    - Drag it to the **bottom** of InventoryWindow's children (the last one is drawn on top).
    - Width **100**, Height **100**.
-   - Give it two children exactly like the Slot's: an **Icon** (UI > Image, stretch stretch, Image unticked)
-     and a **Count** (UI > Text - TextMeshPro, bottom right, empty text).
+   - Give it three children exactly like the Slot's: an **Icon** (UI > Image, stretch stretch, Image unticked),
+     a **Count** (UI > Text - TextMeshPro, bottom right, empty text) and an **ItemName** (unticked).
    - Select HeldItem, Add Component > **HeldItemUI**.
 5. Select the **Player** (the object with PlayerInventory). Add Component > **HotbarSelector** and **ItemDropper**.
 
-SlotUI and HeldItemUI find their Icon and Count by name, so keep those names.
+SlotUI and HeldItemUI find their Icon, Count and ItemName by name, so keep those names.
 
 ## Step 13 – Test
 

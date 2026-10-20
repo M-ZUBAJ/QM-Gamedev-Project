@@ -18,13 +18,52 @@ public class CraftingMenu : MonoBehaviour
 
     bool isOpen;
 
+    // [Tony] added (20/10/2026): this menu can also live inside the inventory's Crafting page
+    // (InventoryCanvas > InventoryWindow > Pages > CraftingPage). There the TAB shows / hides it (Tab key, then click
+    // the Crafting tab), and the inventory already frees the mouse, so C, Esc and the cursor are left to the inventory.
+    // Anywhere else (e.g. its own CraftingCanvas in the scene) it works exactly as before: C opens it.
+    bool insideInventory;                                                                     // [Tony] added
+
+    void Awake()                                                                              // [Tony] added
+    {                                                                                         // [Tony] added
+        insideInventory = GetComponentInParent<InventoryWindow>(true) != null;               // [Tony] added
+        if (insideInventory) FillParent();                                                    // [Tony] added
+    }                                                                                         // [Tony] added
+
+    // [Tony] added: the Crafting page was shown (its tab was clicked): fill the list and show the panel.
+    void OnEnable()                                                                           // [Tony] added
+    {                                                                                         // [Tony] added
+        if (!insideInventory) return;                                                         // [Tony] added
+        FillRows();                                                                           // [Tony] added
+        panel.SetActive(true);                                                                // [Tony] added
+        message.text = "Click an item to craft it.";                                          // [Tony] added
+    }                                                                                         // [Tony] added
+
+    // [Tony] added: inside the page, cover the whole page so the panel sits in its middle
+    // (the prefab's own size is for a full-screen canvas).
+    void FillParent()                                                                         // [Tony] added
+    {                                                                                         // [Tony] added
+        RectTransform rt = transform as RectTransform;                                        // [Tony] added
+        if (rt == null) return;                                                               // [Tony] added
+        rt.anchorMin = Vector2.zero;                                                          // [Tony] added
+        rt.anchorMax = Vector2.one;                                                           // [Tony] added
+        rt.offsetMin = Vector2.zero;                                                          // [Tony] added
+        rt.offsetMax = Vector2.zero;                                                          // [Tony] added
+        // The prefab saves its scale as 0 (Unity sizes a top-level canvas itself). Inside another canvas nothing
+        // does that, so at scale 0 the whole menu would be invisible.
+        rt.localScale = Vector3.one;                                                          // [Tony] added
+    }                                                                                         // [Tony] added
+
     void Start()
     {
-        panel.SetActive(false);   // hidden until C is pressed
+        // [Tony] edited: inside the inventory the panel is not hidden (the page shows / hides it).
+        // Original line: panel.SetActive(false);   // hidden until C is pressed
+        if (!insideInventory) panel.SetActive(false);   // hidden until C is pressed
     }
 
     void Update()
     {
+        if (insideInventory) return;   // [Tony] added: inside the inventory, the inventory's Tab key and tabs open it, not C
         if (MenuState.KeysCaptured) return;
 
         if (Input.GetKeyDown(KeyBindings.Crafting)) //[Tony] see Crafting in KeyBindings.cs 
