@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7847183327421737157}
+  - component: {fileID: 1749423662302722547}
   m_Layer: 0
   m_Name: Axe
   m_TagString: Untagged
@@ -33,6 +34,20 @@ Transform:
   - {fileID: 4763782889198949399}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 15, y: 0, z: 10}
+--- !u!114 &1749423662302722547
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1485845440005327}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e9b6b4dbed587747ade0d4bd5e71666, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  data: {fileID: 11400000, guid: 98253a26a96484b6fb350c39e47d1cd0, type: 2}
+  amount: 1
 --- !u!1 &475044662356831600
 GameObject:
   m_ObjectHideFlags: 0

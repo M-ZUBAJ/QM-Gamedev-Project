@@ -175,6 +175,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6767260759255505826}
+  - component: {fileID: 4726208593933392074}
   m_Layer: 0
   m_Name: PickAxe
   m_TagString: Untagged
@@ -199,3 +200,17 @@ Transform:
   - {fileID: 3704252543510859057}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 15, y: 0, z: 10}
+--- !u!114 &4726208593933392074
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7974673571770277781}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e9b6b4dbed587747ade0d4bd5e71666, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  data: {fileID: 11400000, guid: d3401d7582ad64cfdbf15cabf4a2acce, type: 2}
+  amount: 1

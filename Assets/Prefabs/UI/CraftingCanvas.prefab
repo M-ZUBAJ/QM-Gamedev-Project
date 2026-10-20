@@ -553,9 +553,9 @@ MonoBehaviour:
   craftables:
   - {fileID: 11400000, guid: d524931321f754afdaeefd6219e3fa3c, type: 2}
   - {fileID: 11400000, guid: c374a096ef8724ae6b4d421791ecabb8, type: 2}
-  - {fileID: 11400000, guid: b7f49c0b400c640b99130a4daad2a765, type: 2}
   - {fileID: 11400000, guid: c0c79efa7665c4aff900dc7c122f8655, type: 2}
-  openKey: 99
+  - {fileID: 11400000, guid: d3401d7582ad64cfdbf15cabf4a2acce, type: 2}
+  - {fileID: 11400000, guid: 98253a26a96484b6fb350c39e47d1cd0, type: 2}
   panel: {fileID: 2942019593944188666}
   rows: {fileID: 7494012006072683705}
   message: {fileID: 438336168887961610}
