@@ -1,7 +1,7 @@
 # QM Gamedev Project
 
-Unity 2023.1.13f1, 3D.
-**Need update to 2023.1.22f1**
+Unity 2023.1.22f1, 3D.
+**updated to 2023.1.22f1 on date 20/10/2026**
 
 # Script Style (.cs)
 

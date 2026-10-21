@@ -405,6 +405,20 @@ void OnDisable() { DaylightCycle.NightStarted -= OnNight; }
 void OnNight(int day) { /* spawn more enemies on later nights, e.g. 2 + day */ }
 ```
 
+### PlayerPerks (on the Player): perks on the HUD
+
+Remembers which perks the player has, for the HUD's perk row (PerkBar: name + stats per slot).
+
+| Member | What it is |
+|---|---|
+| `static void Record(PerkType type)` | call it after giving a perk (Marko's PerkChest already does, `[Tony]` lines). Same perk twice = "x2" |
+| `enum PerkType` | MaxHealth, MaxStamina, MoveSpeed, Fireball. **New perk:** add a line here + a case in `PerkName` and `PerkStats` |
+| `IReadOnlyList<OwnedPerk> Owned`, `event Action Changed` | the perks in the order gained; fired when one is added |
+| `static PlayerPerks Current` | the one in the scene (null if the player has none) |
+| `void ResetPerks()` | loses every perk and undoes the boosts (`ResetMaxHealth`, `ResetMaxStamina`, `ResetMoveSpeed`, `PlayerFireball.ResetFireballPerk`). Runs by itself when the player dies (**Reset On Death**, on). **New perk:** also add its undo here |
+
+See `Docs/TonyEditMate/21-10-2026Edit.md`.
+
 ### VictoryScreen (on GameEndCanvas): winning the game
 
 Surviving **5 days and nights** wins: when Day 6 starts, the game freezes (`Time.timeScale = 0`) and the victory page

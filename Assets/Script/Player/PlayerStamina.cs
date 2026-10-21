@@ -1,6 +1,6 @@
 /*
 First Date: 11/10/2026
-Date: 11/10/2026
+Date: 21/10/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerController and PlayerJump).
 Unity Editor: The StaminaBar (StatBar, Stat = Stamina) finds this by itself.
@@ -10,7 +10,7 @@ Purpose: Holds the player's stamina. Sprinting (PlayerController) and jumping (P
          and it fills back up by itself after a short rest.
          When it hits 0 the player is tired: no sprinting or jumping until it has refilled to "Recover To".
 Requirement: PlayerStamina.cs <-x PerkChest.cs
-             PlayerStamina.cs <-o ItemConsumer.cs, PlayerController.cs, PlayerJump.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
+             PlayerStamina.cs <-o ItemConsumer.cs, PlayerController.cs, PlayerJump.cs, PlayerPerks.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
 */
 
 using UnityEngine;
@@ -59,6 +59,7 @@ public class PlayerStamina : MonoBehaviour
     [Min(0f)]
     [SerializeField] float testAmount = 10f;
 
+    float startMaxStamina;       // max stamina before any perk (ResetMaxStamina goes back to it)
     float lastUsedTime = -10f;   // when stamina was last used (regen waits regenDelay after this)
     bool tired;                  // ran out and hasn't recovered to recoverTo yet
 
@@ -69,6 +70,11 @@ public class PlayerStamina : MonoBehaviour
     public bool CanJump => !tired && stamina > 0f;
 
     // ===== Unity messages (Unity calls these) =====
+
+    void Awake()
+    {
+        startMaxStamina = maxStamina;   // before any perk raises it
+    }
 
     void Start()
     {
@@ -137,6 +143,14 @@ public class PlayerStamina : MonoBehaviour
         UpdateBar();
 
         Debug.Log("Maximum stamina increased to " + maxStamina);
+    }
+
+    // [Tony] added: undoes every Max Stamina perk (IncreaseMaxStamina above). PlayerPerks calls it when the player dies.
+    public void ResetMaxStamina()
+    {
+        maxStamina = startMaxStamina;
+        stamina = Mathf.Min(stamina, maxStamina);
+        UpdateBar();
     }
 
 

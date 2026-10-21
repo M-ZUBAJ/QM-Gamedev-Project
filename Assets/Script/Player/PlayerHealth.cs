@@ -1,6 +1,6 @@
 /*
 First Date: 3/10/2026
-Date: 12/10/2026
+Date: 21/10/2026
 Author: Tony
 Use by: Drag this script onto the Player sphere.
 Unity Editor: The HealthBar (StatBar) finds this by itself. "On Changed" is only for extra things
@@ -12,7 +12,7 @@ Purpose: Holds the player's health. TakeDamage / Heal change it and fire On Chan
          At 0 health the player dies: the Died event fires once (PlayerRespawn listens to it and brings the
          player back). Revive fills health back up.
 Requirement: PlayerHealth.cs <-x DeathScreen.cs, PerkChest.cs, PlayerRespawn.cs
-             PlayerHealth.cs <-o AutoCollector.cs, DaylightCycle.cs, ItemConsumer.cs, ItemDropper.cs, PlayerHunger.cs, PlayerStats.cs, StatBar.cs
+             PlayerHealth.cs <-o AutoCollector.cs, DaylightCycle.cs, ItemConsumer.cs, ItemDropper.cs, PlayerHunger.cs, PlayerPerks.cs, PlayerStats.cs, StatBar.cs
 */
 
 using UnityEngine;
@@ -41,6 +41,7 @@ public class PlayerHealth : MonoBehaviour
     [Min(0f)]
     [SerializeField] float testAmount = 10f;
 
+    float startMaxHealth;   // max health before any perk (ResetMaxHealth goes back to it)
     bool dead;           // already died (so Died fires only once per death)
     bool dieNextFrame;   // 0 was typed into Health in the Inspector: die in the next Update (see OnValidate)
 
@@ -52,6 +53,11 @@ public class PlayerHealth : MonoBehaviour
     public bool IsDead => health <= 0f;
 
     // ===== Unity messages (Unity calls these) =====
+
+    void Awake()
+    {
+        startMaxHealth = maxHealth;   // before any perk raises it
+    }
 
     void Start()
     {
@@ -108,6 +114,14 @@ public class PlayerHealth : MonoBehaviour
         UpdateBar();
 
         Debug.Log("Maximum health increased to " + maxHealth);
+    }
+
+    // [Tony] added: undoes every Max Health perk (IncreaseMaxHealth above). PlayerPerks calls it when the player dies.
+    public void ResetMaxHealth()
+    {
+        maxHealth = startMaxHealth;
+        health = Mathf.Min(health, maxHealth);
+        UpdateBar();
     }
 
 

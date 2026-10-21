@@ -1,6 +1,6 @@
 /*
 First Date: 29/9/2026
-Date: 20/10/2026
+Date: 21/10/2026
 Author: Tony
 Use by: Drag this script onto the player shape (any shape: Capsule, Cube, Sphere...). A Rigidbody is added automatically.
 Unity Editor: The shape needs a Collider (3D Objects come with one).
@@ -22,7 +22,7 @@ Purpose: Move the player with W A S D (or the arrow keys, both set in KeyBinding
 Requirement: PlayerController.cs x-> KeyBindings.cs, MenuState.cs, Rigidbody (Unity)
              PlayerController.cs o-> PlayerStamina.cs, PlayerJump.cs
              PlayerController.cs <-x PerkChest.cs
-             PlayerController.cs <-o HeldItemView.cs, PlayerHunger.cs, PlayerJump.cs, PlayerStats.cs
+             PlayerController.cs <-o HeldItemView.cs, PlayerHunger.cs, PlayerJump.cs, PlayerPerks.cs, PlayerStats.cs
 */
 
 using UnityEngine;
@@ -73,6 +73,7 @@ public class PlayerController : MonoBehaviour
     // so they don't cancel the jump.
     const float JumpGrace = 0.2f;
 
+    float startSpeed;      // walking speed before any perk
     Rigidbody rb;          // the physics component: keeps gravity and collisions working
     Collider body;         // the player's shape (for sticking to the ground)
     PlayerStamina stamina; // sprinting uses it up (can be missing = sprint forever)
@@ -95,6 +96,9 @@ public class PlayerController : MonoBehaviour
     // True while standing on walkable ground (not in the air, not on a too-steep slope).
     public bool IsGrounded => grounded;
 
+    // Walking speed right now, in meters per second (perks can raise it: IncreaseMoveSpeed). PlayerPerks shows it.
+    public float Speed => speed;
+
     // PlayerJump reads it: no jumping off a too-steep slope.
     public float MaxSlopeAngle => maxSlopeAngle;
 
@@ -107,6 +111,7 @@ public class PlayerController : MonoBehaviour
 
     void Awake()
     {
+        startSpeed = speed;               // before any perk raises it (ResetMoveSpeed goes back to it)
         rb = GetComponent<Rigidbody>();   // cache it once
         body = GetComponentInChildren<Collider>();
         stamina = GetComponent<PlayerStamina>();
@@ -374,6 +379,12 @@ public class PlayerController : MonoBehaviour
         speed += speedIncrease;
 
         Debug.Log("Movement speed increased to " + speed);
+    }
+
+    // [Tony] added: undoes every Move Speed perk (IncreaseMoveSpeed above). PlayerPerks calls it when the player dies.
+    public void ResetMoveSpeed()
+    {
+        speed = startSpeed;
     }
 
 

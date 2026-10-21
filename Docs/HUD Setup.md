@@ -1,7 +1,7 @@
 # HUD Setup
 
 The HUD is what stays on screen while playing: the crosshair in the middle, the health / hunger / stamina bars in the
-top left, and the day, time and coins in the top right.
+top left, the player's perks along the top, and the day, time and coins in the top right.
 
 ```
 HUDCanvas
@@ -13,6 +13,8 @@ HUDCanvas
     DayText       "DAY 5 - Noon"            (DayCounter)
     TimeText      "14:30 - Night in 2:15"   (TimeCounter)
     CoinCounter   Icon + Text "12"          (CoinCounter)
+  Perks                               top middle (PerkBar)
+    Perk1 / Perk2 / Perk3   each: Title "Fireball x2" + Stats "Q with sword / 2.4 s cooldown"
 ```
 
 ## Quick way: one click
@@ -21,6 +23,7 @@ HUDCanvas
 2. Menu **Tools > UI > Build HUD**.
    - It saves `Assets/Prefabs/UI/HUD/HUDCanvas.prefab` and puts a HUDCanvas in the scene.
    - If the prefab or a HUDCanvas in the scene already exists, it asks first. **Ctrl + Z** brings the old scene one back.
+   - It also adds **PlayerPerks** to the Player (the perk row reads it).
 3. Save the scene (**Ctrl + S**).
 
 Use it any time the HUD was deleted or broken: everything comes back connected.
@@ -32,6 +35,7 @@ Use it any time the HUD was deleted or broken: everything comes back connected.
 | The bars | The Player with **PlayerHealth**, **PlayerHunger**, **PlayerStamina** (the bars find them by themselves) |
 | Day and time | The Directional Light with **DaylightCycle** |
 | Coins | The Player with Marko's **PlayerCoins** |
+| Perks | The Player with **PlayerPerks** (the tool adds it); perk chests (Marko's **PerkChest**) fill it |
 | The crosshair colors | The Player with **ItemGrabber** |
 
 Nothing has to be dragged in: every HUD script finds what it needs.
@@ -60,6 +64,21 @@ Choose the **Look**; only the fields it needs are shown:
 
 **Text Color** changes the number's color in every look.
 
+### Perks (Perks, PerkBar)
+Boxes along the top, one per perk: the perk's **name** ("x2" when the player has it twice) and its **stats right now**,
+e.g. *Max Health / +20% each / Max Health 144*. Boxes are **invisible until the player gets a perk**, then pop in and
+stay. When the player **dies, every perk is lost** (the boosts are undone) and the boxes disappear
+(Player > PlayerPerks > **Reset On Death**, on by default).
+
+**One Box Per Perk** (on Perks > PerkBar):
+- **Off** (default): your boxes Perk1, Perk2, Perk3 keep their places and fill left to right. More perks than boxes:
+  the newest show. More boxes: select **Perk3** and press **Ctrl + D** (any name starting with **Perk** works).
+- **On**: a new box for every perk, from the left, all sharing the row: 1 perk fills the whole row, 2 perks half
+  each, 10 perks 10 boxes (the text shrinks to fit, down to **Min Text Size**).
+
+In Edit mode all boxes stay visible so you can arrange them. Test: Play, Player > PlayerPerks **⋮** >
+**Test: Add Random Perk**; then PlayerHealth **⋮** > **Test: Die** and the boxes disappear.
+
 ## By hand (instead of the tool)
 
 1. Hierarchy > right click > **UI > Canvas**, name it **HUDCanvas**. Canvas Scaler: **Scale With Screen Size**,
@@ -81,7 +100,12 @@ Choose the **Look**; only the fields it needs are shown:
    Control Child Size Width + Height, no Force Expand) and **Layout Element** (Preferred Height 42).
    Children: **Icon** (UI > Image, Layout Element Preferred Width / Height 36) and **Text** (TextMeshPro, size 34,
    Bold, right aligned). Then Add Component > **CoinCounter** on CoinCounter.
-7. Drag HUDCanvas into `Assets/Prefabs/UI/HUD` to make it a prefab. Save the scene.
+7. **Perks**: Create Empty under HUDCanvas, anchor **top middle** (also Pivot 0.5, 1), Pos X 40, Pos Y -8,
+   1110 x 165. Add **Horizontal Layout Group** (Spacing 8, Control Child Size Width + Height, Child Force Expand
+   Width + Height) and **PerkBar**. Inside it **Perk1**, **Perk2**, **Perk3**: each a UI > Image (dark, see-through,
+   Raycast Target off) with two TextMeshPro children: **Title** (top, size 30, bold) and **Stats** (below, size 22).
+   Then add **PlayerPerks** to the Player.
+8. Drag HUDCanvas into `Assets/Prefabs/UI/HUD` to make it a prefab. Save the scene.
 
 ## If something doesn't work
 

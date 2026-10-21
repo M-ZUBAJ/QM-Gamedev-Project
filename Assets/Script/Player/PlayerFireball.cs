@@ -111,4 +111,13 @@ public class PlayerFireball : MonoBehaviour
             " seconds"
         );
     }
+
+    // [Tony] added (21/10/2026): perks reset when the player dies. Tony's PlayerPerks calls this then:
+    // the fireball is locked again until a chest gives the perk again. To undo: delete this method
+    // (and its call in PlayerPerks.ResetPerks).
+    public void ResetFireballPerk()   // [Tony] added
+    {                                 // [Tony] added
+        perkStacks = 0;               // [Tony] added
+        nextFireTime = 0f;            // [Tony] added
+    }                                 // [Tony] added
 }

@@ -93,6 +93,7 @@ public class PerkChest : MonoBehaviour
                         health.IncreaseMaxHealth(0.20f);
                     else
                         Debug.LogWarning("PlayerHealth was not found.");
+                    PlayerPerks.Record(PerkType.MaxHealth);   // [Tony] added: the HUD shows the perk (PerkBar)
                     break;
                 }
 
@@ -105,6 +106,7 @@ public class PerkChest : MonoBehaviour
                         stamina.IncreaseMaxStamina(25f);
                     else
                         Debug.LogWarning("PlayerStamina was not found.");
+                    PlayerPerks.Record(PerkType.MaxStamina);   // [Tony] added: the HUD shows the perk (PerkBar)
                     break;
                 }
 
@@ -117,6 +119,7 @@ public class PerkChest : MonoBehaviour
                         controller.IncreaseMoveSpeed(0.15f);
                     else
                         Debug.LogWarning("PlayerController was not found.");
+                    PlayerPerks.Record(PerkType.MoveSpeed);   // [Tony] added: the HUD shows the perk (PerkBar)
                     break;
                 }
 
@@ -132,6 +135,7 @@ public class PerkChest : MonoBehaviour
                         Debug.LogWarning(
                             "PlayerFireball was not found on the player."
                         );
+                    PlayerPerks.Record(PerkType.Fireball);   // [Tony] added: the HUD shows the perk (PerkBar)
 
                     break;
                 }

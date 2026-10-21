@@ -1,6 +1,6 @@
 /*
 First Date: 18/10/2026
-Date: 18/10/2026
+Date: 21/10/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Open the scene you want it in, then menu Tools > UI > Build HUD.
@@ -13,7 +13,8 @@ Purpose: Builds the whole HUD in one click, the same as the one first made by ha
          HUDCanvas > Crosshair (middle)
                    > HealthBar, HungerBar, StaminaBar (top left; each Background + Fill + Frame, with StatBar)
                    > TopRight > DayText (DayCounter), TimeText (TimeCounter), CoinCounter (Icon + Text)
-Requirement: HUDBuilder.cs x-> UIBuildHelper.cs, StatBar.cs, Crosshair.cs, DayCounter.cs, TimeCounter.cs, CoinCounter.cs, MenuOrder.cs
+                   > Perks (PerkBar) > Perk1, Perk2, Perk3 (top middle; each Title + Stats)
+Requirement: HUDBuilder.cs x-> UIBuildHelper.cs, StatBar.cs, Crosshair.cs, DayCounter.cs, TimeCounter.cs, CoinCounter.cs, PerkBar.cs, PlayerPerks.cs, MenuOrder.cs
 */
 
 using TMPro;
@@ -74,6 +75,15 @@ public static class HUDBuilder
     static readonly Color DayColor = Color.white;
     static readonly Color TimeColor = new Color(0.85f, 0.85f, 0.85f);
 
+    // The perk row along the top, between the bars and the day / time box (where Tony drew it).
+    const int PerkSlots = 3;                                           // Perk1, Perk2, Perk3
+    static readonly Vector2 PerksSize = new Vector2(1110f, 165f);      // the whole row
+    static readonly Vector2 PerksPosition = new Vector2(40f, -8f);     // from the top middle of the screen
+    const float PerkSpacing = 8f;
+    static readonly Color PerkBoxColor = new Color(0f, 0f, 0f, 0.35f); // see-through dark box
+    const float PerkTitleSize = 30f;
+    const float PerkStatsSize = 22f;
+
     // ===== Menu (Unity calls this) =====
 
     [MenuItem("Tools/UI/Build HUD", false, MenuOrder.BuildHUD)]
@@ -105,6 +115,8 @@ public static class HUDBuilder
             Undo.DestroyObjectImmediate(old);
         }
 
+        AddToPlayer<PlayerPerks>();   // the perk row reads it; perk chests fill it
+
         Selection.activeGameObject = canvas;
         EditorGUIUtility.PingObject(prefab);   // flashes it in the Project window
         Debug.Log("HUD built: " + CanvasPath + " (in the scene too). Save the scene (Ctrl + S).");
@@ -120,6 +132,7 @@ public static class HUDBuilder
         MakeCrosshair(canvas.transform);
         foreach (Bar bar in Bars) MakeBar(bar, canvas.transform);
         MakeTopRight(canvas.transform);
+        MakePerks(canvas.transform);
         return canvas;
     }
 
@@ -180,6 +193,46 @@ public static class HUDBuilder
     }
 
     // The box in the top right: day, time, coins, stacked and lined up on the right.
+    // Perks > Perk1, Perk2, Perk3, side by side along the top. Each: a box with Title (perk name) and Stats.
+    static void MakePerks(Transform parent)
+    {
+        GameObject row = NewUI("Perks", parent);
+        RectTransform rt = (RectTransform)row.transform;
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 1f);   // top middle of the screen
+        rt.sizeDelta = PerksSize;
+        rt.anchoredPosition = PerksPosition;
+
+        HorizontalLayoutGroup line = row.AddComponent<HorizontalLayoutGroup>();
+        line.spacing = PerkSpacing;
+        line.childControlWidth = line.childControlHeight = true;           // the slots share the row equally
+        line.childForceExpandWidth = line.childForceExpandHeight = true;
+
+        for (int i = 1; i <= PerkSlots; i++) MakePerkSlot(row.transform, "Perk" + i);
+
+        row.AddComponent<PerkBar>();   // fills the slots from the player's PlayerPerks
+    }
+
+    static void MakePerkSlot(Transform parent, string name)
+    {
+        GameObject slot = NewUI(name, parent);
+        Image box = AddBox(slot);
+        box.color = PerkBoxColor;
+        box.raycastTarget = false;   // the HUD never blocks clicks
+
+        GameObject title = NewUI("Title", slot.transform);
+        TopBand(title, 8f, PerkTitleSize + 10f, 14f);
+        TextMeshProUGUI titleText = AddText(title, "Empty", PerkTitleSize, TextAlignmentOptions.Left);
+        titleText.fontStyle = FontStyles.Bold;
+        titleText.color = Color.white;
+        titleText.enableWordWrapping = false;
+        titleText.overflowMode = TextOverflowModes.Ellipsis;   // a long name ends in "..." instead of spilling out
+
+        GameObject stats = NewUI("Stats", slot.transform);
+        Stretch(stats, 14f, PerkTitleSize + 22f, 14f, 8f);     // under the title
+        TextMeshProUGUI statsText = AddText(stats, "Open a perk chest (E)", PerkStatsSize, TextAlignmentOptions.TopLeft);
+        statsText.color = new Color(0.85f, 0.85f, 0.85f);
+    }
+
     static void MakeTopRight(Transform parent)
     {
         GameObject box = NewUI("TopRight", parent);
