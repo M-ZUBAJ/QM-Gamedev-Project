@@ -7,6 +7,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 - CraftingMenu.cs has no /* */ header at the top.
 - ResourceNode.cs has no /* */ header at the top.
 - Wander.cs has no /* */ header at the top.
+- PlayerFireball.cs has no /* */ header at the top.
 - PlayerStats.cs: can't read this Requirement line: "ItemConsumer.cs, BlueprintPlacer.cs, PlayerRespawn.cs"
 - ObjectScatter.cs has no /* */ header at the top.
 - PerkChest.cs has no /* */ header at the top.
@@ -71,6 +72,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [ObjectLevitator.cs](<Assets/Script/Player/ObjectLevitator.cs>) | Player | - | PlayerHunger.cs (optional) |
 | [PickupEffect.cs](<Assets/Script/Player/PickupEffect.cs>) | Player | - | - |
 | [PlayerController.cs](<Assets/Script/Player/PlayerController.cs>) | Player | KeyBindings.cs, MenuState.cs, Rigidbody (Unity), PlayerStamina.cs (optional), PlayerJump.cs (optional) | HeldItemView.cs (optional), PerkChest.cs, PlayerHunger.cs (optional), PlayerJump.cs (optional), PlayerStats.cs (optional) |
+| [PlayerFireball.cs](<Assets/Script/Player/PlayerFireball.cs>) | Player | - | PerkChest.cs |
 | [PlayerHealth.cs](<Assets/Script/Player/PlayerHealth.cs>) | Player | - | AutoCollector.cs (optional), DaylightCycle.cs (optional), DeathScreen.cs, ItemConsumer.cs (optional), ItemDropper.cs (optional), PerkChest.cs, PlayerHunger.cs (optional), PlayerRespawn.cs, PlayerStats.cs (optional), StatBar.cs (optional) |
 | [PlayerHunger.cs](<Assets/Script/Player/PlayerHunger.cs>) | Player | PlayerController.cs (optional), PlayerHealth.cs (optional), ObjectLevitator.cs (optional) | ItemConsumer.cs (optional), PlayerRespawn.cs (optional), PlayerStats.cs (optional), StatBar.cs (optional) |
 | [PlayerInventory.cs](<Assets/Script/Player/PlayerInventory.cs>) | Player | IHand.cs, ItemData.cs | AutoCollector.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingData.cs, CraftingMenu.cs, DroppedStack.cs, HeldItemUI.cs, HeldItemView.cs, HotbarSelector.cs, ItemConsumer.cs, ItemData.cs, ItemDropper.cs, ItemGrabber.cs, ItemIconRules.cs, Recipe.cs, ResourceNode.cs, SlotGroup.cs, SlotUI.cs, UIBuildHelper.cs |

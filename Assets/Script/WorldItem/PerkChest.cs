@@ -80,39 +80,63 @@ public class PerkChest : MonoBehaviour
 
     void GrantRandomPerk()
     {
-        int perk = Random.Range(0, 3);
+        int perk = Random.Range(0, 4);
 
         switch (perk)
         {
             // Perk 1 :increase heath by 20 percent
             case 0:
-                PlayerHealth health = FindFirstObjectByType<PlayerHealth>();
+                {
+                    PlayerHealth health = FindFirstObjectByType<PlayerHealth>();
 
-                if (health != null)
-                    health.IncreaseMaxHealth(0.20f);
-                else
-                    Debug.LogWarning("PlayerHealth was not found.");
-                break;
+                    if (health != null)
+                        health.IncreaseMaxHealth(0.20f);
+                    else
+                        Debug.LogWarning("PlayerHealth was not found.");
+                    break;
+                }
 
             // Perk 2 : Increase max stamina by 25 percent
             case 1:
-                PlayerStamina stamina = FindFirstObjectByType<PlayerStamina>();
+                {
+                    PlayerStamina stamina = FindFirstObjectByType<PlayerStamina>();
 
-                if (stamina != null)
-                    stamina.IncreaseMaxStamina(25f);
-                else
-                    Debug.LogWarning("PlayerStamina was not found.");
-                break;
+                    if (stamina != null)
+                        stamina.IncreaseMaxStamina(25f);
+                    else
+                        Debug.LogWarning("PlayerStamina was not found.");
+                    break;
+                }
 
             // Perk 3 : increase Max move speed by 15 percent 
             case 2:
-                PlayerController controller = FindFirstObjectByType<PlayerController>();
+                {
+                    PlayerController controller = FindFirstObjectByType<PlayerController>();
 
-                if (controller != null)
-                    controller.IncreaseMoveSpeed(0.15f);
-                else
-                    Debug.LogWarning("PlayerController was not found.");
-                break;
+                    if (controller != null)
+                        controller.IncreaseMoveSpeed(0.15f);
+                    else
+                        Debug.LogWarning("PlayerController was not found.");
+                    break;
+                }
+
+            // Perk 4: Unlock or upgrade the Fireball ability.
+            case 3:
+                {
+                    PlayerFireball fireball =
+                        FindFirstObjectByType<PlayerFireball>();
+
+                    if (fireball != null)
+                        fireball.AddFireballPerk();
+                    else
+                        Debug.LogWarning(
+                            "PlayerFireball was not found on the player."
+                        );
+
+                    break;
+                }
+
+
         }
     }
 }

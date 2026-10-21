@@ -19,6 +19,10 @@ public class PlayerCoins : MonoBehaviour
         }
 
         Instance = this;
+
+
+        ///temporary test code
+        AddCoins(20);
     }
 
     public void AddCoins(int amount)
