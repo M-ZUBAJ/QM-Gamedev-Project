@@ -29,7 +29,7 @@ public class Wander : MonoBehaviour
             target = home + new Vector3(r.x, 0f, r.y);            // that is the new target
             return;
         }
-
+        //Moves by changing the position directly, so the animal ignores walls and stays at its start height.
         transform.position += toTarget.normalized * moveSpeed * Time.deltaTime;   // take one small step
         transform.rotation = Quaternion.LookRotation(toTarget);                   // face the way it walks
     }

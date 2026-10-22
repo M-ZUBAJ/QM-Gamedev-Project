@@ -59,7 +59,7 @@ public class ResourceNode : MonoBehaviour
         if (currentHealth <= 0f) Break();
     }
 
-    // Gives the drop to the player, then removes the node.
+    // Gives the drop to the player, then removes the node, the drops go straight to the inventory.
     void Break()
     {
         PlayerInventory inv = PlayerInventory.Instance;
