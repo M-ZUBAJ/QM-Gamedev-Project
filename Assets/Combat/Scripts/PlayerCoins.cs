@@ -22,7 +22,7 @@ public class PlayerCoins : MonoBehaviour
 
 
         ///temporary test code
-        AddCoins(20);
+        //AddCoins(20);
     }
 
     public void AddCoins(int amount)

@@ -46,7 +46,7 @@ public class EnemyCombat : MonoBehaviour
     {
         Debug.Log("Enemy defeated!");
 
-        int coinsEarned = Random.Range(1, 4);// player can get 1-3 coins per kill
+        int coinsEarned = Random.Range(3, 7);// player can get 1-3 coins per kill
 
         if (PlayerCoins.Instance != null) // if the player has a PlayerCoins component
         {
