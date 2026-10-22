@@ -3037,8 +3037,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 857f45be1d5466442a942d9e1f643651, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  timeOfDay: 0.3
-  dayLengthMinutes: 6
+  timeOfDay: 0.5
+  dayLengthMinutes: 10
   day: 1
   dawnStart: 0.23
   morningStart: 0.3
@@ -7101,7 +7101,8 @@ PrefabInstance:
       value: -1183493901
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 7201488366040048812, guid: 25c7b9a89adb9b142a40a239806afc13, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 25c7b9a89adb9b142a40a239806afc13, type: 3}
