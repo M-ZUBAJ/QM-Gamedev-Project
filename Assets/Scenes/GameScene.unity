@@ -3038,7 +3038,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   timeOfDay: 0.3
-  dayLengthMinutes: 4
+  dayLengthMinutes: 6
   day: 1
   dawnStart: 0.23
   morningStart: 0.3
@@ -4875,7 +4875,7 @@ MonoBehaviour:
   player: {fileID: 1576947588}
   spawnDistance: 10
   spawnAtNight: 1
-  enemiesPerNight: 5
+  enemiesPerNight: 4
 --- !u!4 &1913953990
 Transform:
   m_ObjectHideFlags: 0
