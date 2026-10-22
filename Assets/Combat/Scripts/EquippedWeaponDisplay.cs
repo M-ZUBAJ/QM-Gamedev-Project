@@ -39,7 +39,7 @@ public class EquippedWeaponDisplay : MonoBehaviour
             item != null && !item.IsEmpty && item.id == "PickAxe";
 
         swordModel.SetActive(swordEquipped);
-        axeModel.SetActive(axeEquipped);
-        pickAxeModel.SetActive(pickAxeEquipped);
+        axeModel.SetActive(false);// should be axeEquipped
+        pickAxeModel.SetActive(false); // should be pickAxeEquipped
     }
 }
