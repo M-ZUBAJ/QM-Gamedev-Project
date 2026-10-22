@@ -7,8 +7,8 @@ public class CraftingMenu : MonoBehaviour
 {
     [Tooltip("The items listed in the menu. Drag in Item Data files that have a recipe.")]
     [SerializeField] List<ItemData> craftables = new List<ItemData>();
-    
-    // From Tony I move and edit Turaki code to KeyBindings.cs .The key that opens and closes the menu is KeyBindings.Crafting (default C), set on the KeyBindings object.
+
+    // From Tony I move and edit Turki code to KeyBindings.cs .The key that opens and closes the menu is KeyBindings.Crafting (default C), set on the KeyBindings object.
 
     [Header("UI (already filled in on the prefab)")]
     [SerializeField] GameObject panel;    // the dark box that shows and hides
@@ -98,7 +98,7 @@ public class CraftingMenu : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;   // back to aiming
     }
 
-    // Throws away the old buttons and makes one new button per craftable item.
+    // Rebuilt on every open so the list always matches the current Craftables.
     void FillRows()
     {
         foreach (Transform child in rows) Destroy(child.gameObject);
