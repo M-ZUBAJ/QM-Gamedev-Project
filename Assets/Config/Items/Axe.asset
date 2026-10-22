@@ -27,6 +27,10 @@ MonoBehaviour:
     health: 0
     hunger: 0
     stamina: 0
-  recipe: []
+  recipe:
+  - item: {fileID: 11400000, guid: d524931321f754afdaeefd6219e3fa3c, type: 2}
+    amount: 2
+  - item: {fileID: 11400000, guid: 95900003d1b92425f815bb41bf1f4c7d, type: 2}
+    amount: 1
   craftAmount: 1
   craftedAt: 0
