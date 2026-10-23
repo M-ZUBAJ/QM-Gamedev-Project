@@ -17,7 +17,7 @@ Purpose: Day and night. Turns the sun around the world and changes its brightnes
          (Reset On Player Death).
 Requirement: DaylightCycle.cs x-> GameRules.cs, Light (Unity)
              DaylightCycle.cs o-> PlayerHealth.cs
-             DaylightCycle.cs <-x DayCounter.cs, TimeCounter.cs, VictoryScreen.cs
+             DaylightCycle.cs <-x DayCounter.cs, EnemySpawner.cs, TimeCounter.cs, VictoryScreen.cs
 */
 
 using UnityEngine;

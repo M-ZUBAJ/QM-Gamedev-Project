@@ -9,7 +9,7 @@ Unity Editor: The StaminaBar (StatBar, Stat = Stamina) finds this by itself.
 Purpose: Holds the player's stamina. Sprinting (PlayerController) and jumping (PlayerJump) use it up,
          and it fills back up by itself after a short rest.
          When it hits 0 the player is tired: no sprinting or jumping until it has refilled to "Recover To".
-Requirement: PlayerStamina.cs <-x PerkChest.cs
+Requirement: PlayerStamina.cs <-x PerkChest.cs, PlayerCombat.cs
              PlayerStamina.cs <-o ItemConsumer.cs, PlayerController.cs, PlayerJump.cs, PlayerPerks.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
 */
 

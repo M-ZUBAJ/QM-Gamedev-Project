@@ -1,5 +1,21 @@
 # QM Gamedev Project
 
+# Random Survival (working title)
+
+The aim of the game is survive 5 nights. After reaching the morning of day 6 you win. Spend the day getting ready for night by gathering healing and building resources. Craft a weapon, and some consumable items to get ready. Every night enemies will spawn near and attack and follow the player. The player can choose to fight back or run away to survive until the next morning when enemies despawn/die. Choosing to fight the enemies though, has the incentive of gaining coins. Use these coins to open any of the chests around the map. Once opened you will gain a statistical buff or a new ability. You'll know you opened the chest as the UI will display your perk. You can get stronger this way, but be careful because the enemies get stronger too. Each night until the end, their damage and health increases. Survive until the end, and win the game.
+
+## Controls & tips
+
+When there is nothing equipped, you attack/mine/gather with your hands which are less effective. You can do this pressing the left click once close enough.
+
+- You can press tab to open the inventory. You will also see the crafting tab here. Once you have acquired enough resources you may craft any of the items listed. Once crafted, the items will appear in your inventory. To equip them, left click on the item in the invetory, then pick a quick slot (complete bottom row of slots) and again press left click to set the item there. Once in the quick slots, you can equip the item by using the scroll wheel to select the slot the item is in, or alternatively use the keyboard numbers, for eg, pressing '1' will equip the 1st quick slot and so on.
+
+- Enter the building menu with 'b' on the keyboard. Once a building item is selected, controls appear on screen
+
+- Press left shit to spring
+
+- With a consumable item equipped in your quickslot, press the right mouse button to consume them.
+
 Unity 2023.1.22f1, 3D.
 **updated to 2023.1.22f1 on date 20/10/2026**
 
@@ -21,15 +37,15 @@ Requirement: DaylightCycle.cs x-> GameRules.cs, Light (Unity)
 */
 ```
 
-| Field | What to write |
-|---|---|
-| First Date | The day the script was first made (D/M/YYYY). Never change it. Scripts brought over from an older project keep their original First Date. |
-| Date | The day the script was last changed (D/M/YYYY). Update it every edit. |
-| Author | Tony |
-| Use by | Which GameObject to drag the script onto. |
+| Field        | What to write                                                                                                                                                                                               |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| First Date   | The day the script was first made (D/M/YYYY). Never change it. Scripts brought over from an older project keep their original First Date.                                                                   |
+| Date         | The day the script was last changed (D/M/YYYY). Update it every edit.                                                                                                                                       |
+| Author       | Tony                                                                                                                                                                                                        |
+| Use by       | Which GameObject to drag the script onto.                                                                                                                                                                   |
 | Unity Editor | What to do in the Unity Editor to make it work: windows / menus to set up, tags, layers, and how to test it while playing. Don't repeat the `[Tooltip]` text of each field; tooltips already explain those. |
-| Purpose | What the script does, in plain words. One script = one job. |
-| Requirement | What this script needs. See [Requirement symbols](#requirement-symbols). |
+| Purpose      | What the script does, in plain words. One script = one job.                                                                                                                                                 |
+| Requirement  | What this script needs. See [Requirement symbols](#requirement-symbols).                                                                                                                                    |
 
 # Rules for Scripts
 
@@ -64,7 +80,7 @@ public class DaylightCycle : MonoBehaviour
 }
 ```
 
-In the Inspector, click **+** under *On Night Start*, drag in e.g. the MonsterSpawner object and pick `MonsterSpawner > StartSpawning`.
+In the Inspector, click **+** under _On Night Start_, drag in e.g. the MonsterSpawner object and pick `MonsterSpawner > StartSpawning`.
 `DaylightCycle` never mentions `MonsterSpawner` in code, so each still works on its own.
 
 # Requirement Symbols
@@ -73,14 +89,14 @@ You write only **what your script needs**. The Script Map tool writes **what nee
 
 The arrow points at the script that is NEEDED.
 
-| Symbol | Meaning | Who writes it |
-|---|---|---|
-| `A.cs x-> B.cs` | A needs B. B does not need A. | You |
-| `A.cs <-> B.cs` | A and B need each other (write it in both files, as a warning). | You |
-| `A.cs o-> B.cs` | A works without B, but does more when B is there. | You |
-| `B.cs <-x A.cs` | A needs B. | The tool. Don't write it by hand. |
-| `B.cs <-o A.cs` | A uses B if it's there. | The tool. Don't write it by hand. |
-| `None` | Needs nothing, and nothing needs it. | The tool (when nothing else is left) |
+| Symbol          | Meaning                                                         | Who writes it                        |
+| --------------- | --------------------------------------------------------------- | ------------------------------------ |
+| `A.cs x-> B.cs` | A needs B. B does not need A.                                   | You                                  |
+| `A.cs <-> B.cs` | A and B need each other (write it in both files, as a warning). | You                                  |
+| `A.cs o-> B.cs` | A works without B, but does more when B is there.               | You                                  |
+| `B.cs <-x A.cs` | A needs B.                                                      | The tool. Don't write it by hand.    |
+| `B.cs <-o A.cs` | A uses B if it's there.                                         | The tool. Don't write it by hand.    |
+| `None`          | Needs nothing, and nothing needs it.                            | The tool (when nothing else is left) |
 
 - Unity's built-in components (Light, Rigidbody, Collider, ...) get `(Unity)` after the name, e.g. `Light (Unity)`. These are the ones you'd put in `[RequireComponent]`.
 - "Need" = won't compile or won't do its job without the other script.
@@ -141,13 +157,13 @@ It never changes `Date:`. That is only for changes people make.
 
 Scripts are grouped by system in `Assets/Script/`:
 
-| Folder | What goes there |
-|---|---|
-| `Core/` | Core scripts that any script may use directly (see rule 4). |
-| `World/` | The world itself: time of day, weather, ... |
-| `Bridge/` | Bridge scripts. |
-| `UI/` | Menus and HUD (inventory window, tabs...). Setup guides are in `Docs/`. |
-| `Editor/` | Tools for the Unity Editor (like Script Map). Not part of the game. |
+| Folder    | What goes there                                                         |
+| --------- | ----------------------------------------------------------------------- |
+| `Core/`   | Core scripts that any script may use directly (see rule 4).             |
+| `World/`  | The world itself: time of day, weather, ...                             |
+| `Bridge/` | Bridge scripts.                                                         |
+| `UI/`     | Menus and HUD (inventory window, tabs...). Setup guides are in `Docs/`. |
+| `Editor/` | Tools for the Unity Editor (like Script Map). Not part of the game.     |
 
 Add a new folder when a new system starts (e.g. `Building/`, `Combat/`, `Camera/`).
 When moving a script, always move its `.meta` file with it (or move it inside Unity), or Unity loses the link to it in scenes.
