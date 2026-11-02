@@ -1,6 +1,6 @@
 /*
 First Date: 18/10/2026
-Date: 18/10/2026
+Date: 2/11/2026
 Author: Tony
 Use by: Put this on the coin counter in the HUD (Tools > UI > Build HUD makes it: HUDCanvas > TopRight > CoinCounter),
         an object with two children: "Icon" (an Image) and "Text" (a TextMeshPro text).
@@ -14,8 +14,10 @@ Unity Editor: Choose the Look; only the fields that look needs are shown (CoinCo
               PlayerCoins.AddCoins from a test script; the number goes up.
 Purpose: Shows how many coins the player has (Marko's PlayerCoins.Instance.Coins), and redraws whenever the total
          changes (PlayerCoins.CoinsChanged). Waits quietly if the player isn't there yet.
+         ShownSprite = the coin picture it shows right now (e.g. the "+5 Coins" message uses the same coin).
 Requirement: CoinCounter.cs x-> PlayerCoins.cs, AsepriteFrames.cs
              CoinCounter.cs <-x CoinCounterEditor.cs, HUDBuilder.cs
+             CoinCounter.cs <-o GainNotifier.cs
 */
 
 using TMPro;
@@ -76,6 +78,10 @@ public class CoinCounter : MonoBehaviour
     float frameTimer;
 
     public CoinLook Look => look;
+
+    // The coin picture shown right now (the drawn coin, the PNG, or the animation's current frame).
+    // null when the look is Text Name (no picture).
+    public Sprite ShownSprite => icon != null && icon.gameObject.activeSelf ? icon.sprite : null;
 
     // ===== Unity messages (Unity calls these) =====
 

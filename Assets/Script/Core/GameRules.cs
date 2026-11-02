@@ -1,11 +1,12 @@
 /*
 First Date: 4/10/2026
-Date: 20/10/2026
+Date: 2/11/2026
 Author: Tony
 Use by: Create an empty GameObject called "GameRules" in the scene and add this script.
         (If you forget to add this script, one is created by itself with the default rules.)
 Unity Editor: Tick / untick the rules in the Inspector (also works while playing).
-              Item Icon Style only shows while Overwrite Item Icon is ticked (GameRulesEditor).
+              Item Icon Style only shows while Overwrite Item Icon is ticked, and Notification Side only while
+              Show Notifications is ticked (GameRulesEditor).
 Purpose: On / off rules for the world, like Minecraft's /gamerule.
          Other scripts ask for a rule like this: if (GameRules.DoDaylightCycle) ...
          - DoDaylightCycle (default on): time of day moves (DaylightCycle). Off = time stops.
@@ -27,8 +28,11 @@ Purpose: On / off rules for the world, like Minecraft's /gamerule.
              Static Image       = the item's own still picture (its Item Data > Icon > Image)
              Aseprite Animation = the item's own Aseprite animation (its Item Data > Icon > Aseprite)
            An item without that picture / animation falls back to Auto Icon.
+         - ShowNotifications (default on): messages like "+3 Wood" or "+5 Coins" pop up on the side of the screen
+           when the player gets items or coins (NotificationFeed). Off = no messages.
+           Notification Side (dropdown) = which side of the screen they show on: Left or Right.
          Adding a rule = new GameRule entry + bool field + a case in Get and Set + static property.
-Requirement: GameRules.cs <-x AutoCollector.cs, DaylightCycle.cs, GameRulesEditor.cs, HeldItemUI.cs, ItemDropper.cs, ItemIconRules.cs, SlotUI.cs
+Requirement: GameRules.cs <-x AutoCollector.cs, DaylightCycle.cs, GameRulesEditor.cs, HeldItemUI.cs, ItemDropper.cs, ItemIconRules.cs, NotificationFeed.cs, SlotUI.cs
 */
 
 using UnityEngine;
@@ -43,6 +47,14 @@ public enum GameRule
     ClearItemOnDead,
     OverwriteItemIcon,
     DropItem,
+    ShowNotifications,
+}
+
+// Which side of the screen the "+3 Wood" messages show on while Show Notifications is on (a dropdown).
+public enum NotificationSide
+{
+    Left,
+    Right,
 }
 
 // How every item is shown while the rule Overwrite Item Icon is on. One at a time (a dropdown).
@@ -91,6 +103,14 @@ public class GameRules : MonoBehaviour
              "(items without one get Auto Icon).")]
     [SerializeField] ItemIconStyle itemIconStyle = ItemIconStyle.AutoIcon;
 
+    [Header("Notifications")]
+    [Tooltip("On: messages like \"+3 Wood\" or \"+5 Coins\" pop up on the side of the screen when the player gets " +
+             "items (harvesting, picking up, crafting) or coins (defeating an enemy). Off: no messages.")]
+    [SerializeField] bool showNotifications = true;
+
+    [Tooltip("Which side of the screen the messages show on.")]
+    [SerializeField] NotificationSide notificationSide = NotificationSide.Left;
+
     static GameRules instance;   // the one GameRules in the scene
 
     // Other scripts subscribe to this to be told when any rule changes.
@@ -104,9 +124,13 @@ public class GameRules : MonoBehaviour
     public static bool ClearItemOnDead  => Get(GameRule.ClearItemOnDead);
     public static bool OverwriteItemIcon => Get(GameRule.OverwriteItemIcon);
     public static bool DropItem         => Get(GameRule.DropItem);
+    public static bool ShowNotifications => Get(GameRule.ShowNotifications);
 
     // The dropdown under Overwrite Item Icon (only used while that rule is on).
     public static ItemIconStyle ItemIconStyle => Current.itemIconStyle;
+
+    // The dropdown under Show Notifications (only used while that rule is on).
+    public static NotificationSide NotificationSide => Current.notificationSide;
 
     // Finds the GameRules in the scene. If there isn't one, makes one with the default rules.
     static GameRules Current
@@ -164,6 +188,7 @@ public class GameRules : MonoBehaviour
             case GameRule.ClearItemOnDead:  return r.clearItemOnDead;
             case GameRule.OverwriteItemIcon: return r.overwriteItemIcon;
             case GameRule.DropItem:         return r.dropItem;
+            case GameRule.ShowNotifications: return r.showNotifications;
         }
         return false;   // a new GameRule with no field yet
     }
@@ -181,6 +206,7 @@ public class GameRules : MonoBehaviour
             case GameRule.ClearItemOnDead:  r.clearItemOnDead = value;  break;
             case GameRule.OverwriteItemIcon: r.overwriteItemIcon = value; break;
             case GameRule.DropItem:         r.dropItem = value;          break;
+            case GameRule.ShowNotifications: r.showNotifications = value; break;
         }
 
         Changed?.Invoke();   // tell every listening script (if there are any)
@@ -190,6 +216,13 @@ public class GameRules : MonoBehaviour
     public static void SetItemIconStyle(ItemIconStyle style)
     {
         Current.itemIconStyle = style;
+        Changed?.Invoke();
+    }
+
+    // Moves the notifications to the other side from code (e.g. a settings menu later).
+    public static void SetNotificationSide(NotificationSide side)
+    {
+        Current.notificationSide = side;
         Changed?.Invoke();
     }
 }

@@ -1,6 +1,6 @@
 /*
 First Date: 30/9/2026
-Date: 11/10/2026
+Date: 2/11/2026
 Author: Tony
 Use by: Drag this script onto the PlayerSphere.
 Purpose: Stores the player's items. Items with the same Item Id stack in one slot.
@@ -11,8 +11,10 @@ Purpose: Stores the player's items. Items with the same Item Id stack in one slo
          Like Minecraft, clicking a slot picks its stack onto the cursor (Held) and clicking again puts it down.
          Other scripts add items with PlayerInventory.Instance.Add(...)
          and listen to PlayerInventory.Changed to update the UI.
+         PlayerInventory.ItemAdded tells which item came in and how many (harvested, picked up, crafted...),
+         e.g. GainNotifier shows "+3 Wood". Items only moving inside the inventory don't fire it.
 Requirement: PlayerInventory.cs x-> IHand.cs, ItemData.cs
-             PlayerInventory.cs <-x AutoCollector.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingData.cs, CraftingMenu.cs, DroppedStack.cs, EquippedWeaponDisplay.cs, GiveSwordForTesting.cs, HeldItemUI.cs, HeldItemView.cs, HotbarSelector.cs, ItemConsumer.cs, ItemData.cs, ItemDropper.cs, ItemGrabber.cs, ItemIconRules.cs, PlayerCombat.cs, PlayerFireball.cs, Recipe.cs, ResourceNode.cs, SlotGroup.cs, SlotUI.cs, UIBuildHelper.cs
+             PlayerInventory.cs <-x AutoCollector.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingData.cs, CraftingMenu.cs, DroppedStack.cs, EquippedWeaponDisplay.cs, GainNotifier.cs, GiveSwordForTesting.cs, HeldItemUI.cs, HeldItemView.cs, HotbarSelector.cs, ItemConsumer.cs, ItemData.cs, ItemDropper.cs, ItemGrabber.cs, ItemIconRules.cs, PlayerCombat.cs, PlayerFireball.cs, Recipe.cs, ResourceNode.cs, SlotGroup.cs, SlotUI.cs, UIBuildHelper.cs
 */
 
 using System.Collections.Generic;
@@ -77,6 +79,9 @@ public class PlayerInventory : MonoBehaviour, IHand
 
     public static PlayerInventory Instance { get; private set; }   // any script can reach the inventory
     public static event System.Action Changed;                     // fired whenever items change (or the hotbar selection)
+    // Fired when items come into the inventory from outside (Add): the slot they went into and how many came in.
+    // Not fired when items only move around inside it (clicks, the cursor stack going back).
+    public static event System.Action<Slot, int> ItemAdded;
 
     public IReadOnlyList<Slot> Slots => slots;
     public Slot Held => held;   // the stack on the cursor (Held.IsEmpty = holding nothing)
@@ -106,7 +111,10 @@ public class PlayerInventory : MonoBehaviour, IHand
 
     void OnDestroy()
     {
-        if (Instance == this) Instance = null;   // static values outlive the scene, so clear it
+        if (Instance != this) return;
+
+        Instance = null;     // static values outlive the scene, so clear them
+        ItemAdded = null;
     }
 
     // ===== My methods =====
@@ -115,11 +123,22 @@ public class PlayerInventory : MonoBehaviour, IHand
     // data = the item's config file (Item Data), so it can be dropped / shown later. Can be null.
     public bool Add(string id, string name, Sprite icon, int amount, ItemData data = null)
     {
+        Slot slot = Put(id, name, icon, amount, data);
+        if (slot == null) return false;
+
+        ItemAdded?.Invoke(slot, amount);   // e.g. the "+3 Wood" message
+        return true;
+    }
+
+    // Puts items into a slot: stacks them on the same item, else the first empty slot.
+    // Returns that slot, or null if a new slot is needed but all are full.
+    Slot Put(string id, string name, Sprite icon, int amount, ItemData data)
+    {
         Slot slot = FindSlot(id);     // first try to stack on the same item
         if (slot == null)
         {
             slot = FindEmptySlot();   // otherwise use the first empty slot
-            if (slot == null) return false;
+            if (slot == null) return null;
 
             slot.id = id;
             slot.name = name;
@@ -133,7 +152,7 @@ public class PlayerInventory : MonoBehaviour, IHand
 
         slot.count += amount;
         Changed?.Invoke();
-        return true;
+        return slot;
     }
 
     // Left click on a slot (like Minecraft):
@@ -278,9 +297,9 @@ public class PlayerInventory : MonoBehaviour, IHand
     {
         if (held.IsEmpty) return;
 
-        // Add() stacks it on the same item or uses the first empty slot.
+        // Put() stacks it on the same item or uses the first empty slot (not Add: nothing new came in).
         // If there is no room, it stays on the cursor and shows again next time the inventory opens.
-        if (Add(held.id, held.name, held.icon, held.count, held.data))
+        if (Put(held.id, held.name, held.icon, held.count, held.data) != null)
         {
             held.Clear();
             Changed?.Invoke();

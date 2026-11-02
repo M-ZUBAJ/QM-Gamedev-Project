@@ -20,7 +20,7 @@ There are 3 ways to reach a script, depending on the script:
 |---|---|---|
 | **A. A component on the Player** | `PlayerHealth`, `PlayerHunger`, `PlayerStamina`, `PlayerController`, `PlayerJump`, `PlayerRespawn`, `ItemConsumer`, `BlueprintPlacer` | Find it once in `Start()`, keep it in a variable (below) |
 | **B. A component on another object** | `DaylightCycle` (on the Directional Light) | Same as A: `FindFirstObjectByType<DaylightCycle>()` |
-| **C. Static: no finding needed** | `PlayerInventory.Instance`, `GameRules`, `MenuState`, `KeyBindings`, `Crosshair.Target`, `BlueprintPlacer.IsPlacing` | Write the class name and use it directly, from any script |
+| **C. Static: no finding needed** | `PlayerInventory.Instance`, `GameRules`, `MenuState`, `KeyBindings`, `Crosshair.Target`, `BlueprintPlacer.IsPlacing`, `NotificationFeed.Show` | Write the class name and use it directly, from any script |
 | **D. Assets (config files)** | `ItemData`, `BuildingData` | Make a `public ItemData meat;` field and drag the file in the Inspector |
 
 ### A + B: find it once, keep it in a variable
@@ -156,6 +156,7 @@ void OnItemsChanged() { Debug.Log("Items changed"); }
 | Player ate something | on ItemConsumer | `consumer.Consumed += OnAte;` (gets the `ItemData`) |
 | Player built something | on BlueprintPlacer | `placer.Built += OnBuilt;` (gets the `BuildingData`) |
 | Items changed | static | `PlayerInventory.Changed += OnItemsChanged;` |
+| Items came in (which, how many) | static | `PlayerInventory.ItemAdded += OnItemAdded;` (gets the `Slot` and the amount) |
 | A world rule changed | static | `GameRules.Changed += OnRulesChanged;` |
 
 ### Common mistakes
@@ -183,6 +184,8 @@ In these tables, `health`, `stamina`, `daylight`, `player`… are the variables 
 | Take items away | `PlayerInventory.Instance.Remove("Wood", 2)` (returns `false` and takes nothing if not enough) |
 | Check / pay a recipe | `itemData.CanCraft(inv)`, `itemData.Missing(inv)` ("2 Wood", or null), `itemData.TakeRecipeFrom(inv)` |
 | Redraw your UI when items change | `PlayerInventory.Changed += Redraw;` (and `-=` in `OnDisable`) |
+| Tell the player what they got ("+3 Wood") | Already done: everything given with `PlayerInventory.Instance.Add(...)` (harvesting in `ResourceNode`, crafting...) shows a message by itself (GainNotifier). Your files aren't changed |
+| Show any other message | `NotificationFeed.Show("Crafted an Axe!");` (see `NotificationFeed` in section 3) |
 | Item in hand (for tools) | `PlayerInventory.Instance.ActiveItem` (null = no hotbar slot selected) and `.data` = its Item Data |
 | Make a new item | Select the object, **Tools > Items > Make Item From Selection** (see `Docs/Item Setup.md`) |
 | Make an item that heals / feeds | Item Data > **Item Type = Consumable**, fill Health / Hunger / Stamina. Right click eats it (already works) |
@@ -222,6 +225,8 @@ The inventory's **Crafting** tab (`InventoryCanvas > InventoryWindow > Pages > C
 | Which day / night it is | `DaylightCycle.Current.Day` (for "more enemies each night") |
 | Time of day | `DaylightCycle.Current.TimeOfDay` (0 = midnight, 0.25 = sunrise, 0.5 = noon, 0.75 = sunset) |
 | Show your coins on the HUD | Already done: `CoinCounter` reads `PlayerCoins.Instance.Coins` and `CoinsChanged` (your file isn't changed) |
+| "+2 Coins" when an enemy is defeated | Already done: `GainNotifier` watches `CoinsChanged`, so every `AddCoins(...)` shows a message (your files aren't changed) |
+| Show any other message | `NotificationFeed.Show("A boss appeared!");` (see `NotificationFeed` in section 3) |
 | Drop food / items from an animal | see the example below |
 | What the player aims at | `Crosshair.Target` (a GameObject, or null) and `Crosshair.HitPoint` |
 | Is a menu open (don't attack / dodge then) | `MenuState.AnyOpen` |
@@ -334,6 +339,7 @@ Get it: nothing to find, write `PlayerInventory.Instance` (or keep it: `PlayerIn
 | `IReadOnlyList<Slot> Slots` | every slot: inventory first, then hotbar (from `HotbarStart`) |
 | `void ClearAll()` | empty everything |
 | `static event Action Changed` | items or the hotbar selection changed |
+| `static event Action<Slot, int> ItemAdded` | items came in with `Add` (picked up, harvested, crafted): the slot they went into and how many. Not fired when items only move inside the inventory |
 
 A `Slot` has `id`, `name`, `icon`, `count`, `data` (its Item Data) and `IsEmpty`.
 
@@ -376,6 +382,7 @@ Get it: nothing to find, write `GameRules.KeepInventory` etc. directly
 | `GameRules.DropItem` | off | on = the player can throw items out of the inventory; off = they can't (dying still drops items, see Keep Inventory) |
 | `GameRules.OverwriteItemIcon` + `GameRules.ItemIconStyle` | off / Auto Icon | on = every item in the inventory, hotbar, cursor and build menu is shown the same way: **Auto Icon** (photo of the prefab), **Label** (the prefab name in capitals, e.g. "SWORD", like Marko's tool slots), **Static Image** or **Aseprite Animation** (the item's own; falls back to Auto Icon). Code: `ItemIconRules.Resolve(...)`, `ItemIconRules.Label(slot)` |
 | `GameRules.WorldInteraction` | off | old rule for grabbing / levitating anywhere |
+| `GameRules.ShowNotifications` + `GameRules.NotificationSide` | on / Left | on = "+3 Wood" / "+2 Coins" messages show on the **Left** or **Right** side of the screen (NotificationFeed); off = no messages. Change the side from code: `GameRules.SetNotificationSide(NotificationSide.Right)` |
 
 Read: `if (GameRules.KeepInventory) …`. Change: `GameRules.Set(GameRule.KeepInventory, true);`.
 
@@ -437,6 +444,19 @@ Built by **Tools > UI > Build Game End Screen**. Guide: `Docs/Game End Setup.md`
 `DayCounter` ("DAY 5 - Noon"), `TimeCounter` ("14:30 - Night in 2:15") and `CoinCounter` (reads Marko's
 `PlayerCoins.Instance.Coins` and redraws on `CoinsChanged`). Nothing to call: they find what they need.
 **Tools > UI > Build HUD** rebuilds the whole HUD if it's deleted. Guide: `Docs/HUD Setup.md`.
+
+### NotificationFeed: messages for the player ("+3 Wood")
+
+Short messages on the side of the screen that fade away after 3 seconds. Get it: nothing to find, it's static.
+
+| Member | What it is |
+|---|---|
+| `static void Show(string text, Sprite icon = null)` | shows a message, e.g. `NotificationFeed.Show("Night is coming!");` |
+| `static void ShowGain(string key, string name, int amount, Sprite icon = null)` | shows "+5 Coins"; another gain with the same `key` while it's on screen adds up ("+3 Wood" + 2 = "+5 Wood") |
+
+Items given with `PlayerInventory.Instance.Add` and coins given with `PlayerCoins.AddCoins` already show a message
+(`GainNotifier`), so don't add your own for those. Nothing shows while GameRules > **Show Notifications** is off.
+Built by **Tools > UI > Build Notifications**. Guide: `Docs/Notifications Setup.md`.
 
 ### BuildingData, BlueprintPlacer
 

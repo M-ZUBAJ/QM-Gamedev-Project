@@ -15,7 +15,7 @@ Purpose: Decides how an item is shown in the UI.
            Aseprite Animation = the item's own animation (Item Data > Icon = Animated, with an .aseprite file)
          An item without that picture / animation gets Auto Icon instead, so nothing is ever blank.
 Requirement: ItemIconRules.cs x-> GameRules.cs, ItemData.cs, IconSource.cs, IconCapture.cs, PlayerInventory.cs
-             ItemIconRules.cs <-x BuildingButton.cs, HeldItemUI.cs, SlotUI.cs
+             ItemIconRules.cs <-x BuildingButton.cs, GainNotifier.cs, HeldItemUI.cs, SlotUI.cs
 */
 
 using UnityEngine;
