@@ -1,6 +1,6 @@
 /*
 First Date: 5/10/2026
-Date: 11/10/2026
+Date: 2/11/2026
 Author: Tony
 Use by: This is an ASSET (a config file in the Project window), not a script you put on an object.
 Unity Editor: Easiest: select the building (in the scene, or its prefab) > menu Tools > Building > Make Building From Selection,
@@ -17,16 +17,33 @@ Unity Editor: Easiest: select the building (in the scene, or its prefab) > menu 
                                 or Animated (drag in an .aseprite file). Only that one's field shows.
                  Recipe       = click + for each material: drag its Item Data (Assets/Config/Items) into "Item", set "Amount".
               4. It appears in the build menu (B) by itself (BuildMenuAutoList).
+              Piece Type (Snapping) says how it snaps to other pieces while placing (Snap mode, middle click):
+              Auto = guessed from the file name ("...Floor..." = Floor, "...Wall..." = Wall, "...Roof..." = Roof,
+              anything else = Other = furniture). Choose it by hand if the name doesn't say.
               Full steps: Docs/Build Menu Setup.md
 Purpose: One thing the player can build: its name, description, picture, prefab and recipe.
          The recipe is what it costs, in items from the inventory (each line points to the material's Item Data).
          It doesn't have to match the shapes of the prefab.
+         Its Piece Type decides how it snaps to built pieces (BuildSnap): floors side by side, walls on floors and
+         next to / on top of walls, roofs and second floors on top of a floor's walls, furniture on floors and
+         against walls.
 Requirement: BuildingData.cs x-> IconCapture.cs, IconSource.cs, Recipe.cs, PlayerInventory.cs
-             BuildingData.cs <-x Blueprint.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingTools.cs, BuildMenu.cs, BuildMenuAutoList.cs, BuildMenuUIBuilder.cs, ItemTools.cs, PlayerStats.cs
+             BuildingData.cs <-x Blueprint.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingTools.cs, BuildMenu.cs, BuildMenuAutoList.cs, BuildMenuUIBuilder.cs, BuildSnap.cs, BuiltPiece.cs, ItemTools.cs, PlayerStats.cs
 */
 
 using System.Collections.Generic;
 using UnityEngine;
+
+// How a building snaps to other built pieces while placing (Snap mode). New kinds of pieces get a new line here,
+// and then rules in BuildSnap.
+public enum PieceType
+{
+    Auto,    // guessed from the file name: "...Floor...", "...Wall...", "...Roof...", else Other
+    Floor,   // next to floors; over a floor with walls, on top of the walls (a ceiling / second floor)
+    Wall,    // on floors (along an edge or across the middle), next to floors, on top of and next to walls (L, T)
+    Roof,    // over a floor with walls, on top of the walls; next to other roofs
+    Other,   // furniture (e.g. a crafting table): on floors and furniture, against walls, next to floors and furniture
+}
 
 // CreateAssetMenu adds this to the right click > Create menu in the Project window.
 [CreateAssetMenu(fileName = "NewBuilding", menuName = "Building/Building Data")]
@@ -52,11 +69,20 @@ public class BuildingData : ScriptableObject
              "Empty = free.")]
     [SerializeField] List<Ingredient> recipe = new List<Ingredient>();
 
+    [Header("Snapping")]
+    [Tooltip("How it snaps to other built pieces in Snap mode (middle click while placing). " +
+             "Auto = from the file name: Floor / Wall / Roof if the name says so, else Other " +
+             "(furniture: sits on floors and against walls).")]
+    [SerializeField] PieceType pieceType = PieceType.Auto;
+
     public string DisplayName => string.IsNullOrEmpty(displayName) ? name : displayName;
     public string Description => description;
     public GameObject Prefab => prefab;
     public IReadOnlyList<Ingredient> Recipe => recipe;
     public IconSource Icon => icon;   // where the picture comes from (Capture / Static / Animated)
+
+    // The piece type really used: the one chosen, or (Auto) the one the file name says.
+    public PieceType Piece => pieceType == PieceType.Auto ? GuessPiece(name) : pieceType;
 
     // ===== Unity messages (Unity calls these) =====
 
@@ -83,4 +109,14 @@ public class BuildingData : ScriptableObject
     public bool CanAfford(PlayerInventory inv) => global::Recipe.CanAfford(recipe, inv);
     public string Missing(PlayerInventory inv) => global::Recipe.Missing(recipe, inv);   // e.g. "3 Stone", null = enough
     public bool TakeFrom(PlayerInventory inv) => global::Recipe.TakeFrom(recipe, inv);
+
+    // Floor / Wall / Roof from a name like "WoodenWall" or "Stone Floor"; anything else = Other.
+    public static PieceType GuessPiece(string buildingName)
+    {
+        string n = buildingName.ToLowerInvariant();
+        if (n.Contains("floor") || n.Contains("foundation")) return PieceType.Floor;
+        if (n.Contains("wall")) return PieceType.Wall;
+        if (n.Contains("roof")) return PieceType.Roof;
+        return PieceType.Other;
+    }
 }

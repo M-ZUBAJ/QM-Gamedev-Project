@@ -1,15 +1,16 @@
 /*
 First Date: 5/10/2026
-Date: 7/10/2026
+Date: 2/11/2026
 Author: Tony
 Use by: Nothing to set up. BlueprintPlacer makes blueprints with Blueprint.Create(...).
 Purpose: A building that is planned but not built yet: a see-through blue copy of the building's prefab.
-         - While placing: no collisions, blue = can be placed, red = can't.
+         - While placing: no collisions, blue = can be placed, green = snapped onto a built piece, red = can't.
          - Placed: its colliders are triggers, so the crosshair can aim at it but nothing bumps into it.
-         - Build() swaps the blueprint for the real building (e.g. once the recipe is paid).
+         - Build() swaps the blueprint for the real building (e.g. once the recipe is paid) and marks it with
+           BuiltPiece, so later blueprints can snap to it.
          The copy's own scripts are removed, so e.g. a blueprint of an InteractionMachine
          doesn't already work as a machine.
-Requirement: Blueprint.cs x-> BuildingData.cs
+Requirement: Blueprint.cs x-> BuildingData.cs, BuiltPiece.cs
              Blueprint.cs <-x BlueprintPlacer.cs
 */
 
@@ -21,11 +22,13 @@ public class Blueprint : MonoBehaviour
     // Tuning: the hologram colors (A = see-through amount).
     static readonly Color ValidColor = new Color(0.3f, 0.65f, 1f, 0.35f);
     static readonly Color InvalidColor = new Color(1f, 0.25f, 0.25f, 0.35f);
+    static readonly Color SnappedColor = new Color(0.3f, 1f, 0.45f, 0.4f);   // green: locked onto a built piece
     const float OverlapMargin = 0.02f;   // the blueprint may touch other things by this much (e.g. sitting on the ground)
 
     static Transform holder;    // switched-off parent: copies made under it don't run Awake
     static Material validMat;   // shared by every blueprint (made once)
     static Material invalidMat;
+    static Material snappedMat;
     static readonly Collider[] overlapBuffer = new Collider[32];   // reused, so checking makes no garbage
 
     BuildingData data;
@@ -85,10 +88,10 @@ public class Blueprint : MonoBehaviour
 
     // ----- Placing -----
 
-    // Blue = can be placed here, red = can't.
-    public void SetValid(bool valid)
+    // Blue = can be placed here, red = can't, green = can be placed and is snapped onto a built piece.
+    public void SetValid(bool valid, bool snapped = false)
     {
-        Material mat = GetHologram(valid);
+        Material mat = valid && snapped ? GetSnappedHologram() : GetHologram(valid);
         foreach (Renderer r in renderers)
         {
             Material[] mats = new Material[r.sharedMaterials.Length];
@@ -106,7 +109,8 @@ public class Blueprint : MonoBehaviour
     }
 
     // True if any shape is inside something else (a wall, a tree, the player, another blueprint...).
-    public bool Overlaps()
+    // ignoreBuilt: built pieces don't count (snapped pieces may touch, e.g. two walls meeting at a corner).
+    public bool Overlaps(bool ignoreBuilt = false)
     {
         foreach (Renderer r in renderers)
         {
@@ -116,7 +120,7 @@ public class Blueprint : MonoBehaviour
                                                    Physics.AllLayers, QueryTriggerInteraction.Collide);
             for (int i = 0; i < count; i++)
             {
-                if (Blocks(overlapBuffer[i])) return true;
+                if (Blocks(overlapBuffer[i], ignoreBuilt)) return true;
             }
         }
         return false;
@@ -142,9 +146,10 @@ public class Blueprint : MonoBehaviour
     }
 
     // Should this collider stop the blueprint from being placed?
-    bool Blocks(Collider other)
+    bool Blocks(Collider other, bool ignoreBuilt)
     {
         if (other.transform.IsChildOf(transform)) return false;                       // our own shape
+        if (ignoreBuilt && other.GetComponentInParent<BuiltPiece>() != null) return false;   // a built piece we snap to
         if (other.isTrigger) return other.GetComponentInParent<Blueprint>() != null; // only other blueprints' triggers
         return true;
     }
@@ -178,6 +183,12 @@ public class Blueprint : MonoBehaviour
     public GameObject Build()
     {
         GameObject building = Instantiate(data.Prefab, transform.position, transform.rotation);
+
+        // Remember it as a built piece, so the next blueprints can snap to it.
+        BuiltPiece piece = building.GetComponent<BuiltPiece>();
+        if (piece == null) piece = building.AddComponent<BuiltPiece>();
+        piece.Setup(data);
+
         Destroy(gameObject);
         return building;
     }
@@ -207,5 +218,11 @@ public class Blueprint : MonoBehaviour
         if (validMat == null) validMat = new Material(Shader.Find("Sprites/Default")) { color = ValidColor };
         if (invalidMat == null) invalidMat = new Material(Shader.Find("Sprites/Default")) { color = InvalidColor };
         return valid ? validMat : invalidMat;
+    }
+
+    static Material GetSnappedHologram()
+    {
+        if (snappedMat == null) snappedMat = new Material(Shader.Find("Sprites/Default")) { color = SnappedColor };
+        return snappedMat;
     }
 }

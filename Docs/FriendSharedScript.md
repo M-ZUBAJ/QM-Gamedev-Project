@@ -448,6 +448,10 @@ Get them: BuildingData = a `public BuildingData wall;` field with the file dragg
 | `BlueprintPlacer.IsPlacing` (static) | the player is placing a building |
 | `BlueprintPlacer.Begin(data)` (static) | start placing this building from code |
 | `blueprintPlacer.Built` (event, on the Player) | a building was built (gives its `BuildingData`) |
+| `BlueprintPlacer.Mode` (static) | `PlaceMode.Snap` or `PlaceMode.Surface` (middle click switches) |
+| `BlueprintPlacer.IsSnapped` (static) | the blueprint is locked onto a built piece right now (green) |
+| `BuildingData.Piece` | how it snaps: `PieceType.Floor` / `Wall` / `Roof` / `Other` (Auto = guessed from the file name) |
+| `BuiltPiece` (on every building the player built) | `Data` (its BuildingData), `Type`; `BuiltPiece.All` = every built piece in the scene |
 
 ---
 

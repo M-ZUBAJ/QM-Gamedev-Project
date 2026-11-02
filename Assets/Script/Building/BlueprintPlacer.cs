@@ -1,6 +1,6 @@
 /*
 First Date: 5/10/2026
-Date: 11/10/2026
+Date: 2/11/2026
 Author: Tony
 Use by: Hierarchy: select PlayerSphere > Add Component > BlueprintPlacer (only one, on the player).
 Unity Editor: Nothing to connect: the build menu (B) starts it with BlueprintPlacer.Begin(buildingData).
@@ -12,19 +12,30 @@ Unity Editor: Nothing to connect: the build menu (B) starts it with BlueprintPla
               Unity's Move / Rotate tools then appear in the middle of the selected shapes, the same point this script uses.
               This is only a view setting and changes nothing in the game.
 Purpose: Moves a new blueprint with the crosshair until the player puts it down.
-         Left click = place, right click = cancel, mouse wheel = turn to the next direction
-         (only Directions fixed directions lined up with the world: 16 = every 22.5 degrees),
-         middle click = auto placement on / off (keys set in KeyBindings).
-         Auto placement on: the blueprint sits on the surface the crosshair points at.
-         Auto placement off: it floats at a fixed distance in front of you (e.g. to place it against a wall).
+         Left click = place, right click = cancel, middle click = switch between Snap and Surface
+         (keys set in KeyBindings), mouse wheel = turn it.
+         Snap (the start mode): near a built piece, the blueprint locks into the spot where it fits against it
+         (BuildSnap: walls on floors, floors and roofs on top of walls, furniture against walls...) and turns
+         green. Nowhere to snap: it sits on the surface, as in Surface mode.
+         The wheel turns it 90 degrees and it fits again in its new direction. Until the wheel is used,
+         Snap picks the direction that fits best (a wall follows the floor edge); after that, the player's is kept.
+         Surface: the blueprint sits on whatever surface the crosshair points at.
+         The wheel turns it to the next of Directions fixed directions lined up with the world (16 = every 22.5 degrees).
          It turns red, and can't be placed, when it is outside an InteractionMachine's area,
          inside something, in the air, or the player doesn't have the recipe's materials.
          Placing it takes the materials from the inventory and builds the real building right away.
-Requirement: BlueprintPlacer.cs x-> Blueprint.cs, BuildingData.cs, BoundsUtil.cs, ClickClaim.cs, InteractionGate.cs, KeyBindings.cs, MenuState.cs, PlayerInventory.cs
+Requirement: BlueprintPlacer.cs x-> Blueprint.cs, BuildingData.cs, BuildSnap.cs, BuiltPiece.cs, BoundsUtil.cs, ClickClaim.cs, InteractionGate.cs, KeyBindings.cs, MenuState.cs, PlayerInventory.cs
              BlueprintPlacer.cs <-x BuildMenu.cs, BuildMenuUIBuilder.cs, BuildModeHUD.cs, PlayerStats.cs
 */
 
 using UnityEngine;
+
+// How a blueprint is placed. Middle click switches between them.
+public enum PlaceMode
+{
+    Snap,      // locks onto built pieces (floors, walls, roofs, furniture); on the surface where there's nothing to snap to
+    Surface,   // sits on whatever surface the crosshair points at
+}
 
 [DisallowMultipleComponent]
 public class BlueprintPlacer : MonoBehaviour
@@ -35,29 +46,42 @@ public class BlueprintPlacer : MonoBehaviour
     [SerializeField] float placeRange = 12f;
 
     [Range(4, 32)]
-    [Tooltip("How many directions a blueprint can face, lined up with the world (0 = +Z, 90 = +X...). " +
+    [Tooltip("Surface mode: how many directions a blueprint can face, lined up with the world (0 = +Z, 90 = +X...). " +
              "Only 4, 8, 16 or 32: other numbers jump to the nearest one. " +
-             "4 = 90 degrees per wheel step, 8 = 45, 16 = 22.5, 32 = 11.25.")]
+             "4 = 90 degrees per wheel step, 8 = 45, 16 = 22.5, 32 = 11.25. Snap mode always turns 90 degrees.")]
     [SerializeField] int directions = 32;
 
-    [Tooltip("Start with auto placement on (sit on the surface under the crosshair).")]
-    [SerializeField] bool autoPlace = true;
+    [Tooltip("The mode placing starts in. Middle click switches between them while placing. " +
+             "Snap = lock onto built floors / walls / roofs. Surface = sit on what the crosshair points at.")]
+    [SerializeField] PlaceMode startMode = PlaceMode.Snap;
+
+    [Range(0.2f, 5f)]
+    [Tooltip("Snap mode: how close (meters) the crosshair must point to a snap spot for the blueprint to lock onto it. " +
+             "Bigger = locks from further away.")]
+    [SerializeField] float snapDistance = 1.5f;
 
     static BlueprintPlacer instance;   // the one on the player
 
     Camera cam;
     Blueprint ghost;                   // the blueprint being placed (null = not placing)
     int startFrame;                    // the frame placing started (that click must not place it straight away)
-    float yaw;                         // the blueprint's turn, in degrees (always one of the allowed directions)
-    float freeDistance;                // auto placement off: how far in front of the camera it floats
+    float yaw;                         // the way the player turned the blueprint, in degrees
     Vector3 pivotToBottom;             // from the blueprint's position (pivot) to the middle of its bottom, unturned
     Vector3 pivotToCenter;             // from the pivot to the middle of the whole building, unturned
+    Bounds ghostBox;                   // the blueprint's box in its own frame (for snapping)
+    PlaceMode mode;                    // Snap or Surface right now
+    bool snapped;                      // locked onto a built piece right now (green)
+    bool turnedByPlayer;               // the wheel was used: Snap keeps the player's direction instead of choosing one
     bool valid;                        // can it be placed where it is now?
     string problem;                    // why not (shown on screen when the player tries)
 
     // While placing, this script owns the mouse through ClickClaim, so other scripts using the same buttons
     // (levitate, swing, hotbar wheel) step aside without knowing about building.
     public static bool IsPlacing { get; private set; }
+
+    // The placing mode right now and whether the blueprint is locked onto a piece (e.g. the build mode hint shows it).
+    public static PlaceMode Mode => instance != null ? instance.mode : PlaceMode.Snap;
+    public static bool IsSnapped => instance != null && instance.snapped;
 
     // Fired each time a building is really built (paid for and placed), with its Building Data. E.g. PlayerStats counts them.
     public event System.Action<BuildingData> Built;
@@ -67,6 +91,7 @@ public class BlueprintPlacer : MonoBehaviour
     void Awake()
     {
         instance = this;
+        mode = startMode;
     }
 
     void Start()
@@ -103,11 +128,11 @@ public class BlueprintPlacer : MonoBehaviour
         if (Time.frameCount == startFrame) return;   // the click that chose the building
 
         if (CancelPressed()) { Cancel(); return; }
-        if (AutoPressed()) ToggleAuto();
+        if (ModePressed()) ToggleMode();
 
         float scroll = Input.mouseScrollDelta.y;
-        if (scroll > 0f) yaw = Snap(yaw + Step);          // next direction
-        else if (scroll < 0f) yaw = Snap(yaw - Step);     // previous direction
+        if (scroll > 0f) Turn(1);          // next direction
+        else if (scroll < 0f) Turn(-1);    // previous direction
 
         if (PlacePressed()) TryPlace();
     }
@@ -119,7 +144,7 @@ public class BlueprintPlacer : MonoBehaviour
 
         Move();
         valid = Check(out problem);
-        ghost.SetValid(valid);
+        ghost.SetValid(valid, snapped);
     }
 
     // ===== My methods =====
@@ -154,9 +179,11 @@ public class BlueprintPlacer : MonoBehaviour
         Bounds b = BoundsUtil.Of(ghost.gameObject);
         pivotToCenter = b.center;
         pivotToBottom = new Vector3(b.center.x, b.min.y, b.center.z);
+        ghostBox = BuiltPiece.MeasureLocalBox(ghost.transform);
 
         yaw = Snap(cam != null ? cam.transform.eulerAngles.y : 0f);   // start at the direction closest to where you look
-        freeDistance = placeRange * 0.5f;
+        snapped = false;
+        turnedByPlayer = false;   // Snap chooses the best fitting direction until the wheel is used
         startFrame = Time.frameCount;
         IsPlacing = true;
         ClickClaim.Take(this);   // the mouse buttons and wheel are ours until placing ends
@@ -198,39 +225,58 @@ public class BlueprintPlacer : MonoBehaviour
         ClickClaim.Release(this);   // the click that ended placing still counts as used this frame
     }
 
-    void ToggleAuto()
+    void ToggleMode()
     {
-        autoPlace = !autoPlace;
-
-        // Turning it off: keep floating at the distance it is now, so it doesn't jump.
-        if (!autoPlace)
-        {
-            float d = Vector3.Distance(cam.transform.position, ghost.transform.position);
-            freeDistance = Mathf.Clamp(d, 2f, placeRange);
-        }
-
-        Debug.Log(autoPlace ? "Auto placement: ON" : "Auto placement: OFF");
+        mode = mode == PlaceMode.Snap ? PlaceMode.Surface : PlaceMode.Snap;
+        Debug.Log("Placing mode: " + mode);
     }
 
-    // Puts the blueprint where the crosshair points.
-    void Move()
+    // Mouse wheel: turns the blueprint one step. Snap mode: 90 degrees, from the way it faces now, so a snapped
+    // piece turns where it is and fits again in its new direction. Surface mode: to the next of the Directions.
+    void Turn(int steps)
     {
-        Ray ray = cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));   // from the screen center
-        Quaternion rot = Quaternion.Euler(0f, Snap(yaw), 0f);   // Snap again: Directions may be changed while playing
-        Vector3 pos;
+        turnedByPlayer = true;   // from now on Snap keeps the player's direction instead of choosing one
 
-        // Triggers are ignored: other blueprints' blue pieces don't count as ground.
-        if (autoPlace && Physics.Raycast(ray, out RaycastHit hit, placeRange,
-                                         Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+        if (mode == PlaceMode.Snap)
         {
-            // The middle of the bottom sits on the point the crosshair hits.
-            pos = hit.point - rot * pivotToBottom;
+            float from = snapped ? ghost.transform.eulerAngles.y : yaw;   // snapped: lined up with the piece it's on
+            yaw = Mathf.Repeat(from + steps * 90f, 360f);
         }
         else
         {
-            // The middle of the building floats on the crosshair line.
-            Vector3 point = ray.origin + ray.direction * (autoPlace ? placeRange : freeDistance);
-            pos = point - rot * pivotToCenter;
+            yaw = Snap(yaw + steps * Step);
+        }
+    }
+
+    // Puts the blueprint where the crosshair points: locked onto a built piece (Snap), or on the surface.
+    void Move()
+    {
+        Ray ray = cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));   // from the screen center
+        // Triggers are ignored: other blueprints' blue pieces don't count as ground.
+        bool hits = Physics.Raycast(ray, out RaycastHit hit, placeRange,
+                                    Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+        Vector3 pos = Vector3.zero;
+        Quaternion rot = Quaternion.identity;
+
+        // Snap mode: the closest spot where it fits against a built piece (BuildSnap), if the aim is near one.
+        snapped = mode == PlaceMode.Snap &&
+                  BuildSnap.Find(ghost.Data.Piece, ghostBox, ray, placeRange, hits, hit, snapDistance,
+                                 yaw, turnedByPlayer, out pos, out rot);
+
+        if (!snapped)
+        {
+            rot = Quaternion.Euler(0f, Snap(yaw), 0f);   // Snap again: Directions may be changed while playing
+
+            if (hits)
+            {
+                // The middle of the bottom sits on the point the crosshair hits.
+                pos = hit.point - rot * pivotToBottom;
+            }
+            else
+            {
+                // Nothing in range: the middle of the building floats at the end of the crosshair line (shown red).
+                pos = ray.origin + ray.direction * placeRange - rot * pivotToCenter;
+            }
         }
 
         ghost.transform.SetPositionAndRotation(pos, rot);
@@ -243,9 +289,9 @@ public class BlueprintPlacer : MonoBehaviour
 
         if (!InteractionGate.CanInteractWith(BoundsUtil.Of(ghost.gameObject)))
             why = "No Interaction Machine in range";
-        else if (ghost.Overlaps())
+        else if (ghost.Overlaps(snapped))   // snapped: touching the built pieces it locks onto is fine
             why = "Something is in the way";
-        else if (!ghost.IsSupported())
+        else if (!snapped && !ghost.IsSupported())   // snapped: held up by the piece it locks onto
             why = "Can't build in the air";
         else if (!ghost.Data.CanAfford(PlayerInventory.Instance))
             why = "Missing " + ghost.Data.Missing(PlayerInventory.Instance);
@@ -276,8 +322,8 @@ public class BlueprintPlacer : MonoBehaviour
         return Input.GetKeyDown(KeyBindings.CancelBuilding);
     }
 
-    bool AutoPressed()
+    bool ModePressed()
     {
-        return Input.GetKeyDown(KeyBindings.AutoPlace);
+        return Input.GetKeyDown(KeyBindings.AutoPlace);   // middle click by default
     }
 }

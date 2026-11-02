@@ -41,9 +41,11 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 
 | Script | Folder | Needs | Needed by |
 |---|---|---|---|
-| [Blueprint.cs](<Assets/Script/Building/Blueprint.cs>) | Building | BuildingData.cs | BlueprintPlacer.cs |
-| [BlueprintPlacer.cs](<Assets/Script/Building/BlueprintPlacer.cs>) | Building | Blueprint.cs, BuildingData.cs, BoundsUtil.cs, ClickClaim.cs, InteractionGate.cs, KeyBindings.cs, MenuState.cs, PlayerInventory.cs | BuildMenu.cs, BuildMenuUIBuilder.cs, BuildModeHUD.cs, PlayerStats.cs |
-| [BuildingData.cs](<Assets/Script/Building/BuildingData.cs>) | Building | IconCapture.cs, IconSource.cs, Recipe.cs, PlayerInventory.cs | Blueprint.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingTools.cs, BuildMenu.cs, BuildMenuAutoList.cs, BuildMenuUIBuilder.cs, ItemTools.cs, PlayerStats.cs |
+| [Blueprint.cs](<Assets/Script/Building/Blueprint.cs>) | Building | BuildingData.cs, BuiltPiece.cs | BlueprintPlacer.cs |
+| [BlueprintPlacer.cs](<Assets/Script/Building/BlueprintPlacer.cs>) | Building | Blueprint.cs, BuildingData.cs, BuildSnap.cs, BuiltPiece.cs, BoundsUtil.cs, ClickClaim.cs, InteractionGate.cs, KeyBindings.cs, MenuState.cs, PlayerInventory.cs | BuildMenu.cs, BuildMenuUIBuilder.cs, BuildModeHUD.cs, PlayerStats.cs |
+| [BuildingData.cs](<Assets/Script/Building/BuildingData.cs>) | Building | IconCapture.cs, IconSource.cs, Recipe.cs, PlayerInventory.cs | Blueprint.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingTools.cs, BuildMenu.cs, BuildMenuAutoList.cs, BuildMenuUIBuilder.cs, BuildSnap.cs, BuiltPiece.cs, ItemTools.cs, PlayerStats.cs |
+| [BuildSnap.cs](<Assets/Script/Building/BuildSnap.cs>) | Building | BuiltPiece.cs, BuildingData.cs | BlueprintPlacer.cs |
+| [BuiltPiece.cs](<Assets/Script/Building/BuiltPiece.cs>) | Building | BuildingData.cs | Blueprint.cs, BlueprintPlacer.cs, BuildSnap.cs |
 | [CameraController.cs](<Assets/Script/Camera/CameraController.cs>) | Camera | KeyBindings.cs, MenuState.cs | HeldItemView.cs (optional) |
 | [ShapeColor.cs](<Assets/Script/Color & Material/ShapeColor.cs>) | Color & Material | - | IconCapture.cs (optional) |
 | [ClickClaim.cs](<Assets/Script/Core/ClickClaim.cs>) | Core | - | BlueprintPlacer.cs, HotbarSelector.cs, ItemConsumer.cs, ObjectLevitator.cs, PlayerCombat.cs |

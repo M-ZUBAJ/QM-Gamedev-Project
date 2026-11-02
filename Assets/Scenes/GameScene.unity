@@ -3908,7 +3908,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   placeRange: 12
   directions: 32
-  autoPlace: 1
+  startMode: 0
+  snapDistance: 1.5
 --- !u!114 &1576947598
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4232,7 +4233,7 @@ MonoBehaviour:
   autoPickupDrops: 1
   dropItem: 0
   overwriteItemIcon: 1
-  itemIconStyle: 1
+  itemIconStyle: 0
 --- !u!4 &1690935958
 Transform:
   m_ObjectHideFlags: 0

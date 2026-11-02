@@ -11,9 +11,12 @@ What you will get:
 - Click a building: the window closes and a see-through **blueprint** follows your crosshair.
   - **Left click** = build it here (takes the materials from your inventory)
   - **Right click** or **B** = cancel
-  - **Mouse wheel** = turn it to the next fixed direction, lined up with the world
-    (BlueprintPlacer's **Directions**: 4, 8, 16 or 32; 16 = every 22.5°)
-  - **Middle click** = sit on the surface you aim at / float in front of you
+  - **Mouse wheel** = turn it. **Snap** mode: 90° per step. **Surface** mode: to the next fixed direction,
+    lined up with the world (BlueprintPlacer's **Directions**: 4, 8, 16 or 32; 16 = every 22.5°)
+  - **Middle click** = switch between **Snap** (the start mode) and **Surface**
+- **Snap**: aim near a piece you already built and the blueprint **locks into place** next to it and turns
+  **green** (see [Snap building](#snap-building)). Nothing to snap to: it sits on the surface you aim at.
+- **Surface**: the blueprint sits on whatever surface you aim at.
 - The blueprint is **red** (and can't be built) when it's inside something, in the air,
   or you don't have the materials. The reason is written in the Console when you click.
 
@@ -80,10 +83,39 @@ Every object with ItemPickup pointing to the same Item Data counts as that mater
    | **Prefab** | Drag in the building prefab from step 1. |
    | Icon | Choose **one**: **Capture** = a photo of the prefab. **Static** = a PNG (empty = name only). **Animated** = an **.aseprite** file (it plays on the button). Only the chosen one's field shows. |
    | **Recipe** | Click **+** once per material. **Item** = drag in the material's **Item Data** from Assets/Config/Items. **Amount** = how many. |
+   | Piece Type | How it snaps (see [Snap building](#snap-building)). **Auto** = guessed from the file name ("...Floor..." = Floor, "...Wall..." = Wall, "...Roof..." = Roof, anything else = Other). Choose by hand if the name doesn't say. |
 
 3. That's it: the build menu lists every Building Data by itself (when it's made, deleted or moved, and each time scripts compile). **Tools > Building > Update Build Menu List** does the same by hand if you ever need it.
 
 The recipe doesn't have to match the shapes: a furnace made of 10 cubes can cost 3 Stone.
+
+## Snap building
+
+In **Snap** mode (middle click while placing), a new piece locks onto the pieces you already built, like in
+Valheim or Rust. Nothing has to be set up on the prefabs: the snap spots come from each piece's size, and its
+Building Data's **Piece Type** decides the rules:
+
+| Piece Type | Snaps to |
+|---|---|
+| **Floor** | next to a floor (same height); over a floor that has walls, resting on top of the walls (a ceiling / second floor) |
+| **Wall** | on a floor (along any edge, or across the middle); next to a floor; on top of a wall (taller wall); next to a wall: in line (longer wall), at its end (**L** corner) or on its side (**T**) |
+| **Roof** | over a floor that has walls, resting on top of the walls; next to another roof |
+| **Other** | furniture (e.g. a crafting table): on a floor or on other furniture (middle, an edge or a corner); against a wall; next to a floor or other furniture |
+
+- "Next to" = touching it, standing at the same height, lined up with one end, the middle or the other end.
+- Aim at the spot you want (within BlueprintPlacer's **Snap Distance**, 1.5 m): the blueprint jumps there and
+  turns **green**. The spot closest to where your crosshair touches wins.
+- The **mouse wheel** turns the blueprint **90°** and it fits again in its new direction, e.g. a wall on a floor
+  edge turns across the floor or onto the next edge; a wall at another wall's end turns into an **L** corner.
+- Until you use the wheel, Snap picks the direction that fits best (a wall follows the floor edge by itself).
+  After you use it, your direction is kept until the piece is built.
+- A spot is skipped when the same piece is already built there, or when the new piece would go into another
+  built piece. Walls may go into walls, so two walls can meet at a floor's corner.
+- Only pieces built while playing snap (each built piece is marked with **BuiltPiece**). Pieces placed in the
+  scene by hand don't.
+- Snapped pieces don't need ground under them (they hang on the piece they lock onto).
+- A roof or a second floor only snaps once a floor has at least one wall on it (something has to hold it up).
+  Aim at the top of the walls, or at the sky above the floor.
 
 ---
 
@@ -135,7 +167,7 @@ The names **Icon**, **Name**, **Recipe**, **Ingredient** and **Count** matter: t
 A canvas that shows **only while placing** (e.g. pictures of the mouse buttons with "Build", "Cancel", "Turn").
 
 **Quick way:** menu **Tools > UI > Build Build Mode UI**. It makes `Assets/Prefabs/UI/Building/BuildMode/BuildModeCanvas.prefab`
-with the four mouse hints (Build, Cancel, Auto / Free, Rotate, each an animated Aseprite mouse from `Assets/UI/key`)
+with the four mouse hints (Build, Cancel, Snap / Surface, Rotate, each an animated Aseprite mouse from `Assets/UI/key`)
 and puts it in the scene. If the scene already has a BuildModeCanvas, it asks whether to replace it.
 To change a hint's text, picture or position, edit the **Hints** table at the top of `BuildModeUIBuilder.cs`
 and run the tool again. Save the scene (**Ctrl + S**).
@@ -147,7 +179,7 @@ BuildModeCanvas            Canvas + BuildModeHUD script (shown only while placin
 ├── RightClickImage        (MouseRightClick.aseprite)
 │   └── RightClickText     "Cancel"
 ├── MiddleClickImage       (MouseMiddleClick.aseprite)
-│   └── MiddleClickText    "Auto / Free"
+│   └── MiddleClickText    "Snap" (BuildModeHUD shows the mode: "Snap" or "Surface")
 └── MouseWheelImage        (MouseScrolling.aseprite)
     └── MouseWheelText     "Rotate"
 ```

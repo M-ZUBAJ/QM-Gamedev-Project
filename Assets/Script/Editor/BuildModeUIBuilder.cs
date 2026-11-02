@@ -1,6 +1,6 @@
 /*
 First Date: 8/10/2026
-Date: 8/10/2026
+Date: 2/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Open the scene you want it in, then menu Tools > UI > Build Build Mode UI.
@@ -11,7 +11,7 @@ Unity Editor: Open the scene you want it in, then menu Tools > UI > Build Build 
               Needs TMP Essentials (it tells you if they are missing). Undo (Ctrl + Z) works in the scene.
 Purpose: Builds the build mode hints in one click, the same layout as the one first made by hand:
          BuildModeCanvas > LeftClickImage (+ LeftClickText "Build"), RightClickImage ("Cancel"),
-         MiddleClickImage ("Auto / Free"), MouseWheelImage ("Rotate"), each an Aseprite mouse animation.
+         MiddleClickImage ("Snap" / "Surface", the placing mode), MouseWheelImage ("Rotate"), each an Aseprite mouse animation.
 Requirement: BuildModeUIBuilder.cs x-> UIBuildHelper.cs, BuildModeHUD.cs, UIAnimatedImage.cs, MenuOrder.cs
 */
 
@@ -54,7 +54,7 @@ public static class BuildModeUIBuilder
     {
         new Hint("LeftClick",   "Build",       -471f, -270f, "Assets/UI/key/MouseLeftClick.aseprite"),
         new Hint("RightClick",  "Cancel",      -171f, -270f, "Assets/UI/key/MouseRightClick.aseprite"),
-        new Hint("MiddleClick", "Auto / Free",  156f, -270f, "Assets/UI/key/MouseMiddleClick.aseprite", 250f),
+        new Hint("MiddleClick", "Snap",         156f, -270f, "Assets/UI/key/MouseMiddleClick.aseprite", 250f),
         new Hint("MouseWheel",  "Rotate",       483f, -270f, "Assets/UI/key/MouseScrolling.aseprite"),
     };
 

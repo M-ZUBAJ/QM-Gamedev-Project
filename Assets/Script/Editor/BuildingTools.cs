@@ -1,6 +1,6 @@
 /*
 First Date: 11/10/2026
-Date: 11/10/2026
+Date: 2/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Tools > Building > Make Building From Selection
@@ -12,6 +12,8 @@ Unity Editor: Tools > Building > Make Building From Selection
                 - sets the Building Data's Prefab.
                 The build menu (B) lists it by itself (BuildMenuAutoList). Then click the Building Data and set its
                 Display Name, Description, Icon and Recipe.
+                Snapping needs nothing else: the Building Data's Piece Type (Auto) is guessed from the name
+                ("...Floor/Wall/Roof...") and the Console says what it got; choose it by hand if the guess is wrong.
               Full steps: Docs/Build Menu Setup.md
 Purpose: Makes building config files (Building Data) and wires them to their prefab, so nobody has to do it by hand.
 Requirement: BuildingTools.cs x-> BuildingData.cs, ItemPickup.cs, UIBuildHelper.cs, MenuOrder.cs
@@ -50,8 +52,10 @@ public static class BuildingTools
 
         AssetDatabase.SaveAssets();
         Selection.objects = made.ToArray();   // shows the Building Data, ready to fill in its recipe
-        Debug.Log("Buildings ready: " + string.Join(", ", made.Select(d => d.name)) +
-                  ". Set each one's Recipe (and Icon, Description) in the Inspector, then save the scene (Ctrl + S).");
+        // Each one's Piece Type too (how it snaps: Floor / Wall / Roof / Other), guessed from its name while it's Auto.
+        Debug.Log("Buildings ready: " + string.Join(", ", made.Select(d => d.name + " (snaps as " + d.Piece + ")")) +
+                  ". Set each one's Recipe (and Icon, Description) in the Inspector, and its Piece Type if the guess " +
+                  "is wrong, then save the scene (Ctrl + S).");
     }
 
     // ===== My methods =====

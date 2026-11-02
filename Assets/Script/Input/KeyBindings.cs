@@ -1,6 +1,6 @@
 /*
 First Date: 2/10/2026
-Date: 20/10/2026
+Date: 2/11/2026
 Author: Tony
 Use by: Create an empty GameObject called "KeyBindings" in the scene and add this script.
         The keys in the Inspector are the DEFAULT keys. The player can change them in game
@@ -107,7 +107,7 @@ public class KeyBindings : MonoBehaviour
     [Tooltip("Stop placing the blueprint. Mouse1 = right mouse button.")]
     [SerializeField] KeyCode cancelBuilding = KeyCode.Mouse1;
 
-    [Tooltip("Turn auto placement (sit on the ground) on / off while placing. Mouse2 = middle mouse button.")]
+    [Tooltip("Switch between Snap (lock onto built floors / walls / roofs) and Surface placement while placing. Mouse2 = middle mouse button.")]
     [SerializeField] KeyCode autoPlace = KeyCode.Mouse2;
 
     [Header("Camera (default keys)")]
