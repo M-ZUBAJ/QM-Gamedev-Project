@@ -4071,6 +4071,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerCamera: {fileID: 766544976}
   attackRange: 2.5
+  attackCooldown: 0.5
   handDamage: 10
   swordDamage: 25
   axeDamage: 10
