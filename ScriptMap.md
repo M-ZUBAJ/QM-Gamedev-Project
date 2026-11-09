@@ -11,6 +11,9 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 - EnemySpawner.cs has no /* */ header at the top.
 - ResourceNode.cs has no /* */ header at the top.
 - Wander.cs has no /* */ header at the top.
+- PerkChest.cs has no /* */ header at the top.
+- PerkData.cs has no /* */ header at the top.
+- PerkManager.cs has no /* */ header at the top.
 - EquippedWeaponDisplay.cs has no /* */ header at the top.
 - FireballProjectile.cs has no /* */ header at the top.
 - GiveSwordForTesting.cs has no /* */ header at the top.
@@ -20,7 +23,6 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 - PlayerStats.cs: can't read this Requirement line: "ItemConsumer.cs, BlueprintPlacer.cs, PlayerRespawn.cs"
 - TestPlayerHealth.cs has no /* */ header at the top.
 - ObjectScatter.cs has no /* */ header at the top.
-- PerkChest.cs has no /* */ header at the top.
 - ItemDataEditor.cs uses Consumable.cs in its code, but its Requirement doesn't list it. Add: ItemDataEditor.cs x-> Consumable.cs
 - ObjectLevitator.cs uses BoundsUtil.cs in its code, but its Requirement doesn't list it. Add: ObjectLevitator.cs x-> BoundsUtil.cs
 - ObjectLevitator.cs uses ClickClaim.cs in its code, but its Requirement doesn't list it. Add: ObjectLevitator.cs x-> ClickClaim.cs
@@ -79,6 +81,9 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [Wander.cs](<Assets/Script/Gathering/Wander.cs>) | Gathering | - | - |
 | [IconCapture.cs](<Assets/Script/IconCapture/IconCapture.cs>) | IconCapture | ShapeColor.cs (optional) | BuildingData.cs, HeldItemView.cs, ItemData.cs, ItemIconRules.cs, ItemPickup.cs |
 | [KeyBindings.cs](<Assets/Script/Input/KeyBindings.cs>) | Input | - | BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemGrabber.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs |
+| [PerkChest.cs](<Assets/Script/Perks/PerkChest.cs>) | Perks | - | - |
+| [PerkData.cs](<Assets/Script/Perks/PerkData.cs>) | Perks | - | PerkManager.cs |
+| [PerkManager.cs](<Assets/Script/Perks/PerkManager.cs>) | Perks | - | - |
 | [AutoCollector.cs](<Assets/Script/Player/AutoCollector.cs>) | Player | PlayerInventory.cs, ItemPickup.cs, ItemData.cs, GameRules.cs, PlayerHealth.cs (optional) | - |
 | [EquippedWeaponDisplay.cs](<Assets/Script/Player/EquippedWeaponDisplay.cs>) | Player | - | - |
 | [FireballProjectile.cs](<Assets/Script/Player/FireballProjectile.cs>) | Player | - | PlayerFireball.cs |
@@ -92,15 +97,15 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [PickupEffect.cs](<Assets/Script/Player/PickupEffect.cs>) | Player | - | - |
 | [PlayerCoins.cs](<Assets/Script/Player/PlayerCoins.cs>) | Player | - | CoinCounter.cs, EnemyCombat.cs, GainNotifier.cs (optional), PerkChest.cs |
 | [PlayerCombat.cs](<Assets/Script/Player/PlayerCombat.cs>) | Player | - | PlayerFireball.cs |
-| [PlayerController.cs](<Assets/Script/Player/PlayerController.cs>) | Player | KeyBindings.cs, MenuState.cs, Rigidbody (Unity), PlayerStamina.cs (optional), PlayerJump.cs (optional) | HeldItemView.cs (optional), PerkChest.cs, PlayerHunger.cs (optional), PlayerJump.cs (optional), PlayerPerks.cs (optional), PlayerStats.cs (optional) |
-| [PlayerFireball.cs](<Assets/Script/Player/PlayerFireball.cs>) | Player | - | PerkChest.cs, PlayerPerks.cs (optional) |
-| [PlayerHealth.cs](<Assets/Script/Player/PlayerHealth.cs>) | Player | - | AutoCollector.cs (optional), DaylightCycle.cs (optional), DeathScreen.cs, EnemyAttack.cs, ItemConsumer.cs (optional), ItemDropper.cs (optional), PerkChest.cs, PlayerHunger.cs (optional), PlayerPerks.cs (optional), PlayerRespawn.cs, PlayerStats.cs (optional), StatBar.cs (optional) |
+| [PlayerController.cs](<Assets/Script/Player/PlayerController.cs>) | Player | KeyBindings.cs, MenuState.cs, Rigidbody (Unity), PlayerStamina.cs (optional), PlayerJump.cs (optional) | HeldItemView.cs (optional), PerkChest.cs, PerkManager.cs, PlayerHunger.cs (optional), PlayerJump.cs (optional), PlayerPerks.cs (optional), PlayerStats.cs (optional) |
+| [PlayerFireball.cs](<Assets/Script/Player/PlayerFireball.cs>) | Player | - | PerkChest.cs, PerkManager.cs, PlayerPerks.cs (optional) |
+| [PlayerHealth.cs](<Assets/Script/Player/PlayerHealth.cs>) | Player | - | AutoCollector.cs (optional), DaylightCycle.cs (optional), DeathScreen.cs, EnemyAttack.cs, ItemConsumer.cs (optional), ItemDropper.cs (optional), PerkChest.cs, PerkManager.cs, PlayerHunger.cs (optional), PlayerPerks.cs (optional), PlayerRespawn.cs, PlayerStats.cs (optional), StatBar.cs (optional) |
 | [PlayerHunger.cs](<Assets/Script/Player/PlayerHunger.cs>) | Player | PlayerController.cs (optional), PlayerHealth.cs (optional), ObjectLevitator.cs (optional) | ItemConsumer.cs (optional), PlayerRespawn.cs (optional), PlayerStats.cs (optional), StatBar.cs (optional) |
 | [PlayerInventory.cs](<Assets/Script/Player/PlayerInventory.cs>) | Player | IHand.cs, ItemData.cs | AutoCollector.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingData.cs, CraftingMenu.cs, DroppedStack.cs, EquippedWeaponDisplay.cs, GainNotifier.cs, GiveSwordForTesting.cs, HeldItemUI.cs, HeldItemView.cs, HotbarSelector.cs, ItemConsumer.cs, ItemData.cs, ItemDropper.cs, ItemGrabber.cs, ItemIconRules.cs, PlayerCombat.cs, PlayerFireball.cs, Recipe.cs, ResourceNode.cs, SlotGroup.cs, SlotUI.cs, UIBuildHelper.cs |
 | [PlayerJump.cs](<Assets/Script/Player/PlayerJump.cs>) | Player | KeyBindings.cs, MenuState.cs, Rigidbody (Unity), Collider (Unity), PlayerStamina.cs (optional), PlayerController.cs (optional) | PlayerController.cs (optional), PlayerStats.cs (optional) |
 | [PlayerPerks.cs](<Assets/Script/Player/PlayerPerks.cs>) | Player | PlayerHealth.cs (optional), PlayerStamina.cs (optional), PlayerController.cs (optional), PlayerFireball.cs (optional) | HUDBuilder.cs, PerkBar.cs, PerkChest.cs |
 | [PlayerRespawn.cs](<Assets/Script/Player/PlayerRespawn.cs>) | Player | PlayerHealth.cs, PlayerHunger.cs (optional), PlayerStamina.cs (optional), Rigidbody (Unity) (optional) | DeathScreen.cs, PlayerStats.cs |
-| [PlayerStamina.cs](<Assets/Script/Player/PlayerStamina.cs>) | Player | - | ItemConsumer.cs (optional), PerkChest.cs, PlayerCombat.cs, PlayerController.cs (optional), PlayerJump.cs (optional), PlayerPerks.cs (optional), PlayerRespawn.cs (optional), PlayerStats.cs (optional), StatBar.cs (optional) |
+| [PlayerStamina.cs](<Assets/Script/Player/PlayerStamina.cs>) | Player | - | ItemConsumer.cs (optional), PerkChest.cs, PerkManager.cs, PlayerCombat.cs, PlayerController.cs (optional), PlayerJump.cs (optional), PlayerPerks.cs (optional), PlayerRespawn.cs (optional), PlayerStats.cs (optional), StatBar.cs (optional) |
 | [PlayerStats.cs](<Assets/Script/Player/PlayerStats.cs>) | Player | PlayerController.cs (optional), PlayerJump.cs (optional), PlayerHealth.cs (optional), PlayerHunger.cs (optional), PlayerStamina.cs (optional) | DeathScreen.cs (optional), VictoryScreen.cs (optional) |
 | [RespawnOnFall.cs](<Assets/Script/Player/RespawnOnFall.cs>) | Player | - | - |
 | [TestPlayerHealth.cs](<Assets/Script/Player/TestPlayerHealth.cs>) | Player | - | - |
@@ -133,5 +138,4 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [DroppedStack.cs](<Assets/Script/WorldItem/DroppedStack.cs>) | WorldItem | ItemPickup.cs, PlayerInventory.cs | ItemDropper.cs |
 | [ItemData.cs](<Assets/Script/WorldItem/ItemData.cs>) | WorldItem | Recipe.cs (each other), Consumable.cs, IconCapture.cs, IconSource.cs, PlayerInventory.cs | AutoCollector.cs, CraftingMenu.cs, Crosshair.cs, ItemConsumer.cs, ItemDataEditor.cs, ItemIconRules.cs, ItemPickup.cs, ItemTools.cs, PlayerInventory.cs, PlayerStats.cs, Recipe.cs (each other), ResourceNode.cs |
 | [ItemPickup.cs](<Assets/Script/WorldItem/ItemPickup.cs>) | WorldItem | ItemData.cs, IconCapture.cs | AutoCollector.cs, BuildingTools.cs, Crosshair.cs, DroppedStack.cs, ItemDropper.cs, ItemGrabber.cs, ItemTools.cs |
-| [PerkChest.cs](<Assets/Script/WorldItem/PerkChest.cs>) | WorldItem | - | - |
 | [Recipe.cs](<Assets/Script/WorldItem/Recipe.cs>) | WorldItem | ItemData.cs (each other), PlayerInventory.cs | BuildingButton.cs, BuildingData.cs, CraftingMenu.cs, ItemData.cs (each other) |
