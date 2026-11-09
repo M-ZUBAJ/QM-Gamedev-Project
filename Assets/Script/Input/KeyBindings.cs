@@ -1,6 +1,6 @@
 /*
 First Date: 2/10/2026
-Date: 2/11/2026
+Date: 9/11/2026
 Author: Tony
 Use by: Create an empty GameObject called "KeyBindings" in the scene and add this script.
         The keys in the Inspector are the DEFAULT keys. The player can change them in game
@@ -12,7 +12,9 @@ Purpose: One place to change every key in the game.
          Other scripts ask for a key like this: Input.GetKeyDown(KeyBindings.Grab)
          Note: KeyCode only works with the old Input Manager
          (Project Settings → Player → Active Input Handling = "Input Manager (Old)" or "Both").
-Requirement: KeyBindings.cs <-x BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemGrabber.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs
+         The title screen's Settings > Key Bindings page (KeyBindingMenu) changes keys with SetSeveral and
+         ResetToDefaults; the choices are saved, so they work in the game too.
+Requirement: KeyBindings.cs <-x BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemGrabber.cs, KeyBindingMenu.cs, NewGameDefaultsSync.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs, TitleSceneBuilder.cs
 */
 
 using UnityEngine;
@@ -256,6 +258,18 @@ public class KeyBindings : MonoBehaviour
 
         SaveKeys();
         Changed?.Invoke();   // tell every listening script (if there are any)
+    }
+
+    // Gives every action in the list the same key and saves it, WITHOUT swapping anything (unlike Set).
+    // For actions that share a key on purpose (e.g. right click = eat, levitate and interact), and for a key menu
+    // that decides itself what happens to a key that's already used.
+    public static void SetSeveral(System.Collections.Generic.IEnumerable<KeyAction> actions, KeyCode newKey)
+    {
+        KeyCode[] keys = Current.keys;
+        foreach (KeyAction action in actions) keys[(int)action] = newKey;
+
+        SaveKeys();
+        Changed?.Invoke();
     }
 
     // Puts every key back to the default (the keys set in the Inspector) and forgets the saved ones.

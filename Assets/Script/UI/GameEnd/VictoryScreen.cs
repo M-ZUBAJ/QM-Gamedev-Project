@@ -1,6 +1,6 @@
 /*
 First Date: 20/10/2026
-Date: 20/10/2026
+Date: 9/11/2026
 Author: Tony
 Use by: On GameEndCanvas (Tools > UI > Build Game End Screen makes it and adds this script).
 Unity Editor: Nothing to connect. It finds these children by their NAME, so keep the names:
@@ -17,9 +17,10 @@ Purpose: The victory screen. When the player has survived Days To Win full days 
          the game freezes and this page shows what they did (PlayerStats).
          Play Again loads the scene again from the start (fresh world, full stats, Day 1).
          Dying resets the day count (DaylightCycle), so the days must be survived in one life.
+         The New Game page can change Days To Win and Win Time before the game starts (SetGoal, used by GameSetup).
 Requirement: VictoryScreen.cs x-> DaylightCycle.cs, MenuState.cs, Canvas (Unity)
              VictoryScreen.cs o-> PlayerStats.cs
-             VictoryScreen.cs <-x GameEndUIBuilder.cs
+             VictoryScreen.cs <-x GameEndUIBuilder.cs, GameSetup.cs, NewGameDefaults.cs, NewGameDefaultsSync.cs, NewGamePanel.cs
 */
 
 using TMPro;            // TMP_Text (TextMeshPro text)
@@ -163,6 +164,14 @@ public class VictoryScreen : MonoBehaviour
         int hour = Mathf.FloorToInt(t * 24f) % 24;
         int minute = Mathf.FloorToInt(t * 24f * 60f) % 60;
         return "Day " + day + ", " + hour.ToString("00") + ":" + minute.ToString("00") + " (" + winTime + ")";
+    }
+
+    // Changes when the player wins (e.g. chosen on the New Game page). Best called before the game starts,
+    // so the Console's "Victory at ..." line is right.
+    public void SetGoal(int days, WinTime time)
+    {
+        daysToWin = Mathf.Max(1, days);
+        winTime = time;
     }
 
     // Shows the victory page and freezes the game (time stops, no moving, the mouse is free for the button).

@@ -32,7 +32,7 @@ Purpose: On / off rules for the world, like Minecraft's /gamerule.
            when the player gets items or coins (NotificationFeed). Off = no messages.
            Notification Side (dropdown) = which side of the screen they show on: Left or Right.
          Adding a rule = new GameRule entry + bool field + a case in Get and Set + static property.
-Requirement: GameRules.cs <-x AutoCollector.cs, DaylightCycle.cs, GameRulesEditor.cs, HeldItemUI.cs, ItemDropper.cs, ItemIconRules.cs, NotificationFeed.cs, SlotUI.cs
+Requirement: GameRules.cs <-x AutoCollector.cs, DaylightCycle.cs, GameRulesEditor.cs, GameSetup.cs, HeldItemUI.cs, ItemDropper.cs, ItemIconRules.cs, NewGameDefaultsSync.cs, NotificationFeed.cs, SlotUI.cs
 */
 
 using UnityEngine;

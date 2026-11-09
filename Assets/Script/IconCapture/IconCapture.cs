@@ -1,13 +1,17 @@
 /*
 First Date: 30/9/2026
-Date: 7/10/2026
+Date: 9/11/2026
 Author: Tony
 Use by: Nothing to set up. Other scripts call IconCapture.GetIcon(itemId, someObject)
         and IconCapture.MakeModel(itemId).
+Unity Editor: Nothing to set. To make every icon brighter or darker, change the STUDIO_ numbers in Fields below.
 Purpose: Takes a "photo" of a 3D object and turns it into a Sprite for UI icons.
          Icons are remembered by Item Id, so the same item always uses the same icon
          (whether the first photo came from an object in the scene or from a prefab file, e.g. a recipe's material).
          Colors from ShapeColor are kept in both cases.
+         Photos are taken in a "studio" with its own fixed lighting (one key light and a soft even light), so an icon
+         looks the same at noon and at midnight: for the moment of the photo the world's lights (the sun at night),
+         its dim night ambient light and its fog are switched off, then put straight back.
          It also keeps the look-only copy it photographed (meshes and colors, no scripts or physics),
          so MakeModel can give a fresh copy later, e.g. for the item in the player's hand (HeldItemView),
          even though the real item was destroyed when it was picked up.
@@ -17,9 +21,20 @@ Requirement: IconCapture.cs o-> ShapeColor.cs
 
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;   // AmbientMode, SphericalHarmonicsL2, LightProbeUsage
 
 public static class IconCapture
 {
+    // What the world's lighting was before a photo, to put it back right after.
+    struct WorldLighting
+    {
+        public AmbientMode mode;
+        public Color ambient;
+        public float ambientIntensity;
+        public SphericalHarmonicsL2 ambientProbe;
+        public bool fog;
+    }
+
     // ===== Fields =====
     const int ICON_SIZE = 128;       // icon width and height in pixels
     const int ICON_LAYER = 31;       // an unused layer, so the icon camera only sees the copy
@@ -28,9 +43,18 @@ public static class IconCapture
     static readonly Vector3 STUDIO_POS = new Vector3(0f, -1000f, 0f);           // far below the game world
     static readonly Quaternion VIEW_ANGLE = Quaternion.Euler(25f, -35f, 0f);    // three-quarter view
 
+    // The studio's fixed lighting (the same whatever time it is in the game):
+    // a key light shining from the top left of the picture, and a soft even light so the shadow side isn't black.
+    static readonly Quaternion STUDIO_LIGHT_ANGLE = VIEW_ANGLE * Quaternion.Euler(30f, 30f, 0f);
+    static readonly Color STUDIO_LIGHT_COLOR = new Color(1f, 0.97f, 0.92f);    // a little warm, like daylight
+    const float STUDIO_LIGHT_INTENSITY = 1.1f;                                // about the midday sun (1.2)
+    static readonly Color STUDIO_AMBIENT = new Color(0.55f, 0.55f, 0.58f);    // the soft even light (1 = full white)
+
     static readonly Dictionary<string, Sprite> cache = new Dictionary<string, Sprite>();
     static readonly Dictionary<string, GameObject> models = new Dictionary<string, GameObject>();   // look-only copies
+    static readonly List<Light> switchedOff = new List<Light>();   // world lights turned off for the photo
     static Camera cam;
+    static Light studioLight;
     static Transform modelHolder;   // switched off: the kept copies under it are never drawn
 
     // ===== My methods =====
@@ -72,6 +96,7 @@ public static class IconCapture
     static Sprite Capture(string itemId, GameObject source)
     {
         if (cam == null) cam = CreateCamera();
+        if (studioLight == null) studioLight = CreateStudioLight();
 
         GameObject copy = BuildVisualCopy(source);
         Bounds bounds = GetBounds(copy);
@@ -84,10 +109,22 @@ public static class IconCapture
         cam.nearClipPlane = Mathf.Max(0.01f, dist - radius * 2f);
         cam.farClipPlane = dist + radius * 2f;
 
-        // Render into a temporary image, then copy it into a texture we can keep.
+        // Render into a temporary image (in the studio's own light), then copy it into a texture we can keep.
         RenderTexture rt = RenderTexture.GetTemporary(ICON_SIZE, ICON_SIZE, 24, RenderTextureFormat.ARGB32);
         cam.targetTexture = rt;
-        cam.Render();
+        // (Only while playing: in Edit mode switching the scene's lights would mark the scene as changed.)
+        bool studio = Application.isPlaying;
+        UseWorldProbes(copy, false);
+        WorldLighting world = studio ? StudioLightingOn() : default;
+        try
+        {
+            cam.Render();   // happens right now, inside this line: the game's own view never sees the studio lighting
+        }
+        finally
+        {
+            if (studio) StudioLightingOff(world);   // the world's lighting is back before anything else draws
+            UseWorldProbes(copy, true);
+        }
 
         RenderTexture prev = RenderTexture.active;
         RenderTexture.active = rt;
@@ -186,6 +223,88 @@ public static class IconCapture
             bounds.Encapsulate(rends[i].bounds);
         }
         return bounds;
+    }
+
+    // ----- Studio lighting: the same light for every photo -----
+
+    // Switches to the studio's light for one photo: only the studio light, a fixed soft even light, no fog.
+    // Returns the world's lighting, to give back to StudioLightingOff.
+    static WorldLighting StudioLightingOn()
+    {
+        WorldLighting world = new WorldLighting
+        {
+            mode = RenderSettings.ambientMode,
+            ambient = RenderSettings.ambientLight,
+            ambientIntensity = RenderSettings.ambientIntensity,
+            ambientProbe = RenderSettings.ambientProbe,
+            fog = RenderSettings.fog,
+        };
+
+        // Every world light off (e.g. the sun, dim at night), so only the studio light shines on the item.
+        switchedOff.Clear();
+        foreach (Light light in Object.FindObjectsByType<Light>(FindObjectsSortMode.None))
+        {
+            if (light == studioLight || !light.enabled) continue;
+            light.enabled = false;
+            switchedOff.Add(light);
+        }
+
+        // The soft even light ("ambient") the same every time, whatever the sky looks like now.
+        SphericalHarmonicsL2 even = new SphericalHarmonicsL2();
+        even.AddAmbientLight(STUDIO_AMBIENT);
+        RenderSettings.ambientMode = AmbientMode.Flat;
+        RenderSettings.ambientLight = STUDIO_AMBIENT;
+        RenderSettings.ambientIntensity = 1f;
+        RenderSettings.ambientProbe = even;
+        RenderSettings.fog = false;
+
+        studioLight.enabled = true;
+        return world;
+    }
+
+    // Puts the world's lighting back exactly as it was.
+    static void StudioLightingOff(WorldLighting world)
+    {
+        studioLight.enabled = false;
+        foreach (Light light in switchedOff)
+        {
+            if (light != null) light.enabled = true;
+        }
+        switchedOff.Clear();
+
+        RenderSettings.ambientMode = world.mode;
+        RenderSettings.ambientLight = world.ambient;
+        RenderSettings.ambientIntensity = world.ambientIntensity;
+        RenderSettings.ambientProbe = world.ambientProbe;
+        RenderSettings.fog = world.fog;
+    }
+
+    // Light probes (baked light stored in the world) would light the copy by where it stands: off for the photo,
+    // so the studio's own soft light is used. Back on afterwards (the kept copy becomes the item in the player's hand).
+    static void UseWorldProbes(GameObject copy, bool use)
+    {
+        foreach (Renderer r in copy.GetComponentsInChildren<Renderer>(true))
+        {
+            r.lightProbeUsage = use ? LightProbeUsage.BlendProbes : LightProbeUsage.Off;
+            r.reflectionProbeUsage = use ? ReflectionProbeUsage.BlendProbes : ReflectionProbeUsage.Off;
+        }
+    }
+
+    // The studio's key light: lights only the icon copy (its layer), never the world, and is only on during a photo.
+    static Light CreateStudioLight()
+    {
+        GameObject go = new GameObject("IconLight");
+        Object.DontDestroyOnLoad(go);   // keep it when scenes change
+        go.transform.rotation = STUDIO_LIGHT_ANGLE;
+
+        Light light = go.AddComponent<Light>();
+        light.type = LightType.Directional;
+        light.color = STUDIO_LIGHT_COLOR;
+        light.intensity = STUDIO_LIGHT_INTENSITY;
+        light.shadows = LightShadows.None;
+        light.cullingMask = 1 << ICON_LAYER;
+        light.enabled = false;
+        return light;
     }
 
     static Camera CreateCamera()

@@ -1,6 +1,6 @@
 /*
 First Date: 7/10/2026
-Date: 7/10/2026
+Date: 9/11/2026
 Author: Tony
 Use by: Drag this script onto the object that holds the tab buttons (e.g. TabBar).
 Unity Editor: Tabs: set Size to the number of tabs, then for each one drag in its Button and its Page.
@@ -10,7 +10,8 @@ Unity Editor: Tabs: set Size to the number of tabs, then for each one drag in it
 Purpose: Tabs like a web browser: clicking a tab button shows its page and hides the others.
          The chosen tab's button gets the Selected Color so you can see which page is open.
          Works for any window with tabs, not only the inventory.
-Requirement: TabGroup.cs <-x InventoryUIBuilder.cs
+         Changed tells other scripts which tab was open and which opens now (e.g. TabFX slides the page in).
+Requirement: TabGroup.cs <-x InventoryUIBuilder.cs, TabFX.cs, TitleSceneBuilder.cs
 */
 
 using UnityEngine;
@@ -47,7 +48,15 @@ public class TabGroup : MonoBehaviour
 
     int current = -1;   // the open tab (-1 = none yet)
 
+    // Fired when a tab opens: (the tab that was open, -1 if none, the tab open now).
+    public event System.Action<int, int> Changed;
+
     public int Current => current;
+    public int Count => tabs != null ? tabs.Length : 0;
+
+    // Tab i's button and page (null if there's no tab i).
+    public Button ButtonAt(int i) => tabs != null && i >= 0 && i < tabs.Length ? tabs[i].button : null;
+    public GameObject PageAt(int i) => tabs != null && i >= 0 && i < tabs.Length ? tabs[i].page : null;
 
     // ===== Unity messages (Unity calls these) =====
 
@@ -73,6 +82,7 @@ public class TabGroup : MonoBehaviour
     public void Select(int i)
     {
         if (tabs == null || tabs.Length == 0) return;
+        int before = current;
         current = Mathf.Clamp(i, 0, tabs.Length - 1);
 
         for (int j = 0; j < tabs.Length; j++)
@@ -82,5 +92,7 @@ public class TabGroup : MonoBehaviour
             if (tabs[j].button != null && tabs[j].button.targetGraphic != null)
                 tabs[j].button.targetGraphic.color = open ? selectedColor : normalColor;
         }
+
+        Changed?.Invoke(before, current);
     }
 }

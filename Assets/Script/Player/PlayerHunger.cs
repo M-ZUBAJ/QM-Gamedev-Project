@@ -1,6 +1,6 @@
 /*
 First Date: 3/10/2026
-Date: 11/10/2026
+Date: 9/11/2026
 Author: Tony
 Use by: Drag this script onto the Player sphere (next to PlayerController, PlayerHealth and ObjectLevitator).
 Unity Editor: The HungerBar (StatBar) finds this by itself. "On Changed" is only for extra things
@@ -12,7 +12,9 @@ Purpose: Holds the player's food (full = not hungry). It goes down over time:
          and +1x while levitating an object (idle + levitating = 2x, walking + levitating = 3x).
          At 0 the player starves (if a PlayerHealth is on the same object):
          dies at once ("Instant Death" on) or loses health over time (off).
+         The New Game page's difficulty can change how fast it drains (SetDrainPerSecond, used by GameSetup).
 Requirement: PlayerHunger.cs o-> PlayerController.cs, PlayerHealth.cs, ObjectLevitator.cs
+             PlayerHunger.cs <-x GameSetup.cs, NewGameDefaultsSync.cs
              PlayerHunger.cs <-o ItemConsumer.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
 */
 
@@ -168,6 +170,12 @@ public class PlayerHunger : MonoBehaviour
 
         hunger = Mathf.Max(hunger - amount, 0f);
         UpdateBar();
+    }
+
+    // How much food is lost per second while idle, from now on (e.g. a harder difficulty drains faster).
+    public void SetDrainPerSecond(float perSecond)
+    {
+        drainPerSecond = Mathf.Max(0f, perSecond);
     }
 
     void UpdateBar()

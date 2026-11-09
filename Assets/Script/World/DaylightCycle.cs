@@ -1,6 +1,6 @@
 /*
 First Date: 4/10/2026
-Date: 20/10/2026
+Date: 9/11/2026
 Author: Tony
 Use by: Drag this script onto the Directional Light (the sun) in the scene.
 Unity Editor: For a sky that turns orange at sunset and dark at night, use the default Procedural Skybox
@@ -15,9 +15,11 @@ Purpose: Day and night. Turns the sun around the world and changes its brightnes
          Only moves while the GameRule "DoDaylightCycle" is on (off = time stops, like Minecraft).
          When the player dies (PlayerHealth), the day, time and light go back to how the game started
          (Reset On Player Death).
+         The New Game page can change the start time and day length before the game starts (SetStartTime /
+         SetDayLength, used by GameSetup).
 Requirement: DaylightCycle.cs x-> GameRules.cs, Light (Unity)
              DaylightCycle.cs o-> PlayerHealth.cs
-             DaylightCycle.cs <-x DayCounter.cs, EnemySpawner.cs, TimeCounter.cs, VictoryScreen.cs
+             DaylightCycle.cs <-x DayCounter.cs, EnemySpawner.cs, GameSetup.cs, NewGameDefaultsSync.cs, TimeCounter.cs, VictoryScreen.cs
 */
 
 using UnityEngine;
@@ -234,6 +236,21 @@ public class DaylightCycle : MonoBehaviour
         day = startDay;
         ApplyLight();   // the sun and sky change right away, not next frame
         CheckPhase();
+    }
+
+    // Starts the game at another time of day (0 = midnight, 0.5 = midday), e.g. chosen on the New Game page.
+    // Also where dying brings the player back to (Reset On Player Death). Best called before the first frame.
+    public void SetStartTime(float time)
+    {
+        timeOfDay = Mathf.Repeat(time, 1f);
+        startTimeOfDay = timeOfDay;
+        ApplyLight();
+    }
+
+    // How many real minutes one full day (day + night) takes from now on.
+    public void SetDayLength(float minutes)
+    {
+        dayLengthMinutes = Mathf.Clamp(minutes, 0.5f, 60f);
     }
 
     // Which part of the day a Time Of Day is.

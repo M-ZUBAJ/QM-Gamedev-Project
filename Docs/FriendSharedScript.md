@@ -20,7 +20,7 @@ There are 3 ways to reach a script, depending on the script:
 |---|---|---|
 | **A. A component on the Player** | `PlayerHealth`, `PlayerHunger`, `PlayerStamina`, `PlayerController`, `PlayerJump`, `PlayerRespawn`, `ItemConsumer`, `BlueprintPlacer` | Find it once in `Start()`, keep it in a variable (below) |
 | **B. A component on another object** | `DaylightCycle` (on the Directional Light) | Same as A: `FindFirstObjectByType<DaylightCycle>()` |
-| **C. Static: no finding needed** | `PlayerInventory.Instance`, `GameRules`, `MenuState`, `KeyBindings`, `Crosshair.Target`, `BlueprintPlacer.IsPlacing`, `NotificationFeed.Show` | Write the class name and use it directly, from any script |
+| **C. Static: no finding needed** | `PlayerInventory.Instance`, `GameRules`, `MenuState`, `KeyBindings`, `Crosshair.Target`, `BlueprintPlacer.IsPlacing`, `NotificationFeed.Show`, `GameSetup` | Write the class name and use it directly, from any script |
 | **D. Assets (config files)** | `ItemData`, `BuildingData` | Make a `public ItemData meat;` field and drag the file in the Inspector |
 
 ### A + B: find it once, keep it in a variable
@@ -227,6 +227,7 @@ The inventory's **Crafting** tab (`InventoryCanvas > InventoryWindow > Pages > C
 | Show your coins on the HUD | Already done: `CoinCounter` reads `PlayerCoins.Instance.Coins` and `CoinsChanged` (your file isn't changed) |
 | "+2 Coins" when an enemy is defeated | Already done: `GainNotifier` watches `CoinsChanged`, so every `AddCoins(...)` shows a message (your files aren't changed) |
 | Show any other message | `NotificationFeed.Show("A boss appeared!");` (see `NotificationFeed` in section 3) |
+| Make enemies stronger on Hard | `if (GameSetup.ChosenDifficulty == GameSetup.Difficulty.Hard) { ... }` (null = Normal, the game as it is). Enemies per night is already set from the New Game page through your `EnemySpawner`'s public `spawnAtNight` / `enemiesPerNight` (your file isn't changed) |
 | Drop food / items from an animal | see the example below |
 | What the player aims at | `Crosshair.Target` (a GameObject, or null) and `Crosshair.HitPoint` |
 | Is a menu open (don't attack / dodge then) | `MenuState.AnyOpen` |
@@ -255,6 +256,8 @@ void DropMeat(int amount)
 | Where the player respawns | `PlayerRespawn` on the Player, **Respawn Point** in the Inspector (default 0, 0.5, 0). Read it: `respawn.RespawnPoint` |
 | Day / night | `DaylightCycle` on the Directional Light: `TimeOfDay`, `IsNight`; GameRules > **Do Daylight Cycle** stops time |
 | World rules | `GameRules` object in the scene (see section 3) |
+| Scenes / build order | The game starts at **MainTitleScene** (scene 0 in File > Build Settings), START GAME loads **GameScene**. Rebuild the title with **Tools > UI > Build Main Title Scene** (`Docs/Main Title Setup.md`) |
+| Change scene with a fade | `ScreenFader.LoadScene("GameScene", "DAY 1", "Survive 5 nights");` (fades to black, title card, loads, fades in) |
 
 Guides: `Docs/Build Menu Setup.md`, `Docs/Item Setup.md`, `Docs/Inventory Setup.md`.
 
@@ -457,6 +460,36 @@ Short messages on the side of the screen that fade away after 3 seconds. Get it:
 Items given with `PlayerInventory.Instance.Add` and coins given with `PlayerCoins.AddCoins` already show a message
 (`GainNotifier`), so don't add your own for those. Nothing shows while GameRules > **Show Notifications** is off.
 Built by **Tools > UI > Build Notifications**. Guide: `Docs/Notifications Setup.md`.
+
+### GameSetup: what the player chose on the New Game page
+
+Static, nothing to find. Every value is **null when the player left it on the default** (= the game as GameScene has it).
+The choices are put into the game by themselves when GameScene loads (before anything starts), and Play Again keeps them.
+
+| Member | What it is |
+|---|---|
+| `int? DaysToWin`, `WinTime? WinAt` | the goal (already given to VictoryScreen) |
+| `float? DayLengthMinutes`, `float? StartTime` | the sun (already given to DaylightCycle) |
+| `Difficulty? ChosenDifficulty` | `Peaceful`, `Easy`, `Hard` (null = Normal). Read it to scale your own things |
+| `bool? SpawnEnemies`, `int? EnemiesPerNight`, `float? HungerDrainPerSecond` | what the difficulty set (already given to EnemySpawner / PlayerHunger) |
+| `DeathRule? WhenDying`, `bool? AutoPickupDrops`, `bool? ShowNotifications` | the rules (already given to GameRules) |
+| `bool IsChosen` | START GAME was pressed this session (false when you press Play straight in GameScene) |
+
+### Menu effects you can reuse (title screen)
+
+| Script | Drag it onto | What it does |
+|---|---|---|
+| `ButtonFX` | any Button (text child named `Label`) | grows + turns gold on hover, light shine, squash + spring on click, ripple, sparks |
+| `CascadeIn` | a panel | its children slide in one after another every time it's shown |
+| `PulseFX` | any picture or text | a slow glowing heartbeat |
+| `TitleTextFX` | a TextMeshPro text | letters fall in, float in a wave, shine |
+| `UITween.Run(this, seconds, ease, t => ...)` | (code) | a smooth animation with an ease (OutBack, OutBounce...), real time |
+| `UISparks.Burst(rect, color, count)` | (code) | a burst of sparks from a UI object |
+| `ScreenFader.LoadScene(scene, title, subtitle)` | (code) | fade to black, title card, load, fade in |
+
+Other changes for the title screen: `KeyBindings.SetSeveral(actions, key)` sets several actions to one key without
+swapping (the key menu uses it); `TabGroup.Changed` (from, to) fires when a tab opens.
+Guide: `Docs/Main Title Setup.md`.
 
 ### BuildingData, BlueprintPlacer
 
