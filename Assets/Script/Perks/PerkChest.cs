@@ -21,6 +21,12 @@ public class PerkChest : MonoBehaviour
     bool opened;
     int openingCost;
 
+
+
+    [Header("Available Perks")]
+    [SerializeField] List<PerkData> availablePerks = new List<PerkData>();
+    // above line creates an editable list in the inspector, now we can add future perk assets without editing script
+
     void Start()
     {
         if (maxCost < minCost)
@@ -53,30 +59,91 @@ public class PerkChest : MonoBehaviour
         TryOpen();
     }
 
+
     void TryOpen()
     {
-        Debug.Log(name + " — TryOpen called. Opened: " + opened);
-
         if (opened) return;
 
-        if (PlayerCoins.Instance == null)
+        if (PerkSelectionUI.Instance == null)
         {
-            Debug.LogWarning("Cannot open chest: PlayerCoins was not found.");
+            Debug.LogWarning("PerkSelectionUI was not found.");
             return;
         }
 
-        if (!PlayerCoins.Instance.SpendCoins(openingCost))
+        if (availablePerks == null || availablePerks.Count < 3)
+        {
+            Debug.LogWarning("The chest needs at least 3 available perks.");
+            return;
+        }
+
+        if (PlayerCoins.Instance == null)
+        {
+            Debug.LogWarning("PlayerCoins was not found.");
+            return;
+        }
+
+        if (PlayerCoins.Instance.Coins < openingCost)
         {
             Debug.Log("You need " + openingCost + " coins to open this chest.");
             return;
         }
 
+        List<PerkData> choices = new List<PerkData>();
+
+        List<PerkData> pool = new List<PerkData>(
+            availablePerks.FindAll(perk => perk != null)
+        );
+
+        if (pool.Count < 3)
+        {
+            Debug.LogWarning("The chest needs at least 3 valid perk assets.");
+            return;
+        }
+
+        // Randomly select three different perks.
+        for (int i = 0; i < 3; i++)
+        {
+            int index = Random.Range(0, pool.Count);
+            choices.Add(pool[index]);
+            pool.RemoveAt(index);
+        }
+
+        // Show the UI before taking payment.
+        bool shown = PerkSelectionUI.Instance.Show(
+            choices,
+            OnPerkSelected
+        );
+
+        if (!shown) return;
+
+        if (!PlayerCoins.Instance.SpendCoins(openingCost))
+        {
+            PerkSelectionUI.Instance.Hide();
+            return;
+        }
+
         opened = true;
 
-        GrantRandomPerk();
-
-        Debug.Log("Chest opened!");
+        Debug.Log("Chest opened! Choose your perk.");
     }
+
+
+
+
+    void OnPerkSelected(PerkData selectedPerk)
+    {
+        if (PerkManager.Instance == null)
+        {
+            Debug.LogError("PerkManager was not found.");
+            return;
+        }
+
+        PerkManager.Instance.ApplyPerk(selectedPerk);
+
+        Debug.Log("Selected perk: " + selectedPerk.displayName);
+    }
+
+
 
     void GrantRandomPerk()
     {
