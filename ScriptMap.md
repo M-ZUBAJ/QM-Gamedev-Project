@@ -23,6 +23,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 - PlayerStats.cs: can't read this Requirement line: "ItemConsumer.cs, BlueprintPlacer.cs, PlayerRespawn.cs"
 - TestPlayerHealth.cs has no /* */ header at the top.
 - ObjectScatter.cs has no /* */ header at the top.
+- PerkSelectionUI.cs has no /* */ header at the top.
 - ItemDataEditor.cs uses Consumable.cs in its code, but its Requirement doesn't list it. Add: ItemDataEditor.cs x-> Consumable.cs
 - ObjectLevitator.cs uses BoundsUtil.cs in its code, but its Requirement doesn't list it. Add: ObjectLevitator.cs x-> BoundsUtil.cs
 - ObjectLevitator.cs uses ClickClaim.cs in its code, but its Requirement doesn't list it. Add: ObjectLevitator.cs x-> ClickClaim.cs
@@ -82,7 +83,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [IconCapture.cs](<Assets/Script/IconCapture/IconCapture.cs>) | IconCapture | ShapeColor.cs (optional) | BuildingData.cs, HeldItemView.cs, ItemData.cs, ItemIconRules.cs, ItemPickup.cs |
 | [KeyBindings.cs](<Assets/Script/Input/KeyBindings.cs>) | Input | - | BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemGrabber.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs |
 | [PerkChest.cs](<Assets/Script/Perks/PerkChest.cs>) | Perks | - | - |
-| [PerkData.cs](<Assets/Script/Perks/PerkData.cs>) | Perks | - | PerkManager.cs |
+| [PerkData.cs](<Assets/Script/Perks/PerkData.cs>) | Perks | - | PerkManager.cs, PerkSelectionUI.cs |
 | [PerkManager.cs](<Assets/Script/Perks/PerkManager.cs>) | Perks | - | - |
 | [AutoCollector.cs](<Assets/Script/Player/AutoCollector.cs>) | Player | PlayerInventory.cs, ItemPickup.cs, ItemData.cs, GameRules.cs, PlayerHealth.cs (optional) | - |
 | [EquippedWeaponDisplay.cs](<Assets/Script/Player/EquippedWeaponDisplay.cs>) | Player | - | - |
@@ -129,6 +130,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [ItemIconRules.cs](<Assets/Script/UI/ItemIconRules.cs>) | UI | GameRules.cs, ItemData.cs, IconSource.cs, IconCapture.cs, PlayerInventory.cs | BuildingButton.cs, GainNotifier.cs, HeldItemUI.cs, SlotUI.cs |
 | [GainNotifier.cs](<Assets/Script/UI/Notifications/GainNotifier.cs>) | UI/Notifications | NotificationFeed.cs, PlayerInventory.cs, ItemIconRules.cs, PlayerCoins.cs (optional), CoinCounter.cs (optional) | NotificationUIBuilder.cs |
 | [NotificationFeed.cs](<Assets/Script/UI/Notifications/NotificationFeed.cs>) | UI/Notifications | GameRules.cs, VerticalLayoutGroup (Unity) | GainNotifier.cs, NotificationUIBuilder.cs |
+| [PerkSelectionUI.cs](<Assets/Script/UI/Perks/PerkSelectionUI.cs>) | UI/Perks | - | - |
 | [TabGroup.cs](<Assets/Script/UI/Tabs/TabGroup.cs>) | UI/Tabs | - | InventoryUIBuilder.cs |
 | [UIAnimatedImage.cs](<Assets/Script/UI/UIAnimatedImage.cs>) | UI | AsepriteFrames.cs, IconSource.cs, Image (Unity) | BuildingButton.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, SlotUI.cs |
 | [BoundsUtil.cs](<Assets/Script/Utility/BoundsUtil.cs>) | Utility | - | BlueprintPlacer.cs, Crosshair.cs, ItemGrabber.cs, ObjectLevitator.cs |

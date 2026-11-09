@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38c816e89a084134abd3627d24efe837, type: 3}
   m_Name: Perk_MoveSpeed
   m_EditorClassIdentifier: 
-  displayName: 
-  description: 
+  displayName: Agility
+  description: Increase Movement Speed by 15%
   icon: {fileID: 0}
-  perkType: 0
-  value: 0
+  perkType: 2
+  value: 0.15
