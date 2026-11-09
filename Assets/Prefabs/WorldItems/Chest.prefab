@@ -494,3 +494,8 @@ MonoBehaviour:
   maxCost: 2
   interactKey: 101
   interactionRange: 3
+  availablePerks:
+  - {fileID: 11400000, guid: f273ba9728486024796a32707b415d6e, type: 2}
+  - {fileID: 11400000, guid: 469ac1d90ef7d61449a6f0b2a48b24b5, type: 2}
+  - {fileID: 11400000, guid: a18daf5e52897e54ca46edc61d61c0d8, type: 2}
+  - {fileID: 11400000, guid: ee1e4fd06507bce499d4808f1fe31bed, type: 2}

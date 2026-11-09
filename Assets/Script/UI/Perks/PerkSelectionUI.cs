@@ -23,6 +23,12 @@ public class PerkSelectionUI : MonoBehaviour
 
     Action<PerkData> selectionCallback;
 
+    // Remember the cursor state before opening the perk menu.
+    CursorLockMode previousCursorLockState;
+    bool previousCursorVisible;
+    bool cursorStateSaved;
+
+
     public bool IsOpen { get; private set; }
 
     void Awake()
@@ -92,19 +98,42 @@ public class PerkSelectionUI : MonoBehaviour
             );
         }
 
+        // Remember the current mouse settings.
+        previousCursorLockState = Cursor.lockState;
+        previousCursorVisible = Cursor.visible;
+        cursorStateSaved = true;
+
+        // Unlock and show the mouse.
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        // Display the perk selection screen.
         selectionPanel.SetActive(true);
         IsOpen = true;
+
+        // Register this menu with the game's menu system.
+        MenuState.SetOpen(this, true);
 
         return true;
     }
 
     void SelectPerk(PerkData perk)
     {
-        if (selectionCallback == null) return;
+        Debug.Log("Perk button clicked: " + perk.displayName);
+
+        if (selectionCallback == null)
+        {
+            Debug.LogError("Perk selection callback is missing!");
+            return;
+        }
 
         Action<PerkData> callback = selectionCallback;
 
+        Debug.Log("Closing perk selection panel.");
+
         Hide();
+
+        Debug.Log("Applying selected perk.");
 
         callback(perk);
     }
@@ -116,5 +145,30 @@ public class PerkSelectionUI : MonoBehaviour
 
         IsOpen = false;
         selectionCallback = null;
+
+        // Tell the game that this menu has closed.
+        MenuState.SetOpen(this, false);
+
+        // Restore the previous mouse settings.
+        if (cursorStateSaved)
+        {
+            Cursor.lockState = previousCursorLockState;
+            Cursor.visible = previousCursorVisible;
+
+            cursorStateSaved = false;
+        }
     }
+
+    public void TestButtonClick()
+    {
+        Debug.Log("SUCCESS: Unity detected the perk button click!");
+    }
+
+
+    // This prevents the menu from remaining registered as open if its GameObject is destroyed
+    void OnDestroy()
+    {
+        MenuState.SetOpen(this, false);
+    }
+
 }
