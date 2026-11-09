@@ -11,6 +11,9 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 - EnemySpawner.cs has no /* */ header at the top.
 - ResourceNode.cs has no /* */ header at the top.
 - Wander.cs has no /* */ header at the top.
+- PerkChest.cs has no /* */ header at the top.
+- PerkData.cs has no /* */ header at the top.
+- PerkManager.cs has no /* */ header at the top.
 - EquippedWeaponDisplay.cs has no /* */ header at the top.
 - FireballProjectile.cs has no /* */ header at the top.
 - GiveSwordForTesting.cs has no /* */ header at the top.
@@ -20,7 +23,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 - PlayerStats.cs: can't read this Requirement line: "ItemConsumer.cs, BlueprintPlacer.cs, PlayerRespawn.cs"
 - TestPlayerHealth.cs has no /* */ header at the top.
 - ObjectScatter.cs has no /* */ header at the top.
-- PerkChest.cs has no /* */ header at the top.
+- PerkSelectionUI.cs has no /* */ header at the top.
 - ItemDataEditor.cs uses Consumable.cs in its code, but its Requirement doesn't list it. Add: ItemDataEditor.cs x-> Consumable.cs
 - ObjectLevitator.cs uses BoundsUtil.cs in its code, but its Requirement doesn't list it. Add: ObjectLevitator.cs x-> BoundsUtil.cs
 - ObjectLevitator.cs uses ClickClaim.cs in its code, but its Requirement doesn't list it. Add: ObjectLevitator.cs x-> ClickClaim.cs
@@ -36,7 +39,6 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 - PlayerStats.cs uses ItemData.cs in its code, but its Requirement doesn't list it. Add: PlayerStats.cs x-> ItemData.cs
 - PlayerStats.cs uses PlayerRespawn.cs in its code, but its Requirement doesn't list it. Add: PlayerStats.cs x-> PlayerRespawn.cs
 - BuildingButton.cs uses IconSource.cs in its code, but its Requirement doesn't list it. Add: BuildingButton.cs x-> IconSource.cs
-- NewGamePanel.cs uses VictoryScreen.cs in its code, but its Requirement doesn't list it. Add: NewGamePanel.cs x-> VictoryScreen.cs
 
 ## Scripts
 
@@ -50,10 +52,10 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [CameraController.cs](<Assets/Script/Camera/CameraController.cs>) | Camera | KeyBindings.cs, MenuState.cs | HeldItemView.cs (optional) |
 | [ShapeColor.cs](<Assets/Script/Color & Material/ShapeColor.cs>) | Color & Material | - | IconCapture.cs (optional) |
 | [ClickClaim.cs](<Assets/Script/Core/ClickClaim.cs>) | Core | - | BlueprintPlacer.cs, HotbarSelector.cs, ItemConsumer.cs, ObjectLevitator.cs, PlayerCombat.cs |
-| [GameRules.cs](<Assets/Script/Core/GameRules.cs>) | Core | - | AutoCollector.cs, DaylightCycle.cs, GameRulesEditor.cs, GameSetup.cs, HeldItemUI.cs, ItemDropper.cs, ItemIconRules.cs, NewGameDefaultsSync.cs, NotificationFeed.cs, SlotUI.cs |
+| [GameRules.cs](<Assets/Script/Core/GameRules.cs>) | Core | - | AutoCollector.cs, DaylightCycle.cs, GameRulesEditor.cs, HeldItemUI.cs, ItemDropper.cs, ItemIconRules.cs, NotificationFeed.cs, SlotUI.cs |
 | [IHand.cs](<Assets/Script/Core/IHand.cs>) | Core | - | ObjectLevitator.cs, PlayerInventory.cs |
 | [InteractionGate.cs](<Assets/Script/Core/InteractionGate.cs>) | Core | - | BlueprintPlacer.cs, ItemGrabber.cs, ObjectLevitator.cs |
-| [MenuState.cs](<Assets/Script/Core/MenuState.cs>) | Core | - | BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, DeathScreen.cs, HeldItemView.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemDropper.cs, ItemGrabber.cs, ObjectLevitator.cs, PlayerCombat.cs, PlayerController.cs, PlayerJump.cs, VictoryScreen.cs |
+| [MenuState.cs](<Assets/Script/Core/MenuState.cs>) | Core | - | BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, DeathScreen.cs, HeldItemView.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemDropper.cs, ItemGrabber.cs, ObjectLevitator.cs, PerkSelectionUI.cs, PlayerCombat.cs, PlayerController.cs, PlayerJump.cs, VictoryScreen.cs |
 | [CraftingMenu.cs](<Assets/Script/Crafting/CraftingMenu.cs>) | Crafting | - | InventoryUIBuilder.cs |
 | [Crosshair.cs](<Assets/Script/Crosshair/Crosshair.cs>) | Crosshair | ItemGrabber.cs (each other), ItemPickup.cs, ItemData.cs, BoundsUtil.cs, Image (Unity) | HUDBuilder.cs, ItemGrabber.cs (each other), ObjectLevitator.cs |
 | [BuildingTools.cs](<Assets/Script/Editor/BuildingTools.cs>) | Editor | BuildingData.cs, ItemPickup.cs, UIBuildHelper.cs, MenuOrder.cs | - |
@@ -68,22 +70,21 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [InventoryUIBuilder.cs](<Assets/Script/Editor/InventoryUIBuilder.cs>) | Editor | UIBuildHelper.cs, TabGroup.cs, InventoryWindow.cs, SlotUI.cs, SlotGroup.cs, HeldItemUI.cs, HotbarSelector.cs, ItemDropper.cs, CraftingMenu.cs, MenuOrder.cs | - |
 | [ItemDataEditor.cs](<Assets/Script/Editor/ItemDataEditor.cs>) | Editor | ItemData.cs | - |
 | [ItemTools.cs](<Assets/Script/Editor/ItemTools.cs>) | Editor | ItemData.cs, ItemPickup.cs, BuildingData.cs, MenuOrder.cs | - |
-| [MenuOrder.cs](<Assets/Script/Editor/MenuOrder.cs>) | Editor | - | BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, GameEndUIBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, NotificationUIBuilder.cs, ScriptMapTool.cs, TitleSceneBuilder.cs |
-| [NewGameDefaultsSync.cs](<Assets/Script/Editor/NewGameDefaultsSync.cs>) | Editor | NewGameDefaults.cs, NewGamePanel.cs, VictoryScreen.cs, DaylightCycle.cs, EnemySpawner.cs, PlayerHunger.cs, GameRules.cs, KeyBindings.cs | TitleSceneBuilder.cs |
+| [MenuOrder.cs](<Assets/Script/Editor/MenuOrder.cs>) | Editor | - | BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, GameEndUIBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, NotificationUIBuilder.cs, ScriptMapTool.cs |
 | [NotificationUIBuilder.cs](<Assets/Script/Editor/NotificationUIBuilder.cs>) | Editor | UIBuildHelper.cs, NotificationFeed.cs, GainNotifier.cs, MenuOrder.cs | - |
 | [ScriptMapTool.cs](<Assets/Script/Editor/ScriptMapTool.cs>) | Editor | MenuOrder.cs | - |
-| [TitleSceneBuilder.cs](<Assets/Script/Editor/TitleSceneBuilder.cs>) | Editor | UIBuildHelper.cs, MenuOrder.cs, NewGameDefaultsSync.cs, NewGameDefaults.cs, UIFXSprites.cs, UITween.cs, TitleMenu.cs, TitleBackground.cs, TitleTextFX.cs, ButtonFX.cs, CascadeIn.cs, PulseFX.cs, TabFX.cs, TabGroup.cs, ChoiceRow.cs, StepperRow.cs, TogglePop.cs, DropdownUnfold.cs, NewGamePanel.cs, KeyBindingMenu.cs, IncomingMessage.cs, KeyBindings.cs | - |
-| [UIBuildHelper.cs](<Assets/Script/Editor/UIBuildHelper.cs>) | Editor | PlayerInventory.cs | BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, GameEndUIBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, NotificationUIBuilder.cs, TitleSceneBuilder.cs |
+| [UIBuildHelper.cs](<Assets/Script/Editor/UIBuildHelper.cs>) | Editor | PlayerInventory.cs | BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, GameEndUIBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, NotificationUIBuilder.cs |
 | [EnemyAttack.cs](<Assets/Script/Enemy/EnemyAttack.cs>) | Enemy | - | EnemySpawner.cs |
 | [EnemyCombat.cs](<Assets/Script/Enemy/EnemyCombat.cs>) | Enemy | - | EnemySpawner.cs, FireballProjectile.cs, PlayerCombat.cs |
 | [EnemyMovement.cs](<Assets/Script/Enemy/EnemyMovement.cs>) | Enemy | - | EnemySpawner.cs |
-| [EnemySpawner.cs](<Assets/Script/Enemy/EnemySpawner.cs>) | Enemy | - | GameSetup.cs, NewGameDefaultsSync.cs |
+| [EnemySpawner.cs](<Assets/Script/Enemy/EnemySpawner.cs>) | Enemy | - | - |
 | [ResourceNode.cs](<Assets/Script/Gathering/ResourceNode.cs>) | Gathering | - | PlayerCombat.cs |
 | [Wander.cs](<Assets/Script/Gathering/Wander.cs>) | Gathering | - | - |
 | [IconCapture.cs](<Assets/Script/IconCapture/IconCapture.cs>) | IconCapture | ShapeColor.cs (optional) | BuildingData.cs, HeldItemView.cs, ItemData.cs, ItemIconRules.cs, ItemPickup.cs |
-| [KeyBindings.cs](<Assets/Script/Input/KeyBindings.cs>) | Input | - | BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemGrabber.cs, KeyBindingMenu.cs, NewGameDefaultsSync.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs, TitleSceneBuilder.cs |
-| [GameSetup.cs](<Assets/Script/NewGame/GameSetup.cs>) | NewGame | GameRules.cs, VictoryScreen.cs, DaylightCycle.cs, EnemySpawner.cs, PlayerHunger.cs | NewGameDefaults.cs, NewGamePanel.cs, TitleMenu.cs |
-| [NewGameDefaults.cs](<Assets/Script/NewGame/NewGameDefaults.cs>) | NewGame | VictoryScreen.cs, GameSetup.cs | NewGameDefaultsSync.cs, NewGamePanel.cs, TitleSceneBuilder.cs |
+| [KeyBindings.cs](<Assets/Script/Input/KeyBindings.cs>) | Input | - | BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemGrabber.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs |
+| [PerkChest.cs](<Assets/Script/Perks/PerkChest.cs>) | Perks | - | - |
+| [PerkData.cs](<Assets/Script/Perks/PerkData.cs>) | Perks | - | PerkChest.cs, PerkManager.cs, PerkSelectionUI.cs |
+| [PerkManager.cs](<Assets/Script/Perks/PerkManager.cs>) | Perks | - | PerkChest.cs |
 | [AutoCollector.cs](<Assets/Script/Player/AutoCollector.cs>) | Player | PlayerInventory.cs, ItemPickup.cs, ItemData.cs, GameRules.cs, PlayerHealth.cs (optional) | - |
 | [EquippedWeaponDisplay.cs](<Assets/Script/Player/EquippedWeaponDisplay.cs>) | Player | - | - |
 | [FireballProjectile.cs](<Assets/Script/Player/FireballProjectile.cs>) | Player | - | PlayerFireball.cs |
@@ -97,15 +98,15 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [PickupEffect.cs](<Assets/Script/Player/PickupEffect.cs>) | Player | - | - |
 | [PlayerCoins.cs](<Assets/Script/Player/PlayerCoins.cs>) | Player | - | CoinCounter.cs, EnemyCombat.cs, GainNotifier.cs (optional), PerkChest.cs |
 | [PlayerCombat.cs](<Assets/Script/Player/PlayerCombat.cs>) | Player | - | PlayerFireball.cs |
-| [PlayerController.cs](<Assets/Script/Player/PlayerController.cs>) | Player | KeyBindings.cs, MenuState.cs, Rigidbody (Unity), PlayerStamina.cs (optional), PlayerJump.cs (optional) | HeldItemView.cs (optional), PerkChest.cs, PlayerHunger.cs (optional), PlayerJump.cs (optional), PlayerPerks.cs (optional), PlayerStats.cs (optional) |
-| [PlayerFireball.cs](<Assets/Script/Player/PlayerFireball.cs>) | Player | - | PerkChest.cs, PlayerPerks.cs (optional) |
-| [PlayerHealth.cs](<Assets/Script/Player/PlayerHealth.cs>) | Player | - | AutoCollector.cs (optional), DaylightCycle.cs (optional), DeathScreen.cs, EnemyAttack.cs, ItemConsumer.cs (optional), ItemDropper.cs (optional), PerkChest.cs, PlayerHunger.cs (optional), PlayerPerks.cs (optional), PlayerRespawn.cs, PlayerStats.cs (optional), StatBar.cs (optional) |
-| [PlayerHunger.cs](<Assets/Script/Player/PlayerHunger.cs>) | Player | PlayerController.cs (optional), PlayerHealth.cs (optional), ObjectLevitator.cs (optional) | GameSetup.cs, ItemConsumer.cs (optional), NewGameDefaultsSync.cs, PlayerRespawn.cs (optional), PlayerStats.cs (optional), StatBar.cs (optional) |
+| [PlayerController.cs](<Assets/Script/Player/PlayerController.cs>) | Player | KeyBindings.cs, MenuState.cs, Rigidbody (Unity), PlayerStamina.cs (optional), PlayerJump.cs (optional) | HeldItemView.cs (optional), PerkChest.cs, PerkManager.cs, PlayerHunger.cs (optional), PlayerJump.cs (optional), PlayerPerks.cs (optional), PlayerStats.cs (optional) |
+| [PlayerFireball.cs](<Assets/Script/Player/PlayerFireball.cs>) | Player | - | PerkChest.cs, PerkManager.cs, PlayerPerks.cs (optional) |
+| [PlayerHealth.cs](<Assets/Script/Player/PlayerHealth.cs>) | Player | - | AutoCollector.cs (optional), DaylightCycle.cs (optional), DeathScreen.cs, EnemyAttack.cs, ItemConsumer.cs (optional), ItemDropper.cs (optional), PerkChest.cs, PerkManager.cs, PlayerHunger.cs (optional), PlayerPerks.cs (optional), PlayerRespawn.cs, PlayerStats.cs (optional), StatBar.cs (optional) |
+| [PlayerHunger.cs](<Assets/Script/Player/PlayerHunger.cs>) | Player | PlayerController.cs (optional), PlayerHealth.cs (optional), ObjectLevitator.cs (optional) | ItemConsumer.cs (optional), PlayerRespawn.cs (optional), PlayerStats.cs (optional), StatBar.cs (optional) |
 | [PlayerInventory.cs](<Assets/Script/Player/PlayerInventory.cs>) | Player | IHand.cs, ItemData.cs | AutoCollector.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingData.cs, CraftingMenu.cs, DroppedStack.cs, EquippedWeaponDisplay.cs, GainNotifier.cs, GiveSwordForTesting.cs, HeldItemUI.cs, HeldItemView.cs, HotbarSelector.cs, ItemConsumer.cs, ItemData.cs, ItemDropper.cs, ItemGrabber.cs, ItemIconRules.cs, PlayerCombat.cs, PlayerFireball.cs, Recipe.cs, ResourceNode.cs, SlotGroup.cs, SlotUI.cs, UIBuildHelper.cs |
 | [PlayerJump.cs](<Assets/Script/Player/PlayerJump.cs>) | Player | KeyBindings.cs, MenuState.cs, Rigidbody (Unity), Collider (Unity), PlayerStamina.cs (optional), PlayerController.cs (optional) | PlayerController.cs (optional), PlayerStats.cs (optional) |
 | [PlayerPerks.cs](<Assets/Script/Player/PlayerPerks.cs>) | Player | PlayerHealth.cs (optional), PlayerStamina.cs (optional), PlayerController.cs (optional), PlayerFireball.cs (optional) | HUDBuilder.cs, PerkBar.cs, PerkChest.cs |
 | [PlayerRespawn.cs](<Assets/Script/Player/PlayerRespawn.cs>) | Player | PlayerHealth.cs, PlayerHunger.cs (optional), PlayerStamina.cs (optional), Rigidbody (Unity) (optional) | DeathScreen.cs, PlayerStats.cs |
-| [PlayerStamina.cs](<Assets/Script/Player/PlayerStamina.cs>) | Player | - | ItemConsumer.cs (optional), PerkChest.cs, PlayerCombat.cs, PlayerController.cs (optional), PlayerJump.cs (optional), PlayerPerks.cs (optional), PlayerRespawn.cs (optional), PlayerStats.cs (optional), StatBar.cs (optional) |
+| [PlayerStamina.cs](<Assets/Script/Player/PlayerStamina.cs>) | Player | - | ItemConsumer.cs (optional), PerkChest.cs, PerkManager.cs, PlayerCombat.cs, PlayerController.cs (optional), PlayerJump.cs (optional), PlayerPerks.cs (optional), PlayerRespawn.cs (optional), PlayerStats.cs (optional), StatBar.cs (optional) |
 | [PlayerStats.cs](<Assets/Script/Player/PlayerStats.cs>) | Player | PlayerController.cs (optional), PlayerJump.cs (optional), PlayerHealth.cs (optional), PlayerHunger.cs (optional), PlayerStamina.cs (optional) | DeathScreen.cs (optional), VictoryScreen.cs (optional) |
 | [RespawnOnFall.cs](<Assets/Script/Player/RespawnOnFall.cs>) | Player | - | - |
 | [TestPlayerHealth.cs](<Assets/Script/Player/TestPlayerHealth.cs>) | Player | - | - |
@@ -113,23 +114,9 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [BuildingButton.cs](<Assets/Script/UI/Building/BuildingButton.cs>) | UI/Building | BuildingData.cs, Recipe.cs, PlayerInventory.cs, UIAnimatedImage.cs, ItemIconRules.cs, Button (Unity) | BuildMenu.cs, BuildMenuUIBuilder.cs |
 | [BuildMenu.cs](<Assets/Script/UI/Building/BuildMenu.cs>) | UI/Building | BuildingButton.cs, BuildingData.cs, BlueprintPlacer.cs, KeyBindings.cs, MenuState.cs | BuildMenuUIBuilder.cs |
 | [BuildModeHUD.cs](<Assets/Script/UI/Building/BuildModeHUD.cs>) | UI/Building | BlueprintPlacer.cs, Canvas (Unity) | BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs |
-| [ChoiceRow.cs](<Assets/Script/UI/Controls/ChoiceRow.cs>) | UI/Controls | UITween.cs | NewGamePanel.cs, TitleSceneBuilder.cs |
-| [DropdownUnfold.cs](<Assets/Script/UI/Controls/DropdownUnfold.cs>) | UI/Controls | UITween.cs, TMP_Dropdown (Unity) | TitleSceneBuilder.cs |
-| [StepperRow.cs](<Assets/Script/UI/Controls/StepperRow.cs>) | UI/Controls | UITween.cs | NewGamePanel.cs, TitleSceneBuilder.cs |
-| [TogglePop.cs](<Assets/Script/UI/Controls/TogglePop.cs>) | UI/Controls | UITween.cs, Toggle (Unity) | TitleSceneBuilder.cs |
 | [DeathScreen.cs](<Assets/Script/UI/Death/DeathScreen.cs>) | UI/Death | PlayerHealth.cs, PlayerRespawn.cs, MenuState.cs, Canvas (Unity), PlayerStats.cs (optional) | - |
-| [ButtonFX.cs](<Assets/Script/UI/Effects/ButtonFX.cs>) | UI/Effects | UITween.cs, UIFXSprites.cs, UISparks.cs, UISound.cs, Button (Unity) | TitleMenu.cs, TitleSceneBuilder.cs |
-| [CascadeIn.cs](<Assets/Script/UI/Effects/CascadeIn.cs>) | UI/Effects | UITween.cs | TitleMenu.cs, TitleSceneBuilder.cs |
-| [PulseFX.cs](<Assets/Script/UI/Effects/PulseFX.cs>) | UI/Effects | UITween.cs | TitleSceneBuilder.cs |
-| [ScreenFader.cs](<Assets/Script/UI/Effects/ScreenFader.cs>) | UI/Effects | UITween.cs | TitleMenu.cs |
-| [TabFX.cs](<Assets/Script/UI/Effects/TabFX.cs>) | UI/Effects | TabGroup.cs, UITween.cs | TitleSceneBuilder.cs |
-| [TitleTextFX.cs](<Assets/Script/UI/Effects/TitleTextFX.cs>) | UI/Effects | UITween.cs, TMP_Text (Unity) | TitleMenu.cs, TitleSceneBuilder.cs |
-| [UIFXSprites.cs](<Assets/Script/UI/Effects/UIFXSprites.cs>) | UI/Effects | - | ButtonFX.cs, IncomingMessage.cs, TitleBackground.cs, TitleSceneBuilder.cs, UISparks.cs |
-| [UISound.cs](<Assets/Script/UI/Effects/UISound.cs>) | UI/Effects | - | ButtonFX.cs, TitleMenu.cs |
-| [UISparks.cs](<Assets/Script/UI/Effects/UISparks.cs>) | UI/Effects | UITween.cs, UIFXSprites.cs | ButtonFX.cs, TitleMenu.cs |
-| [UITween.cs](<Assets/Script/UI/Effects/UITween.cs>) | UI/Effects | - | ButtonFX.cs, CascadeIn.cs, ChoiceRow.cs, DropdownUnfold.cs, IncomingMessage.cs, KeyBindingMenu.cs, NewGamePanel.cs, PulseFX.cs, ScreenFader.cs, StepperRow.cs, TabFX.cs, TitleBackground.cs, TitleMenu.cs, TitleSceneBuilder.cs, TitleTextFX.cs, TogglePop.cs, UISparks.cs |
 | [FitToText.cs](<Assets/Script/UI/FitToText.cs>) | UI | RectTransform (Unity) | GameEndUIBuilder.cs |
-| [VictoryScreen.cs](<Assets/Script/UI/GameEnd/VictoryScreen.cs>) | UI/GameEnd | DaylightCycle.cs, MenuState.cs, Canvas (Unity), PlayerStats.cs (optional) | GameEndUIBuilder.cs, GameSetup.cs, NewGameDefaults.cs, NewGameDefaultsSync.cs, NewGamePanel.cs |
+| [VictoryScreen.cs](<Assets/Script/UI/GameEnd/VictoryScreen.cs>) | UI/GameEnd | DaylightCycle.cs, MenuState.cs, Canvas (Unity), PlayerStats.cs (optional) | GameEndUIBuilder.cs |
 | [CoinCounter.cs](<Assets/Script/UI/HUD/CoinCounter.cs>) | UI/HUD | PlayerCoins.cs, AsepriteFrames.cs | CoinCounterEditor.cs, GainNotifier.cs (optional), HUDBuilder.cs |
 | [DayCounter.cs](<Assets/Script/UI/HUD/DayCounter.cs>) | UI/HUD | DaylightCycle.cs, TextMeshProUGUI (Unity) | HUDBuilder.cs |
 | [PerkBar.cs](<Assets/Script/UI/HUD/PerkBar.cs>) | UI/HUD | PlayerPerks.cs | HUDBuilder.cs |
@@ -143,19 +130,14 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [ItemIconRules.cs](<Assets/Script/UI/ItemIconRules.cs>) | UI | GameRules.cs, ItemData.cs, IconSource.cs, IconCapture.cs, PlayerInventory.cs | BuildingButton.cs, GainNotifier.cs, HeldItemUI.cs, SlotUI.cs |
 | [GainNotifier.cs](<Assets/Script/UI/Notifications/GainNotifier.cs>) | UI/Notifications | NotificationFeed.cs, PlayerInventory.cs, ItemIconRules.cs, PlayerCoins.cs (optional), CoinCounter.cs (optional) | NotificationUIBuilder.cs |
 | [NotificationFeed.cs](<Assets/Script/UI/Notifications/NotificationFeed.cs>) | UI/Notifications | GameRules.cs, VerticalLayoutGroup (Unity) | GainNotifier.cs, NotificationUIBuilder.cs |
-| [IncomingMessage.cs](<Assets/Script/UI/Settings/IncomingMessage.cs>) | UI/Settings | UITween.cs, UIFXSprites.cs | TitleSceneBuilder.cs |
-| [KeyBindingMenu.cs](<Assets/Script/UI/Settings/KeyBindingMenu.cs>) | UI/Settings | KeyBindings.cs, UITween.cs | TitleMenu.cs (optional), TitleSceneBuilder.cs |
-| [TabGroup.cs](<Assets/Script/UI/Tabs/TabGroup.cs>) | UI/Tabs | - | InventoryUIBuilder.cs, TabFX.cs, TitleSceneBuilder.cs |
-| [NewGamePanel.cs](<Assets/Script/UI/Title/NewGamePanel.cs>) | UI/Title | NewGameDefaults.cs, GameSetup.cs, StepperRow.cs, ChoiceRow.cs, UITween.cs, TMP_Dropdown (Unity) | NewGameDefaultsSync.cs, TitleMenu.cs, TitleSceneBuilder.cs |
-| [TitleBackground.cs](<Assets/Script/UI/Title/TitleBackground.cs>) | UI/Title | UITween.cs, UIFXSprites.cs | TitleSceneBuilder.cs |
-| [TitleMenu.cs](<Assets/Script/UI/Title/TitleMenu.cs>) | UI/Title | UITween.cs, UISparks.cs, UISound.cs, ScreenFader.cs, TitleTextFX.cs, CascadeIn.cs, ButtonFX.cs, NewGamePanel.cs, GameSetup.cs, KeyBindingMenu.cs (optional) | TitleSceneBuilder.cs |
+| [PerkSelectionUI.cs](<Assets/Script/UI/Perks/PerkSelectionUI.cs>) | UI/Perks | - | PerkChest.cs |
+| [TabGroup.cs](<Assets/Script/UI/Tabs/TabGroup.cs>) | UI/Tabs | - | InventoryUIBuilder.cs |
 | [UIAnimatedImage.cs](<Assets/Script/UI/UIAnimatedImage.cs>) | UI | AsepriteFrames.cs, IconSource.cs, Image (Unity) | BuildingButton.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, SlotUI.cs |
 | [BoundsUtil.cs](<Assets/Script/Utility/BoundsUtil.cs>) | Utility | - | BlueprintPlacer.cs, Crosshair.cs, ItemGrabber.cs, ObjectLevitator.cs |
-| [DaylightCycle.cs](<Assets/Script/World/DaylightCycle.cs>) | World | GameRules.cs, Light (Unity), PlayerHealth.cs (optional) | DayCounter.cs, EnemySpawner.cs, GameSetup.cs, NewGameDefaultsSync.cs, TimeCounter.cs, VictoryScreen.cs |
+| [DaylightCycle.cs](<Assets/Script/World/DaylightCycle.cs>) | World | GameRules.cs, Light (Unity), PlayerHealth.cs (optional) | DayCounter.cs, EnemySpawner.cs, TimeCounter.cs, VictoryScreen.cs |
 | [ObjectScatter.cs](<Assets/Script/World/ObjectScatter.cs>) | World | - | - |
 | [Consumable.cs](<Assets/Script/WorldItem/Consumable.cs>) | WorldItem | - | ItemConsumer.cs, ItemData.cs, ItemDataEditor.cs |
 | [DroppedStack.cs](<Assets/Script/WorldItem/DroppedStack.cs>) | WorldItem | ItemPickup.cs, PlayerInventory.cs | ItemDropper.cs |
 | [ItemData.cs](<Assets/Script/WorldItem/ItemData.cs>) | WorldItem | Recipe.cs (each other), Consumable.cs, IconCapture.cs, IconSource.cs, PlayerInventory.cs | AutoCollector.cs, CraftingMenu.cs, Crosshair.cs, ItemConsumer.cs, ItemDataEditor.cs, ItemIconRules.cs, ItemPickup.cs, ItemTools.cs, PlayerInventory.cs, PlayerStats.cs, Recipe.cs (each other), ResourceNode.cs |
 | [ItemPickup.cs](<Assets/Script/WorldItem/ItemPickup.cs>) | WorldItem | ItemData.cs, IconCapture.cs | AutoCollector.cs, BuildingTools.cs, Crosshair.cs, DroppedStack.cs, ItemDropper.cs, ItemGrabber.cs, ItemTools.cs |
-| [PerkChest.cs](<Assets/Script/WorldItem/PerkChest.cs>) | WorldItem | - | - |
 | [Recipe.cs](<Assets/Script/WorldItem/Recipe.cs>) | WorldItem | ItemData.cs (each other), PlayerInventory.cs | BuildingButton.cs, BuildingData.cs, CraftingMenu.cs, ItemData.cs (each other) |

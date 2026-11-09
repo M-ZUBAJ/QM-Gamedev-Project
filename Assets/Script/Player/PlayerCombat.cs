@@ -9,6 +9,13 @@ public class PlayerCombat : MonoBehaviour
 
     public float attackRange = 2.5f; // from how far away player can attack
 
+    [Header("Attack Cooldown")]
+    [Min(0f)]
+    public float attackCooldown = 0.5f; // half a second
+
+    private float nextAttackTime;
+
+
 
     [Header("Enemy and Animal Damage")]
     public float handDamage = 10f;
@@ -48,7 +55,8 @@ public class PlayerCombat : MonoBehaviour
         if (Cursor.lockState != CursorLockMode.Locked && EventSystem.current != null &&                       // [Tony] added
             EventSystem.current.IsPointerOverGameObject()) return;                                            // [Tony] added
 
-        if (Input.GetMouseButtonDown(0)) // if the player presses the left click
+        //if the player presses the left click and enough time has passed since last attack.
+        if (Input.GetMouseButtonDown(0) && Time.time >= nextAttackTime)
         {
             Attack();
         }
@@ -64,6 +72,8 @@ public class PlayerCombat : MonoBehaviour
             Debug.Log("Attack Failed: Not Enough Stamina !");
             return;
         }
+
+        nextAttackTime = Time.time + attackCooldown;
 
         if (playerStamina != null)
         {
