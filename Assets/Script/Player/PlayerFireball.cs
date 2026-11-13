@@ -54,7 +54,10 @@ public class PlayerFireball : MonoBehaviour
         if (inventory == null ||
             inventory.ActiveItem == null ||
             inventory.ActiveItem.IsEmpty ||
-            inventory.ActiveItem.id != "Sword")
+            // [Tony] replaced (12/11/2026): inventory.ActiveItem.id != "Sword")
+            // Swords now come in tiers (WoodenSword ... DiamondSword): any of them can cast the fireball.
+            // Log: Docs/TonyEditMate/Marko/12-11-2026 Tier Tools.md
+            !ToolRules.IsSword(inventory.ActiveItem))                                             // [Tony] replaced
         {
             Debug.Log("Equip your sword to cast Fireball.");
             return;

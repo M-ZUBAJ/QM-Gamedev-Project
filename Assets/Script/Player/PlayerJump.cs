@@ -16,7 +16,7 @@ Purpose: Jump with Space, only when standing on something (no jumping again in t
          so the player can't hop their way up a cliff.
 Requirement: PlayerJump.cs x-> KeyBindings.cs, MenuState.cs, Rigidbody (Unity), Collider (Unity)
              PlayerJump.cs o-> PlayerStamina.cs, PlayerController.cs
-             PlayerJump.cs <-o PlayerController.cs, PlayerStats.cs
+             PlayerJump.cs <-o PlayerAnimator.cs, PlayerController.cs, PlayerStats.cs
 */
 
 using UnityEngine;

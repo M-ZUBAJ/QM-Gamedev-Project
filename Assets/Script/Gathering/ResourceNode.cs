@@ -41,6 +41,10 @@ public class ResourceNode : MonoBehaviour
 
     public float currentHealth;
 
+    // [Tony] added (12/11/2026): lets Tony's ToolRules read which pickaxe this rock needs (the drop item's Mined With:
+    // copper and iron need a Stone pickaxe). Read only. Log: Docs/TonyEditMate/Turki/12-11-2026 Tier Tools.md
+    public ItemData DropItem => dropItem; // [Tony] added
+
     // ===== Unity messages (Unity calls these) =====
 
     void Start()

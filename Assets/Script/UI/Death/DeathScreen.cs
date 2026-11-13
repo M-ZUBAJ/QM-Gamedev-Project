@@ -1,6 +1,6 @@
 /*
 First Date: 11/10/2026
-Date: 11/10/2026
+Date: 10/11/2026
 Author: Tony
 Use by: Drag this script onto DeadCanvas (the top object of the death page).
 Unity Editor: Nothing to connect. It finds these children by their NAME, so keep the names:
@@ -11,8 +11,8 @@ Unity Editor: Nothing to connect. It finds these children by their NAME, so keep
               Give DeadCanvas a higher Sort Order than the HUD so it covers it.
               The scene needs an EventSystem for the button (Tools > UI > Build Inventory UI makes one).
               Testing: in Play mode, click PlayerHealth's ⋮ menu > "Test: Die", then click Respawn.
-Purpose: When the player dies, shows the death page with what they did this life (PlayerStats),
-         frees the mouse and freezes the player. Clicking Respawn brings them back (PlayerRespawn)
+Purpose: When the player dies, closes every other open menu (MenuState.CloseAll), shows the death page with what
+         they did this life (PlayerStats), frees the mouse and freezes the player. Clicking Respawn brings them back (PlayerRespawn)
          and hides the page again.
 Requirement: DeathScreen.cs x-> PlayerHealth.cs, PlayerRespawn.cs, MenuState.cs, Canvas (Unity)
              DeathScreen.cs o-> PlayerStats.cs
@@ -99,6 +99,7 @@ public class DeathScreen : MonoBehaviour
 
     void Show()
     {
+        MenuState.CloseAll();   // any menu still open closes first, so the death page is the only one (and keeps the mouse)
         canvas.enabled = true;
         WriteStats();
 

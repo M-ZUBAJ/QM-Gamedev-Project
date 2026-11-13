@@ -21,8 +21,8 @@ Purpose: Move the player with W A S D (or the arrow keys, both set in KeyBinding
          The shape never tips over or rolls. The player's collider has no friction (Slippery Body).
 Requirement: PlayerController.cs x-> KeyBindings.cs, MenuState.cs, Rigidbody (Unity)
              PlayerController.cs o-> PlayerStamina.cs, PlayerJump.cs
-             PlayerController.cs <-x PerkChest.cs, PerkManager.cs
-             PlayerController.cs <-o HeldItemView.cs, PlayerHunger.cs, PlayerJump.cs, PlayerPerks.cs, PlayerStats.cs
+             PlayerController.cs <-x PerkChest.cs, PerkManager.cs, PlayerCharacterBuilder.cs
+             PlayerController.cs <-o FirstPersonHands.cs, HeldItemView.cs, PlayerAnimator.cs, PlayerHunger.cs, PlayerJump.cs, PlayerPerks.cs, PlayerStats.cs, WildAnimal.cs
 */
 
 using UnityEngine;

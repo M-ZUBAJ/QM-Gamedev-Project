@@ -9,7 +9,7 @@ Purpose: The small building blocks every UI builder tool needs, kept in one plac
          and put a script on the player.
          A builder writes "using static UIBuildHelper;" and can then call e.g. NewUI(...) directly.
 Requirement: UIBuildHelper.cs x-> PlayerInventory.cs
-             UIBuildHelper.cs <-x BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, GameEndUIBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, NotificationUIBuilder.cs, TitleSceneBuilder.cs
+             UIBuildHelper.cs <-x BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, DeathEffectBuilder.cs, EnemyBuilder.cs, FirstPersonArmsHelper.cs, FirstPersonHandsBuilder.cs, GameEndUIBuilder.cs, GrasslandTreeBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, MaterialBuildHelper.cs, NotificationUIBuilder.cs, PlayerAnimationSetup.cs, PlayerCharacterBuilder.cs, PunchEffectBuilder.cs, TierToolBuilder.cs, TitleSceneBuilder.cs, WildAnimalBuilder.cs, WorldSpawnSetup.cs
 */
 
 using TMPro;

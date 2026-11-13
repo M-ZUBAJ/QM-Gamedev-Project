@@ -71,7 +71,10 @@ public class EnemySpawner : MonoBehaviour
 
             spawnPosition = player.position + randomDirection * spawnDistance;
             //spawnPosition.y = transform.position.y;
-            spawnPosition.y = 0.5f;
+            // [Tony] replaced (10/11/2026): spawnPosition.y = 0.5f;
+            // A fixed 0.5 put enemies inside hills or in the air over dips. Now they appear on the ground that's there.
+            // Log: Docs/TonyEditMate/Marko/10-11-2026 Slime Enemy With Animations.md
+            spawnPosition.y = GroundHeight(spawnPosition);                            // [Tony] replaced
         }
 
         GameObject enemy = Instantiate(
@@ -123,6 +126,20 @@ public class EnemySpawner : MonoBehaviour
 
         spawnedEnemies.Add(enemy);
     }
+
+    // [Tony] added (10/11/2026): the height to spawn at = the ground found by a ray from high above (terrain, rock,
+    // floor...) plus half a meter. The old ball enemy (its middle is 0.5 above its bottom) then stands right on the
+    // ground, and a monster with physics (its pivot is at its feet) drops the last bit onto it. Nothing found = 0.5.
+    float GroundHeight(Vector3 spot)                                                  // [Tony] added
+    {                                                                                 // [Tony] added
+        Vector3 from = new Vector3(spot.x, spot.y + 500f, spot.z);                    // [Tony] added
+        if (Physics.Raycast(from, Vector3.down, out RaycastHit hit, 1000f,            // [Tony] added
+                            Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))   // [Tony] added
+        {                                                                             // [Tony] added
+            return hit.point.y + 0.5f;                                                // [Tony] added
+        }                                                                             // [Tony] added
+        return 0.5f;                                                                  // [Tony] added
+    }                                                                                 // [Tony] added
 
     public void DespawnEnemies()
     {

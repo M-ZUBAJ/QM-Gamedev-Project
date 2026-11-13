@@ -17,6 +17,7 @@ Purpose: Takes a "photo" of a 3D object and turns it into a Sprite for UI icons.
          even though the real item was destroyed when it was picked up.
 Requirement: IconCapture.cs o-> ShapeColor.cs
              IconCapture.cs <-x BuildingData.cs, HeldItemView.cs, ItemData.cs, ItemIconRules.cs, ItemPickup.cs
+             IconCapture.cs <-o ToolInHand.cs
 */
 
 using System.Collections.Generic;

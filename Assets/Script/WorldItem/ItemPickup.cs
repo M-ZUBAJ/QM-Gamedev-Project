@@ -13,7 +13,7 @@ Purpose: Marks an object as an item. Its Item Data says which item it is and how
          Stacks the player DROPPED (IsDrop) ignore the Item Data's Pickup: F, or walking near them when the
          GameRule Auto Pickup Drops is on.
 Requirement: ItemPickup.cs x-> ItemData.cs, IconCapture.cs
-             ItemPickup.cs <-x AutoCollector.cs, BuildingTools.cs, Crosshair.cs, DroppedStack.cs, ItemDropper.cs, ItemGrabber.cs, ItemTools.cs
+             ItemPickup.cs <-x AutoCollector.cs, BuildingTools.cs, Crosshair.cs, DroppedStack.cs, ItemDropper.cs, ItemGrabber.cs, ItemTools.cs, TierToolBuilder.cs
 */
 
 using System.Text.RegularExpressions;   // Regex: find and replace text by a pattern

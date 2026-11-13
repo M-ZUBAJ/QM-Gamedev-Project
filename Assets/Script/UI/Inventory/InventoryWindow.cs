@@ -1,6 +1,6 @@
 /*
 First Date: 7/10/2026
-Date: 7/10/2026
+Date: 10/11/2026
 Author: Tony
 Use by: Drag this script onto InventoryCanvas (NOT onto InventoryWindow itself: a hidden object can't listen for keys).
 Unity Editor: Drag InventoryWindow (the child that holds the tabs and pages) into "Window".
@@ -10,6 +10,7 @@ Unity Editor: Drag InventoryWindow (the child that holds the tabs and pages) int
 Purpose: Opens and closes the inventory window.
          Open: the mouse cursor shows (to click slots and tabs) and the camera stops turning.
          Closed: the cursor hides again and the camera follows the mouse.
+         It also closes by itself when every menu is told to close (MenuState.CloseAll, e.g. the player died).
 Requirement: InventoryWindow.cs x-> KeyBindings.cs, MenuState.cs
              InventoryWindow.cs <-x CraftingMenu.cs, InventoryUIBuilder.cs
 */
@@ -43,12 +44,27 @@ public class InventoryWindow : MonoBehaviour
         else if (isOpen && Input.GetKeyDown(KeyBindings.UnlockCursor)) SetOpen(false);   // Esc closes it too
     }
 
+    void OnEnable()
+    {
+        MenuState.CloseAllRequested += CloseNow;   // e.g. the player died: close with every other menu
+    }
+
+    void OnDisable()
+    {
+        MenuState.CloseAllRequested -= CloseNow;
+    }
+
     void OnDestroy()
     {
         MenuState.SetOpen(this, false);   // static values outlive the scene, so clear them
     }
 
     // ===== My methods =====
+
+    void CloseNow()
+    {
+        if (isOpen) SetOpen(false);
+    }
 
     // Also usable from a Close button: On Click () > InventoryCanvas > InventoryWindow.SetOpen (ticked = open).
     public void SetOpen(bool open)

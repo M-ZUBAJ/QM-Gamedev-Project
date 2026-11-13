@@ -1,11 +1,14 @@
 /*
 First Date: 11/10/2026
-Date: 11/10/2026
+Date: 12/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Nothing to click. Every Item Data file's Inspector is drawn by it.
-Purpose: Shows Item Data's fields as usual, but the Consumable section (Health / Hunger / Stamina) only
-         when Item Type = Consumable, so a Material like Wood never shows food settings.
+Purpose: Shows Item Data's fields as usual, but each type's own section only for that type, so a Material like
+         Wood never shows food or tool settings:
+         - Consumable section (Health / Hunger / Stamina): Item Type = Consumable;
+         - Tool section (Kind / Tier): Item Type = Tool;
+         - Mined With (which pickaxe a rock dropping it needs): Item Type = Material.
 Requirement: ItemDataEditor.cs x-> ItemData.cs
 */
 
@@ -20,6 +23,8 @@ public class ItemDataEditor : Editor
     // The field names in ItemData.cs. If you rename a field there, rename it here too.
     const string TypeField = "itemType";
     const string ConsumableField = "consumable";
+    const string ToolField = "tool";
+    const string MinedWithField = "minedWith";
 
     // ===== Unity messages (Unity calls these) =====
 
@@ -31,6 +36,8 @@ public class ItemDataEditor : Editor
         // Show the section if the type is Consumable (or the selected files don't all agree).
         bool showConsumable = type == null || type.hasMultipleDifferentValues
                               || type.enumValueIndex == (int)ItemType.Consumable;
+        bool showTool = type == null || type.hasMultipleDifferentValues || type.enumValueIndex == (int)ItemType.Tool;
+        bool showMining = type == null || type.hasMultipleDifferentValues || type.enumValueIndex == (int)ItemType.Material;
 
         // Walk through every field in order, the same way Unity's normal Inspector does.
         SerializedProperty field = serializedObject.GetIterator();
@@ -44,6 +51,12 @@ public class ItemDataEditor : Editor
                 if (!showConsumable) continue;   // a Material: hide the food settings
                 field.isExpanded = true;         // open, so the stats show without clicking the arrow
             }
+            if (field.name == ToolField)
+            {
+                if (!showTool) continue;         // not a tool: hide Kind / Tier
+                field.isExpanded = true;
+            }
+            if (field.name == MinedWithField && !showMining) continue;   // only materials come out of rocks
 
             using (new EditorGUI.DisabledScope(field.name == "m_Script"))   // the greyed-out "Script" line
             {

@@ -8,7 +8,8 @@ Purpose: Move the mouse to turn the camera.
          Press Esc to show the cursor again, click in the Game view to hide it.
          (These keys can be changed in KeyBindings.)
 Requirement: CameraController.cs x-> KeyBindings.cs, MenuState.cs
-             CameraController.cs <-o HeldItemView.cs
+             CameraController.cs <-x FirstPersonHandsBuilder.cs
+             CameraController.cs <-o FirstPersonHands.cs, HeldItemView.cs, PlayerAnimator.cs, ToolInHand.cs
 */
  
 using UnityEngine;

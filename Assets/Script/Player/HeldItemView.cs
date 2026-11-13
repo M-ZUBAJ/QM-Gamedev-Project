@@ -1,6 +1,6 @@
 /*
 First Date: 7/10/2026
-Date: 7/10/2026
+Date: 12/11/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerInventory).
 Unity Editor: Tune it WHILE PLAYING: hold an item (pick one up, put it in the hotbar, press its number key),
@@ -10,7 +10,8 @@ Unity Editor: Tune it WHILE PLAYING: hold an item (pick one up, put it in the ho
 Purpose: Shows the selected hotbar item at the bottom right of the screen, like the player is holding it.
          It is a look-only copy (no scripts or physics), made by IconCapture when the item was picked up.
          It follows the camera; turning makes it lag a little (sway) and walking makes it bob.
-         Nothing selected, or an empty hotbar slot = empty hand.
+         Nothing selected, or an empty hotbar slot = empty hand. A tool (Item Data > Item Type = Tool) isn't shown here:
+         it's in the character's own hand (ToolInHand), in first and third person.
 Requirement: HeldItemView.cs x-> PlayerInventory.cs, IconCapture.cs, MenuState.cs
              HeldItemView.cs o-> PlayerController.cs, CameraController.cs
 */
@@ -151,7 +152,8 @@ public class HeldItemView : MonoBehaviour
     void Refresh()
     {
         PlayerInventory.Slot active = inv.ActiveItem;
-        string id = active != null && !active.IsEmpty ? active.id : null;
+        bool tool = active != null && !active.IsEmpty && active.data != null && active.data.IsTool;   // shown in the hand (ToolInHand)
+        string id = active != null && !active.IsEmpty && !tool ? active.id : null;
         if (id == shownId && (id == null || model != null)) return;   // same item as before (e.g. only the count changed)
 
         if (model != null) Destroy(model);

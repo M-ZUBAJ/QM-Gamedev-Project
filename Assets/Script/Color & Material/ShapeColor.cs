@@ -7,7 +7,8 @@ Purpose: Pick the shape's color in the Inspector. The color shows right away,
          in the Scene view and in Play mode, and each shape can have its own color.
          IconCapture reads Color too, so item icons get this color even when photographed from a prefab file
          (a prefab file never runs this script, so it would look like its plain material).
-Requirement: ShapeColor.cs <-o IconCapture.cs
+Requirement: ShapeColor.cs <-x GrasslandTreeBuilder.cs
+             ShapeColor.cs <-o IconCapture.cs
 */
 
 using UnityEngine;

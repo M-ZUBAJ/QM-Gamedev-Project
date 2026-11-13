@@ -1,6 +1,6 @@
 /*
 First Date: 5/10/2026
-Date: 2/11/2026
+Date: 10/11/2026
 Author: Tony
 Use by: Hierarchy: select PlayerSphere > Add Component > BlueprintPlacer (only one, on the player).
 Unity Editor: Nothing to connect: the build menu (B) starts it with BlueprintPlacer.Begin(buildingData).
@@ -24,6 +24,7 @@ Purpose: Moves a new blueprint with the crosshair until the player puts it down.
          It turns red, and can't be placed, when it is outside an InteractionMachine's area,
          inside something, in the air, or the player doesn't have the recipe's materials.
          Placing it takes the materials from the inventory and builds the real building right away.
+         Placing stops by itself when every menu is told to close (MenuState.CloseAll, e.g. the player died).
 Requirement: BlueprintPlacer.cs x-> Blueprint.cs, BuildingData.cs, BuildSnap.cs, BuiltPiece.cs, BoundsUtil.cs, ClickClaim.cs, InteractionGate.cs, KeyBindings.cs, MenuState.cs, PlayerInventory.cs
              BlueprintPlacer.cs <-x BuildMenu.cs, BuildMenuUIBuilder.cs, BuildModeHUD.cs, PlayerStats.cs
 */
@@ -99,8 +100,14 @@ public class BlueprintPlacer : MonoBehaviour
         cam = Camera.main;
     }
 
+    void OnEnable()
+    {
+        MenuState.CloseAllRequested += Cancel;   // every menu is told to close (e.g. the player died): stop placing too
+    }
+
     void OnDisable()
     {
+        MenuState.CloseAllRequested -= Cancel;
         Cancel();
     }
 

@@ -33,6 +33,7 @@ public class CraftingMenu : MonoBehaviour
     // [Tony] added: the Crafting page was shown (its tab was clicked): fill the list and show the panel.
     void OnEnable()                                                                           // [Tony] added
     {                                                                                         // [Tony] added
+        MenuState.CloseAllRequested += CloseNow;   // [Tony] added (10/11/2026), see CloseNow below
         if (!insideInventory) return;                                                         // [Tony] added
         FillRows();                                                                           // [Tony] added
         panel.SetActive(true);                                                                // [Tony] added
@@ -78,6 +79,19 @@ public class CraftingMenu : MonoBehaviour
     {
         MenuState.SetOpen(this, false);
     }
+
+    // [Tony] added (10/11/2026): close when every menu is told to close (MenuState.CloseAll), e.g. the player died,
+    // the same as pressing C again. (Inside the inventory the inventory closes it.) To undo: delete the lines marked
+    // [Tony] (10/11/2026). Log: Docs/TonyEditMate/Turki/10-11-2026 Crafting Menu Closes On Death.md
+    void OnDisable()                                                                          // [Tony] added
+    {                                                                                         // [Tony] added
+        MenuState.CloseAllRequested -= CloseNow;                                              // [Tony] added
+    }                                                                                         // [Tony] added
+
+    void CloseNow()                                                                           // [Tony] added
+    {                                                                                         // [Tony] added
+        if (isOpen) Close();                                                                  // [Tony] added
+    }                                                                                         // [Tony] added
 
     void Open()
     {

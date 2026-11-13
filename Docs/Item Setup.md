@@ -39,8 +39,10 @@ Recipes that pointed to that prefab are switched to the new Item Data.
 | **Prefab** | What it looks like in the world. Its root must have ItemPickup with **Data** = this file (the tool does it). |
 | **Pickup** | **Pickup**: aim + F. **AutoPickup**: collected on touch. More ways can be added to this list later. |
 | Icon | Choose **one**: **Capture** = a photo of the prefab, taken by itself. **Static** = drag in a PNG (Texture Type = Sprite). **Animated** = drag in an **.aseprite** file (it plays in the inventory; Aseprite Tag only if the file has several animations). Only the chosen one's field shows. |
-| **Item Type** | **Material** = used to make things (Wood, Stone), can't be eaten. **Consumable** = food / drink, right click to eat. Both can be used in crafting and building recipes. |
+| **Item Type** | **Material** = used to make things (Wood, Stone), can't be eaten. **Consumable** = food / drink, right click to eat. **Tool** = a pickaxe, axe or sword: held in the hand, left click swings it (see `Docs/Tool Setup.md`). All three can be used in crafting and building recipes. |
 | Consumable | Only shows when Item Type = **Consumable**. **Health**, **Hunger**, **Stamina**: how much eating it changes each stat. Positive = gives (Health 20 = heals 20), negative = takes away, 0 = no change. Set as many as you like, e.g. a meal: Health 20, Hunger 20. See [Food](#food-consumable-items). |
+| Tool | Only shows when Item Type = **Tool**. **Kind** (Pickaxe / Axe / Sword) and **Tier** (Wood, Stone, Iron, Gold, Diamond). Tools > Items > Build Tier Tools makes all 15. |
+| Mining > Mined With | Only shows when Item Type = **Material**. The weakest pickaxe that can mine a rock that drops this item. None = anything, even a hand (Stone). Copper / Iron: Stone, gold: Iron, diamond: Gold. |
 | Recipe | What crafting this item costs (for the crafting system, coming later). **+** per material: drag in its Item Data, set Amount. Empty = can't be crafted (a raw material like Wood). |
 | Craft Amount | How many of this item one craft makes (e.g. 1 Wood -> 4 Planks). |
 | Crafted At | Where it's made: **Crafting** (the inventory's Crafting page) or **Furnace**. More places can be added to this list later. |

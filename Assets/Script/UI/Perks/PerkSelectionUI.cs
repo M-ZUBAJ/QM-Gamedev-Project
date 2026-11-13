@@ -165,6 +165,24 @@ public class PerkSelectionUI : MonoBehaviour
     }
 
 
+    // [Tony] added (10/11/2026): close when every menu is told to close (MenuState.CloseAll), e.g. the player died,
+    // the same as if it was hidden normally (no perk is chosen). To undo: delete the lines marked [Tony].
+    // Log: Docs/TonyEditMate/Marko/10-11-2026 Coins Reset On Death, Perk Menu Closes, Punch.md
+    void OnEnable()                                                                   // [Tony] added
+    {                                                                                 // [Tony] added
+        MenuState.CloseAllRequested += CloseNow;                                      // [Tony] added
+    }                                                                                 // [Tony] added
+
+    void OnDisable()                                                                  // [Tony] added
+    {                                                                                 // [Tony] added
+        MenuState.CloseAllRequested -= CloseNow;                                      // [Tony] added
+    }                                                                                 // [Tony] added
+
+    void CloseNow()                                                                   // [Tony] added
+    {                                                                                 // [Tony] added
+        if (IsOpen) Hide();                                                           // [Tony] added
+    }                                                                                 // [Tony] added
+
     // This prevents the menu from remaining registered as open if its GameObject is destroyed
     void OnDestroy()
     {

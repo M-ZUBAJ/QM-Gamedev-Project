@@ -1,6 +1,6 @@
 /*
 First Date: 7/10/2026
-Date: 8/10/2026
+Date: 10/11/2026
 Author: Tony
 Use by: Drag this script onto BuildMenuCanvas (NOT onto BuildWindow itself: a hidden object can't listen for keys).
         Tools > UI > Build Build Menu UI makes all of it for you.
@@ -12,6 +12,7 @@ Unity Editor: Window = BuildWindow. List = the object the building buttons go in
 Purpose: The build menu. B opens / closes it (Esc also closes it). It shows one button per building,
          with its picture, name and recipe. Clicking one closes the menu and starts placing it (BlueprintPlacer).
          Pressing B while placing stops placing.
+         It also closes by itself when every menu is told to close (MenuState.CloseAll, e.g. the player died).
 Requirement: BuildMenu.cs x-> BuildingButton.cs, BuildingData.cs, BlueprintPlacer.cs, KeyBindings.cs, MenuState.cs
              BuildMenu.cs <-x BuildMenuUIBuilder.cs
 */
@@ -64,12 +65,27 @@ public class BuildMenu : MonoBehaviour
         }
     }
 
+    void OnEnable()
+    {
+        MenuState.CloseAllRequested += CloseNow;   // e.g. the player died: close with every other menu
+    }
+
+    void OnDisable()
+    {
+        MenuState.CloseAllRequested -= CloseNow;
+    }
+
     void OnDestroy()
     {
         MenuState.SetOpen(this, false);   // static values outlive the scene, so clear them
     }
 
     // ===== My methods =====
+
+    void CloseNow()
+    {
+        if (isOpen) SetOpen(false);
+    }
 
     // Also usable from a Close button: On Click () > BuildMenuCanvas > BuildMenu.SetOpen (ticked = open).
     public void SetOpen(bool open)

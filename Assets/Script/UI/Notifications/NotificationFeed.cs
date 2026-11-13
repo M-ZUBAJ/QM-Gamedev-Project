@@ -17,7 +17,7 @@ Purpose: Shows short messages on the side of the screen for the player, newest a
          "+3 Wood" then 2 more Wood = "+5 Wood".
          Nothing shows while GameRules.ShowNotifications is off.
 Requirement: NotificationFeed.cs x-> GameRules.cs, VerticalLayoutGroup (Unity)
-             NotificationFeed.cs <-x GainNotifier.cs, NotificationUIBuilder.cs
+             NotificationFeed.cs <-x GainNotifier.cs, NotificationUIBuilder.cs, ToolRules.cs
 */
 
 using System.Collections.Generic;

@@ -192,6 +192,10 @@ In these tables, `health`, `stamina`, `daylight`, `player`… are the variables 
 | Open / close a crafting window | `MenuState.SetOpen(this, true/false)` + free the cursor (see section 4) |
 | The crafting menu's key | `Input.GetKeyDown(KeyBindings.Crafting)` (default **C**, change it on the KeyBindings object). `CraftingMenu` already uses it; its old `openKey` field is gone |
 | Crafting inside the inventory | A CraftingCanvas under `InventoryWindow > Pages > CraftingPage` now shows itself whenever the Crafting tab is open (Tony's `[Tony]` lines in `CraftingMenu`, see `Docs/TonyEditMate/20-10-2026Edit.md`). The scene-root CraftingCanvas still opens with C |
+| Animate the player mining / picking up | `PlayerAnimator.Play(PlayerAction.Mine);` / `PlayerAnimator.Play(PlayerAction.Gather);` (upper body only; does nothing if the player has no character) |
+| Your trees are low-poly trees now | Tony's tool (**Tools > World > Use Low Poly Grassland Trees**) changed only the look and pivot of your `TreeNode.prefab`. It's a Round Oak from Broken Vector's pack, standing on the foot of its trunk. Your `ResourceNode` and its settings (Wood, Apple bonus, health) aren't changed. 5 more looks are Prefab Variants in `Assets/Prefabs/ResourceNodes/Trees`, so they follow TreeNode's drops and health. Log: `Docs/TonyEditMate/Turki/12-11-2026 Low Poly Grassland Trees.md` |
+| Your sheep (AnimalNode) | Not used in GameScene anymore: deer took its place (`DeerNode`, Tony's **Tools > World > Build Wild Animal**). Your `AnimalNode.prefab` and `Wander` script aren't changed. DeerNode got a copy of your sheep's ResourceNode settings (Meat 1 to 3, health 100). Change the deer's drops on DeerNode's ResourceNode. Guide: `Docs/Animal Setup.md` |
+| Tools and mining tiers | Item Data has a new **Item Type: Tool** (Kind + Tier) and, for materials, **Mining > Mined With**: the weakest pickaxe that can mine a rock that drops it. Copper and Iron are now **Stone** (a hand can't mine them), Stone stays None. New gold / diamond ores: set Mined With to Iron / Gold. Your ResourceNode got one `[Tony]` read-only line, `DropItem`. Your crafting list now offers **Iron Sword / Stone Axe / Stone Pickaxe** (same recipes as the old Sword / Axe / PickAxe). 15 tools with recipes are in `Assets/Config/Items/Tools`. Your panel fits ~8 rows: add a Scroll View to offer more. Log: `Docs/TonyEditMate/Turki/12-11-2026 Tier Tools.md` |
 
 **Example: crafting one item**
 
@@ -232,6 +236,17 @@ The inventory's **Crafting** tab (`InventoryCanvas > InventoryWindow > Pages > C
 | What the player aims at | `Crosshair.Target` (a GameObject, or null) and `Crosshair.HitPoint` |
 | Is a menu open (don't attack / dodge then) | `MenuState.AnyOpen` |
 | Read keys | `Input.GetKeyDown(KeyBindings.Swing)` (Swing = left mouse, free for attacking) |
+| Your enemy is now an animated slime | `Assets/Prefabs/Enemy/SlimeEnemy.prefab` (made by **Tools > Enemies > Build Monster Enemy**, guide `Docs/Enemy Setup.md`) uses your EnemyCombat / EnemyMovement / EnemyAttack plus Tony's `EnemyAnimator`, and the EnemySpawner now spawns it. Tony's `[Tony]` lines in your 4 enemy scripts: physics movement (walls stop it), spawning on the ground, attack animation, death animation before removal. Every change and how to undo it: `Docs/TonyEditMate/Marko/10-11-2026 Slime Enemy With Animations.md`. Your old `Enemy.prefab` still works |
+| Enemies and animals dying into particles | Already done for the slime and the deer: Tony's `DeathEffect` (on the prefab, **Tools > Effects > Build Death Particles**, guide `Docs/Death Effect Setup.md`). Harmful = has your `EnemyAttack` = red, else green. Your `EnemyCombat.Die()` is unchanged: Tony's `EnemyAnimator.PlayDeath()` (already called from your `[Tony]` lines) asks DeathEffect to turn the body into red particles during the death animation and returns how long that takes. A new enemy prefab: add `DeathEffect` and drag `Prefabs/Effects/DeathParticles` into it, or run the tool. Burst one yourself: `GetComponent<DeathEffect>().Burst();` |
+| Play an enemy animation from your code | `GetComponent<EnemyAnimator>().PlayAttack();` (`PlayDeath()` is already called by `EnemyCombat.Die()`; `IsDead` = it's dying) |
+| Animate the player's attack / fireball | Already done: Tony's `[Tony]` lines in your `PlayerCombat.Attack()` play what's in the hand: nothing / a non-tool = `Punch`, sword or axe = `Attack`, pickaxe = `Mine` (Attack and Mine both show Mixamo's downward axe chop). Fireball: `PlayerAnimator.Play(PlayerAction.Cast);` right after its `Instantiate(...)`. Upper body only, so the legs keep running. The flinch when the player is hurt already plays by itself |
+| Your tools | Replaced by 15 tier tools (pickaxe / axe / sword in Wood, Stone, Iron, Gold, Diamond, Abduo Bricks' Low Poly Tool Pack): Item Data with **Item Type = Tool** (Kind + Tier), held in the character's hand (Tony's `ToolInHand`). Your damage numbers stay (a wooden tool does them); `[Tony]` lines map the tool to your `"Sword"` / `"Axe"` / `"PickAxe"` checks (`ToolRules.WeaponName`) and add +25 % per tier at the tool's job (`ToolRules.Boost`). Copper / iron need a Stone pickaxe (`ToolRules.CanMine`). Your fireball works with any sword (`ToolRules.IsSword`). Your GiveSwordForTesting / EquippedWeaponDisplay left the scene (GameRules > **Tool Test** gives all tools now). Log: `Docs/TonyEditMate/Marko/12-11-2026 Tier Tools.md`, guide `Docs/Tool Setup.md` |
+| What's in the player's hand | `ToolStats tool = ToolRules.ToolIn(PlayerInventory.Instance.ActiveItem);` (null = a bare hand), then `tool.kind` (Pickaxe / Axe / Sword) and `tool.tier` (Wood ... Diamond) |
+| Bare-handed punches | Tony's `PunchCombo` (on the Player) picks them: left click = left / right jabs in turn, right click = heavy left hook / heavy right punch in turn, which hit and cost x2. `[Tony]` lines in your `PlayerCombat` ask `punchCombo.Next(...)` and call `Attack(punch)`; heavy damage = `PunchCombo.Power(swing)`. Log: `Docs/TonyEditMate/Marko/13-11-2026 Punch Combo.md`, guide `Docs/Mixamo Animations.md` |
+| A burst where an attack hits | Bare-handed hits already burst, and they hurt **when the fist lands**: Tony's `[Tony] replaced` lines in your `PlayerCombat.Attack()` call `PunchEffect.Punch(target, hit, () => target.TakeDamage(damage))` instead of `TakeDamage` at once. It waits the Impact Delay (about 0.3 s), hurts, then bursts on the spot that was hit, even on a running deer. Weapons still hit at once. For a burst only (sword, fireball): `PunchEffect.Play(hit.point, hit.normal);`. Log: `Docs/TonyEditMate/Marko/12-11-2026 Punch Wind Burst.md` |
+| Coins when the player dies | They go back to the starting amount: Tony's `[Tony]` lines in your `PlayerCoins` (Reset On Death tick box, `ResetCoins()`). Log: `Docs/TonyEditMate/Marko/10-11-2026 Coins Reset On Death, Perk Menu Closes, Punch.md` |
+| Animals that run away | Already done: the sheep are deer now (ithappy's **Animals FREE** pack, `Assets/Prefabs/ResourceNodes/DeerNode`). Tony's `WildAnimal` makes them graze, wander, and run from the player when the player comes within 12 m or hits them. Your `PlayerCombat` damages them as `ResourceType.Animal`, like the sheep. More animals: select e.g. `Imported3D/ithappy/Animals_FREE/Prefabs/Horse_001`, then **Tools > World > Build Wild Animal**. Guide: `Docs/Animal Setup.md` |
+| A sight perk or buff | `PlayerSight.Current.AddRange(20f);` (a perk: until the player dies) or `PlayerSight.Current.AddRange(40f, 30f);` (a buff: 30 seconds). Deer then spawn farther out by themselves (Tony's `AnimalSpawner` reads the range live). `PlayerSight.Current.Range` = the range now |
 
 **Example: drop meat when an animal dies**
 
@@ -250,6 +265,10 @@ void DropMeat(int amount)
 | You want to… | Use |
 |---|---|
 | Place resources in the world | Instantiate an **Item Data's Prefab** (`itemData.Prefab`). It already has `ItemPickup`, so F picks it up |
+| Place trees | Drag `Assets/Prefabs/ResourceNodes/TreeNode` or a look from `ResourceNodes/Trees` (Oak, Broadleaf, Tall Broadleaf, Birch, Birch Cluster) onto the ground. The pivot is the foot of the trunk. Then **Tools > World > Mix Trees In Scene** gives them random looks, turns and sizes and stands them on the ground. Your `ObjectScatter` now spawns the 200 trees as one rule per look (`Trees: Round Oak`, ...) with **Y Offset 0**: the new trees' pivot is the foot of the trunk, so Y Offset 2 made them float (only its settings changed, not your script; log `Docs/TonyEditMate/Sanyam/12-11-2026 Tree Spawn Height And Looks.md`). Guide: `Docs/Tree Setup.md` |
+| Animals in the world | Not in your ObjectScatter any more: Tony's tool (**Tools > World > Set Up World Spawning**) moved the `Animals` rule to Tony's `AnimalSpawner - DeerNode` object. It keeps 15 deer around the player and only spawns them where the player can't see (Tony's `PlayerSight` on the Player). Before, the rule ran after 1000+ trees and found no spot (0 of 40). Guide: `Docs/World Spawning Setup.md` |
+| Your ObjectScatter (changed) | Tony's `[Tony]` lines (13/11/2026, log `Docs/TonyEditMate/Sanyam/13-11-2026 Scatter Spacing Groups And Forest Patches.md`): **Min Spacing** now counts only between rules with the same **Spacing Group** (empty = the prefab's name; all tree looks = `Trees`). Other kinds keep **Clearance** (3 m), so many trees still leave room for rocks and bushes. New per-rule settings: **Patch Size** / **Open Ground** (forests with meadows) and **Min / Max Size** (random sizes). Used spots are kept in 10 m squares (fast with 1000+ trees). Old rules still work |
+| Spawn something where the player can't see it | `PlayerSight.Current.CanSee(feet, height)` (false = out of sight: behind the player, behind a hill / trunk / wall, or past the sight range). Tony's `AnimalSpawner` does this for the deer; you could do the same for enemies |
 | Make a new building piece | Select it, **Tools > Building > Make Building From Selection**, fill the recipe. It appears in the build menu (B) by itself |
 | Know when the player built something | `FindFirstObjectByType<BlueprintPlacer>().Built += OnBuilt;` (gives the `BuildingData`) |
 | Is the player placing a building now? | `BlueprintPlacer.IsPlacing` |
@@ -314,6 +333,76 @@ Get them: `controller = FindFirstObjectByType<PlayerController>();`, `jump = Fin
 | `bool IsGrounded` | PlayerController: standing on walkable ground (not in the air, not on a too-steep slope). PlayerJump has one too (standing on something not too steep) |
 | `float MaxSlopeAngle` | PlayerController: the steepest slope the player can walk up (default 45 degrees); steeper = a wall |
 | `event Action Jumped` | PlayerJump: fired on every jump |
+
+### PlayerAnimator (on the Player's child "Character"): the animated body
+
+The player's look: Blink's low-poly human standing on the ball (the ball still does the moving and colliding).
+It plays idle / run / sprint / jump / fall / death by itself. Get it: nothing to find, `Play` is static.
+
+| Member | What it is |
+|---|---|
+| `static void Play(PlayerAction action)` | plays an action on the upper body, e.g. `PlayerAnimator.Play(PlayerAction.Attack);`. Does nothing if there's no character |
+| `PlayerAction` | `Hit` (already plays by itself when hurt), `Punch` (the right jab), `Attack`, `Mine`, `Gather`, `Cast`, and PunchCombo's `PunchLeft`, `HeavyHook`, `HeavyPunch` |
+| `static PlayerAnimator Current` | the character in the scene (null if none) |
+| `const float ActionSpeed` | how fast actions play (2 = twice as fast as the clips), in the body AND the first-person hands, so they stay together |
+| `static event Action<PlayerAction> ActionPlayed` | fired by every `Play(...)`. The first-person hands (`FirstPersonHands`, on the Main Camera) listen, so `Play` also animates the hands in first person |
+
+Built by **Tools > Player > Add Character Model**. Guide: `Docs/Player Character Setup.md`.
+
+### EnemyAnimator (on an enemy, e.g. SlimeEnemy): the enemy's animations
+
+Plays the monster's animations next to Marko's enemy scripts: idle / walk / run by its real speed, a flinch when its
+`currentHealth` goes down, and a cheer when the player dies. Get it: `GetComponent<EnemyAnimator>()` on the enemy.
+
+| Member | What it is |
+|---|---|
+| `void PlayAttack()` | the attack animation (EnemyAttack calls it) |
+| `float PlayDeath()` | the death animation; stops the enemy (no moving, attacking or being hit) and returns the seconds to wait before removing it (EnemyCombat.Die calls it) |
+| `bool IsDead` | it's dying |
+
+Built by **Tools > Enemies > Build Monster Enemy**. Guide: `Docs/Enemy Setup.md`.
+
+### PunchEffect (on the Player): the grey wind burst where a punch lands
+
+Grey dust clouds, wind lines, a shock ring and a few specks, a little in front of the hit spot. It waits until the fist
+lands in the punch animation (Impact Delay), then removes itself after about a second. Get it: nothing to find, `Punch`
+and `Play` are static.
+
+| Member | What it is |
+|---|---|
+| `static void Punch(Component target, RaycastHit hit, Action hurt)` | a punch that lands after the Impact Delay: then `hurt` runs (e.g. `() => enemy.TakeDamage(10)`) and the burst pops on the spot of `target` that was hit, even if it moved. Not run if the target is gone by then. Without a PunchEffect, `hurt` runs at once. PlayerCombat uses it for bare-handed hits |
+| `static void Hit(Component target, RaycastHit hit, Action hurt, PlayerAction swing)` | the same for any swing, with its own delay: Punch = Impact Delay, Attack = Swing Delay, Mine = Mine Delay; every hit bursts wind (tools: Tool Burst Size). PlayerCombat uses it for every hit |
+| `static void Play(Vector3 point, Vector3 normal)` | a burst at `point`, flying out of the surface (`normal` = `RaycastHit.normal`), e.g. `PunchEffect.Play(hit.point, hit.normal);`. Does nothing if the Player has no PunchEffect or it's switched off |
+| `static PunchEffect Current` | the one on the Player (null if none) |
+
+Built by **Tools > Effects > Build Punch Wind Burst** (prefab `Assets/Prefabs/Effects/PunchWindBurst.prefab`). Guide:
+`Docs/Punch Effect Setup.md`.
+
+### WildAnimal (on an animal, e.g. DeerNode): grazes, wanders, runs from the player
+
+It needs nothing from your code. It finds the player by itself, keeps itself on the ground and plays its own
+animations. Its settings (Flee Distance, Run Speed, Wander Radius...) are in the Inspector. Hurting it the normal way
+(`ResourceNode.TakeDamage`) also makes it run.
+
+| Member | What it is |
+|---|---|
+| `const string SpeedName`, `AnimSpeedName` | its Animator's floats: `Speed` (0 = standing, 1 = walking, 2 = running) and `AnimSpeed` |
+
+Built by **Tools > World > Build Wild Animal** (any ithappy animal; the deer by default). Guide: `Docs/Animal Setup.md`.
+
+### ToolRules (nothing to find: static): how tools work
+
+| Member | What it is |
+|---|---|
+| `ToolStats ToolIn(PlayerInventory.Slot slot)` | the tool in a slot (`kind`, `tier`), or null (empty, or not a tool) |
+| `bool IsSword(slot)` | a sword of any tier |
+| `PlayerAction SwingFor(tool)` | the animation a click plays: Punch (null), Mine (pickaxe), Attack (sword, axe) |
+| `float Boost(tool, ToolKind job)` | 1.25 per tier above Wood, only at its own job (e.g. `Boost(tool, ToolKind.Sword)` for damage to enemies) |
+| `bool CanMine(tool, ResourceNode node)` | can this tool (null = a hand) break it: an ore needs its Mined With pickaxe or better |
+| `void TellCantMine(node)` | shows "Needs a Stone Pickaxe or better" (not more than every 1.5 s) |
+
+Tools are made by **Tools > Items > Build Tier Tools**. The selected tool shows in the hand by itself (`ToolInHand`), and
+GameRules > **Tool Test** gives one of each. Guide: `Docs/Tool Setup.md`.
 
 ### PlayerRespawn (on the Player)
 
@@ -514,6 +603,14 @@ Get them: BuildingData = a `public BuildingData wall;` field with the file dragg
   `MenuState.SetOpen(this, false)` when it closes, and free the cursor:
   `Cursor.lockState = CursorLockMode.None; Cursor.visible = true;` (lock it again on close).
   The camera, movement keys and other menus then step aside by themselves.
+- **Close your menu when the player dies:** listen to `MenuState.CloseAllRequested` and close yourself there.
+  Tony's PlayerRespawn and DeathScreen call `MenuState.CloseAll()` the moment the player dies, so only the death page
+  stays on screen:
+  `void OnEnable() { MenuState.CloseAllRequested += CloseNow; }`,
+  `void OnDisable() { MenuState.CloseAllRequested -= CloseNow; }`,
+  `void CloseNow() { if (isOpen) Close(); }`.
+  Turki's CraftingMenu and Marko's PerkSelectionUI already do this (Tony's `[Tony]` lines, logs in
+  `Docs/TonyEditMate/Turki/` and `Docs/TonyEditMate/Marko/`).
 - **Before reacting to clicks / keys,** check `if (MenuState.AnyOpen) return;` so clicks inside a menu don't also attack or build.
 - **Keys** come from `KeyBindings` (e.g. `KeyBindings.Swing`, `KeyBindings.Interact`), so players can change them in one place.
   Need a new key? Ask Tony to add it.

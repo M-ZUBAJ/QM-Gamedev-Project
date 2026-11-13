@@ -11,8 +11,8 @@ Unity Editor: The HealthBar (StatBar) finds this by itself. "On Changed" is only
 Purpose: Holds the player's health. TakeDamage / Heal change it and fire On Changed (current, max).
          At 0 health the player dies: the Died event fires once (PlayerRespawn listens to it and brings the
          player back). Revive fills health back up.
-Requirement: PlayerHealth.cs <-x DeathScreen.cs, EnemyAttack.cs, PerkChest.cs, PerkManager.cs, PlayerRespawn.cs
-             PlayerHealth.cs <-o AutoCollector.cs, DaylightCycle.cs, ItemConsumer.cs, ItemDropper.cs, PlayerHunger.cs, PlayerPerks.cs, PlayerStats.cs, StatBar.cs
+Requirement: PlayerHealth.cs <-x DeathScreen.cs, EnemyAttack.cs, PerkChest.cs, PerkManager.cs, PlayerCoins.cs, PlayerRespawn.cs
+             PlayerHealth.cs <-o AutoCollector.cs, DaylightCycle.cs, EnemyAnimator.cs, FirstPersonHands.cs, GainNotifier.cs, ItemConsumer.cs, ItemDropper.cs, PlayerAnimator.cs, PlayerHunger.cs, PlayerPerks.cs, PlayerSight.cs, PlayerStats.cs, StatBar.cs, WildAnimal.cs
 */
 
 using UnityEngine;

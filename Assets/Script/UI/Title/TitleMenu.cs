@@ -1,6 +1,6 @@
 /*
 First Date: 7/11/2026
-Date: 9/11/2026
+Date: 13/11/2026
 Author: Tony
 Use by: Put this on the title screen's menu canvas (Tools > UI > Build Main Title Scene makes TitleCanvas with it).
 Unity Editor: Nothing to connect: it finds its pages and buttons by NAME (TitlePage, NewGamePage, SettingsPage, Title,
@@ -113,8 +113,10 @@ public class TitleMenu : MonoBehaviour
 
         foreach (ButtonFX fx in GetComponentsInChildren<ButtonFX>(true)) fx.UseSoundsIfEmpty(hoverSound, clickSound);
 
+        // The version shows what's typed in Footer > Version (e.g. "v1.1"), so changing it there is enough. Only an
+        // empty text is filled in from Project Settings > Player > Version.
         TMP_Text version = Find<TMP_Text>("Version");
-        if (version != null) version.text = "v" + Application.version;   // Project Settings > Player > Version
+        if (version != null && string.IsNullOrWhiteSpace(version.text)) version.text = "v" + Application.version;
 
 #if UNITY_WEBGL && !UNITY_EDITOR
         Transform quit = FindDeep(transform, "QuitButton");

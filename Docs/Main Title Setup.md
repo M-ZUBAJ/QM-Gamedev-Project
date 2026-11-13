@@ -104,8 +104,9 @@ slots (a ButtonFX with its own sound keeps it). Empty slots stay silent.
 
 - **The title text:** select TitleCanvas > Pages > TitlePage > **Title** and change the text, then **Overrides > Apply
   All**. To keep it for every rebuild, change `GameTitle` at the top of `Editor/TitleSceneBuilder.cs`.
-- **Credits:** the **Credits** text in the Footer (or `Credits` in the builder). The **version** comes from
-  Project Settings > Player > Version.
+- **Credits:** the **Credits** text in the Footer (or `Credits` in the builder). The **version** is the
+  **Version** text in the Footer (TitleCanvas > Pages > TitlePage > Footer > Version): type e.g. `v1.1` there.
+  Left empty, it shows Project Settings > Player > Version.
 - **Colors and sizes:** in the Inspector of each object, or in the Fields at the top of the builder for every rebuild.
 
 ## By hand (instead of the tool)

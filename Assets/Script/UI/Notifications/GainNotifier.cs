@@ -1,6 +1,6 @@
 /*
 First Date: 2/11/2026
-Date: 2/11/2026
+Date: 10/11/2026
 Author: Tony
 Use by: Put this on NotificationCanvas (Tools > UI > Build Notifications adds it), or on any one object in the scene.
 Unity Editor: Tick which gains get a message (Items, Coins). Nothing to connect: it finds the player's inventory and
@@ -10,10 +10,10 @@ Purpose: Tells the player what they just got, through NotificationFeed:
            Items: "+3 Wood" with the item's icon whenever items come into the inventory
                   (PlayerInventory.ItemAdded: harvesting, picking up, crafting...).
            Coins: "+5 Coins" whenever the coin total goes up (Marko's PlayerCoins.CoinsChanged, e.g. an enemy was
-                  defeated). Spending coins shows nothing.
+                  defeated). Spending coins shows nothing, and so does the coin reset when the player dies.
          The item icon follows GameRules' Item Icons rules, like the inventory slots (ItemIconRules).
 Requirement: GainNotifier.cs x-> NotificationFeed.cs, PlayerInventory.cs, ItemIconRules.cs
-             GainNotifier.cs o-> PlayerCoins.cs, CoinCounter.cs
+             GainNotifier.cs o-> PlayerCoins.cs, CoinCounter.cs, PlayerHealth.cs
              GainNotifier.cs <-x NotificationUIBuilder.cs
 */
 
@@ -39,6 +39,7 @@ public class GainNotifier : MonoBehaviour
     const float SearchInterval = 0.5f;   // seconds between looks for PlayerCoins while it's missing
 
     PlayerCoins playerCoins;   // Marko's script on the player (null until found)
+    PlayerHealth playerHealth; // on the same player: no coin messages while dead (can be missing)
     int lastCoins;             // the total last time, to work out how many just came in
     float nextSearch;
     CoinCounter counter;       // the HUD's coin counter, for its picture (can be missing)
@@ -84,15 +85,18 @@ public class GainNotifier : MonoBehaviour
         if (playerCoins == null) return;
 
         lastCoins = playerCoins.Coins;   // coins the player already has don't count as new
+        playerHealth = playerCoins.GetComponent<PlayerHealth>();
         playerCoins.CoinsChanged += OnCoinsChanged;
     }
 
-    // The coin total changed: more than before = "+5 Coins". Less (spent) = nothing.
+    // The coin total changed: more than before = "+5 Coins". Less (spent) = nothing. Nothing while the player is dead
+    // either: dying puts the coins back to the starting amount, which can be MORE than they had (not a real gain).
     void OnCoinsChanged(int total)
     {
         int gained = total - lastCoins;
         lastCoins = total;
-        if (coins && gained > 0) NotificationFeed.ShowGain(CoinKey, coinName, gained, CoinIcon());
+        bool dead = playerHealth != null && playerHealth.IsDead;
+        if (coins && gained > 0 && !dead) NotificationFeed.ShowGain(CoinKey, coinName, gained, CoinIcon());
     }
 
     // The coin picture: the one set here, else whatever the HUD's coin counter shows.

@@ -1,6 +1,6 @@
 /*
 First Date: 11/10/2026
-Date: 11/10/2026
+Date: 10/11/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerHealth).
 Unity Editor: Set "Respawn Point" to where the player comes back (default 0, 0.5, 0: the middle of the world,
@@ -11,7 +11,8 @@ Unity Editor: Set "Respawn Point" to where the player comes back (default 0, 0.5
 Purpose: When the player dies (PlayerHealth reaches 0), brings them back at the Respawn Point, like Minecraft:
          moved there, stopped (no falling speed kept), and full Health, Hunger and Stamina again.
          The inventory is kept. Fires Respawned afterwards (PlayerStats starts counting a new life).
-Requirement: PlayerRespawn.cs x-> PlayerHealth.cs
+         The moment the player dies, every open menu closes (inventory, build menu, crafting, perk choice...).
+Requirement: PlayerRespawn.cs x-> PlayerHealth.cs, MenuState.cs
              PlayerRespawn.cs o-> PlayerHunger.cs, PlayerStamina.cs, Rigidbody (Unity)
              PlayerRespawn.cs <-x DeathScreen.cs, PlayerStats.cs
 */
@@ -76,6 +77,7 @@ public class PlayerRespawn : MonoBehaviour
 
     void OnDied()
     {
+        MenuState.CloseAll();   // close the inventory, build menu, crafting... nothing stays open over the death
         if (!WaitForButton) respawnNextFrame = true;
     }
 

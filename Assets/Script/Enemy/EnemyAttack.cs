@@ -45,5 +45,10 @@ public class EnemyAttack : MonoBehaviour
         {
             playerHealth.TakeDamage(attackDamage);
         }
+
+        // [Tony] added (10/11/2026): play the attack animation, if the enemy has Tony's EnemyAnimator (the SlimeEnemy does).
+        // To undo: delete the lines marked [Tony]. Log: Docs/TonyEditMate/Marko/10-11-2026 Slime Enemy With Animations.md
+        EnemyAnimator animator = GetComponent<EnemyAnimator>();                      // [Tony] added
+        if (animator != null) animator.PlayAttack();                                  // [Tony] added
     }
 }

@@ -21,7 +21,7 @@ Purpose: With an empty hand (no hotbar slot selected, or the selected slot has n
          Untick it for the old behavior.
          This script only moves the object. Visuals (e.g. LevitationEffect) listen to
          ObjectLevitator.Started / Stopped, so the look can be changed without touching this script.
-Requirement: ObjectLevitator.cs <-o PlayerHunger.cs
+Requirement: ObjectLevitator.cs <-o PlayerHunger.cs, PunchCombo.cs
 */
 
 using UnityEngine;
