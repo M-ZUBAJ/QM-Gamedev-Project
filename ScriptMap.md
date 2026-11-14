@@ -102,7 +102,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [EnemyCombat.cs](<Assets/Script/Enemy/EnemyCombat.cs>) | Enemy | - | DeathEffect.cs (optional), EnemyAnimator.cs (optional), EnemyBuilder.cs, EnemySpawner.cs, FireballProjectile.cs, PlayerCombat.cs |
 | [EnemyMovement.cs](<Assets/Script/Enemy/EnemyMovement.cs>) | Enemy | - | EnemyAnimator.cs (optional), EnemyBuilder.cs, EnemySpawner.cs |
 | [EnemySpawner.cs](<Assets/Script/Enemy/EnemySpawner.cs>) | Enemy | - | EnemyBuilder.cs, GameSetup.cs, NewGameDefaultsSync.cs |
-| [ResourceNode.cs](<Assets/Script/Gathering/ResourceNode.cs>) | Gathering | - | DeathEffect.cs (optional), GrasslandTreeBuilder.cs, PlayerCombat.cs, ToolRules.cs, WildAnimal.cs (optional), WildAnimalBuilder.cs, WorldSpawnSetup.cs |
+| [ResourceNode.cs](<Assets/Script/Gathering/ResourceNode.cs>) | Gathering | - | DeathEffect.cs (optional), FireballProjectile.cs, GrasslandTreeBuilder.cs, PlayerCombat.cs, ToolRules.cs, WildAnimal.cs (optional), WildAnimalBuilder.cs, WorldSpawnSetup.cs |
 | [Wander.cs](<Assets/Script/Gathering/Wander.cs>) | Gathering | - | - |
 | [IconCapture.cs](<Assets/Script/IconCapture/IconCapture.cs>) | IconCapture | ShapeColor.cs (optional) | BuildingData.cs, HeldItemView.cs, ItemData.cs, ItemIconRules.cs, ItemPickup.cs, ToolInHand.cs (optional) |
 | [KeyBindings.cs](<Assets/Script/Input/KeyBindings.cs>) | Input | - | BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemGrabber.cs, KeyBindingMenu.cs, NewGameDefaultsSync.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs, TitleSceneBuilder.cs |

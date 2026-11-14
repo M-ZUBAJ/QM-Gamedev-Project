@@ -40,12 +40,24 @@ public class FireballProjectile : MonoBehaviour
         if (collision.transform.root == transform.root)
             return;
 
+
+        // check if fireball hit the enemy 
         EnemyCombat enemy =
             collision.collider.GetComponentInParent<EnemyCombat>();
 
+        // check if fireball hit animal or other resource 
+        ResourceNode resource = collision.collider.GetComponentInParent<ResourceNode>();
+
+
+        // if fireball hit an enemy, make it take damage
         if (enemy != null)
         {
             enemy.TakeDamage(damage);
+        }
+        // otherwise if it hit a resource/animal, make that take damage instead.
+        else if (resource != null)
+        {
+            resource.TakeDamage(damage);
         }
 
         Destroy(gameObject);
