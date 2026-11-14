@@ -18,6 +18,13 @@ public class PerkChest : MonoBehaviour
     [Min(1f)]
     [SerializeField] float interactionRange = 3f;
 
+
+    [Header("Opened Chest")]
+    [SerializeField] bool despawnAfterOpened = true;
+
+    [Min(0f)]
+    [SerializeField] float despawnDelay = 0f; // how longer after opened chest should despawn
+
     bool opened;
     int openingCost;
 
@@ -141,6 +148,14 @@ public class PerkChest : MonoBehaviour
         PerkManager.Instance.ApplyPerk(selectedPerk);
 
         Debug.Log("Selected perk: " + selectedPerk.displayName);
+
+        // Remove the chest after the player chooses a perk.
+        if (despawnAfterOpened)
+        {
+            Destroy(gameObject, despawnDelay);
+        }
+
+
     }
 
 
