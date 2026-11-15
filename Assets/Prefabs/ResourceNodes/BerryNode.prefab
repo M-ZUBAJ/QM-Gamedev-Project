@@ -331,8 +331,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dropItem: {fileID: 11400000, guid: c8132a65f12a04e8bb073435f3519ef4, type: 2}
   maxHealth: 10
+  resourceType: 0
   dropMin: 3
   dropMax: 5
+  bonusItem: {fileID: 0}
+  bonusChance: 0.3
+  bonusMin: 1
+  bonusMax: 2
+  collectWithKey: 1
+  collectKey: 101
+  collectRange: 3
   currentHealth: 0
 --- !u!1 &8591208068668196500
 GameObject:
