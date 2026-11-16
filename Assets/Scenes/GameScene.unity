@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028292, g: 0.22571306, b: 0.30692118, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -5352,6 +5352,7 @@ GameObject:
   - component: {fileID: 1576947615}
   - component: {fileID: 1576947616}
   - component: {fileID: 1576947617}
+  - component: {fileID: 1576947618}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -5946,6 +5947,22 @@ MonoBehaviour:
     m_Bits: 51
   eyes: {fileID: 0}
   resetOnDeath: 1
+--- !u!114 &1576947618
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1576947584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0281cd4448ed34cffad78c11c9d77c16, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  buffs:
+  - food: {fileID: 11400000, guid: c0c79efa7665c4aff900dc7c122f8655, type: 2}
+    maxHealthPercent: 0.05
+    duration: 120
 --- !u!4 &1609570296 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1601464460967339328, guid: 62da010430b404922bc87adb93c05aa4, type: 3}

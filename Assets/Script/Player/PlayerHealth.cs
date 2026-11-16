@@ -12,7 +12,7 @@ Purpose: Holds the player's health. TakeDamage / Heal change it and fire On Chan
          At 0 health the player dies: the Died event fires once (PlayerRespawn listens to it and brings the
          player back). Revive fills health back up.
 Requirement: PlayerHealth.cs <-x DeathScreen.cs, EnemyAttack.cs, PerkChest.cs, PerkManager.cs, PlayerCoins.cs, PlayerRespawn.cs
-             PlayerHealth.cs <-o AutoCollector.cs, DaylightCycle.cs, EnemyAnimator.cs, FirstPersonHands.cs, GainNotifier.cs, ItemConsumer.cs, ItemDropper.cs, PlayerAnimator.cs, PlayerHunger.cs, PlayerPerks.cs, PlayerSight.cs, PlayerStats.cs, StatBar.cs, WildAnimal.cs
+             PlayerHealth.cs <-o AutoCollector.cs, DaylightCycle.cs, EnemyAnimator.cs, FirstPersonHands.cs, FoodBuff.cs, GainNotifier.cs, ItemConsumer.cs, ItemDropper.cs, PlayerAnimator.cs, PlayerHunger.cs, PlayerPerks.cs, PlayerSight.cs, PlayerStats.cs, StatBar.cs, WildAnimal.cs
 */
 
 using UnityEngine;
@@ -121,6 +121,15 @@ public class PlayerHealth : MonoBehaviour
     {
         maxHealth = startMaxHealth;
         health = Mathf.Min(health, maxHealth);
+        UpdateBar();
+    }
+
+    // [Turki] added: changes max health by a flat amount (negative = take it away again). FoodBuff uses it for a
+    // temporary max health buff, because IncreaseMaxHealth can only raise it and ResetMaxHealth would also remove the perks.
+    public void AddMaxHealth(float amount)
+    {
+        maxHealth = Mathf.Max(1f, maxHealth + amount);
+        health = Mathf.Min(health, maxHealth);   // health can never be above the new max
         UpdateBar();
     }
 

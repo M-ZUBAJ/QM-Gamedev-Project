@@ -14,6 +14,7 @@ Purpose: Eat / drink the item in hand, like Minecraft: right click with food sel
 Requirement: ItemConsumer.cs x-> PlayerInventory.cs, ItemData.cs, Consumable.cs, KeyBindings.cs, MenuState.cs, ClickClaim.cs
              ItemConsumer.cs o-> PlayerHealth.cs, PlayerHunger.cs, PlayerStamina.cs
              ItemConsumer.cs <-x PlayerStats.cs
+             ItemConsumer.cs <-o FoodBuff.cs
 */
 
 using UnityEngine;
