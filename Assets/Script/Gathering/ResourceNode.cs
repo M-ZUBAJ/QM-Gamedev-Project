@@ -1,4 +1,3 @@
-
 using UnityEngine;
 
 [RequireComponent(typeof(Collider))]
@@ -39,6 +38,18 @@ public class ResourceNode : MonoBehaviour
     [Tooltip("Most bonus items.")]
     [SerializeField] int bonusMax = 2;
 
+    // NEW: collect-by-key fields (used by the berry bush)
+    [Header("Collect by key (berries)")]
+    [Tooltip("On: attacks do nothing. The player collects it by looking at it and pressing the collect key.")]
+    [SerializeField] bool collectWithKey = false;
+
+    [Tooltip("The key that collects it (same key as the chests).")]
+    [SerializeField] KeyCode collectKey = KeyCode.E;
+
+    [Tooltip("How close the player must be, in metres.")]
+    [Min(1f)]
+    [SerializeField] float collectRange = 3f;
+
     public float currentHealth;
 
     // [Tony] added (12/11/2026): lets Tony's ToolRules read which pickaxe this rock needs (the drop item's Mined With:
@@ -52,11 +63,44 @@ public class ResourceNode : MonoBehaviour
         currentHealth = maxHealth;
     }
 
+    // NEW: berries are picked with a key instead of being hit, so the node watches for the key itself.
+    void Update()
+    {
+        if (!collectWithKey) return;                   // normal nodes are mined with attacks
+        if (!Input.GetKeyDown(collectKey)) return;
+        if (MenuState.AnyOpen) return;                 // no collecting while a menu is open
+
+        Camera cam = Camera.main;
+        if (cam == null) return;
+
+        // The camera sits at the edge of the player's own sphere, so a normal Raycast hits the player first.
+        // RaycastAll returns everything along the ray, and we skip the player's body.
+        Ray ray = new Ray(cam.transform.position, cam.transform.forward);
+        RaycastHit[] hits = Physics.RaycastAll(ray, collectRange);
+
+        float closest = float.MaxValue;
+        bool lookingAtThis = false;
+        foreach (RaycastHit h in hits)
+        {
+            if (h.collider.GetComponentInParent<PlayerController>() != null) continue;   // ignore our own body
+
+            if (h.distance < closest)                  // the nearest thing that is not the player
+            {
+                closest = h.distance;
+                lookingAtThis = h.collider.transform == transform || h.collider.transform.IsChildOf(transform);
+            }
+        }
+
+        if (lookingAtThis) Break();                    // gives the drop and removes the bush
+    }
+
     // ===== My methods =====
 
     // The player's attack calls this (same name as EnemyCombat.TakeDamage).
     public void TakeDamage(float damage)
     {
+        if (collectWithKey) return;   // NEW: berries are picked with a key, not hit
+
         currentHealth -= damage;
         Debug.Log(name + " took " + damage + " damage. Current Health: " + currentHealth);
 

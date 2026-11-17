@@ -13,7 +13,7 @@ Purpose: One place to check "is any menu open?" (menus free the cursor and pause
          so gameplay must ignore the keyboard.
          CloseAll() asks every menu to close itself (PlayerRespawn and DeathScreen call it when the player dies,
          so only the death page is left on screen).
-Requirement: MenuState.cs <-x BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, DeathScreen.cs, HeldItemView.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemDropper.cs, ItemGrabber.cs, ObjectLevitator.cs, PerkSelectionUI.cs, PlayerCombat.cs, PlayerController.cs, PlayerJump.cs, PlayerRespawn.cs, VictoryScreen.cs
+Requirement: MenuState.cs <-x BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, DeathScreen.cs, HeldItemView.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemDropper.cs, ItemGrabber.cs, ObjectLevitator.cs, PerkSelectionUI.cs, PlayerCombat.cs, PlayerController.cs, PlayerJump.cs, PlayerRespawn.cs, ResourceNode.cs, VictoryScreen.cs
 */
 
 using System.Collections.Generic;
