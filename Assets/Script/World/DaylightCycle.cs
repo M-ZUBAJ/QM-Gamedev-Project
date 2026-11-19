@@ -19,7 +19,7 @@ Purpose: Day and night. Turns the sun around the world and changes its brightnes
          SetDayLength, used by GameSetup).
 Requirement: DaylightCycle.cs x-> GameRules.cs, Light (Unity)
              DaylightCycle.cs o-> PlayerHealth.cs
-             DaylightCycle.cs <-x DayCounter.cs, EnemySpawner.cs, GameSetup.cs, NewGameDefaultsSync.cs, TimeCounter.cs, VictoryScreen.cs
+             DaylightCycle.cs <-x DayCounter.cs, EnemySpawner.cs, GameSetup.cs, NewGameDefaultsSync.cs, NightLightingController.cs, TimeCounter.cs, VictoryScreen.cs
 */
 
 using UnityEngine;

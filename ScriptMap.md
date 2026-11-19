@@ -189,7 +189,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [TitleMenu.cs](<Assets/Script/UI/Title/TitleMenu.cs>) | UI/Title | UITween.cs, UISparks.cs, UISound.cs, ScreenFader.cs, TitleTextFX.cs, CascadeIn.cs, ButtonFX.cs, NewGamePanel.cs, GameSetup.cs, KeyBindingMenu.cs (optional) | TitleSceneBuilder.cs |
 | [UIAnimatedImage.cs](<Assets/Script/UI/UIAnimatedImage.cs>) | UI | AsepriteFrames.cs, IconSource.cs, Image (Unity) | BuildingButton.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, SlotUI.cs |
 | [BoundsUtil.cs](<Assets/Script/Utility/BoundsUtil.cs>) | Utility | - | BlueprintPlacer.cs, Crosshair.cs, ItemGrabber.cs, ObjectLevitator.cs |
-| [DaylightCycle.cs](<Assets/Script/World/DaylightCycle.cs>) | World | GameRules.cs, Light (Unity), PlayerHealth.cs (optional) | DayCounter.cs, EnemySpawner.cs, GameSetup.cs, NewGameDefaultsSync.cs, TimeCounter.cs, VictoryScreen.cs |
+| [DaylightCycle.cs](<Assets/Script/World/DaylightCycle.cs>) | World | GameRules.cs, Light (Unity), PlayerHealth.cs (optional) | DayCounter.cs, EnemySpawner.cs, GameSetup.cs, NewGameDefaultsSync.cs, NightLightingController.cs, TimeCounter.cs, VictoryScreen.cs |
 | [NightLightingController.cs](<Assets/Script/World/NightLightingController.cs>) | World | - | - |
 | [ObjectScatter.cs](<Assets/Script/World/ObjectScatter.cs>) | World | - | GrasslandTreeBuilder.cs, WildAnimalBuilder.cs, WorldSpawnSetup.cs |
 | [Consumable.cs](<Assets/Script/WorldItem/Consumable.cs>) | WorldItem | - | ItemConsumer.cs, ItemData.cs, ItemDataEditor.cs |
