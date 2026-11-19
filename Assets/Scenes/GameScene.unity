@@ -4333,7 +4333,7 @@ Light:
   serializedVersion: 10
   m_Type: 1
   m_Shape: 0
-  m_Color: {r: 0.7686275, g: 0.7686275, b: 0.7686275, a: 1}
+  m_Color: {r: 0.3019608, g: 0.5137255, b: 0.90588236, a: 1}
   m_Intensity: 0.25
   m_Range: 10
   m_SpotAngle: 30
@@ -4678,7 +4678,7 @@ MonoBehaviour:
     m_NumColorKeys: 3
     m_NumAlphaKeys: 2
   dayAmbient: 1
-  nightAmbient: 0.2
+  nightAmbient: 0.9
   resetOnPlayerDeath: 1
 --- !u!108 &1218533313
 Light:
