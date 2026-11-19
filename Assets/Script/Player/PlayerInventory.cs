@@ -1,6 +1,6 @@
 /*
 First Date: 30/9/2026
-Date: 2/11/2026
+Date: 19/11/2026
 Author: Tony
 Use by: Drag this script onto the PlayerSphere.
 Purpose: Stores the player's items. Items with the same Item Id stack in one slot.
@@ -8,13 +8,14 @@ Purpose: Stores the player's items. Items with the same Item Id stack in one slo
          The hotbar slots come after the inventory slots (HotbarStart). One of them can be selected (ActiveItem),
          or none (ActiveHotbar = NoHotbar).
          New items go to the inventory first, then to the hotbar when the inventory is full.
+         An upgraded tool goes where the old tool was instead (SlotOf before crafting uses it up, then AddInto).
          Like Minecraft, clicking a slot picks its stack onto the cursor (Held) and clicking again puts it down.
          Other scripts add items with PlayerInventory.Instance.Add(...)
          and listen to PlayerInventory.Changed to update the UI.
          PlayerInventory.ItemAdded tells which item came in and how many (harvested, picked up, crafted...),
          e.g. GainNotifier shows "+3 Wood". Items only moving inside the inventory don't fire it.
 Requirement: PlayerInventory.cs x-> IHand.cs, ItemData.cs
-             PlayerInventory.cs <-x AutoCollector.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingData.cs, CraftingMenu.cs, DroppedStack.cs, EquippedWeaponDisplay.cs, GainNotifier.cs, GiveSwordForTesting.cs, HeldItemUI.cs, HeldItemView.cs, HotbarSelector.cs, ItemConsumer.cs, ItemData.cs, ItemDropper.cs, ItemGrabber.cs, ItemIconRules.cs, PlayerAnimationSetup.cs, PlayerCombat.cs, PlayerFireball.cs, PunchCombo.cs, Recipe.cs, ResourceNode.cs, SlotGroup.cs, SlotUI.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs, UIBuildHelper.cs
+             PlayerInventory.cs <-x AutoCollector.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingData.cs, CraftingMenu.cs, CraftingRow.cs, DroppedStack.cs, EquippedWeaponDisplay.cs, GainNotifier.cs, GiveSwordForTesting.cs, HeldItemUI.cs, HeldItemView.cs, HotbarSelector.cs, ItemConsumer.cs, ItemData.cs, ItemDropper.cs, ItemGrabber.cs, ItemIconRules.cs, ItemTooltip.cs, PlayerAnimationSetup.cs, PlayerCombat.cs, PlayerFireball.cs, PunchCombo.cs, Recipe.cs, ResourceNode.cs, SlotGroup.cs, SlotUI.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs, UIBuildHelper.cs
              PlayerInventory.cs <-o FirstPersonHands.cs
 */
 
@@ -34,6 +35,11 @@ public class PlayerInventory : MonoBehaviour, IHand
         public ItemData data;   // the item's config file (prefab, pickup type...). Can be empty for old items.
 
         public bool IsEmpty => count <= 0;   // an empty slot has nothing in it
+
+        // The name shown to the player (e.g. when the mouse is on it): its Item Data's Display Name, or the Item Data's
+        // file name when Display Name is empty (ItemData.DisplayName). Not the prefab's name.
+        // An old item without Item Data: the name it was added with, else its Item Id.
+        public string ShownName => data != null ? data.DisplayName : !string.IsNullOrEmpty(name) ? name : id;
 
         // True if both hold the same item, so they can stack.
         public bool SameItemAs(Slot other)
@@ -128,6 +134,25 @@ public class PlayerInventory : MonoBehaviour, IHand
         if (slot == null) return false;
 
         ItemAdded?.Invoke(slot, amount);   // e.g. the "+3 Wood" message
+        return true;
+    }
+
+    // Adds items into slot i if it's empty, e.g. the slot an upgrade's old tool was just taken from, so the new tool
+    // stays where the player kept the old one (the same hotbar or inventory slot, so a tool in hand stays in hand).
+    // Otherwise (i = -1, or the slot isn't empty: the old tool was a stack of 2) it's the same as Add.
+    // Returns false if a new slot is needed but all are full.
+    public bool AddInto(int i, string id, string name, Sprite icon, int amount, ItemData data = null)
+    {
+        if (!IsSlot(i) || !slots[i].IsEmpty || amount <= 0) return Add(id, name, icon, amount, data);
+
+        Slot slot = slots[i];
+        slot.id = id;
+        slot.name = name;
+        slot.icon = icon;
+        slot.data = data;
+        slot.count = amount;
+        Changed?.Invoke();
+        ItemAdded?.Invoke(slot, amount);   // e.g. the "+1 Stone Axe" message
         return true;
     }
 
@@ -353,6 +378,19 @@ public class PlayerInventory : MonoBehaviour, IHand
             if (!slot.IsEmpty && slot.id == id) return slot;
         }
         return null;
+    }
+
+    // Where this item is: the index in Slots of the first slot holding it, which is the slot Remove takes it from first
+    // (inventory first, then hotbar). -1 = the player has none (or item is null).
+    // E.g. crafting asks where the old tool is before an upgrade uses it up, then gives the new tool AddInto that slot.
+    public int SlotOf(ItemData item)
+    {
+        if (item == null) return -1;
+        for (int i = 0; i < slots.Count; i++)
+        {
+            if (!slots[i].IsEmpty && slots[i].id == item.Id) return i;
+        }
+        return -1;
     }
 
     // Takes "amount" of this item out of the inventory, from as many slots as needed (inventory first, then hotbar).

@@ -81,6 +81,23 @@ public class PerkManager : MonoBehaviour
                 }
         }
 
+        // [Tony] added (19/11/2026): tell the HUD's perk row (Tony's PlayerPerks, shown by PerkBar) which perk the
+        // player got. Only the old random perk in PerkChest did that, so perks picked on the panel never showed.
+        // To undo: delete the lines marked [Tony]. Log: Docs/TonyEditMate/Marko/19-11-2026 Perk Panel, E Toggle And Pay On Pick.md
+        PlayerPerks.Record(HudPerk(perk.perkType)); // [Tony] added
+
         Debug.Log("Perk selected: " + perk.displayName);
     }
+
+    // [Tony] added: your chest perk -> the same perk in Tony's HUD list (PerkType has the same four names).
+    static PerkType HudPerk(ChestPerkType type)                                       // [Tony] added
+    {                                                                                 // [Tony] added
+        switch (type)                                                                 // [Tony] added
+        {                                                                             // [Tony] added
+            case ChestPerkType.MaxHealth:  return PerkType.MaxHealth;                 // [Tony] added
+            case ChestPerkType.MaxStamina: return PerkType.MaxStamina;                // [Tony] added
+            case ChestPerkType.MoveSpeed:  return PerkType.MoveSpeed;                 // [Tony] added
+            default:                       return PerkType.Fireball;                  // [Tony] added
+        }                                                                             // [Tony] added
+    }                                                                                 // [Tony] added
 }

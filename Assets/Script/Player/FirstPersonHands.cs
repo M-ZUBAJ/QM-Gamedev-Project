@@ -22,7 +22,7 @@ Purpose: Minecraft-style hands for the first-person view. A copy of the player's
 Requirement: FirstPersonHands.cs x-> Animator (Unity)
              FirstPersonHands.cs o-> PlayerAnimator.cs, CameraController.cs, PlayerInventory.cs, PlayerHealth.cs, PlayerController.cs, Camera (Unity)
              FirstPersonHands.cs <-x FirstPersonArmsHelper.cs, FirstPersonHandsBuilder.cs, TierToolBuilder.cs
-             FirstPersonHands.cs <-o ToolInHand.cs
+             FirstPersonHands.cs <-o HeldItemView.cs, ToolInHand.cs
 */
 
 using System.Collections.Generic;

@@ -1,6 +1,6 @@
 /*
 First Date: 7/11/2026
-Date: 9/11/2026
+Date: 19/11/2026
 Author: Tony
 Use by: Nothing to set up (code only, no component). The New Game page fills it; it works by itself in the game.
 Unity Editor: Nothing to set. Pressing Play straight in GameScene (testing) changes nothing: the choices are only used
@@ -13,6 +13,7 @@ Purpose: Remembers the player's New Game choices and puts them into the game whe
            Difficulty                  -> EnemySpawner's spawnAtNight / enemiesPerNight (Marko's public settings,
                                           his file isn't changed) and PlayerHunger.SetDrainPerSecond
            When I die, pickups, "+3 Wood" messages -> GameRules
+           Testing: start with all tools           -> GameRules Tool Test (ToolTestKit gives the 15 tier tools)
          Other scripts can read what was chosen, e.g. if (GameSetup.ChosenDifficulty == GameSetup.Difficulty.Hard).
 Requirement: GameSetup.cs x-> GameRules.cs, VictoryScreen.cs, DaylightCycle.cs, EnemySpawner.cs, PlayerHunger.cs
              GameSetup.cs <-x NewGameDefaults.cs, NewGamePanel.cs, TitleMenu.cs
@@ -46,6 +47,7 @@ public static class GameSetup
     public static DeathRule? WhenDying;
     public static bool? AutoPickupDrops;
     public static bool? ShowNotifications;
+    public static bool? StartWithAllTools;     // Testing: one of every tier tool from the start
 
     static bool chosen;   // START GAME was pressed: use the choices in every game scene that loads (Play Again too)
 
@@ -73,6 +75,7 @@ public static class GameSetup
         WhenDying = null;
         AutoPickupDrops = null;
         ShowNotifications = null;
+        StartWithAllTools = null;
         chosen = false;
     }
 
@@ -127,5 +130,6 @@ public static class GameSetup
         }
         if (AutoPickupDrops.HasValue) GameRules.Set(GameRule.AutoPickupDrops, AutoPickupDrops.Value);
         if (ShowNotifications.HasValue) GameRules.Set(GameRule.ShowNotifications, ShowNotifications.Value);
+        if (StartWithAllTools.HasValue) GameRules.Set(GameRule.ToolTest, StartWithAllTools.Value);
     }
 }

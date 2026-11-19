@@ -1,6 +1,6 @@
 /*
 First Date: 13/11/2026
-Date: 13/11/2026
+Date: 19/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Open GameScene, then Tools > World > Set Up World Spawning, then save the scene. Ctrl + Z undoes it.
@@ -10,7 +10,8 @@ Purpose: Sets up how the world fills itself, in the open scene:
          - Sanyam's ObjectScatter: the tree rules get Spacing Group "Trees" (trees keep Min Spacing from every tree
            look), forest patches (Patch Size 120 m, Open Ground 0.35 = meadows between the forests) and sizes 0.85-1.2;
            rocks get sizes 0.7-1.3; every rule keeps Clearance 3 m from other kinds. So many trees still leave room for
-           forest rocks and berry bushes.
+           forest rocks and berry bushes. A berry bush is no tree (Turki's ResourceNode picked with E = Collect With
+           Key; its Resource Type says Tree too): a bush rule an older run put with the trees gets its own group back.
          - Its animal rules (prefabs with WildAnimal, e.g. DeerNode) move to an AnimalSpawner, which keeps deer around
            the player and only spawns them where the player can't see.
          - PlayerSight on the Player (the line of sight the AnimalSpawner asks).
@@ -79,7 +80,7 @@ public static class WorldSpawnSetup
     static string FixScatter(ObjectScatter scatter, List<ObjectScatter.ScatterRule> animalRules)
     {
         Undo.RecordObject(scatter, ToolName);
-        int trees = 0, rocks = 0, moved = 0;
+        int trees = 0, rocks = 0, moved = 0, bushes = 0;
         for (int i = scatter.rules.Count - 1; i >= 0; i--)
         {
             ObjectScatter.ScatterRule rule = scatter.rules[i];
@@ -94,6 +95,11 @@ public static class WorldSpawnSetup
             if (rule.clearance <= 0f) rule.clearance = Clearance;
             ResourceNode node = rule.prefab != null ? rule.prefab.GetComponentInChildren<ResourceNode>(true) : null;
             if (node == null) continue;
+            if (PickedByKey(node))
+            {
+                if (UndoTreeSettings(rule)) bushes++;   // a berry bush, not a tree
+                continue;
+            }
             if (node.resourceType == ResourceNode.ResourceType.Tree)
             {
                 if (string.IsNullOrEmpty(rule.spacingGroup)) rule.spacingGroup = TreeGroup;
@@ -114,6 +120,7 @@ public static class WorldSpawnSetup
         EditorUtility.SetDirty(scatter);
         return "ObjectScatter on \"" + scatter.name + "\": " + trees + " tree rules (group \"" + TreeGroup + "\", forest patches), " +
                rocks + " rock rules, Clearance " + Clearance + " m for every rule" +
+               (bushes > 0 ? ", " + bushes + " berry bush rule(s) taken out of the trees' group" : "") +
                (moved > 0 ? ", " + moved + " animal rule(s) moved to an AnimalSpawner" : "");
     }
 
@@ -124,6 +131,30 @@ public static class WorldSpawnSetup
         if (!plain) return;
         rule.minSize = sizes.x;
         rule.maxSize = sizes.y;
+    }
+
+    // Turki's berry bush is picked with E (Collect With Key on its ResourceNode), not chopped. Its Resource Type is Tree
+    // (the first choice), so the type alone can't tell a bush from a tree.
+    static bool PickedByKey(ResourceNode node)
+    {
+        SerializedProperty byKey = new SerializedObject(node).FindProperty("collectWithKey");
+        return byKey != null && byKey.boolValue;
+    }
+
+    // The 13/11/2026 run of this tool took the berry bushes for trees and put them in the "Trees" group: then their
+    // Min Spacing (20 m) counted against every tree, and almost none spawned ("Berry Bushes: spawned 1 of 150").
+    // Takes back only the tree values it gave them. True = it was in the trees' group.
+    static bool UndoTreeSettings(ObjectScatter.ScatterRule rule)
+    {
+        if (rule.spacingGroup != TreeGroup) return false;
+        rule.spacingGroup = "";   // its own group again (= the prefab's name): Min Spacing only between bushes
+        if (Mathf.Approximately(rule.patchSize, TreePatchSize)) rule.patchSize = 0f;   // all over its ground, not only in forests
+        if (Mathf.Approximately(rule.minSize, TreeSizes.x) && Mathf.Approximately(rule.maxSize, TreeSizes.y))
+        {
+            rule.minSize = 0f;   // 0 = not set = the prefab's own size
+            rule.maxSize = 0f;
+        }
+        return true;
     }
 
     // One AnimalSpawner per animal: the animal rules taken from the ObjectScatter, else DeerNode. A spawner that already

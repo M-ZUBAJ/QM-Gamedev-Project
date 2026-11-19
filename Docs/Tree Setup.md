@@ -123,6 +123,11 @@ Kept out of the grassland, for later:
 9. The spawner: select the object with **ObjectScatter**, open **Rules > Trees** and set **Y Offset** to 0. For more
    looks, add a rule per look (same Terrain Layer, Min Strength, Max Slope and Min Spacing) and share the Count.
 
+## When a tree is chopped down
+
+It falls over away from the player and breaks into brown wood chips: Tony's **TreeFall** on TreeNode
+(**Tools > Effects > Build Tree Fall**, guide `Docs/Tree Fall Setup.md`).
+
 ## Problems
 
 | Problem | Why / fix |

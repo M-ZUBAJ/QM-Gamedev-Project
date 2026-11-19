@@ -1,6 +1,6 @@
 /*
 First Date: 8/10/2026
-Date: 20/10/2026
+Date: 19/11/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerController). A Rigidbody is added automatically.
 Unity Editor: The jump key is set in KeyBindings (Jump, default Space).
@@ -16,7 +16,7 @@ Purpose: Jump with Space, only when standing on something (no jumping again in t
          so the player can't hop their way up a cliff.
 Requirement: PlayerJump.cs x-> KeyBindings.cs, MenuState.cs, Rigidbody (Unity), Collider (Unity)
              PlayerJump.cs o-> PlayerStamina.cs, PlayerController.cs
-             PlayerJump.cs <-o PlayerAnimator.cs, PlayerController.cs, PlayerStats.cs
+             PlayerJump.cs <-o PlayerAnimator.cs, PlayerController.cs, PlayerInfoPage.cs, PlayerStats.cs
 */
 
 using UnityEngine;
@@ -50,6 +50,7 @@ public class PlayerJump : MonoBehaviour
     float lastPressedTime = -10f;
 
     public bool IsGrounded { get; private set; }   // other scripts can read it (e.g. a landing sound later)
+    public float JumpHeight => jumpHeight;          // meters (the inventory's Info tab shows it)
 
     // Fired each time the player jumps. E.g. PlayerStats counts jumps.
     public event System.Action Jumped;

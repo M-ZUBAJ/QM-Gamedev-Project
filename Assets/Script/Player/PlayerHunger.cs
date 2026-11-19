@@ -15,7 +15,7 @@ Purpose: Holds the player's food (full = not hungry). It goes down over time:
          The New Game page's difficulty can change how fast it drains (SetDrainPerSecond, used by GameSetup).
 Requirement: PlayerHunger.cs o-> PlayerController.cs, PlayerHealth.cs, ObjectLevitator.cs
              PlayerHunger.cs <-x GameSetup.cs, NewGameDefaultsSync.cs
-             PlayerHunger.cs <-o ItemConsumer.cs, PassiveRegen.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
+             PlayerHunger.cs <-o ItemConsumer.cs, PassiveRegen.cs, PlayerInfoPage.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
 */
 
 using UnityEngine;

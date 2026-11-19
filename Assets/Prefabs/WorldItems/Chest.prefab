@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 8534466050875978022}
   - component: {fileID: 1397918784959313244}
   - component: {fileID: 596634640668226276}
+  - component: {fileID: 3246792397987579695}
+  - component: {fileID: 7262116110767728345}
   m_Layer: 0
   m_Name: Chest
   m_TagString: Untagged
@@ -71,11 +73,48 @@ MonoBehaviour:
   maxCost: 2
   interactKey: 101
   interactionRange: 3
+  despawnAfterOpened: 1
+  despawnDelay: 0
   availablePerks:
   - {fileID: 11400000, guid: f273ba9728486024796a32707b415d6e, type: 2}
   - {fileID: 11400000, guid: 469ac1d90ef7d61449a6f0b2a48b24b5, type: 2}
   - {fileID: 11400000, guid: a18daf5e52897e54ca46edc61d61c0d8, type: 2}
   - {fileID: 11400000, guid: ee1e4fd06507bce499d4808f1fe31bed, type: 2}
+--- !u!114 &3246792397987579695
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8644458751390724045}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0203aa6be0d2545a0fd9dd9fd28dce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  footOffset: 0.20676574
+  maxTilt: 15
+  sink: 0.02
+  lookAbove: 1
+--- !u!114 &7262116110767728345
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8644458751390724045}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e792a8cb53c9f4e478d321da45a01c97, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  color: {r: 1, g: 0.82, b: 0.1, a: 1}
+  width: 4
+  fill: 0
+  pulse: 0.3
+  showWhen: 0
+  range: 3
+  fadeSeconds: 0.12
 --- !u!1001 &694966618082988762
 PrefabInstance:
   m_ObjectHideFlags: 0

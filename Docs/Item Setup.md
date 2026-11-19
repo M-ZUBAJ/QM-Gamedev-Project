@@ -35,7 +35,7 @@ Recipes that pointed to that prefab are switched to the new Item Data.
 
 | Field | What to put |
 |---|---|
-| Display Name | The name shown to the player. Empty = the file name. |
+| Display Name | The name shown to the player (e.g. next to the mouse in the inventory). Empty = the file name. |
 | **Prefab** | What it looks like in the world. Its root must have ItemPickup with **Data** = this file (the tool does it). |
 | **Pickup** | **Pickup**: aim + F. **AutoPickup**: collected on touch. More ways can be added to this list later. |
 | Icon | Choose **one**: **Capture** = a photo of the prefab, taken by itself. **Static** = drag in a PNG (Texture Type = Sprite). **Animated** = drag in an **.aseprite** file (it plays in the inventory; Aseprite Tag only if the file has several animations). Only the chosen one's field shows. |

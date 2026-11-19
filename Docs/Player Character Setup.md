@@ -255,5 +255,5 @@ heavy punches (left hook / heavy right) in turn. The clips come from Mixamo: see
 ## Good to know
 
 - Only the ball (1 m) bumps into things, so the head (1.8 m) can poke through low ceilings or branches.
-- The item in hand (HeldItemView) and Marko's weapon models still show in front of the camera, not in the
-  character's hand.
+- Held items and tools are in the character's right hand: HeldItemView for items (`Docs/Held Item Setup.md`),
+  ToolInHand for tools. Marko's old weapon models in front of the camera are gone.

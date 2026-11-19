@@ -1,6 +1,6 @@
 /*
 First Date: 7/11/2026
-Date: 9/11/2026
+Date: 19/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Menu Tools > UI > Build Main Title Scene. It asks to save the open scene first, and asks before replacing
@@ -9,7 +9,8 @@ Unity Editor: Menu Tools > UI > Build Main Title Scene. It asks to save the open
                 Assets/Prefabs/UI/Title/TitleCanvas.prefab (the menu)
                 Assets/Config/NewGame/NewGameDefaults.asset (the game as it is now, read from GameScene)
                 Assets/UI/Title/*.png + TitleText.mat (the soft shapes and the glowing title; existing files are kept)
-              It builds a brand new scene, so Undo doesn't apply: run it again to rebuild.
+              It builds a brand new scene, so Undo doesn't apply: run it again to rebuild. A rebuild keeps the
+              Version text typed into the old title screen (e.g. v1.1).
               To change texts, sizes or colors for every future build, edit Fields below.
               Needs TMP Essentials (it tells you if they are missing). Guide: Docs/Main Title Setup.md
 Purpose: Builds the whole title screen in one click:
@@ -66,6 +67,7 @@ public static class TitleSceneBuilder
     static Sprite gradientSprite, vignetteSprite, glowSprite, ringSprite;
     static Texture2D stripesTexture;
     static Material titleMaterial;
+    static string keptVersion;   // the old title screen's Version text, kept by a rebuild (null = none)
 
     // Unity's built-in UI pictures.
     static Sprite Builtin(string file) => AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/" + file);
@@ -80,6 +82,7 @@ public static class TitleSceneBuilder
                 "MainTitleScene already exists. Build a new one and replace it (and TitleCanvas.prefab)?",
                 "Replace", "Cancel")) return;
         if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;   // the open scene closes next
+        keptVersion = OldVersionText();   // e.g. "v1.1" typed in by hand: the new title screen shows it too
 
         ReadDefaults(out string keyBindingsJson);   // while GameScene can still be opened
 
@@ -110,6 +113,34 @@ public static class TitleSceneBuilder
     // ===== My methods =====
 
     // ----- Files: art, defaults, build settings -----
+
+    // The Version text of the title screen being replaced (e.g. "v1.1" typed in by hand), so a rebuild keeps it.
+    // null = there was none: the new one shows "v" + Project Settings > Player > Version.
+    static string OldVersionText()
+    {
+        Scene open = SceneManager.GetActiveScene();
+        if (open.path == ScenePath) return VersionIn(open);
+        if (!File.Exists(ScenePath)) return null;
+
+        Scene old = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Additive);
+        string text = VersionIn(old);
+        EditorSceneManager.CloseScene(old, true);
+        return text;
+    }
+
+    // The text of the "Version" object in a "Footer" in this scene, or null.
+    static string VersionIn(Scene scene)
+    {
+        foreach (GameObject root in scene.GetRootGameObjects())
+        {
+            foreach (TMP_Text text in root.GetComponentsInChildren<TMP_Text>(true))
+            {
+                if (text.name == "Version" && text.transform.parent != null && text.transform.parent.name == "Footer")
+                    return text.text;
+            }
+        }
+        return null;
+    }
 
     static void MakeArt()
     {
@@ -374,7 +405,8 @@ public static class TitleSceneBuilder
         f.anchoredPosition = new Vector2(0f, 24f);
         f.sizeDelta = new Vector2(-80f, 50f);   // 40 pixels in from each side
         footer.AddComponent<CanvasGroup>();
-        TextMeshProUGUI version = MakeText(footer.transform, "Version", "v" + Application.version, 26f, Dim, TextAlignmentOptions.Left);
+        string versionText = !string.IsNullOrEmpty(keptVersion) ? keptVersion : "v" + Application.version;
+        TextMeshProUGUI version = MakeText(footer.transform, "Version", versionText, 26f, Dim, TextAlignmentOptions.Left);
         Stretch(version.gameObject, 0f, 0f, 0f, 0f);
         TextMeshProUGUI credits = MakeText(footer.transform, "Credits", Credits, 26f, Dim, TextAlignmentOptions.Right);
         Stretch(credits.gameObject, 0f, 0f, 0f, 0f);
@@ -386,7 +418,7 @@ public static class TitleSceneBuilder
         MakeHeader(page, "NEW GAME", true);
 
         GameObject panel = NewUI("Panel", page);
-        Place(panel, new Vector2(0.5f, 0.5f), new Vector2(0f, 10f), new Vector2(1200f, 690f));
+        Place(panel, new Vector2(0.5f, 0.5f), new Vector2(0f, 35f), new Vector2(1200f, 740f));   // room for TESTING
         AddBox(panel).color = PanelColor;
 
         GameObject rows = NewUI("Rows", panel.transform);
@@ -413,6 +445,8 @@ public static class TitleSceneBuilder
                       null, false);
         MakeToggleRow(rows.transform, "PickupRow", "Pick up dropped items by walking over them");
         MakeToggleRow(rows.transform, "MessagesRow", "Show \"+3 Wood\" messages");
+        Section(rows.transform, "TESTING");
+        MakeToggleRow(rows.transform, "AllToolsRow", "Start with all tools (pickaxe, axe and sword in every tier)");
 
         TextMeshProUGUI summary = MakeText(page, "Summary", "Everything is set to the game as it is now.", 30f, SoftWhite,
                                        TextAlignmentOptions.Center);

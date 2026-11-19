@@ -1,0 +1,299 @@
+/*
+First Date: 19/11/2026
+Date: 19/11/2026
+Author: Tony
+Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
+Unity Editor: Menu Tools > UI > Build Crafting Menu. It asks first, because it changes Turki's CraftingCanvas prefab.
+              Run it again any time (e.g. after new tools got recipes): it builds the row again and sorts the list again.
+              Every crafting list follows (the inventory's Crafting page and the C menu are both that prefab).
+              Guide: Docs/Crafting Menu Setup.md
+Purpose: Gives Turki's crafting list pictures and the tier tools, in one click:
+           - makes Assets/Prefabs/UI/Crafting/CraftingRow.prefab: a row with the item's picture and name and its recipe
+             as pictures with "have / need" amounts (Tony's CraftingRow), and puts it in Turki's CraftingMenu > Row
+             Prefab (his old CraftRow prefab is kept, just not used);
+           - makes Turki's panel bigger (Panel Size) and puts its rows in a scroll list with a scroll bar, so any number
+             of items fits (the mouse wheel scrolls it);
+           - sorts the list (Craftables): the items that aren't tools first, in their order (Plank, Stew...), then every
+             tool with a recipe made at the Crafting page, Wooden > Stone > Iron, each Pickaxe, Axe, Sword. Tools
+             without a recipe (Gold, Diamond) are left out.
+         Turki's CraftingMenu script only gets one [Tony] line (it calls CraftingRow.Show).
+         Log: Docs/TonyEditMate/Turki/19-11-2026 Crafting Menu Icons And Tier Tools.md
+Requirement: CraftingMenuBuilder.cs x-> CraftingMenu.cs, CraftingRow.cs, ItemData.cs, ToolStats.cs, UIBuildHelper.cs, MenuOrder.cs
+*/
+
+using System.Collections.Generic;
+using TMPro;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.UI;
+using static UIBuildHelper;   // NewUI, AddBox, AddText, FindPrefabPath, MakeFolders...
+
+public static class CraftingMenuBuilder
+{
+    // ===== Fields =====
+    const string ToolName = "Build Crafting Menu";
+    // Turki's crafting list, found by name if it was moved.
+    static string CraftingPath => FindPrefabPath("Assets/Prefabs/UI/CraftingCanvas.prefab");
+    const string RowPath = "Assets/Prefabs/UI/Crafting/CraftingRow.prefab";
+
+    // Sizes (pixels on a 1920 x 1080 screen). The inventory's Crafting page is about 1200 x 720.
+    static readonly Vector2 PanelSize = new Vector2(960f, 640f);   // Turki's panel was 700 x 600 (about 8 rows)
+    const float RowHeight = 76f;
+    const float IconSize = 58f;
+    const float TextLeft = 92f;      // where the name and the recipe start, after the picture
+    const float StatusWidth = 150f;  // the CRAFT text on the right
+
+    static readonly Color NameColor = new Color(0.12f, 0.12f, 0.14f);
+    static readonly Color StatusColor = new Color(0.1f, 0.55f, 0.25f);
+
+    // ===== Menu (Unity calls this) =====
+
+    [MenuItem("Tools/UI/Build Crafting Menu", false, MenuOrder.BuildCraftingMenu)]
+    static void Build()
+    {
+        if (Application.isPlaying)
+        {
+            EditorUtility.DisplayDialog(ToolName, "Stop Play first: changes made while playing are lost.", "OK");
+            return;
+        }
+        if (!CheckTMP(ToolName)) return;
+
+        string canvasPath = CraftingPath;
+        if (AssetDatabase.LoadAssetAtPath<GameObject>(canvasPath) == null)
+        {
+            EditorUtility.DisplayDialog(ToolName, "Turki's CraftingCanvas.prefab wasn't found (Assets/Prefabs/UI).", "OK");
+            return;
+        }
+        if (!EditorUtility.DisplayDialog(ToolName,
+                "This changes Turki's CraftingCanvas prefab:\n\n" +
+                "- rows with pictures (the item and its recipe, green / red for enough / missing)\n" +
+                "- a bigger panel with a scroll list\n" +
+                "- the list sorted, with every Wooden, Stone and Iron tool that has a recipe\n\n" +
+                "The inventory's Crafting page and the C menu both follow. Continue?", "Build", "Cancel"))
+            return;
+
+        GameObject rowPrefab = MakeRowPrefab();
+        string report = UpgradeCraftingList(canvasPath, rowPrefab);
+        AssetDatabase.SaveAssets();
+        Debug.Log(ToolName + ": " + RowPath + " made; " + report +
+                  " Test: Play, Tab > Crafting (or press C).");
+    }
+
+    // ===== My methods =====
+
+    // The row prefab: [picture] Name / recipe pictures with "have/need Name", and CRAFT on the right.
+    static GameObject MakeRowPrefab()
+    {
+        GameObject row = NewUI("CraftingRow", null);
+        ((RectTransform)row.transform).sizeDelta = new Vector2(880f, RowHeight);
+        Image back = AddBox(row);   // a white box like the rest of the inventory
+        back.color = Color.white;
+        Button button = row.AddComponent<Button>();
+        button.targetGraphic = back;
+        LayoutElement size = row.AddComponent<LayoutElement>();
+        size.preferredHeight = size.minHeight = RowHeight;
+        row.AddComponent<CanvasGroup>();   // CraftingRow fades the row while something is missing
+
+        Image icon = NewUI("Icon", row.transform).AddComponent<Image>();
+        icon.preserveAspect = true;
+        icon.raycastTarget = false;
+        RectTransform i = icon.rectTransform;
+        i.anchorMin = i.anchorMax = new Vector2(0f, 0.5f);
+        i.anchoredPosition = new Vector2(TextLeft / 2f, 0f);
+        i.sizeDelta = new Vector2(IconSize, IconSize);
+
+        TextMeshProUGUI name = AddText(NewUI("Name", row.transform), "Item", 26f, TextAlignmentOptions.MidlineLeft);
+        name.color = NameColor;
+        name.fontStyle = FontStyles.Bold;
+        name.enableWordWrapping = false;
+        Band(name.gameObject, 14f, 32f);
+
+        GameObject ingredients = NewUI("Ingredients", row.transform);
+        Band(ingredients, -16f, 30f);
+        HorizontalLayoutGroup line = ingredients.AddComponent<HorizontalLayoutGroup>();
+        line.spacing = 22f;
+        line.childAlignment = TextAnchor.MiddleLeft;
+        line.childControlWidth = line.childControlHeight = true;
+        line.childForceExpandWidth = line.childForceExpandHeight = false;
+        MakeIngredientTemplate(ingredients.transform);
+
+        TextMeshProUGUI status = AddText(NewUI("Status", row.transform), "CRAFT", 22f, TextAlignmentOptions.MidlineRight);
+        status.color = StatusColor;
+        status.fontStyle = FontStyles.Bold;
+        status.characterSpacing = 4f;
+        RectTransform s = status.rectTransform;
+        s.anchorMin = s.anchorMax = s.pivot = new Vector2(1f, 0.5f);   // on the right edge
+        s.anchoredPosition = new Vector2(-22f, 0f);
+        s.sizeDelta = new Vector2(StatusWidth - 22f, 32f);
+
+        row.AddComponent<CraftingRow>();
+
+        MakeFolders(FolderOf(RowPath));
+        GameObject prefab = PrefabUtility.SaveAsPrefabAsset(row, RowPath);
+        Object.DestroyImmediate(row);   // the prefab file is saved; the temporary object isn't needed
+        return prefab;
+    }
+
+    // One ingredient: [small picture] "1/2 Plank". Switched off: CraftingRow copies it per ingredient.
+    static void MakeIngredientTemplate(Transform parent)
+    {
+        GameObject chip = NewUI("Ingredient", parent);
+        HorizontalLayoutGroup line = chip.AddComponent<HorizontalLayoutGroup>();
+        line.spacing = 6f;
+        line.childAlignment = TextAnchor.MiddleLeft;
+        line.childControlWidth = line.childControlHeight = true;
+        line.childForceExpandWidth = line.childForceExpandHeight = false;
+
+        Image icon = NewUI("Icon", chip.transform).AddComponent<Image>();
+        icon.preserveAspect = true;
+        icon.raycastTarget = false;
+        LayoutElement iconSize = icon.gameObject.AddComponent<LayoutElement>();
+        iconSize.preferredWidth = iconSize.preferredHeight = 26f;
+
+        TextMeshProUGUI amount = AddText(NewUI("Amount", chip.transform), "1/2 Plank", 20f, TextAlignmentOptions.MidlineLeft);
+        amount.enableWordWrapping = false;
+
+        chip.SetActive(false);
+    }
+
+    // A strip across the row (between the picture and the CRAFT text), its middle "y" above the row's middle.
+    static void Band(GameObject go, float y, float height)
+    {
+        RectTransform rt = (RectTransform)go.transform;
+        rt.anchorMin = new Vector2(0f, 0.5f);
+        rt.anchorMax = new Vector2(1f, 0.5f);
+        rt.pivot = new Vector2(0f, 0.5f);
+        rt.offsetMin = new Vector2(TextLeft, y - height / 2f);
+        rt.offsetMax = new Vector2(-StatusWidth, y + height / 2f);
+    }
+
+    // Turki's CraftingCanvas: the new row, a bigger panel, the scroll list and the sorted list. Returns a report.
+    static string UpgradeCraftingList(string path, GameObject rowPrefab)
+    {
+        GameObject root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            CraftingMenu menu = root.GetComponentInChildren<CraftingMenu>(true);
+            if (menu == null) return "no CraftingMenu in " + path + ", nothing changed.";
+
+            SerializedObject so = new SerializedObject(menu);   // the names in quotes must match Turki's fields
+            GameObject panel = so.FindProperty("panel").objectReferenceValue as GameObject;
+            Transform rows = so.FindProperty("rows").objectReferenceValue as Transform;
+            if (panel == null || rows == null) return "its Panel or Rows is empty, nothing changed.";
+
+            ((RectTransform)panel.transform).sizeDelta = PanelSize;
+            bool scroll = MakeScrollList(panel.transform, rows);
+            so.FindProperty("rowPrefab").objectReferenceValue = rowPrefab.GetComponent<Button>();
+            int tools = SortCraftables(so.FindProperty("craftables"));
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            PrefabUtility.SaveAsPrefabAsset(root, path);
+            return path + ": rows with pictures, panel " + PanelSize.x + " x " + PanelSize.y +
+                   (scroll ? ", rows in a new scroll list" : ", scroll list already there") +
+                   ", " + tools + " tools in the list (Wooden > Stone > Iron).";
+        }
+        finally
+        {
+            PrefabUtility.UnloadPrefabContents(root);
+        }
+    }
+
+    // Puts the rows in a scroll list where they were (between Turki's title and message): Scroll (fills the space
+    // that's left) > Viewport (cuts off what's outside) > Rows, plus a scroll bar on the right. False = already done.
+    static bool MakeScrollList(Transform panel, Transform rows)
+    {
+        if (rows.parent != null && rows.parent.name == "Viewport") return false;
+
+        GameObject scroll = NewUI("Scroll", panel);
+        scroll.transform.SetSiblingIndex(rows.GetSiblingIndex());
+        LayoutElement fill = scroll.AddComponent<LayoutElement>();
+        fill.flexibleHeight = 1f;   // takes all the height the title and the message leave
+        fill.minHeight = 150f;
+
+        GameObject viewport = NewUI("Viewport", scroll.transform);
+        Stretch(viewport, 0f, 0f, 0f, 0f);
+        Image catcher = viewport.AddComponent<Image>();
+        catcher.color = new Color(0f, 0f, 0f, 0f);   // see-through, but the mouse wheel works over the gaps too
+        viewport.AddComponent<RectMask2D>();
+
+        rows.SetParent(viewport.transform, false);
+        RectTransform r = (RectTransform)rows;
+        r.anchorMin = new Vector2(0f, 1f);
+        r.anchorMax = new Vector2(1f, 1f);
+        r.pivot = new Vector2(0.5f, 1f);
+        r.anchoredPosition = Vector2.zero;
+        r.sizeDelta = Vector2.zero;
+        ContentSizeFitter grow = rows.GetComponent<ContentSizeFitter>();
+        if (grow == null) grow = rows.gameObject.AddComponent<ContentSizeFitter>();
+        grow.verticalFit = ContentSizeFitter.FitMode.PreferredSize;   // as tall as all its rows
+
+        Scrollbar bar = MakeScrollbar(scroll.transform);
+        ScrollRect list = scroll.AddComponent<ScrollRect>();
+        list.horizontal = false;
+        list.vertical = true;
+        list.movementType = ScrollRect.MovementType.Clamped;
+        list.scrollSensitivity = 40f;
+        list.viewport = (RectTransform)viewport.transform;
+        list.content = r;
+        list.verticalScrollbar = bar;
+        list.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
+        list.verticalScrollbarSpacing = 6f;
+        return true;
+    }
+
+    // A slim scroll bar down the right side.
+    static Scrollbar MakeScrollbar(Transform parent)
+    {
+        DefaultControls.Resources res = new DefaultControls.Resources
+        {
+            standard = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd"),
+            background = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Background.psd"),
+        };
+        GameObject go = DefaultControls.CreateScrollbar(res);
+        go.name = "Scrollbar";
+        go.transform.SetParent(parent, false);
+        foreach (Transform part in go.GetComponentsInChildren<Transform>(true)) part.gameObject.layer = UILayer;
+
+        RectTransform rt = (RectTransform)go.transform;
+        rt.anchorMin = new Vector2(1f, 0f);
+        rt.anchorMax = Vector2.one;
+        rt.pivot = new Vector2(1f, 1f);
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = new Vector2(14f, 0f);
+
+        Scrollbar bar = go.GetComponent<Scrollbar>();
+        bar.direction = Scrollbar.Direction.BottomToTop;
+        go.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.12f);
+        if (bar.targetGraphic != null) bar.targetGraphic.color = new Color(0.45f, 0.47f, 0.52f);
+        return bar;
+    }
+
+    // Sorts Craftables: everything that isn't a tool first (in its order), then every tool with a recipe made at the
+    // Crafting page, weakest tier first (Wooden > Stone > Iron), each Pickaxe, Axe, Sword. Returns how many tools.
+    static int SortCraftables(SerializedProperty list)
+    {
+        List<ItemData> others = new List<ItemData>();
+        for (int i = 0; i < list.arraySize; i++)
+        {
+            ItemData item = list.GetArrayElementAtIndex(i).objectReferenceValue as ItemData;
+            if (item != null && !item.IsTool && !others.Contains(item)) others.Add(item);
+        }
+
+        List<ItemData> tools = new List<ItemData>();
+        foreach (string guid in AssetDatabase.FindAssets("t:ItemData"))
+        {
+            ItemData item = AssetDatabase.LoadAssetAtPath<ItemData>(AssetDatabase.GUIDToAssetPath(guid));
+            if (item != null && item.IsTool && item.IsCraftable && item.CraftedAt == CraftStation.Crafting) tools.Add(item);
+        }
+        tools.Sort((a, b) =>
+        {
+            int byTier = ((int)a.Tool.tier).CompareTo((int)b.Tool.tier);
+            return byTier != 0 ? byTier : ((int)a.Tool.kind).CompareTo((int)b.Tool.kind);
+        });
+
+        list.arraySize = others.Count + tools.Count;
+        for (int i = 0; i < others.Count; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = others[i];
+        for (int i = 0; i < tools.Count; i++) list.GetArrayElementAtIndex(others.Count + i).objectReferenceValue = tools[i];
+        return tools.Count;
+    }
+}

@@ -94,6 +94,7 @@ GameObject:
   - component: {fileID: 8900527977091490266}
   - component: {fileID: 994265055265060129}
   - component: {fileID: 2962278684664453714}
+  - component: {fileID: 4389488909739055060}
   m_Layer: 0
   m_Name: TreeNode
   m_TagString: Untagged
@@ -161,4 +162,34 @@ MonoBehaviour:
   bonusChance: 0.3
   bonusMin: 1
   bonusMax: 3
+  collectWithKey: 0
+  collectKey: 101
+  collectRange: 3
   currentHealth: 0
+--- !u!114 &4389488909739055060
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3245735666504203572}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f15384563d9b5c74496e3c70c01bfc16, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  chips: {fileID: 6452159929674301282, guid: f2b630e80d20e5142b14118aa404cab0, type: 3}
+  darkWood: {r: 0.33, g: 0.2, b: 0.09, a: 1}
+  lightWood: {r: 0.7, g: 0.49, b: 0.27, a: 1}
+  fallSeconds: 1.2
+  fallAngle: 86
+  lieSeconds: 0.25
+  breakSeconds: 0.9
+  cutChips: 30
+  landChips: 160
+  breakRate: 220
+  chipSpeed: 2.6
+  closedMeshes:
+  - open: {fileID: 4300000, guid: 58e56545a2d219944b78729eaa444a51, type: 3}
+    closed: {fileID: 4300000, guid: 7ba5d16b8ec567b4e8614ef39bf9e8fe, type: 2}
+  cutWood: {fileID: 2100000, guid: 458c1c36f4574ad49b5bce2afd0c2eef, type: 2}

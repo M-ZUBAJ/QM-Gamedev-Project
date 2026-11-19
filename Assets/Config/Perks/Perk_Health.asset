@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayName: Vitality
   description: Increases Max health by 20%
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: daa1023139330cd41800c7ab23470474, type: 3}
   perkType: 0
   value: 0.2

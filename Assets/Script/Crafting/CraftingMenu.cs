@@ -123,7 +123,14 @@ public class CraftingMenu : MonoBehaviour
             if (item == null || !item.IsCraftable || item.CraftedAt != CraftStation.Crafting) continue;
 
             Button row = Instantiate(rowPrefab, rows);
-            row.GetComponentInChildren<TMP_Text>().text = RowText(item);
+            // [Tony] replaced (19/11/2026): a row with pictures (Tony's CraftingRow, on the row prefab made by
+            // Tools > UI > Build Crafting Menu) shows the item's icon and its recipe as icons with "have/need",
+            // green / red for enough / missing. A plain row without CraftingRow still gets your text.
+            // Log: Docs/TonyEditMate/Turki/19-11-2026 Crafting Menu Icons And Tier Tools.md
+            // Original: row.GetComponentInChildren<TMP_Text>().text = RowText(item);
+            CraftingRow pictures = row.GetComponent<CraftingRow>();                           // [Tony] added
+            if (pictures != null) pictures.Show(item);                                        // [Tony] added
+            else row.GetComponentInChildren<TMP_Text>().text = RowText(item);                 // [Tony] replaced
             row.onClick.AddListener(() => Craft(item));
         }
     }
@@ -151,8 +158,14 @@ public class CraftingMenu : MonoBehaviour
             return;
         }
 
+        // [Tony] replaced (19/11/2026): an upgraded tool (e.g. Wooden Axe + 3 Plank + 6 Stone = Stone Axe) goes into the
+        // slot the old tool was in, hotbar or inventory, instead of the first free slot. Everything else is added as
+        // before (AddInto works like Add when there's no old tool).
+        // Log: Docs/TonyEditMate/Turki/19-11-2026 Upgraded Tool Keeps Its Slot.md
+        // Original: if (inv.Add(item.Id, item.DisplayName, item.GetIcon(), item.CraftAmount, item))
+        int oldToolSlot = inv.SlotOf(item.UpgradedFrom);   // [Tony] added: where the old tool is (-1 = not an upgrade)
         item.TakeRecipeFrom(inv);
-        if (inv.Add(item.Id, item.DisplayName, item.GetIcon(), item.CraftAmount, item))
+        if (inv.AddInto(oldToolSlot, item.Id, item.DisplayName, item.GetIcon(), item.CraftAmount, item))   // [Tony] replaced
         {
             message.text = "Crafted " + item.DisplayName + "!";
         }

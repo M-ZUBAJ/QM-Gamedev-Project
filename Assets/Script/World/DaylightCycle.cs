@@ -1,15 +1,22 @@
 /*
 First Date: 4/10/2026
-Date: 9/11/2026
+Date: 19/11/2026
 Author: Tony
 Use by: Drag this script onto the Directional Light (the sun) in the scene.
-Unity Editor: For a sky that turns orange at sunset and dark at night, use the default Procedural Skybox
-              (Window > Rendering > Lighting > Environment > Skybox Material = Default-Skybox) and set "Sun Source" there to this light.
+Unity Editor: For a sky that turns orange at sunset and dark blue with a moon at night, use the default Procedural
+              Skybox (Window > Rendering > Lighting > Environment > Skybox Material = Default-Skybox) and set "Sun Source"
+              there to this light.
               "Parts Of The Day" = exactly when Dawn, Morning, Noon, Afternoon, Dusk and Night start (Night ends at Dawn).
-              Testing: drag "Time Of Day" in the Inspector while playing, or shorten "Day Length Minutes" (e.g. 1)
-              and watch the HUD's day / time counters (DayCounter, TimeCounter).
+              Testing: drag "Time Of Day" in the Inspector while playing (0 = midnight), or shorten "Day Length Minutes"
+              (e.g. 1) and watch the HUD's day / time counters (DayCounter, TimeCounter). The Moon, Ambient and Night
+              Sky settings change the night while you watch. Guide: Docs/Day And Night Setup.md
+              Starting the game from the title screen needs the scene's light from the sky saved once, or every shadow
+              is pitch black: Tools > World > Set Up Sky Lighting (Docs/Sky Lighting Setup.md).
 Purpose: Day and night. Turns the sun around the world and changes its brightness and color.
          Time Of Day: 0 = midnight, 0.25 = sunrise, 0.5 = noon, 0.75 = sunset.
+         At night (Moonlight on) the same light becomes the moon, on the other side of the sky from the sun: a soft
+         blue light with soft shadows, a moon in the sky (the sky's sun disk), a dark blue sky, and dark blue light in
+         the shadows instead of darkness. Off = the old dark nights.
          Counts the days (Day 1, 2, 3... a new day starts at Dawn) and names the part of the day (Noon, Night...).
          Tells other scripts when night and day start (NightStarted / DayStarted), e.g. to spawn enemies at night.
          Only moves while the GameRule "DoDaylightCycle" is on (off = time stops, like Minecraft).
@@ -17,12 +24,15 @@ Purpose: Day and night. Turns the sun around the world and changes its brightnes
          (Reset On Player Death).
          The New Game page can change the start time and day length before the game starts (SetStartTime /
          SetDayLength, used by GameSetup).
+         If the scene has no saved light from the sky (pitch-black shadows when the title screen opens it), it asks
+         Unity to work it out from the sky when the game starts, and says in the Console how to fix it for good.
 Requirement: DaylightCycle.cs x-> GameRules.cs, Light (Unity)
              DaylightCycle.cs o-> PlayerHealth.cs
              DaylightCycle.cs <-x DayCounter.cs, EnemySpawner.cs, GameSetup.cs, NewGameDefaultsSync.cs, TimeCounter.cs, VictoryScreen.cs
 */
 
 using UnityEngine;
+using UnityEngine.Rendering;   // AmbientMode, SphericalHarmonicsL2 (the light from the sky)
 
 // The parts of a day, in the order they come after midnight's Night.
 public enum DayPhase
@@ -90,26 +100,77 @@ public class DaylightCycle : MonoBehaviour
     [Tooltip("Sun color by height: left = on the horizon (sunrise / sunset), right = high in the sky.")]
     [SerializeField] Gradient sunColor = DefaultSunColor();
 
+    [Header("Moon (the same light, at night)")]
+    [Tooltip("On: at night this light becomes the moon (on the other side of the sky from the sun): a soft blue light " +
+             "with shadows, a moon in the sky, a dark blue sky and blue light in the shadows. Off: dark nights, the old way.")]
+    [SerializeField] bool moonlight = true;
+
+    [Range(0f, 2f)]
+    [Tooltip("Moon brightness high in the sky (the sun at noon is Max Sun Intensity). Higher = easier to see at night.")]
+    [SerializeField] float moonIntensity = 0.5f;
+
+    [Tooltip("Moonlight color: a pale blue.")]
+    [SerializeField] Color moonColor = new Color(0.62f, 0.74f, 1f);
+
+    [Range(0f, 1f)]
+    [Tooltip("How dark the moon's shadows are: 0 = no shadows, 1 = as dark as the sun's.")]
+    [SerializeField] float moonShadowStrength = 0.6f;
+
     [Header("Ambient (light that comes from everywhere)")]
     [Range(0f, 2f)]
-    [Tooltip("Ambient light in the day.")]
+    [Tooltip("Ambient light in the day: 1 = the sky's light as saved by Tools > World > Set Up Sky Lighting.")]
     [SerializeField] float dayAmbient = 1f;
 
     [Range(0f, 2f)]
-    [Tooltip("Ambient light at night. Not 0, or the night is pitch black.")]
+    [Tooltip("Ambient light at night with Moonlight off: the day's, times this. Not 0, or the night is pitch black.")]
     [SerializeField] float nightAmbient = 0.2f;
+
+    [Tooltip("Ambient light at night with Moonlight on: the blue that lights the shadows (what a white wall in the " +
+             "shade looks like). Lighter = easier to see at night.")]
+    [SerializeField] Color nightAmbientColor = new Color(0.25f, 0.3f, 0.42f);
+
+    [Header("Night Sky (Moonlight on, Procedural Skybox)")]
+    [Range(0f, 8f)]
+    [Tooltip("How bright the night sky is (the sky material's Exposure; the day keeps the material's own, 1.3 by default).")]
+    [SerializeField] float nightSkyExposure = 0.2f;
+
+    [Tooltip("The night sky's color (the sky material's Sky Tint; grey = a normal sky).")]
+    [SerializeField] Color nightSkyTint = new Color(0.3f, 0.42f, 0.8f);
 
     [Header("Player Death")]
     [Tooltip("On: when the player dies, the day, the time and the light go back to how the game started " +
              "(the Day and Time Of Day set here before pressing Play). Off: time just carries on.")]
     [SerializeField] bool resetOnPlayerDeath = true;
 
-    Light sun;
+    Light sun;   // this Directional Light: the sun in the day, the moon at night (Moonlight)
+    float sunShadowStrength;   // its own shadow darkness, from the scene (the moon has Moon Shadow Strength)
     DayPhase lastPhase;
     bool phaseKnown;   // false until the first Update, so the starting part of the day is announced once too
     float startTimeOfDay;   // how the game started, to go back to when the player dies
     int startDay;
     PlayerHealth playerHealth;   // found by itself, can be missing (then dying resets nothing)
+
+    // The day's sky, remembered in Start before the night changes anything.
+    bool skyRemembered;          // false before Start: the sky and the ambient light aren't touched yet
+    bool skyLightSaved;          // the scene has saved light from the sky (else Unity works it out, so it's left alone)
+    SphericalHarmonicsL2 dayProbe;   // that saved light from everywhere (Unity's "ambient probe")
+    float dayReflection = 1f;    // how much the sky shows in shiny things in the day
+    Material originalSky;        // the scene's sky material, given back when this goes
+    Material skyCopy;            // a copy of it that the night changes (the material file itself never changes)
+    float dayExposure = 1.3f;    // the sky material's own Exposure and tint (the day keeps them)
+    Color dayTint = Color.gray;
+    int tintId;                  // which tint the sky material has (_SkyTint or _Tint), if hasTint
+    bool hasTint;
+
+    // The light turns from sun into moon (and back at dawn) when the sun is this far below the horizon (about 6
+    // degrees). Then it has no brightness at all, so the change isn't seen.
+    const float SwitchHeight = 0.1f;
+    const float SwitchDip = 0.1f;        // around that moment the sky fades out and back in (it's drawn from this light)
+    const float MoonRise = 0.25f;        // the moon is at full brightness this much higher (about 20 degrees up)
+    const float NightReflection = 0.3f;  // how much the sky shows in shiny things at night (1 = as in the day)
+    static readonly int ExposureId = Shader.PropertyToID("_Exposure");
+    static readonly int SkyTintId = Shader.PropertyToID("_SkyTint");   // the Procedural Skybox's tint
+    static readonly int TintId = Shader.PropertyToID("_Tint");         // other skies' tint (Cubemap, 6 Sided, Panoramic)
 
     // The one in the scene (null if there is none), e.g. DaylightCycle.Current.Day
     public static DaylightCycle Current { get; private set; }
@@ -149,6 +210,7 @@ public class DaylightCycle : MonoBehaviour
     {
         Current = this;
         sun = GetComponent<Light>();
+        sunShadowStrength = sun.shadowStrength;
         if (RenderSettings.sun == null) RenderSettings.sun = sun;   // the procedural sky follows this light
 
         startTimeOfDay = timeOfDay;   // remember the start, to go back to it when the player dies
@@ -159,11 +221,18 @@ public class DaylightCycle : MonoBehaviour
     {
         playerHealth = FindFirstObjectByType<PlayerHealth>();
         if (playerHealth != null) playerHealth.Died += OnPlayerDied;
+        CheckSkyLight();
+        RememberSky();
     }
 
     void OnDestroy()
     {
         if (playerHealth != null) playerHealth.Died -= OnPlayerDied;
+        if (skyCopy != null)   // give the scene its own sky material back
+        {
+            if (RenderSettings.skybox == skyCopy) RenderSettings.skybox = originalSky;
+            Destroy(skyCopy);
+        }
         if (Current != this) return;
 
         Current = null;   // static values outlive the scene, so clear them
@@ -274,26 +343,120 @@ public class DaylightCycle : MonoBehaviour
 
     void ApplyLight()
     {
-        // 0.25 (sunrise) = 0 degrees (horizon), 0.5 (noon) = 90 (straight down), 0.75 (sunset) = 180.
+        // Where the sun is: 0.25 (sunrise) = 0 degrees (horizon), 0.5 (noon) = 90 (straight down), 0.75 (sunset) = 180.
         float angle = timeOfDay * 360f - 90f;
-        transform.rotation = Quaternion.Euler(angle, sunDirection, 0f);
+        Quaternion sunTurn = Quaternion.Euler(angle, sunDirection, 0f);
+        // How high the sun is: 1 = straight up, 0 = horizon, -1 = straight down (midnight). The light shines along its
+        // forward, so the sun itself is the other way.
+        float height = -(sunTurn * Vector3.forward).y;
 
-        float height = SunHeight();   // 1 = noon, 0 = horizon, below 0 = night
+        // Once the sun is a bit below the horizon, this light is the moon (with Moonlight on).
+        if (moonlight && height < -SwitchHeight) ShineAsMoon(angle, -height);
+        else ShineAsSun(sunTurn, height);
 
-        // Bright in the day, fading out quickly as the sun goes below the horizon.
+        ApplyAmbient(Mathf.Clamp01(height * 2f + 0.3f));   // 1 = the day's light from everywhere, 0 = the night's
+        ApplySky(height);
+    }
+
+    // This light is the sun: bright in the day, fading out quickly as the sun goes below the horizon.
+    void ShineAsSun(Quaternion turn, float height)
+    {
+        transform.rotation = turn;
         // "* 4" makes the fade short: full brightness once the sun is a bit above the horizon.
         sun.intensity = maxSunIntensity * Mathf.Clamp01(height * 4f + 0.1f);
         sun.color = sunColor.Evaluate(Mathf.Clamp01(height));
-        sun.enabled = height > -0.1f;   // no sun shadows from below the ground at night
-
-        RenderSettings.ambientIntensity = Mathf.Lerp(nightAmbient, dayAmbient, Mathf.Clamp01(height * 2f + 0.3f));
+        sun.shadowStrength = sunShadowStrength;
+        // No sun shadows from below the ground at night. With Moonlight on it stays on (with no brightness left) until
+        // it turns into the moon, because the sky is drawn from where this light is.
+        sun.enabled = moonlight || height > -0.1f;
     }
 
-    // How high the sun is: 1 = straight up, 0 = horizon, -1 = straight down (midnight).
-    float SunHeight()
+    // This light is the moon: on the other side of the sky from the sun, pale blue, starting with no light at all (so
+    // the change from sun to moon isn't seen) and getting brighter as it rises.
+    void ShineAsMoon(float sunAngle, float moonHeight)
     {
-        // The light shines along its forward, so the sun itself is in the opposite direction.
-        return -transform.forward.y;
+        transform.rotation = Quaternion.Euler(sunAngle + 180f, sunDirection, 0f);
+        float rise = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(SwitchHeight, SwitchHeight + MoonRise, moonHeight));
+        sun.intensity = moonIntensity * rise;
+        sun.color = moonColor;
+        sun.shadowStrength = moonShadowStrength;
+        sun.enabled = true;
+    }
+
+    // The light from everywhere (it lights the shadows): the sky's own saved light in the day, a dark blue at night
+    // (Moonlight on), or the day's light times Night Ambient (Moonlight off). dayShare: 1 = day, 0 = night.
+    void ApplyAmbient(float dayShare)
+    {
+        if (!skyRemembered) return;   // before Start: the day's sky isn't remembered yet
+        RenderSettings.reflectionIntensity = Mathf.Lerp(NightReflection, dayReflection, dayShare);
+        if (!skyLightSaved) return;   // Unity works the sky's light out by itself (see CheckSkyLight): left to Unity
+
+        SphericalHarmonicsL2 night;
+        if (moonlight)
+        {
+            night = new SphericalHarmonicsL2();   // the same blue from every side
+            bool linear = QualitySettings.activeColorSpace == ColorSpace.Linear;   // the lighting's maths uses linear colors
+            night.AddAmbientLight(linear ? nightAmbientColor.linear : nightAmbientColor);
+        }
+        else night = dayProbe * nightAmbient;
+        RenderSettings.ambientProbe = dayProbe * (dayAmbient * dayShare) + night * (1f - dayShare);
+    }
+
+    // The sky (a sky material with an Exposure, e.g. the Procedural Skybox): a dim blue at night with the moon where the
+    // sun's disk would be. The sky is drawn from where this light is, so it fades out for a moment while the light
+    // turns from sun into moon near the horizon (and back at dawn), or the jump would show.
+    void ApplySky(float height)
+    {
+        if (skyCopy == null) return;
+        float night = moonlight ? Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.1f, -0.25f, height)) : 0f;   // 1 = night sky
+        float dip = moonlight ? Mathf.SmoothStep(0f, 1f, Mathf.Abs(height + SwitchHeight) / SwitchDip) : 1f;  // 0 = at the change
+        skyCopy.SetFloat(ExposureId, Mathf.Lerp(dayExposure, nightSkyExposure, night) * dip);
+        if (hasTint) skyCopy.SetColor(tintId, Color.Lerp(dayTint, nightSkyTint, night));
+    }
+
+    // Remembers the day's sky before the night changes it: its light from everywhere (ambient), how much it shows in
+    // shiny things, and its sky material, which is swapped for a copy that the night can change.
+    void RememberSky()
+    {
+        dayProbe = RenderSettings.ambientProbe;
+        skyLightSaved = !IsBlack(dayProbe);
+        dayReflection = RenderSettings.reflectionIntensity;
+        skyRemembered = true;
+
+        Material sky = RenderSettings.skybox;
+        if (sky == null || !sky.HasProperty(ExposureId)) return;   // no sky, or one without an Exposure: only the light changes
+        originalSky = sky;
+        skyCopy = new Material(sky) { name = sky.name + " (day and night)" };
+        RenderSettings.skybox = skyCopy;
+        dayExposure = sky.GetFloat(ExposureId);
+        hasTint = true;
+        if (sky.HasProperty(SkyTintId)) tintId = SkyTintId;
+        else if (sky.HasProperty(TintId)) tintId = TintId;
+        else hasTint = false;
+        if (hasTint) dayTint = sky.GetColor(tintId);
+    }
+
+    // The light from the whole sky (ambient light) is what lights the shadows. Unity works it out by itself only for
+    // the scene opened in the Editor. A scene the title screen opens (or a built game) gets only what was saved for it
+    // with Tools > World > Set Up Sky Lighting: nothing saved = no sky light = every shadow pitch black. Then this asks
+    // Unity to work it out from the sky now (a backup: the sky's reflections stay missing) and says how to fix it.
+    void CheckSkyLight()
+    {
+        if (RenderSettings.ambientMode != AmbientMode.Skybox || RenderSettings.skybox == null) return;   // not lit by the sky
+        if (!IsBlack(RenderSettings.ambientProbe)) return;   // saved, or worked out by the Editor: fine
+
+        DynamicGI.UpdateEnvironment();
+        Debug.LogWarning("DaylightCycle: \"" + gameObject.scene.name + "\" has no saved light from the sky, so its shadows " +
+                         "are pitch black when the title screen opens it. Fix: open it, then Tools > World > Set Up Sky Lighting.");
+    }
+
+    // True if the ambient light holds no light at all (all its numbers are 0).
+    static bool IsBlack(SphericalHarmonicsL2 sky)
+    {
+        for (int color = 0; color < 3; color++)
+            for (int part = 0; part < 9; part++)
+                if (Mathf.Abs(sky[color, part]) > 0.0001f) return false;
+        return true;
     }
 
     // Orange on the horizon, warm white high in the sky.

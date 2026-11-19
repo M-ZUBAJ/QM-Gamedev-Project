@@ -63,12 +63,15 @@ today's game. These values are read from GameScene and kept in `NewGameDefaults.
 | **When I die** | Keep items / Drop items / Lose items (GameRules Keep Inventory / Clear Item On Dead) | from GameScene |
 | **Pick up dropped items by walking over them** | GameRules Auto Pickup Drops | from GameScene |
 | **Show "+3 Wood" messages** | GameRules Show Notifications | from GameScene |
+| **Start with all tools** (TESTING) | GameRules Tool Test: one of every tier tool (pickaxe, axe, sword x Wood ... Diamond) in the inventory from the start (ToolTestKit) | off (from GameScene) |
 
 The difficulty numbers can be changed on **NewGamePage > NewGamePanel**: Easy / Hard enemies and hunger
 (compared to Normal), and Short / Long day.
 
 Pressing **Play straight in GameScene** (testing) still uses GameScene's own settings: the choices are only used
 after START GAME. **Play Again** on the victory screen keeps them.
+
+The **TESTING** section is new (19/11/2026): run the tool again to get it. An older title scene without it still works.
 
 ## The Settings page: Key Bindings
 
@@ -106,7 +109,8 @@ slots (a ButtonFX with its own sound keeps it). Empty slots stay silent.
   All**. To keep it for every rebuild, change `GameTitle` at the top of `Editor/TitleSceneBuilder.cs`.
 - **Credits:** the **Credits** text in the Footer (or `Credits` in the builder). The **version** is the
   **Version** text in the Footer (TitleCanvas > Pages > TitlePage > Footer > Version): type e.g. `v1.1` there.
-  Left empty, it shows Project Settings > Player > Version.
+  Left empty, it shows Project Settings > Player > Version. Running the tool again keeps what you typed there (it
+  reads the old Version text before it replaces the scene).
 - **Colors and sizes:** in the Inspector of each object, or in the Fields at the top of the builder for every rebuild.
 
 ## By hand (instead of the tool)
@@ -119,7 +123,8 @@ keep these **names**: the scripts find their parts by name.
   page, `StartButton` (with a `Flash` child), `Shockwave`, `IntroBlack`.
 - **NewGamePanel** (on NewGamePage) looks for: `DaysRow` (StepperRow with `Minus`, `Plus`, `Value`), `WinAtRow` and
   `StartTimeRow` (each with a TextMeshPro `Dropdown`), `DayLengthRow`, `DifficultyRow`, `DeathRow` (ChoiceRows with an
-  `Options` holder and a `Highlight`), `PickupRow` and `MessagesRow` (each with a `Toggle`), `DayLengthRow/Info`,
+  `Options` holder and a `Highlight`), `PickupRow`, `MessagesRow` and `AllToolsRow` (each with a `Toggle`;
+  `AllToolsRow` is optional), `DayLengthRow/Info`,
   `DifficultyInfo`, `Summary`, `DefaultsButton`, and a `Dot` in each row.
 - **KeyBindingMenu** (on KeyBindingsPage) looks for: `Content`, the switched-off `HeaderTemplate`, `RowTemplate`
   (`Label`, `Key`, `Key2`), `HotbarRowTemplate` (`Label`, `Key1` ... `Key8`), and optionally `Hint`, `ResetAllButton`.
@@ -135,6 +140,7 @@ keep these **names**: the scripts find their parts by name.
 4. **START GAME**: flash, shockwave, "DAY 1", then the game fades in. Check the Console: "Victory at Day ..." matches
    Days to win.
 5. **SETTINGS**: click a tab (the underline glides), change Jump to another key, **RESET ALL**.
+6. **PLAY**, tick **Start with all tools**, START GAME: the 15 tier tools are in the inventory.
 
 | Problem | Fix |
 |---|---|

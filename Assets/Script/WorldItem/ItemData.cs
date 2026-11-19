@@ -1,6 +1,6 @@
 /*
 First Date: 7/10/2026
-Date: 12/11/2026
+Date: 19/11/2026
 Author: Tony
 Use by: This is an ASSET (a config file in the Project window, kept in Assets/Config/Items), not a script you put on an object.
 Unity Editor: Easiest: select an item object (in the scene or a prefab) > menu Tools > Items > Make Item From Selection.
@@ -19,9 +19,10 @@ Purpose: One kind of item (a material like Wood or Stone, or food like an Apple)
          for the crafting system later; empty recipe = can't be crafted, a raw material).
          The FILE is the item: its file name is the Item Id the inventory stacks by, recipes point to this file,
          and every object in the world with ItemPickup pointing here is this item. No tags, no typed ids.
+         A tool whose recipe uses up another tool is an upgrade of it (UpgradedFrom: a Stone Axe of a Wooden Axe).
 Requirement: ItemData.cs <-> Recipe.cs
              ItemData.cs x-> Consumable.cs, ToolStats.cs, IconCapture.cs, IconSource.cs, PlayerInventory.cs
-             ItemData.cs <-x AutoCollector.cs, CraftingMenu.cs, Crosshair.cs, ItemConsumer.cs, ItemDataEditor.cs, ItemIconRules.cs, ItemPickup.cs, ItemTools.cs, PlayerInventory.cs, PlayerStats.cs, ResourceNode.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs
+             ItemData.cs <-x AutoCollector.cs, CraftingMenu.cs, CraftingMenuBuilder.cs, CraftingRow.cs, Crosshair.cs, HeldItemView.cs, ItemConsumer.cs, ItemDataEditor.cs, ItemIconRules.cs, ItemPickup.cs, ItemTools.cs, PlayerInventory.cs, PlayerStats.cs, ResourceNode.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs
 */
 
 using System.Collections.Generic;
@@ -117,6 +118,9 @@ public class ItemData : ScriptableObject
     public int CraftAmount => craftAmount;
     public CraftStation CraftedAt => craftedAt;
     public bool IsCraftable => recipe.Exists(ing => ing != null && ing.item != null);
+    // The tool this tool is an upgrade of: the tool in its recipe, which crafting uses up (a Stone Axe's Wooden Axe).
+    // null = not an upgrade. Crafting puts the new tool in the slot the old one was in (PlayerInventory.AddInto).
+    public ItemData UpgradedFrom => IsTool ? recipe.Find(ing => ing != null && ing.item != null && ing.item.IsTool)?.item : null;
 
     // ===== Unity messages (Unity calls these) =====
 

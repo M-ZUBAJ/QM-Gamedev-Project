@@ -1,6 +1,6 @@
 /*
 First Date: 3/10/2026
-Date: 21/10/2026
+Date: 19/11/2026
 Author: Tony
 Use by: Drag this script onto the Player sphere.
 Unity Editor: The HealthBar (StatBar) finds this by itself. "On Changed" is only for extra things
@@ -12,7 +12,7 @@ Purpose: Holds the player's health. TakeDamage / Heal change it and fire On Chan
          At 0 health the player dies: the Died event fires once (PlayerRespawn listens to it and brings the
          player back). Revive fills health back up.
 Requirement: PlayerHealth.cs <-x DeathScreen.cs, EnemyAttack.cs, PerkChest.cs, PerkManager.cs, PlayerCoins.cs, PlayerRespawn.cs
-             PlayerHealth.cs <-o AutoCollector.cs, DaylightCycle.cs, EnemyAnimator.cs, FirstPersonHands.cs, GainNotifier.cs, ItemConsumer.cs, ItemDropper.cs, PassiveRegen.cs, PlayerAnimator.cs, PlayerHunger.cs, PlayerPerks.cs, PlayerSight.cs, PlayerStats.cs, StatBar.cs, WildAnimal.cs
+             PlayerHealth.cs <-o AutoCollector.cs, ChestPrompt.cs, DaylightCycle.cs, EnemyAnimator.cs, FirstPersonHands.cs, GainNotifier.cs, InteractOutline.cs, ItemConsumer.cs, ItemDropper.cs, PassiveRegen.cs, PlayerAnimator.cs, PlayerHunger.cs, PlayerInfoPage.cs, PlayerPerks.cs, PlayerSight.cs, PlayerStats.cs, StatBar.cs, WildAnimal.cs
 */
 
 using UnityEngine;
@@ -50,6 +50,7 @@ public class PlayerHealth : MonoBehaviour
 
     public float Health => health;         // other scripts can read but not set it
     public float MaxHealth => maxHealth;
+    public float StartMaxHealth => startMaxHealth;   // max health before any perk (the inventory's Info tab shows the difference)
     public bool IsDead => health <= 0f;
 
     // ===== Unity messages (Unity calls these) =====

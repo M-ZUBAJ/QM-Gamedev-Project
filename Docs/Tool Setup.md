@@ -25,8 +25,12 @@ They replaced Marko's three placeholder tools (Sword, Axe, PickAxe). Change logs
 | **Pickaxe can mine** | stone | + copper, iron | + gold | + diamond | everything |
 | **Strength at its job** (x Marko's numbers) | x1 | x1.25 | x1.56 | x1.95 | x2.44 |
 | **Sword damage** (Marko's Sword Damage 25) | 25 | 31 | 39 | 49 | 61 |
-| **Recipe** | Planks (pickaxe 4, axe 3, sword 2) | 2 Plank + Stone (pickaxe 2, axe 1, sword 1) | 2 Plank + Iron (same counts) | none yet | none yet |
+| **Recipe** | 3 Plank + Wood (pickaxe 3, axe 3, sword 6) | the Wooden one + 3 Plank + Stone (pickaxe 6, axe 6, sword 9) | the Stone one + 3 Plank + Iron (same counts) | none yet | none yet |
 
+- **The recipes are a chain** (19/11/2026): each tier is made from the same tool of the tier below, which crafting
+  uses up (Wooden Axe + 3 Plank + 6 Stone = Stone Axe), and the new tool goes into the old tool's slot (hotbar or
+  inventory). **Tools > Items > Update Tool Recipes** puts them on existing tools; Build Tier Tools uses them too.
+  Table: `Docs/Crafting Menu Setup.md`.
 - **A bare hand** can still punch trees, stone and animals (slowly), but no ore.
 - **Copper and iron:** copper counts as the same tier as iron ("copper or iron can mine gold"). The pack has no copper
   tools.
@@ -51,7 +55,8 @@ They replaced Marko's three placeholder tools (Sword, Axe, PickAxe). Change logs
    - **The Player:** gets **ToolTestKit**, and its **PunchEffect** gets the sword / axe and pickaxe swing timing,
      measured from the animations.
    - **Turki's crafting list:** Sword / Axe / PickAxe become **Iron Sword / Stone Axe / Stone Pickaxe**, with the same
-     recipes.
+     recipes. (Since 19/11/2026 **Tools > UI > Build Crafting Menu** lists every Wooden, Stone and Iron tool, with
+     pictures: `Docs/Crafting Menu Setup.md`.)
    - **Marko's old tools:** GiveSwordForTesting and EquippedWeaponDisplay leave the Player, the three weapon models
      leave the Main Camera, and the old Sword / Axe / PickAxe files go to the trash (your computer's bin; git has them
      too).
@@ -65,7 +70,8 @@ StonePickaxe    Box Collider (aim + F to pick up) + ItemPickup (StonePickaxe, 1)
 
 ## Test
 
-1. Select the **GameRules** object and tick **Testing > Tool Test**. You can also tick it while playing.
+1. Select the **GameRules** object and tick **Testing > Tool Test**. You can also tick it while playing. From the
+   title screen: **PLAY > TESTING > Start with all tools**.
 2. Press Play. All 15 tools are in your inventory.
 3. Put a tool in the hotbar and select it (1 – 8). It's in the right hand: look in first person, and in third person.
 4. Left click at a tree with an axe, at stone with a pickaxe, at an enemy or deer with a sword.
@@ -106,7 +112,7 @@ along their X.
 3. **Item Data:**
    1. `Assets/Config/Items/Tools` > right-click > **Create > Items > Item Data**, named `StonePickaxe`.
    2. Prefab = the prefab, Display Name `Stone Pickaxe`, **Item Type Tool**, **Tool > Kind Pickaxe, Tier Stone**.
-   3. Recipe 2 Plank + 2 Stone.
+   3. Recipe: 1 WoodenPickaxe + 3 Plank + 6 Stone.
    4. Drag this file into the prefab's ItemPickup **Data**.
 4. **Ores:** `Assets/Config/Items/Copper` and `Iron` > **Mining > Mined With: Stone**.
 5. **Hands:** open `Assets/Prefabs/Player/PlayerCharacter.prefab` and add **ToolInHand** to its top object.

@@ -4,14 +4,22 @@ How to build the inventory window in Unity, step by step. No experience needed.
 
 What you will make:
 
-- A window with **3 tabs**: Inventory, Gear, Crafting. Clicking a tab shows its page.
+- A window with **4 tabs**: Inventory, Gear, Crafting, Info. Clicking a tab shows its page.
 - The **Inventory page** has 20 slots (4 rows of 5).
 - A **hotbar** of 8 slots at the bottom of the screen that is **always visible**.
 - Press **Tab** to open and close the window (Esc also closes it).
 - The slots show the player's items. Click them to move items around, like Minecraft.
 - Keys **1 - 8** or the **mouse wheel** choose the hotbar slot in hand.
+- **Mouse over an item** (window open): its name shows next to the mouse. The name is the item's Item Data
+  **Display Name** (`Assets/Config/Items`), or the Item Data's **file name** when Display Name is empty: `Meat.asset`
+  shows "Meat", `StonePickaxe.asset` (Display Name "Stone Pickaxe") shows "Stone Pickaxe". It's **not** the prefab's
+  name. To rename an item, type a Display Name (don't rename the file: the file name is the Item Id that stacks and
+  recipes use).
 
-Gear and Crafting pages are placeholders until their designs are ready.
+The Gear page is a placeholder until its design is ready. The Crafting page holds Turki's crafting list (with
+pictures, a scroll list and the tier tools after **Tools > UI > Build Crafting Menu**: `Docs/Crafting Menu Setup.md`).
+**Info** shows the player's status (health, hunger, stamina, walk and sprint speed, jump height, fireball, coins),
+what perks added to it (in green, e.g. "+44 from perks"), and the perks the player has, with their icons.
 
 ---
 
@@ -29,7 +37,8 @@ player). The Crafting page gets Turki's **CraftingCanvas** (the crafting list). 
 InventoryCanvas, it asks whether to replace it. Ctrl + Z removes it from the scene again.
 
 **Built it before?** Use **Tools > UI > Add Inventory Scripts** instead. It adds only what's missing to the
-prefabs you already have (SlotUI, SlotGroup, HeldItem, the ItemName texts, the crafting list), without rebuilding them.
+prefabs you already have (SlotUI, SlotGroup, HeldItem, the ItemName texts, the crafting list, the **Info** tab, the
+item name box), without rebuilding them.
 
 The steps below do the same thing by hand. Read them to understand how it is put together,
 or to change it later.
@@ -46,7 +55,8 @@ InventoryCanvas            Canvas + InventoryWindow script
 │   ├── TabBar             Horizontal Layout Group + TabGroup script
 │   │   ├── InventoryTab   Button
 │   │   ├── GearTab        Button
-│   │   └── CraftingTab    Button
+│   │   ├── CraftingTab    Button
+│   │   └── InfoTab        Button
 │   ├── Pages              the big frame
 │   │   ├── InventoryPage  Grid Layout Group + SlotGroup script
 │   │   │   ├── Slot       (20 of them) SlotUI script
@@ -55,15 +65,22 @@ InventoryCanvas            Canvas + InventoryWindow script
 │   │   │   │   └── ItemName   (hidden) the item's name, e.g. "SWORD"
 │   │   │   └── ...
 │   │   ├── GearPage
-│   │   └── CraftingPage
-│   │       └── CraftingCanvas  Turki's crafting list (CraftingMenu), shows when the tab is open
+│   │   ├── CraftingPage
+│   │   │   └── CraftingCanvas  Turki's crafting list (CraftingMenu), shows when the tab is open
+│   │   └── InfoPage       PlayerInfoPage script: the player's status and perks
+│   │       ├── Status     HealthRow, HungerRow, StaminaRow (each Icon, Name, Value, Bonus, Bar > Fill),
+│   │       │              SpeedRow, SprintRow, JumpRow, FireballRow, CoinsRow (Icon, Name, Value, Bonus)
+│   │       └── PerkList   NoPerks text + PerkTemplate (switched off: Icon, Name, Stats), copied per perk
 │   └── HeldItem           HeldItemUI script: the stack on the mouse (LAST child = drawn on top)
 │       ├── Icon
 │       ├── Count
 │       └── ItemName       (hidden) the name in Label mode
-└── Hotbar                 Horizontal Layout Group + SlotGroup script (NOT inside InventoryWindow)
-    ├── Slot               (8 of them)
-    └── ...
+├── Hotbar                 Horizontal Layout Group + SlotGroup script (NOT inside InventoryWindow)
+│   ├── Slot               (8 of them)
+│   └── ...
+└── ItemTooltip            ItemTooltip script: the item's name next to the mouse (LAST child = drawn on top)
+    └── Box                dark round box that fits the name
+        └── Text
 EventSystem                made by Unity, lets you click UI
 
 Player                     PlayerInventory + HotbarSelector scripts
@@ -130,13 +147,14 @@ Everything that should hide with Tab goes inside InventoryWindow.
 
    This makes the tab buttons share the bar equally, side by side.
 
-## Step 4 – The 3 tab buttons
+## Step 4 – The tab buttons
 
 1. Right click **TabBar** > **UI > Button - TextMeshPro**. Rename it **InventoryTab**.
 2. Click the small arrow next to InventoryTab to open it. Select its child **Text (TMP)**.
    In the Inspector, change the text "Button" to **Inventory**. Font Size about **32**.
-3. Select **InventoryTab** and press **Ctrl + D** two times (duplicate).
-4. Rename the copies **GearTab** and **CraftingTab**, and change their texts to **Gear** and **Crafting**.
+3. Select **InventoryTab** and press **Ctrl + D** three times (duplicate).
+4. Rename the copies **GearTab**, **CraftingTab** and **InfoTab**, and change their texts to **Gear**, **Crafting**
+   and **Info**.
 
 They line up by themselves because of the Horizontal Layout Group.
 
@@ -196,6 +214,13 @@ To change all slots later: double click the Slot prefab in the Project window, e
    (`Assets/Prefabs/UI`) onto it. Nothing else to set: when the game runs it fills the page, fixes its size
    (the prefab is saved at scale 0) and shows itself whenever the Crafting tab is open.
    (The CraftingCanvas at the top of the scene is a separate copy that opens with **C**. Keep it if you want both.)
+4. **InfoPage**: the easy way is **Tools > UI > Add Inventory Scripts**, which builds the whole page. By hand: an empty
+   **InfoPage** (stretch stretch) with **Add Component > PlayerInfoPage**. PlayerInfoPage finds its parts by name:
+   - rows named **HealthRow**, **HungerRow**, **StaminaRow**, **SpeedRow**, **SprintRow**, **JumpRow**,
+     **FireballRow**, **CoinsRow**, each with a TextMeshPro **Value** and **Bonus** (and for the first three a
+     **Bar** with a **Fill** image inside it, stretched);
+   - **PerkList** with a TextMeshPro **NoPerks** and a switched-off **PerkTemplate** row (an Image **Icon**, and
+     TextMeshPro **Name** and **Stats**). One copy of PerkTemplate is made for every perk.
 
 ## Step 9 – The hotbar
 
@@ -213,13 +238,14 @@ To change all slots later: double click the Slot prefab in the Project window, e
 ## Step 10 – Make the tabs work
 
 1. Select **TabBar**. Add Component > **TabGroup**.
-2. **Tabs**: set the number to **3**. Open each Element and drag objects from the Hierarchy into it:
+2. **Tabs**: set the number to **4**. Open each Element and drag objects from the Hierarchy into it:
 
    | Element | Button | Page |
    |---|---|---|
    | 0 | InventoryTab | InventoryPage |
    | 1 | GearTab | GearPage |
    | 2 | CraftingTab | CraftingPage |
+   | 3 | InfoTab | InfoPage |
 
 3. Optional: Selected Color (the open tab) and Normal Color (the others).
 
@@ -244,6 +270,11 @@ You don't need to hide the window yourself: the script closes it when the game s
      a **Count** (UI > Text - TextMeshPro, bottom right, empty text) and an **ItemName** (unticked).
    - Select HeldItem, Add Component > **HeldItemUI**.
 5. Select the **Player** (the object with PlayerInventory). Add Component > **HotbarSelector** and **ItemDropper**.
+6. The name next to the mouse: right click **InventoryCanvas** > **Create Empty**, rename it **ItemTooltip**, stretch
+   stretch, and keep it the **last** child of InventoryCanvas. In it a UI > Image **Box** (dark, Raycast Target
+   **off**) with a **Horizontal Layout Group** (Padding 14 / 14 / 8 / 8, Control Child Size Width + Height) and a
+   **Content Size Fitter** (both Preferred Size), and in the Box a TextMeshPro **Text** (white, Raycast Target off).
+   Select ItemTooltip > Add Component > **ItemTooltip**.
 
 SlotUI and HeldItemUI find their Icon, Count and ItemName by name, so keep those names.
 
@@ -251,7 +282,9 @@ SlotUI and HeldItemUI find their Icon, Count and ItemName by name, so keep those
 
 1. Press **Play**.
 2. Only the hotbar shows. Press **Tab**: the window opens on the Inventory page, and the mouse cursor appears.
-3. Click **Gear** and **Crafting**: their pages show, and the clicked tab changes color.
+3. Click **Gear**, **Crafting** and **Info**: their pages show, and the clicked tab changes color. **Info** shows
+   your health, hunger and stamina bars moving, your speeds and coins. Take a perk from a chest: its stat gets a green
+   "+ ... from perks" and the perk appears on the right with its icon.
 4. Press **Tab** (or **Esc**): the window closes and the mouse turns the camera again.
 5. Pick up some items (F, or touch AutoPickup items), then press **Tab**: they are in the slots.
 6. Move them like Minecraft:
@@ -269,12 +302,18 @@ SlotUI and HeldItemUI find their Icon, Count and ItemName by name, so keep those
    or **Bundle** (a small box with the picture and amount on its sides). Same items lying close together merge into one stack.
 8. Close the window while holding a stack: it goes back into the inventory.
 9. Press **1 - 8** or turn the mouse wheel: the selected hotbar slot changes color.
+10. Window open, move the mouse over an item (inventory or hotbar): its name shows next to the mouse. Over an empty
+    slot, or while holding a stack on the mouse, nothing shows.
 
 ### If something doesn't work
 
 | Problem | Fix |
 |---|---|
 | Tab does nothing | Is InventoryWindow (script) on **InventoryCanvas**, with **Window** filled in? Any red errors in the Console? |
+| No Info tab | Run **Tools > UI > Add Inventory Scripts** (it adds the tab and its page to the inventory you have). |
+| No name when the mouse is on an item | Run **Tools > UI > Add Inventory Scripts** (it adds the ItemTooltip). The Slot prefab needs **SlotUI**. |
+| The name is wrong / ugly (e.g. "IronOre") | Select the item's Item Data in `Assets/Config/Items` and type its **Display Name**. |
+| The Info page's perks have no icons | Run **Tools > UI > Build HUD** or **Add Inventory Scripts**: they put the perk pictures in the Player's **PlayerPerks > Icons**. |
 | Clicking tabs does nothing | Is there an **EventSystem** in the Hierarchy? If not: right click > **UI > Event System**. |
 | Text is missing | Import **TMP Essentials** (see "Before you start"). |
 | The hotbar disappears with the window | Hotbar must be a child of **InventoryCanvas**, not of InventoryWindow. |

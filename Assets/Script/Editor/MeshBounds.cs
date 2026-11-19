@@ -1,6 +1,6 @@
 /*
 First Date: 10/11/2026
-Date: 10/11/2026
+Date: 19/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Not used directly. The tools that size and place a model use it
@@ -9,8 +9,9 @@ Purpose: Measures the box around the model you actually SEE, from its real corne
          Unity's own Renderer.bounds can be much bigger than an animated (skinned) model: that box is kept around
          one of its bones, and when that bone is turned the box grows. The RPG Monster Duo slime's box was 1.67 m
          tall and reached 0.37 m below its feet, so a tool using it made the slime small and floating.
+         A scaled model measures at its real size too (the chest's model is scaled about 0.4).
          A tool calls MeshBounds.Of(model).
-Requirement: MeshBounds.cs <-x EnemyBuilder.cs, FirstPersonHandsBuilder.cs, PlayerCharacterBuilder.cs, TierToolBuilder.cs, WildAnimalBuilder.cs
+Requirement: MeshBounds.cs <-x ChestSetup.cs, EnemyBuilder.cs, FirstPersonHandsBuilder.cs, PlayerCharacterBuilder.cs, TierToolBuilder.cs, WildAnimalBuilder.cs
 */
 
 using UnityEngine;
@@ -35,7 +36,10 @@ public static class MeshBounds
                 Mesh mesh = null;
                 if (r is SkinnedMeshRenderer skinned && skinned.sharedMesh != null)
                 {
-                    skinned.BakeMesh(posed, false);   // the mesh as its bones hold it now, in the renderer's own space
+                    // The mesh as its bones hold it now, in the renderer's own space. true = without the renderer's
+                    // scale, like a normal mesh, so toWorld below scales it once. false (Unity's default) keeps that
+                    // scale in the mesh, so a scaled model (the chest's) came out scaled twice: the wrong size.
+                    skinned.BakeMesh(posed, true);
                     mesh = posed;
                 }
                 else if (r is MeshRenderer && r.TryGetComponent(out MeshFilter filter))

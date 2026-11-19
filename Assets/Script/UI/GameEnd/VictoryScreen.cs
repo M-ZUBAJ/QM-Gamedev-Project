@@ -1,6 +1,6 @@
 /*
 First Date: 20/10/2026
-Date: 9/11/2026
+Date: 19/11/2026
 Author: Tony
 Use by: On GameEndCanvas (Tools > UI > Build Game End Screen makes it and adds this script).
 Unity Editor: Nothing to connect. It finds these children by their NAME, so keep the names:
@@ -14,7 +14,8 @@ Unity Editor: Nothing to connect. It finds these children by their NAME, so keep
               Day Length Minutes to 0.5 and wait (5 days = about 2.5 minutes).
 Purpose: The victory screen. When the player has survived Days To Win full days and nights and then reaches
          the next Win Time (Dawn, Morning, Midday, Afternoon, Dusk, Night or Midnight, read from DaylightCycle),
-         the game freezes and this page shows what they did (PlayerStats).
+         the game freezes and this page shows what they did (PlayerStats). Every open menu closes first (e.g. a
+         chest's perk panel, the inventory: MenuState.CloseAll), so only this page is left.
          Play Again loads the scene again from the start (fresh world, full stats, Day 1).
          Dying resets the day count (DaylightCycle), so the days must be survived in one life.
          The New Game page can change Days To Win and Win Time before the game starts (SetGoal, used by GameSetup).
@@ -183,6 +184,7 @@ public class VictoryScreen : MonoBehaviour
         canvas.enabled = true;
         WriteStats();
 
+        MenuState.CloseAll();                    // close every other menu first (a chest's perk panel, the inventory...)
         MenuState.SetOpen(this, true);           // the camera, building, attacking... pause
         MenuState.SetKeysCaptured(this, true);   // moving, jumping, eating, the hotbar... stop
         Cursor.lockState = CursorLockMode.None;  // free the mouse to click Play Again

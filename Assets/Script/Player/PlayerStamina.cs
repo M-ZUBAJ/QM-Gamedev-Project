@@ -1,6 +1,6 @@
 /*
 First Date: 11/10/2026
-Date: 21/10/2026
+Date: 19/11/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerController and PlayerJump).
 Unity Editor: The StaminaBar (StatBar, Stat = Stamina) finds this by itself.
@@ -10,7 +10,7 @@ Purpose: Holds the player's stamina. Sprinting (PlayerController) and jumping (P
          and it fills back up by itself after a short rest.
          When it hits 0 the player is tired: no sprinting or jumping until it has refilled to "Recover To".
 Requirement: PlayerStamina.cs <-x PerkChest.cs, PerkManager.cs, PlayerCombat.cs
-             PlayerStamina.cs <-o ItemConsumer.cs, PlayerController.cs, PlayerJump.cs, PlayerPerks.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
+             PlayerStamina.cs <-o ItemConsumer.cs, PlayerController.cs, PlayerInfoPage.cs, PlayerJump.cs, PlayerPerks.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
 */
 
 using UnityEngine;
@@ -65,6 +65,7 @@ public class PlayerStamina : MonoBehaviour
 
     public float Stamina => stamina;          // other scripts can read but not set it
     public float MaxStamina => maxStamina;
+    public float StartMaxStamina => startMaxStamina;   // max stamina before any perk (the inventory's Info tab shows the difference)
     public bool IsTired => tired;
     public bool CanSprint => !tired && stamina > 0f;
     public bool CanJump => !tired && stamina > 0f;

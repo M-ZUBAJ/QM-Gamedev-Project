@@ -1,6 +1,6 @@
 /*
 First Date: 29/9/2026
-Date: 21/10/2026
+Date: 19/11/2026
 Author: Tony
 Use by: Drag this script onto the player shape (any shape: Capsule, Cube, Sphere...). A Rigidbody is added automatically.
 Unity Editor: The shape needs a Collider (3D Objects come with one).
@@ -22,7 +22,7 @@ Purpose: Move the player with W A S D (or the arrow keys, both set in KeyBinding
 Requirement: PlayerController.cs x-> KeyBindings.cs, MenuState.cs, Rigidbody (Unity)
              PlayerController.cs o-> PlayerStamina.cs, PlayerJump.cs
              PlayerController.cs <-x PerkChest.cs, PerkManager.cs, PlayerCharacterBuilder.cs, ResourceNode.cs
-             PlayerController.cs <-o FirstPersonHands.cs, HeldItemView.cs, PlayerAnimator.cs, PlayerHunger.cs, PlayerJump.cs, PlayerPerks.cs, PlayerStats.cs, WildAnimal.cs
+             PlayerController.cs <-o FirstPersonHands.cs, InteractOutline.cs, PlayerAnimator.cs, PlayerHunger.cs, PlayerInfoPage.cs, PlayerJump.cs, PlayerPerks.cs, PlayerStats.cs, TreeFall.cs, WildAnimal.cs
 */
 
 using UnityEngine;
@@ -98,6 +98,10 @@ public class PlayerController : MonoBehaviour
 
     // Walking speed right now, in meters per second (perks can raise it: IncreaseMoveSpeed). PlayerPerks shows it.
     public float Speed => speed;
+
+    // Walking speed before any perk (the inventory's Info tab shows how much perks added), and sprint = Speed x this.
+    public float StartSpeed => startSpeed;
+    public float SprintMultiplier => sprintMultiplier;
 
     // PlayerJump reads it: no jumping off a too-steep slope.
     public float MaxSlopeAngle => maxSlopeAngle;

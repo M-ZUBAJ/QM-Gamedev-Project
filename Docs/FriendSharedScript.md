@@ -193,9 +193,15 @@ In these tables, `health`, `stamina`, `daylight`, `player`… are the variables 
 | The crafting menu's key | `Input.GetKeyDown(KeyBindings.Crafting)` (default **C**, change it on the KeyBindings object). `CraftingMenu` already uses it; its old `openKey` field is gone |
 | Crafting inside the inventory | A CraftingCanvas under `InventoryWindow > Pages > CraftingPage` now shows itself whenever the Crafting tab is open (Tony's `[Tony]` lines in `CraftingMenu`, see `Docs/TonyEditMate/20-10-2026Edit.md`). The scene-root CraftingCanvas still opens with C |
 | Animate the player mining / picking up | `PlayerAnimator.Play(PlayerAction.Mine);` / `PlayerAnimator.Play(PlayerAction.Gather);` (upper body only; does nothing if the player has no character) |
+| Your trees fall now | Tony's **Tools > Effects > Build Tree Fall** (19/11/2026, log `Docs/TonyEditMate/Turki/19-11-2026 Trees Fall Into Wood Chips.md`) put Tony's **TreeFall** on your TreeNode prefab: when your `ResourceNode` breaks a tree (`currentHealth` 0, `Destroy`), a look-only copy falls over away from the player and breaks into brown wood chips (the copy's open trunk bottom is closed with cut wood, so nobody sees through it). Your script and the drops are unchanged; berry bushes are skipped. Guide: `Docs/Tree Fall Setup.md` |
+| An upgraded tool keeps its slot | Your `CraftingMenu.Craft` has two `[Tony]` lines (19/11/2026, log `Docs/TonyEditMate/Turki/19-11-2026 Upgraded Tool Keeps Its Slot.md`): an upgrade (Wooden Axe -> Stone Axe) goes into the slot the old tool was in (`PlayerInventory.SlotOf` + `AddInto`), not the first free slot. Anything that isn't an upgrade is added exactly as before |
+| Tool recipes are a chain | Since 19/11/2026 (Tony's **Tools > Items > Update Tool Recipes**): Wooden Pickaxe / Axe = 3 Plank + 3 Wood, Wooden Sword = 3 Plank + 6 Wood; Stone = the Wooden one + 3 Plank + 6 Stone (sword 9); Iron = the Stone one + 3 Plank + 6 Iron (sword 9). A tool can be an ingredient: `Recipe.CanAfford` / `TakeFrom` count it by Item Id like anything else, so your CraftingMenu needed no change. Table: `Docs/Crafting Menu Setup.md` |
 | Your trees are low-poly trees now | Tony's tool (**Tools > World > Use Low Poly Grassland Trees**) changed only the look and pivot of your `TreeNode.prefab`. It's a Round Oak from Broken Vector's pack, standing on the foot of its trunk. Your `ResourceNode` and its settings (Wood, Apple bonus, health) aren't changed. 5 more looks are Prefab Variants in `Assets/Prefabs/ResourceNodes/Trees`, so they follow TreeNode's drops and health. Log: `Docs/TonyEditMate/Turki/12-11-2026 Low Poly Grassland Trees.md` |
 | Your sheep (AnimalNode) | Not used in GameScene anymore: deer took its place (`DeerNode`, Tony's **Tools > World > Build Wild Animal**). Your `AnimalNode.prefab` and `Wander` script aren't changed. DeerNode got a copy of your sheep's ResourceNode settings (Meat 1 to 3, health 100). Change the deer's drops on DeerNode's ResourceNode. Guide: `Docs/Animal Setup.md` |
-| Tools and mining tiers | Item Data has a new **Item Type: Tool** (Kind + Tier) and, for materials, **Mining > Mined With**: the weakest pickaxe that can mine a rock that drops it. Copper and Iron are now **Stone** (a hand can't mine them), Stone stays None. New gold / diamond ores: set Mined With to Iron / Gold. Your ResourceNode got one `[Tony]` read-only line, `DropItem`. Your crafting list now offers **Iron Sword / Stone Axe / Stone Pickaxe** (same recipes as the old Sword / Axe / PickAxe). 15 tools with recipes are in `Assets/Config/Items/Tools`. Your panel fits ~8 rows: add a Scroll View to offer more. Log: `Docs/TonyEditMate/Turki/12-11-2026 Tier Tools.md` |
+| An outline on your berry bushes | Add Tony's **InteractOutline** to `BerryNode`: Color green, Show When *Look At*, Range = your **Collect Range**. It glows while E would pick it, and goes away with the bush. `InteractOutline.LooksAt(ray, range, transform)` is the same "am I looking at it" test, skipping the player's body like yours. Guide: `Docs/Interact Outline Setup.md` |
+| Keep Collect With Key on your bushes | Tony's **Tools > World > Set Up World Spawning** tells a berry bush from a tree by your **Collect With Key** tick (both have Resource Type Tree, the first choice), so the bushes don't get the trees' spacing. Nothing of yours is changed |
+| Your crafting menu (changed) | Tony's **Tools > UI > Build Crafting Menu** (19/11/2026, log `Docs/TonyEditMate/Turki/19-11-2026 Crafting Menu Icons And Tier Tools.md`): each row now shows the item's picture and its recipe as pictures with "have/need" (green / red), through Tony's `CraftingRow` on a new row prefab (one `[Tony]` line in your `FillRows` calls `CraftingRow.Show(item)`; a row without it still gets your text). Your panel is 960 x 640 with the rows in a scroll list, and Craftables lists Plank, Stew, then the Wooden / Stone / Iron tools. Guide: `Docs/Crafting Menu Setup.md` |
+| Tools and mining tiers | Item Data has a new **Item Type: Tool** (Kind + Tier) and, for materials, **Mining > Mined With**: the weakest pickaxe that can mine a rock that drops it. Copper and Iron are now **Stone** (a hand can't mine them), Stone stays None. New gold / diamond ores: set Mined With to Iron / Gold. Your ResourceNode got one `[Tony]` read-only line, `DropItem`. Your crafting list now offers **Iron Sword / Stone Axe / Stone Pickaxe** (same recipes as the old Sword / Axe / PickAxe). 15 tools with recipes are in `Assets/Config/Items/Tools`. Your panel fits ~8 rows: add a Scroll View to offer more. Log: `Docs/TonyEditMate/Turki/12-11-2026 Tier Tools.md`. (Since 19/11/2026 the list scrolls and shows every Wooden / Stone / Iron tool, and the tool recipes are a chain: see the rows above.) |
 
 **Example: crafting one item**
 
@@ -245,8 +251,10 @@ The inventory's **Crafting** tab (`InventoryCanvas > InventoryWindow > Pages > C
 | Bare-handed punches | Tony's `PunchCombo` (on the Player) picks them: left click = left / right jabs in turn, right click = heavy left hook / heavy right punch in turn, which hit and cost x2. `[Tony]` lines in your `PlayerCombat` ask `punchCombo.Next(...)` and call `Attack(punch)`; heavy damage = `PunchCombo.Power(swing)`. Log: `Docs/TonyEditMate/Marko/13-11-2026 Punch Combo.md`, guide `Docs/Mixamo Animations.md` |
 | A burst where an attack hits | Bare-handed hits already burst, and they hurt **when the fist lands**: Tony's `[Tony] replaced` lines in your `PlayerCombat.Attack()` call `PunchEffect.Punch(target, hit, () => target.TakeDamage(damage))` instead of `TakeDamage` at once. It waits the Impact Delay (about 0.3 s), hurts, then bursts on the spot that was hit, even on a running deer. Weapons still hit at once. For a burst only (sword, fireball): `PunchEffect.Play(hit.point, hit.normal);`. Log: `Docs/TonyEditMate/Marko/12-11-2026 Punch Wind Burst.md` |
 | Coins when the player dies | They go back to the starting amount: Tony's `[Tony]` lines in your `PlayerCoins` (Reset On Death tick box, `ResetCoins()`). Log: `Docs/TonyEditMate/Marko/10-11-2026 Coins Reset On Death, Perk Menu Closes, Punch.md` |
+| Your perk chest and panel (changed again) | Tony's `[Tony]` lines (19/11/2026, log `Docs/TonyEditMate/Marko/19-11-2026 Perk Panel, E Toggle And Pay On Pick.md`): E opens the panel while looking at a chest and closes it wherever you look; walking away (past Interaction Range + 0.5 m) closes it; the coins are paid when a perk is **picked** (not when the panel opens), so closing costs nothing; each chest rolls its 3 perks once and keeps them. Read only: `chest.OpeningCost`, `InteractionRange`, `InteractKey`, and `PerkChest.Showing` (the chest whose perks are on screen). Your PerkManager now also tells the HUD's perk row (one `[Tony]` line). Your PerkSelectionUI is unchanged; it sits on Tony's built panel (**Tools > UI > Build Perk Panel**, which also gave your Perk Data icons). Guide: `Docs/Perk Panel Setup.md` |
 | Animals that run away | Already done: the sheep are deer now (ithappy's **Animals FREE** pack, `Assets/Prefabs/ResourceNodes/DeerNode`). Tony's `WildAnimal` makes them graze, wander, and run from the player when the player comes within 12 m or hits them. Your `PlayerCombat` damages them as `ResourceType.Animal`, like the sheep. More animals: select e.g. `Imported3D/ithappy/Animals_FREE/Prefabs/Horse_001`, then **Tools > World > Build Wild Animal**. Guide: `Docs/Animal Setup.md` |
 | A sight perk or buff | `PlayerSight.Current.AddRange(20f);` (a perk: until the player dies) or `PlayerSight.Current.AddRange(40f, 30f);` (a buff: 30 seconds). Deer then spawn farther out by themselves (Tony's `AnimalSpawner` reads the range live). `PlayerSight.Current.Range` = the range now |
+| Your chest (changed) | Tony's **Tools > World > Set Up Chests** (19/11/2026, log `Docs/TonyEditMate/Marko/19-11-2026 Chest On The Floor And Yellow Outline.md`): the Chest prefab got Tony's **StandOnGround** (it now sits on the floor; it floated because the new model sits lower than the old box) and **InteractOutline** (a yellow outline while you can open it with E). Your PerkChest got `[Tony]` lines: `IsOpened` (read only) and the E ray now uses `InteractOutline.LooksAt(ray, interactionRange, transform)`, which skips the player's own ball (in first person the camera sits on its edge, so the old ray often hit the player and E did nothing). Guide: `Docs/Interact Outline Setup.md` |
 
 **Example: drop meat when an animal dies**
 
@@ -269,6 +277,9 @@ void DropMeat(int amount)
 | Animals in the world | Not in your ObjectScatter any more: Tony's tool (**Tools > World > Set Up World Spawning**) moved the `Animals` rule to Tony's `AnimalSpawner - DeerNode` object. It keeps 15 deer around the player and only spawns them where the player can't see (Tony's `PlayerSight` on the Player). Before, the rule ran after 1000+ trees and found no spot (0 of 40). Guide: `Docs/World Spawning Setup.md` |
 | Your ObjectScatter (changed) | Tony's `[Tony]` lines (13/11/2026, log `Docs/TonyEditMate/Sanyam/13-11-2026 Scatter Spacing Groups And Forest Patches.md`): **Min Spacing** now counts only between rules with the same **Spacing Group** (empty = the prefab's name; all tree looks = `Trees`). Other kinds keep **Clearance** (3 m), so many trees still leave room for rocks and bushes. New per-rule settings: **Patch Size** / **Open Ground** (forests with meadows) and **Min / Max Size** (random sizes). Used spots are kept in 10 m squares (fast with 1000+ trees). Old rules still work |
 | Spawn something where the player can't see it | `PlayerSight.Current.CanSee(feet, height)` (false = out of sight: behind the player, behind a hill / trunk / wall, or past the sight range). Tony's `AnimalSpawner` does this for the deer; you could do the same for enemies |
+| Make something sit on the floor | Add Tony's **StandOnGround** to the prefab: when the game starts it drops onto the floor under it (terrain, built floor, rock), tilts up to **Max Tilt** on slopes, whatever Y Offset your ObjectScatter used. The chests have it now (their rules still say Y Offset 0.6; StandOnGround settles them after they spawn). Guide: `Docs/Interact Outline Setup.md` |
+| Your berry bushes spawn again | Tony's spawning tool (13/11) had put your **Berry Bushes** rule in the trees' Spacing Group, because Turki's BerryNode also says Resource Type Tree: the bushes then kept their 20 m from every tree, and 1 of 150 spawned. **Tools > World > Set Up World Spawning** now knows a bush by Collect With Key and puts its rule back in its own group (only its settings, not your script; log `Docs/TonyEditMate/Sanyam/19-11-2026 Berry Bushes Spawn Again.md`) |
+| Dark shadows in a scene another scene opens | A scene opened by another scene (START GAME) or in a built game only has the light from the sky that was saved for it, else its shadows are pitch black. Open it and run **Tools > World > Set Up Sky Lighting** (GameScene needs it), again after changing its sky (Lighting > Environment), and commit the files it makes in `Assets/Scenes/`. Guide: `Docs/Sky Lighting Setup.md` |
 | Make a new building piece | Select it, **Tools > Building > Make Building From Selection**, fill the recipe. It appears in the build menu (B) by itself |
 | Know when the player built something | `FindFirstObjectByType<BlueprintPlacer>().Built += OnBuilt;` (gives the `BuildingData`) |
 | Is the player placing a building now? | `BlueprintPlacer.IsPlacing` |
@@ -291,6 +302,7 @@ Get it: `health = FindFirstObjectByType<PlayerHealth>();` in `Start()`
 | Member | What it is |
 |---|---|
 | `float Health`, `float MaxHealth` | current / max (default 100) |
+| `float StartMaxHealth` | max health before any perk (`MaxHealth - StartMaxHealth` = what perks added) |
 | `bool IsDead` | health is 0 |
 | `void TakeDamage(float amount)` | lose health; at 0 the player dies (`Died` fires once) |
 | `void Heal(float amount)` | gain health, never above max |
@@ -316,6 +328,7 @@ Get it: `stamina = FindFirstObjectByType<PlayerStamina>();`
 | Member | What it is |
 |---|---|
 | `float Stamina`, `float MaxStamina` | current / max (100) |
+| `float StartMaxStamina` | max stamina before any perk |
 | `bool IsTired` | hit 0 and hasn't refilled enough yet: no sprint, no jump |
 | `void Use(float amount)` | spend stamina (attack, dodge…); hitting 0 makes the player tired |
 | `void Restore(float amount)` | give stamina back at once |
@@ -333,6 +346,8 @@ Get them: `controller = FindFirstObjectByType<PlayerController>();`, `jump = Fin
 | `bool IsGrounded` | PlayerController: standing on walkable ground (not in the air, not on a too-steep slope). PlayerJump has one too (standing on something not too steep) |
 | `float MaxSlopeAngle` | PlayerController: the steepest slope the player can walk up (default 45 degrees); steeper = a wall |
 | `event Action Jumped` | PlayerJump: fired on every jump |
+| `float Speed`, `float StartSpeed`, `float SprintMultiplier` | PlayerController: walking speed now / before any perk (m/s); sprinting = Speed x SprintMultiplier |
+| `float JumpHeight` | PlayerJump: how high a jump goes, in meters |
 
 ### PlayerAnimator (on the Player's child "Character"): the animated body
 
@@ -377,6 +392,53 @@ and `Play` are static.
 
 Built by **Tools > Effects > Build Punch Wind Burst** (prefab `Assets/Prefabs/Effects/PunchWindBurst.prefab`). Guide:
 `Docs/Punch Effect Setup.md`.
+
+### InteractOutline (on anything you can use, e.g. the Chest): a glowing outline
+
+A colored outline around the thing (yellow on chests), drawn on top of the picture. By default it shows while the
+player looks at it from within Range, the same test as the chest's E key. It hides while a menu is open, while dead,
+and once a chest is opened. Settings: Color, Width, Fill, Pulse, Show When (Look At / Near / Always), Range.
+
+| Member | What it is |
+|---|---|
+| `static bool LooksAt(Ray ray, float range, Transform target)` | true if the nearest thing along the ray (within `range`) is `target` or part of it, skipping the player's own ball. Use it for your own "press E while looking at it" code: `InteractOutline.LooksAt(new Ray(cam.transform.position, cam.transform.forward), 3f, transform)` |
+| `bool IsShowing` | its outline shows right now (or is fading out) |
+| switching the component off | hides the outline for good, e.g. once your thing is used up: `GetComponent<InteractOutline>().enabled = false;` |
+
+### PlayerInfoPage (the inventory's Info tab)
+
+The player's status, 4 times a second while the tab is open: health / hunger / stamina (now / max with a bar), walk
+and sprint speed, jump height, the fireball (locked, or its cooldown) and coins. What perks added shows in green (e.g.
+"+44 from perks"), and the perks the player has are listed with their icons. Nothing to call: it reads PlayerHealth,
+PlayerHunger, PlayerStamina, PlayerController, PlayerJump, your PlayerFireball (`HasFireballPerk`, `PerkStacks`,
+`CurrentCooldown`) and PlayerCoins, and PlayerPerks. Made by **Tools > UI > Add Inventory Scripts** (guide
+`Docs/Inventory Setup.md`). **A new perk that changes a stat:** its row shows the change by itself if the stat's
+script has a "start" value (like `StartMaxHealth`).
+
+### ChestPrompt (in the HUD, under the crosshair)
+
+While the crosshair is on a perk chest within its reach, it shows `E  Open chest  (coin) 2`: the chest's key, what it
+does and its price (red while the player can't pay). Nothing to call: it reads `PerkChest.OpeningCost`,
+`InteractionRange` and `InteractKey` by itself. Made by **Tools > UI > Build HUD**.
+
+### PerkPanelInfo (on the perk panel, next to Marko's PerkSelectionUI)
+
+Writes the open chest's price (`PerkChest.Showing.OpeningCost`) and the player's coins on the panel, fades out the
+CHOOSE buttons ("NEED 2 COINS") while the player can't pay, and pops the window in. Nothing to call. Made by
+**Tools > UI > Build Perk Panel** (guide `Docs/Perk Panel Setup.md`).
+
+### HeldItemView (on the Player): the selected item in the hand
+
+The selected hotbar item (not a tool: ToolInHand holds those) sits in the character's right fist, on the body and on
+the first-person hands. Nothing to call: it follows `PlayerInventory.Changed`. Settings: Size In Hand, Item Nudge,
+Item Turn. Guide: `Docs/Held Item Setup.md`.
+
+### StandOnGround (on anything that should rest on the floor, e.g. the Chest)
+
+When the game starts it drops the object onto the floor below it (not itself, not the player or anything physics
+moves), sunk 2 cm, tilted up to Max Tilt on a slope. `Settle()` does it again now (true = a floor was found), e.g.
+after you move it in code. Foot Offset = how far the model's bottom is below the pivot (-1 = measured at the start).
+Guide for both: `Docs/Interact Outline Setup.md`.
 
 ### WildAnimal (on an animal, e.g. DeerNode): grazes, wanders, runs from the player
 
@@ -423,6 +485,8 @@ Get it: nothing to find, write `PlayerInventory.Instance` (or keep it: `PlayerIn
 | Member | What it is |
 |---|---|
 | `bool Add(id, name, icon, amount, ItemData data)` | add items (stacks by id); `false` = inventory full |
+| `int SlotOf(ItemData item)` | index in `Slots` of the first slot with this item (the one `Remove` takes from first), -1 = none |
+| `bool AddInto(int slot, id, name, icon, amount, ItemData data)` | add into that slot if it's empty (e.g. where an upgrade's old tool was); otherwise the same as `Add` |
 | `int Count(string id)` | how many of this item, all slots together |
 | `bool Remove(string id, int amount)` | take items away (all or nothing) |
 | `Slot TakeOne(string id)` | take 1, returns what was taken (or null) |
@@ -433,7 +497,9 @@ Get it: nothing to find, write `PlayerInventory.Instance` (or keep it: `PlayerIn
 | `static event Action Changed` | items or the hotbar selection changed |
 | `static event Action<Slot, int> ItemAdded` | items came in with `Add` (picked up, harvested, crafted): the slot they went into and how many. Not fired when items only move inside the inventory |
 
-A `Slot` has `id`, `name`, `icon`, `count`, `data` (its Item Data) and `IsEmpty`.
+A `Slot` has `id`, `name`, `icon`, `count`, `data` (its Item Data) and `IsEmpty`. `slot.ShownName` = the name the
+player sees: the Item Data's **Display Name**, or its file name when that's empty (not the prefab's name). The
+inventory shows it next to the mouse (Tony's `ItemTooltip`; `ItemTooltip.Show(text)` / `Hide()` for your own UI).
 
 ### ItemData (asset in `Assets/Config/Items`) and ItemPickup (on world items)
 
@@ -446,6 +512,7 @@ Get them: ItemData = a `public ItemData wood;` field with the file dragged in. I
 | `ItemType Type`, `bool IsConsumable`, `Consumable Consumable` | Material / Consumable; `Consumable.health / hunger / stamina` |
 | `IReadOnlyList<Ingredient> Recipe`, `int CraftAmount`, `CraftStation CraftedAt` | crafting info |
 | `bool IsCraftable`, `bool CanCraft(inv)`, `bool TakeRecipeFrom(inv)`, `string Missing(inv)` | crafting checks |
+| `ItemData UpgradedFrom` | for a tool: the tool in its recipe that crafting uses up (a Stone Axe's Wooden Axe); null otherwise |
 
 | ItemPickup member | What it is |
 |---|---|
@@ -474,6 +541,7 @@ Get it: nothing to find, write `GameRules.KeepInventory` etc. directly
 | `GameRules.DropItem` | off | on = the player can throw items out of the inventory; off = they can't (dying still drops items, see Keep Inventory) |
 | `GameRules.OverwriteItemIcon` + `GameRules.ItemIconStyle` | off / Auto Icon | on = every item in the inventory, hotbar, cursor and build menu is shown the same way: **Auto Icon** (photo of the prefab), **Label** (the prefab name in capitals, e.g. "SWORD", like Marko's tool slots), **Static Image** or **Aseprite Animation** (the item's own; falls back to Auto Icon). Code: `ItemIconRules.Resolve(...)`, `ItemIconRules.Label(slot)` |
 | `GameRules.WorldInteraction` | off | old rule for grabbing / levitating anywhere |
+| `GameRules.PerkIcons` | on | on = the HUD shows the perks as icons (x2 for stacks); off = boxes with each perk's name and stats (PerkBar) |
 | `GameRules.ShowNotifications` + `GameRules.NotificationSide` | on / Left | on = "+3 Wood" / "+2 Coins" messages show on the **Left** or **Right** side of the screen (NotificationFeed); off = no messages. Change the side from code: `GameRules.SetNotificationSide(NotificationSide.Right)` |
 
 Read: `if (GameRules.KeepInventory) …`. Change: `GameRules.Set(GameRule.KeepInventory, true);`.
@@ -497,6 +565,8 @@ Get it: `DaylightCycle.Current` (no searching; null if there's no sun in the sce
 
 The events are **static**: subscribe from anywhere, any time, no need to find the sun first.
 They also fire once when the game starts (NightStarted if it starts at night, DayStarted if in the day).
+At night the same Directional Light is the **moon** (Moonlight, on by default, since 19/11/2026), so don't read the
+light's direction as the sun's: use `TimeOfDay` / `IsNight`. Guide: `Docs/Day And Night Setup.md`.
 
 ```csharp
 void OnEnable()  { DaylightCycle.NightStarted += OnNight; }
@@ -511,7 +581,8 @@ Remembers which perks the player has, for the HUD's perk row (PerkBar: name + st
 | Member | What it is |
 |---|---|
 | `static void Record(PerkType type)` | call it after giving a perk (Marko's PerkChest already does, `[Tony]` lines). Same perk twice = "x2" |
-| `enum PerkType` | MaxHealth, MaxStamina, MoveSpeed, Fireball. **New perk:** add a line here + a case in `PerkName` and `PerkStats` |
+| `enum PerkType` | MaxHealth, MaxStamina, MoveSpeed, Fireball. **New perk:** add a line here + a case in `NameOf` and `PerkStats`, and its picture in the Player's PlayerPerks **Icons** |
+| `Sprite IconOf(PerkType type)`, `static string NameOf(PerkType type)` | the perk's picture (from **Icons**, filled by Tools > UI > Build HUD; null if none) and its name ("Max Health"). The HUD's perk icons and the inventory's Info tab use them |
 | `IReadOnlyList<OwnedPerk> Owned`, `event Action Changed` | the perks in the order gained; fired when one is added |
 | `static PlayerPerks Current` | the one in the scene (null if the player has none) |
 | `void ResetPerks()` | loses every perk and undoes the boosts (`ResetMaxHealth`, `ResetMaxStamina`, `ResetMoveSpeed`, `PlayerFireball.ResetFireballPerk`). Runs by itself when the player dies (**Reset On Death**, on). **New perk:** also add its undo here |

@@ -33,6 +33,8 @@ MonoBehaviour:
   minedWith: 0
   recipe:
   - item: {fileID: 11400000, guid: d524931321f754afdaeefd6219e3fa3c, type: 2}
-    amount: 4
+    amount: 3
+  - item: {fileID: 11400000, guid: 3531b718bb76535458623a98976a16c7, type: 2}
+    amount: 3
   craftAmount: 1
   craftedAt: 0

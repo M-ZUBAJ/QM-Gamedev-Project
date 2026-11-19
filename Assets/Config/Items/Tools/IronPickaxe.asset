@@ -32,9 +32,11 @@ MonoBehaviour:
     tier: 3
   minedWith: 0
   recipe:
+  - item: {fileID: 11400000, guid: 6b4e4c41c8aa0d04a89f7f08101a169f, type: 2}
+    amount: 1
   - item: {fileID: 11400000, guid: d524931321f754afdaeefd6219e3fa3c, type: 2}
-    amount: 2
+    amount: 3
   - item: {fileID: 11400000, guid: 5c6e2eb642dbe4159a36e38d99e65413, type: 2}
-    amount: 2
+    amount: 6
   craftAmount: 1
   craftedAt: 0

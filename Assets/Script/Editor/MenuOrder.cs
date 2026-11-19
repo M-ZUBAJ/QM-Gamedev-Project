@@ -1,6 +1,6 @@
 /*
 First Date: 8/10/2026
-Date: 13/11/2026
+Date: 19/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: To reorder the Tools menu, change the numbers below and save. Unity updates the menu after it compiles
@@ -11,7 +11,7 @@ Purpose: The order of every item in our Tools menu, in ONE place.
          - Numbers more than 10 apart = a separator line between them (a new group).
          - A submenu (UI, Building, Items...) sits where its smallest number is.
          Each tool's [MenuItem] uses one of these numbers, e.g. [MenuItem("Tools/UI/Build Inventory UI", false, MenuOrder.BuildInventoryUI)].
-Requirement: MenuOrder.cs <-x BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, DeathEffectBuilder.cs, EnemyBuilder.cs, FirstPersonHandsBuilder.cs, GameEndUIBuilder.cs, GrasslandTreeBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, NotificationUIBuilder.cs, PlayerAnimationSetup.cs, PlayerCharacterBuilder.cs, PunchEffectBuilder.cs, ScriptMapTool.cs, TierToolBuilder.cs, TitleSceneBuilder.cs, WildAnimalBuilder.cs, WorldSpawnSetup.cs
+Requirement: MenuOrder.cs <-x BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, ChestSetup.cs, CraftingMenuBuilder.cs, DeathEffectBuilder.cs, EnemyBuilder.cs, FirstPersonHandsBuilder.cs, GameEndUIBuilder.cs, GrasslandTreeBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, NotificationUIBuilder.cs, PerkPanelBuilder.cs, PlayerAnimationSetup.cs, PlayerCharacterBuilder.cs, PunchEffectBuilder.cs, ScriptMapTool.cs, SkyLightingSetup.cs, TierToolBuilder.cs, TitleSceneBuilder.cs, TreeFallBuilder.cs, WildAnimalBuilder.cs, WorldSpawnSetup.cs
 */
 
 public static class MenuOrder
@@ -20,6 +20,7 @@ public static class MenuOrder
     // Inventory
     public const int BuildInventoryUI = 100;
     public const int AddInventoryScripts = 101;
+    public const int BuildCraftingMenu = 102;   // Turki's crafting list: rows with pictures, a scroll list, the tier tools
     // --- line ---
     // Build menu (B)
     public const int BuildBuildMenuUI = 120;
@@ -28,9 +29,10 @@ public static class MenuOrder
     public const int BuildBuildModeUI = 140;
     public const int AddBuildModeScripts = 141;
     // --- line ---
-    // HUD (bars, crosshair, day / time / coin counters) and the "+3 Wood" messages
+    // HUD (bars, crosshair, day / time / coin counters), the "+3 Wood" messages and the chests' perk panel
     public const int BuildHUD = 160;
     public const int BuildNotifications = 161;
+    public const int BuildPerkPanel = 162;      // the chests' "CHOOSE YOUR REWARD" panel (Marko's PerkSelectionUI + Tony's PerkPanelInfo)
     // --- line ---
     // Game end (victory screen)
     public const int BuildGameEndUI = 180;
@@ -47,6 +49,8 @@ public static class MenuOrder
     public const int MixTreesInScene = 226;     // random look, turn and size for the trees in the open scene
     public const int BuildWildAnimal = 227;     // an animal model (ithappy's deer) -> a huntable animal that runs from the player
     public const int SetUpWorldSpawning = 228;  // ObjectScatter spacing groups + forest patches, deer spawned out of the player's sight
+    public const int SetUpChests = 229;         // chests stand on the floor (StandOnGround) and glow yellow when you can open them (InteractOutline)
+    public const int SetUpSkyLighting = 230;    // saves the scene's light from the sky, so shadows aren't pitch black when the title screen opens it
 
     // ===== Tools > Player =====
     public const int AddCharacterModel = 250;   // the animated character on the Player's ball
@@ -59,11 +63,13 @@ public static class MenuOrder
     // ===== Tools > Effects =====
     public const int BuildPunchWindBurst = 285; // the grey wind burst where a bare-handed punch hits something with health
     public const int BuildDeathParticles = 286; // creatures die into particles: harmless green, harmful red
+    public const int BuildTreeFall = 287;       // a chopped tree falls over and breaks into brown wood chips
 
     // ===== Tools > Items =====
     public const int MakeItemFromSelection = 300;
     public const int BuildTierTools = 301;      // 15 tools (pickaxe / axe / sword x Wood ... Diamond) from the Low Poly Tool Pack
     public const int RebuildToolModels = 302;   // only the 15 tool prefabs again (handle length, materials); Item Data untouched
+    public const int UpdateToolRecipes = 303;   // only the tools' recipes again (the crafting chain Wooden > Stone > Iron)
     // --- line ---
     public const int ConvertTaggedObjectsToItems = 320;   // one-time move from tags, rarely needed
 

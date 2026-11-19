@@ -1,6 +1,6 @@
 /*
 First Date: 18/10/2026
-Date: 21/10/2026
+Date: 19/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Open the scene you want it in, then menu Tools > UI > Build HUD.
@@ -11,10 +11,14 @@ Unity Editor: Open the scene you want it in, then menu Tools > UI > Build HUD.
               Needs TMP Essentials (it tells you if they are missing). Hand-made steps: Docs/HUD Setup.md
 Purpose: Builds the whole HUD in one click, the same as the one first made by hand, plus the top-right counters:
          HUDCanvas > Crosshair (middle)
+                   > ChestPrompt (under the crosshair: "E  Open chest  (coin) 2" while looking at a perk chest)
                    > HealthBar, HungerBar, StaminaBar (top left; each Background + Fill + Frame, with StatBar)
-                   > TopRight > DayText (DayCounter), TimeText (TimeCounter), CoinCounter (Icon + Text)
+                   > TopRight > DayText (DayCounter), TimeText (TimeCounter), CoinCounter (Pill > Icon + Text)
                    > Perks (PerkBar) > Perk1, Perk2, Perk3 (top middle; each Title + Stats)
-Requirement: HUDBuilder.cs x-> UIBuildHelper.cs, StatBar.cs, Crosshair.cs, DayCounter.cs, TimeCounter.cs, CoinCounter.cs, PerkBar.cs, PlayerPerks.cs, MenuOrder.cs
+                   > PerkIcons > PerkIcon1 (the perks as icons, shown instead while GameRules > Perk Icons is on;
+                                saved switched off, PerkBar switches it on)
+         The coin and the round boxes are pictures drawn by IconArt (Assets/UI/Common).
+Requirement: HUDBuilder.cs x-> UIBuildHelper.cs, StatBar.cs, Crosshair.cs, DayCounter.cs, TimeCounter.cs, CoinCounter.cs, ChestPrompt.cs, PerkBar.cs, PlayerPerks.cs, IconArt.cs, MenuOrder.cs
 */
 
 using TMPro;
@@ -70,10 +74,19 @@ public static class HUDBuilder
     const float TopRightWidth = 460f;
     const float DayFontSize = 36f;
     const float TimeFontSize = 26f;
-    const float CoinFontSize = 34f;
-    const float CoinIconSize = 36f;
+    const float CoinFontSize = 36f;
+    const float CoinIconSize = 40f;
+    const float CoinPillHeight = 54f;
     static readonly Color DayColor = Color.white;
     static readonly Color TimeColor = new Color(0.85f, 0.85f, 0.85f);
+    static readonly Color PillColor = new Color(0f, 0f, 0f, 0.45f);   // the see-through dark round box behind the coins / prompt
+
+    // The chest prompt under the crosshair.
+    const float PromptY = -92f;                                        // below the middle of the screen (the crosshair)
+    const float PromptHeight = 52f;
+    static readonly Color KeyCapColor = new Color(0.92f, 0.93f, 0.96f);
+    static readonly Color KeyTextColor = new Color(0.1f, 0.1f, 0.12f);
+    static readonly Color PriceColor = new Color(1f, 0.85f, 0.2f);    // gold, like the coins
 
     // The perk row along the top, between the bars and the day / time box (where Tony drew it).
     const int PerkSlots = 3;                                           // Perk1, Perk2, Perk3
@@ -83,6 +96,8 @@ public static class HUDBuilder
     static readonly Color PerkBoxColor = new Color(0f, 0f, 0f, 0.35f); // see-through dark box
     const float PerkTitleSize = 30f;
     const float PerkStatsSize = 22f;
+    const float PerkIconSize = 68f;                                    // one icon tile (stays above the inventory window)
+    const float PerkIconSpacing = 10f;
 
     // ===== Menu (Unity calls this) =====
 
@@ -116,6 +131,7 @@ public static class HUDBuilder
         }
 
         AddToPlayer<PlayerPerks>();   // the perk row reads it; perk chests fill it
+        IconArt.GivePerkIcons(Object.FindFirstObjectByType<PlayerPerks>());   // each perk's picture (perk icons, Info tab)
 
         Selection.activeGameObject = canvas;
         EditorGUIUtility.PingObject(prefab);   // flashes it in the Project window
@@ -130,9 +146,14 @@ public static class HUDBuilder
         canvas.GetComponent<CanvasScaler>().matchWidthOrHeight = 0f;   // same as the hand-made HUD: follow the width
 
         MakeCrosshair(canvas.transform);
+        MakeChestPrompt(canvas.transform);
         foreach (Bar bar in Bars) MakeBar(bar, canvas.transform);
         MakeTopRight(canvas.transform);
-        MakePerks(canvas.transform);
+        PerkBar perkBar = MakePerks(canvas.transform);
+        RectTransform perkIcons = MakePerkIcons(canvas.transform);
+        SerializedObject so = new SerializedObject(perkBar);   // the names in quotes must match PerkBar's fields
+        so.FindProperty("iconRow").objectReferenceValue = perkIcons;
+        so.ApplyModifiedPropertiesWithoutUndo();
         return canvas;
     }
 
@@ -194,7 +215,7 @@ public static class HUDBuilder
 
     // The box in the top right: day, time, coins, stacked and lined up on the right.
     // Perks > Perk1, Perk2, Perk3, side by side along the top. Each: a box with Title (perk name) and Stats.
-    static void MakePerks(Transform parent)
+    static PerkBar MakePerks(Transform parent)
     {
         GameObject row = NewUI("Perks", parent);
         RectTransform rt = (RectTransform)row.transform;
@@ -209,7 +230,55 @@ public static class HUDBuilder
 
         for (int i = 1; i <= PerkSlots; i++) MakePerkSlot(row.transform, "Perk" + i);
 
-        row.AddComponent<PerkBar>();   // fills the slots from the player's PlayerPerks
+        return row.AddComponent<PerkBar>();   // fills the slots from the player's PlayerPerks
+    }
+
+    // PerkIcons > PerkIcon1: the perks as icon tiles, centered along the top, shown instead of the boxes while
+    // GameRules > Perk Icons is on. PerkBar copies PerkIcon1 for every perk. Saved switched off (PerkBar shows it).
+    static RectTransform MakePerkIcons(Transform parent)
+    {
+        GameObject row = NewUI("PerkIcons", parent);
+        RectTransform rt = (RectTransform)row.transform;
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 1f);   // top middle of the screen
+        rt.sizeDelta = new Vector2(PerksSize.x, PerkIconSize);
+        rt.anchoredPosition = new Vector2(0f, PerksPosition.y);
+
+        HorizontalLayoutGroup line = row.AddComponent<HorizontalLayoutGroup>();
+        line.spacing = PerkIconSpacing;
+        line.childAlignment = TextAnchor.UpperCenter;
+        line.childControlWidth = line.childControlHeight = true;
+        line.childForceExpandWidth = line.childForceExpandHeight = false;   // each tile keeps its square size
+
+        GameObject tile = NewUI("PerkIcon1", row.transform);
+        LayoutElement size = tile.AddComponent<LayoutElement>();
+        size.preferredWidth = size.preferredHeight = PerkIconSize;
+        Image box = AddImage(tile, IconArt.RoundedBox(), PerkBoxColor);
+        box.type = Image.Type.Sliced;
+
+        Image icon = AddImage(NewUI("Icon", tile.transform), IconArt.PerkHealth(), Color.white);   // PerkBar sets the real one
+        Stretch(icon.gameObject, 8f, 8f, 8f, 8f);
+        icon.preserveAspect = true;
+
+        GameObject count = NewUI("Count", tile.transform);
+        RectTransform c = (RectTransform)count.transform;
+        c.anchorMin = c.anchorMax = c.pivot = new Vector2(1f, 0f);   // bottom right corner
+        c.anchoredPosition = new Vector2(-4f, 2f);
+        c.sizeDelta = new Vector2(48f, 26f);
+        TextMeshProUGUI countText = AddText(count, "x2", 21f, TextAlignmentOptions.BottomRight);
+        countText.fontStyle = FontStyles.Bold;
+        countText.color = PriceColor;
+
+        GameObject label = NewUI("Label", tile.transform);
+        Stretch(label, 4f, 4f, 4f, 4f);
+        TextMeshProUGUI labelText = AddText(label, "Perk", 15f, TextAlignmentOptions.Center);
+        labelText.color = Color.white;
+        labelText.enableAutoSizing = true;   // a long name shrinks to fit the tile
+        labelText.fontSizeMin = 8f;
+        labelText.fontSizeMax = 15f;
+        label.SetActive(false);              // only for a perk without a picture
+
+        row.SetActive(false);                // PerkBar switches it on while playing, when GameRules > Perk Icons is on
+        return rt;
     }
 
     static void MakePerkSlot(Transform parent, string name)
@@ -260,38 +329,106 @@ public static class HUDBuilder
         MakeCoinCounter(box.transform);
     }
 
-    // CoinCounter > Icon + Text, side by side, lined up on the right.
+    // CoinCounter > Pill (a see-through dark round box as wide as what's in it) > Icon (the coin) + Text, on the right.
     static void MakeCoinCounter(Transform parent)
     {
         GameObject row = NewUI("CoinCounter", parent);
-        row.AddComponent<LayoutElement>().preferredHeight = CoinIconSize + 6f;
+        row.AddComponent<LayoutElement>().preferredHeight = CoinPillHeight + 6f;
 
-        HorizontalLayoutGroup line = row.AddComponent<HorizontalLayoutGroup>();
-        line.childAlignment = TextAnchor.MiddleRight;
-        line.spacing = 8f;
-        line.childControlWidth = true;
-        line.childControlHeight = true;
-        line.childForceExpandWidth = false;
-        line.childForceExpandHeight = false;
+        GameObject pill = NewUI("Pill", row.transform);
+        RectTransform p = (RectTransform)pill.transform;
+        p.anchorMin = p.anchorMax = p.pivot = new Vector2(1f, 0.5f);   // on the right edge, growing to the left
+        p.anchoredPosition = Vector2.zero;
+        p.sizeDelta = new Vector2(150f, CoinPillHeight);
+        AddPill(pill, new RectOffset(12, 18, 4, 4), 10f);
 
-        GameObject iconGo = NewUI("Icon", row.transform);
-        Image icon = iconGo.AddComponent<Image>();
+        Image icon = AddImage(NewUI("Icon", pill.transform), IconArt.Coin(), Color.white);
         icon.preserveAspect = true;
-        icon.raycastTarget = false;
-        LayoutElement iconSize = iconGo.AddComponent<LayoutElement>();
+        LayoutElement iconSize = icon.gameObject.AddComponent<LayoutElement>();
         iconSize.preferredWidth = iconSize.preferredHeight = CoinIconSize;
 
-        GameObject textGo = NewUI("Text", row.transform);
-        TextMeshProUGUI text = AddText(textGo, "0", CoinFontSize, TextAlignmentOptions.Right);
+        GameObject textGo = NewUI("Text", pill.transform);
+        TextMeshProUGUI text = AddText(textGo, "0", CoinFontSize, TextAlignmentOptions.Left);
         text.fontStyle = FontStyles.Bold;
         text.enableWordWrapping = false;
 
         CoinCounter counter = row.AddComponent<CoinCounter>();
         // The names in quotes must match the field names in CoinCounter.
         SerializedObject so = new SerializedObject(counter);
+        so.FindProperty("look").enumValueIndex = (int)CoinLook.StaticIcon;   // the coin picture: shows in Edit mode too
+        so.FindProperty("staticIcon").objectReferenceValue = icon.sprite;
         so.FindProperty("icon").objectReferenceValue = icon;
         so.FindProperty("text").objectReferenceValue = text;
+        so.FindProperty("popTarget").objectReferenceValue = p;              // the pill pops when the coins change
         so.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    // ChestPrompt (under the crosshair) > Pill > Key (a light key cap) > KeyText "E", Label, CoinIcon, Price.
+    static void MakeChestPrompt(Transform parent)
+    {
+        GameObject prompt = NewUI("ChestPrompt", parent);
+        RectTransform r = (RectTransform)prompt.transform;
+        r.anchorMin = r.anchorMax = r.pivot = new Vector2(0.5f, 0.5f);
+        r.anchoredPosition = new Vector2(0f, PromptY);
+        r.sizeDelta = new Vector2(400f, PromptHeight);
+        CanvasGroup group = prompt.AddComponent<CanvasGroup>();
+        group.alpha = 0f;                // ChestPrompt fades it in while a chest is looked at
+        group.blocksRaycasts = false;
+        group.interactable = false;
+
+        GameObject pill = NewUI("Pill", prompt.transform);
+        RectTransform p = (RectTransform)pill.transform;
+        p.anchorMin = p.anchorMax = p.pivot = new Vector2(0.5f, 0.5f);   // in the middle, growing both ways
+        p.sizeDelta = new Vector2(300f, PromptHeight);
+        AddPill(pill, new RectOffset(8, 18, 6, 6), 12f);
+
+        GameObject key = NewUI("Key", pill.transform);
+        LayoutElement keySize = key.AddComponent<LayoutElement>();
+        keySize.preferredWidth = keySize.preferredHeight = PromptHeight - 12f;
+        Image cap = AddImage(key, IconArt.RoundedBox(), KeyCapColor);
+        cap.type = Image.Type.Sliced;
+        GameObject keyTextGo = NewUI("KeyText", key.transform);
+        Stretch(keyTextGo, 0f, 0f, 0f, 0f);
+        TextMeshProUGUI keyText = AddText(keyTextGo, "E", 26f, TextAlignmentOptions.Center);
+        keyText.color = KeyTextColor;
+        keyText.fontStyle = FontStyles.Bold;
+
+        TextMeshProUGUI label = AddText(NewUI("Label", pill.transform), "Open chest", 28f, TextAlignmentOptions.Left);
+        label.color = Color.white;
+        label.enableWordWrapping = false;
+
+        Image coin = AddImage(NewUI("CoinIcon", pill.transform), IconArt.Coin(), Color.white);
+        coin.preserveAspect = true;
+        LayoutElement coinSize = coin.gameObject.AddComponent<LayoutElement>();
+        coinSize.preferredWidth = coinSize.preferredHeight = 32f;
+
+        TextMeshProUGUI price = AddText(NewUI("Price", pill.transform), "2", 28f, TextAlignmentOptions.Left);
+        price.color = PriceColor;
+        price.fontStyle = FontStyles.Bold;
+        price.enableWordWrapping = false;
+
+        ChestPrompt script = prompt.AddComponent<ChestPrompt>();
+        // The names in quotes must match the field names in ChestPrompt.
+        SerializedObject so = new SerializedObject(script);
+        so.FindProperty("keyText").objectReferenceValue = keyText;
+        so.FindProperty("label").objectReferenceValue = label;
+        so.FindProperty("price").objectReferenceValue = price;
+        so.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    // A see-through dark box with round corners that grows to fit the row inside it (coin + number, key + words...).
+    static void AddPill(GameObject go, RectOffset padding, float spacing)
+    {
+        Image back = AddImage(go, IconArt.RoundedBox(), PillColor);
+        back.type = Image.Type.Sliced;   // the corners stay round at any size
+
+        HorizontalLayoutGroup line = go.AddComponent<HorizontalLayoutGroup>();
+        line.padding = padding;
+        line.spacing = spacing;
+        line.childAlignment = TextAnchor.MiddleCenter;
+        line.childControlWidth = line.childControlHeight = true;
+        line.childForceExpandWidth = line.childForceExpandHeight = false;
+        go.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
     }
 
     // A one-line text row, lined up on the right.

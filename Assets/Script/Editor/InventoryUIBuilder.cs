@@ -1,6 +1,6 @@
 /*
 First Date: 7/10/2026
-Date: 20/10/2026
+Date: 19/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Open the scene you want the inventory in, then menu Tools > UI > Build Inventory UI.
@@ -10,14 +10,15 @@ Unity Editor: Open the scene you want the inventory in, then menu Tools > UI > B
               The Crafting page gets Turki's CraftingCanvas prefab (the crafting list), if it's in the project.
               Needs TMP Essentials (it tells you if they are missing).
               Already built the inventory before? Use Tools > UI > Add Inventory Scripts instead: it adds the
-              newer pieces (SlotUI, SlotGroup, HeldItem, ItemName texts, the crafting list, HotbarSelector,
-              ItemDropper) to what you have, without rebuilding (your changes are kept).
+              newer pieces (SlotUI, SlotGroup, HeldItem, ItemName texts, the crafting list, the Info tab, the item
+              name box, HotbarSelector, ItemDropper) to what you have, without rebuilding (your changes are kept).
 Purpose: Builds the inventory window from Docs/Inventory Setup.md in one click:
-         InventoryCanvas > InventoryWindow > TabBar (3 tabs) + Pages (Inventory with 20 slots, Gear, Crafting
-         with the crafting list), the HeldItem on the mouse, and the 8-slot Hotbar. Every script is added and filled
-         in for you, and HotbarSelector + ItemDropper are added to the player.
+         InventoryCanvas > InventoryWindow > TabBar (4 tabs) + Pages (Inventory with 20 slots, Gear, Crafting
+         with the crafting list, Info: the player's status and perks), the HeldItem on the mouse, the 8-slot
+         Hotbar, and the ItemTooltip (the item's name next to the mouse). Every script is added and filled in for you,
+         and HotbarSelector + ItemDropper are added to the player.
          An existing Slot prefab is reused (your changes to it are kept), so only InventoryCanvas is rebuilt.
-Requirement: InventoryUIBuilder.cs x-> UIBuildHelper.cs, TabGroup.cs, InventoryWindow.cs, SlotUI.cs, SlotGroup.cs, HeldItemUI.cs, HotbarSelector.cs, ItemDropper.cs, CraftingMenu.cs, MenuOrder.cs
+Requirement: InventoryUIBuilder.cs x-> UIBuildHelper.cs, TabGroup.cs, InventoryWindow.cs, SlotUI.cs, SlotGroup.cs, HeldItemUI.cs, HotbarSelector.cs, ItemDropper.cs, CraftingMenu.cs, PlayerInfoPage.cs, PlayerPerks.cs, ItemTooltip.cs, IconArt.cs, MenuOrder.cs
 */
 
 using TMPro;
@@ -45,6 +46,20 @@ public static class InventoryUIBuilder
     const int Columns = 5;
     const int HotbarSlots = 8;       // match PlayerInventory's Hotbar Size
     const float TabBarHeight = 80f;
+
+    // The Info page (light, like the rest of the window). Pixels on a 1920 x 1080 screen.
+    const float StatusWidth = 640f;    // the STATUS column on the left
+    const float PerksWidth = 430f;     // the PERKS column on the right
+    const float StatRowHeight = 60f;
+    static readonly Color InfoText = new Color(0.13f, 0.13f, 0.15f);
+    static readonly Color InfoDim = new Color(0.42f, 0.43f, 0.48f);
+    static readonly Color InfoBonus = new Color(0.1f, 0.58f, 0.27f);    // what perks added
+    static readonly Color InfoRowColor = new Color(0.92f, 0.93f, 0.95f);
+    static readonly Color InfoBarBack = new Color(0.8f, 0.81f, 0.85f);
+    static readonly Color HealthColor = new Color(0.15f, 0.75f, 0.25f);
+    static readonly Color HungerColor = new Color(0.95f, 0.6f, 0.05f);
+    static readonly Color StaminaColor = new Color(0.9f, 0.75f, 0.05f);
+    static readonly Color TooltipColor = new Color(0.08f, 0.09f, 0.12f, 0.92f);   // the name box: dark, like Minecraft's
 
     // ===== Menu (Unity calls this) =====
 
@@ -86,6 +101,7 @@ public static class InventoryUIBuilder
 
         MakeEventSystemIfMissing(ToolName);
         AddHotbarSelectorToPlayer();
+        IconArt.GivePerkIcons(Object.FindFirstObjectByType<PlayerPerks>());   // the Info tab's perk pictures
 
         Selection.activeGameObject = canvas;
         EditorGUIUtility.PingObject(canvasPrefab);   // flashes it in the Project window
@@ -116,9 +132,11 @@ public static class InventoryUIBuilder
         if (!ok) return;
 
         AddHotbarSelectorToPlayer();
+        IconArt.GivePerkIcons(Object.FindFirstObjectByType<PlayerPerks>());   // the Info tab's perk pictures
         Debug.Log("Inventory scripts added (only what was missing): SlotUI + ItemName (Slot prefab), " +
                   "SlotGroup (InventoryPage, Hotbar), HeldItem + its ItemName (InventoryWindow), the crafting list " +
-                  "(Crafting page), HotbarSelector + ItemDropper (Player). " +
+                  "(Crafting page), the Info tab (status and perks), the item name box (ItemTooltip), " +
+                  "HotbarSelector + ItemDropper (Player). " +
                   "Press Play, pick up items and press Tab to test. Save the scene (Ctrl + S).");
     }
 
@@ -162,7 +180,219 @@ public static class InventoryUIBuilder
 
         Transform craftingPage = window.Find("Pages/CraftingPage");
         if (craftingPage != null) AddCraftingList(craftingPage);
+
+        AddInfoTab(window);   // the 4th tab: the player's status and perks
+        AddTooltip(canvas.transform);   // the item's name next to the mouse
         return true;
+    }
+
+    // ItemTooltip: the box with the item's name that follows the mouse over a slot, last child so it's on top
+    // (it also gets a canvas of its own while playing). Added once. SlotUI tells it what to show.
+    static void AddTooltip(Transform canvas)
+    {
+        if (canvas.Find("ItemTooltip") != null) return;
+
+        GameObject tooltip = NewUI("ItemTooltip", canvas);
+        Stretch(tooltip, 0f, 0f, 0f, 0f);   // the whole screen: the box moves around inside it
+
+        GameObject box = NewUI("Box", tooltip.transform);
+        RectTransform b = (RectTransform)box.transform;
+        b.anchorMin = b.anchorMax = new Vector2(0.5f, 0.5f);
+        b.pivot = Vector2.zero;             // ItemTooltip moves the corner next to the mouse
+        b.sizeDelta = new Vector2(200f, 44f);
+        Image back = box.AddComponent<Image>();
+        back.sprite = IconArt.RoundedBox();
+        back.type = Image.Type.Sliced;
+        back.color = TooltipColor;
+        back.raycastTarget = false;         // never in the way of the mouse
+        HorizontalLayoutGroup padding = box.AddComponent<HorizontalLayoutGroup>();
+        padding.padding = new RectOffset(14, 14, 8, 8);
+        padding.childControlWidth = padding.childControlHeight = true;
+        padding.childForceExpandWidth = padding.childForceExpandHeight = false;
+        ContentSizeFitter fit = box.AddComponent<ContentSizeFitter>();
+        fit.horizontalFit = fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;   // as big as the name
+
+        TextMeshProUGUI text = AddText(NewUI("Text", box.transform), "Item", 24f, TextAlignmentOptions.MidlineLeft);
+        text.color = Color.white;
+        text.enableWordWrapping = false;
+
+        tooltip.AddComponent<ItemTooltip>();
+        tooltip.transform.SetAsLastSibling();
+    }
+
+    // ----- The Info tab -----
+
+    // The Info tab (the player's status and perks), added once: its button at the end of the tab bar, its page in
+    // Pages, and both at the end of TabGroup's list. Does nothing if the window isn't the usual one or has it already.
+    static void AddInfoTab(Transform window)
+    {
+        Transform tabBar = window.Find("TabBar");
+        Transform pages = window.Find("Pages");
+        TabGroup group = tabBar != null ? tabBar.GetComponent<TabGroup>() : null;
+        if (group == null || pages == null || tabBar.Find("InfoTab") != null) return;
+
+        Button button = MakeTab("InfoTab", "Info", tabBar);
+        GameObject page = MakeInfoPage(pages);
+
+        SerializedObject so = new SerializedObject(group);   // "tabs", "button" and "page" must match TabGroup's fields
+        SerializedProperty tabs = so.FindProperty("tabs");
+        int last = tabs.arraySize;
+        tabs.arraySize = last + 1;
+        tabs.GetArrayElementAtIndex(last).FindPropertyRelative("button").objectReferenceValue = button;
+        tabs.GetArrayElementAtIndex(last).FindPropertyRelative("page").objectReferenceValue = page;
+        so.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    // InfoPage: STATUS on the left (a row per stat), PERKS on the right (PlayerInfoPage copies PerkTemplate per perk).
+    static GameObject MakeInfoPage(Transform pages)
+    {
+        GameObject page = NewUI("InfoPage", pages);
+        Stretch(page, 40f, 30f, 40f, 30f);
+
+        Transform status = InfoColumn(page.transform, "Status", 0f, StatusWidth);
+        InfoTitle(status, "STATUS");
+        MakeStatRow(status, "HealthRow", "Health", IconArt.PerkHealth(), HealthColor, true);
+        MakeStatRow(status, "HungerRow", "Hunger", IconArt.StatHunger(), HungerColor, true);
+        MakeStatRow(status, "StaminaRow", "Stamina", IconArt.PerkStamina(), StaminaColor, true);
+        MakeStatRow(status, "SpeedRow", "Walk speed", IconArt.PerkSpeed(), Color.clear, false);
+        MakeStatRow(status, "SprintRow", "Sprint speed", IconArt.PerkSpeed(), Color.clear, false);
+        MakeStatRow(status, "JumpRow", "Jump height", IconArt.StatJump(), Color.clear, false);
+        MakeStatRow(status, "FireballRow", "Fireball", IconArt.PerkFireball(), Color.clear, false);
+        MakeStatRow(status, "CoinsRow", "Coins", IconArt.Coin(), Color.clear, false);
+
+        Transform perks = InfoColumn(page.transform, "PerkList", 1f, PerksWidth);
+        InfoTitle(perks, "PERKS");
+        GameObject none = NewUI("NoPerks", perks);
+        none.AddComponent<LayoutElement>().preferredHeight = 60f;
+        TextMeshProUGUI noneText = AddText(none, "No perks yet. Open a chest (E) to get one.", 22f, TextAlignmentOptions.MidlineLeft);
+        noneText.color = InfoDim;
+        noneText.fontStyle = FontStyles.Italic;
+        MakePerkTemplate(perks);
+
+        page.AddComponent<PlayerInfoPage>();
+        page.SetActive(false);   // TabGroup shows it when its tab is clicked
+        return page;
+    }
+
+    // A column of rows down one side of the page (side 0 = left, 1 = right), the page's full height, this wide.
+    static Transform InfoColumn(Transform page, string objectName, float side, float width)
+    {
+        GameObject column = NewUI(objectName, page);
+        RectTransform rt = (RectTransform)column.transform;
+        rt.anchorMin = new Vector2(side, 0f);
+        rt.anchorMax = new Vector2(side, 1f);
+        rt.pivot = new Vector2(side, 1f);
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = new Vector2(width, 0f);
+
+        VerticalLayoutGroup rows = column.AddComponent<VerticalLayoutGroup>();
+        rows.spacing = 6f;
+        rows.childControlWidth = rows.childControlHeight = true;
+        rows.childForceExpandWidth = true;
+        rows.childForceExpandHeight = false;
+        return column.transform;
+    }
+
+    static void InfoTitle(Transform column, string title)
+    {
+        GameObject go = NewUI(title.Substring(0, 1) + title.Substring(1).ToLower() + "Title", column);
+        go.AddComponent<LayoutElement>().preferredHeight = 40f;
+        TextMeshProUGUI text = AddText(go, title, 26f, TextAlignmentOptions.BottomLeft);
+        text.color = InfoDim;
+        text.fontStyle = FontStyles.Bold;
+        text.characterSpacing = 6f;
+    }
+
+    // One stat: [icon] Name    Value   Bonus (green), with a thin bar under it for Health / Hunger / Stamina.
+    static void MakeStatRow(Transform column, string objectName, string label, Sprite icon, Color barColor, bool withBar)
+    {
+        GameObject row = NewUI(objectName, column);
+        row.AddComponent<LayoutElement>().preferredHeight = StatRowHeight;
+        Rounded(row, InfoRowColor);
+
+        Image picture = InfoImage(row.transform, "Icon", icon, Color.white);
+        picture.preserveAspect = true;
+        PlaceLeft(picture.gameObject, 32f, 0f, new Vector2(40f, 40f));
+
+        float textY = withBar ? 8f : 0f;   // with a bar under them, the words sit a little higher
+        TextMeshProUGUI nameText = AddText(NewUI("Name", row.transform), label, 26f, TextAlignmentOptions.MidlineLeft);
+        nameText.color = InfoText;
+        PlaceLeft(nameText.gameObject, 154f, textY, new Vector2(180f, 34f));
+
+        TextMeshProUGUI value = AddText(NewUI("Value", row.transform), "-", 26f, TextAlignmentOptions.MidlineRight);
+        value.color = InfoText;
+        value.fontStyle = FontStyles.Bold;
+        value.enableWordWrapping = false;
+        PlaceLeft(value.gameObject, 330f, textY, new Vector2(160f, 34f));
+
+        TextMeshProUGUI bonus = AddText(NewUI("Bonus", row.transform), "", 21f, TextAlignmentOptions.MidlineLeft);
+        bonus.color = InfoBonus;
+        bonus.enableWordWrapping = false;
+        PlaceLeft(bonus.gameObject, 527f, textY, new Vector2(210f, 34f));
+
+        if (!withBar) return;
+        GameObject bar = NewUI("Bar", row.transform);
+        PlaceLeft(bar, 237f, -16f, new Vector2(346f, 8f));
+        Rounded(bar, InfoBarBack);
+        GameObject fill = NewUI("Fill", bar.transform);
+        Stretch(fill, 0f, 0f, 0f, 0f);   // full; PlayerInfoPage moves its right edge (now / max)
+        Rounded(fill, barColor);
+    }
+
+    // The row PlayerInfoPage copies for every perk: [icon] Name x2 / its stats.
+    static void MakePerkTemplate(Transform column)
+    {
+        GameObject row = NewUI("PerkTemplate", column);
+        row.AddComponent<LayoutElement>().preferredHeight = 72f;
+        Rounded(row, InfoRowColor);
+
+        Image icon = InfoImage(row.transform, "Icon", null, Color.white);
+        icon.preserveAspect = true;
+        PlaceLeft(icon.gameObject, 36f, 0f, new Vector2(48f, 48f));
+
+        TextMeshProUGUI name = AddText(NewUI("Name", row.transform), "Perk", 24f, TextAlignmentOptions.MidlineLeft);
+        name.color = InfoText;
+        name.fontStyle = FontStyles.Bold;
+        PlaceLeft(name.gameObject, 246f, 13f, new Vector2(340f, 30f));
+
+        TextMeshProUGUI stats = AddText(NewUI("Stats", row.transform), "What it does", 19f, TextAlignmentOptions.MidlineLeft);
+        stats.color = InfoDim;
+        stats.enableAutoSizing = true;   // long stats shrink to fit
+        stats.fontSizeMin = 12f;
+        stats.fontSizeMax = 19f;
+        PlaceLeft(stats.gameObject, 246f, -14f, new Vector2(340f, 26f));
+
+        row.SetActive(false);   // a template: PlayerInfoPage switches on its copies
+    }
+
+    // Puts a UI object with its middle "x" pixels from its parent's left edge and "y" above its middle, this big.
+    static void PlaceLeft(GameObject go, float x, float y, Vector2 size)
+    {
+        RectTransform rt = (RectTransform)go.transform;
+        rt.anchorMin = rt.anchorMax = new Vector2(0f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = new Vector2(x, y);
+        rt.sizeDelta = size;
+    }
+
+    // A box with round corners (IconArt's 9-sliced picture), in this color.
+    static Image Rounded(GameObject go, Color color)
+    {
+        Image image = go.AddComponent<Image>();
+        image.sprite = IconArt.RoundedBox();
+        image.type = Image.Type.Sliced;
+        image.color = color;
+        image.raycastTarget = false;   // the slots' clicks are never blocked
+        return image;
+    }
+
+    static Image InfoImage(Transform parent, string objectName, Sprite sprite, Color color)
+    {
+        Image image = NewUI(objectName, parent).AddComponent<Image>();
+        image.sprite = sprite;
+        image.color = color;
+        image.raycastTarget = false;
+        return image;
     }
 
     // Puts Turki's CraftingCanvas (the crafting list) into the Crafting page, if the page doesn't have one yet.
@@ -306,7 +536,7 @@ public static class InventoryUIBuilder
         windowRt.sizeDelta = WindowSize;
         windowRt.anchoredPosition = new Vector2(0f, 60f);
 
-        // --- TabBar with 3 tabs ---
+        // --- TabBar with 3 tabs (AddCanvasScripts adds the 4th, Info) ---
         GameObject tabBar = NewUI("TabBar", window.transform);
         RectTransform barRt = (RectTransform)tabBar.transform;
         barRt.anchorMin = new Vector2(0f, 1f);   // stretched along the top

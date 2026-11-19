@@ -45,7 +45,8 @@ How the world fills itself:
 1. Open `Assets/Scenes/GameScene.unity`.
 2. Menu **Tools > World > Set Up World Spawning**. It:
    - fills the ObjectScatter's new settings (Spacing Group "Trees" + forest patches + sizes for the tree rules, sizes
-     for the rock rules, Clearance 3 for every rule). Your **Counts** are not changed;
+     for the rock rules, Clearance 3 for every rule). Your **Counts** are not changed. Berry bushes are no trees
+     (picked with E), so their rule keeps its own group;
    - moves the **Animals** rule out of the ObjectScatter into a new object **AnimalSpawner - DeerNode**, with the
      same ground settings;
    - adds **PlayerSight** to the Player.
@@ -111,7 +112,9 @@ Run the tool again any time: it only fills settings that are still empty.
 | A deer appears where I'm looking | It came out from behind a tree's leaves (they don't block sight), or Walls Block Sight is off. Raise **Screen Margin** or **Notice Radius**. |
 | Deer come twice as often | The ObjectScatter still has its Animals rule. Remove it (by hand step 3.1). |
 | "Berry Bushes: spawned 8 of 150" in the Console | The rules don't have their new settings yet (Clearance 0 and no Spacing Group): run the tool. |
+| "Berry Bushes: spawned 1 of 150" in the Console | The tool's first version (13/11/2026) took the bushes for trees (Turki's BerryNode also has Resource Type Tree) and put their rule in Spacing Group `Trees`: then their Min Spacing (20 m) counted against every tree. Run the tool again: it now knows a bush by **Collect With Key** and puts its rule back (Spacing Group empty, Patch Size 0, sizes 0). By hand: set those on the **Berry Bushes** rule. |
 | The forests are too thin / too thick | Change **Open Ground** on the tree rules (lower = more forest), or their **Counts**. |
 | The game takes long to start | 1000+ trees are placed in the first frame. Lower the tree Counts. |
 
-Sanyam's change log: `Docs/TonyEditMate/Sanyam/13-11-2026 Scatter Spacing Groups And Forest Patches.md`.
+Sanyam's change logs: `Docs/TonyEditMate/Sanyam/13-11-2026 Scatter Spacing Groups And Forest Patches.md`,
+`Docs/TonyEditMate/Sanyam/19-11-2026 Berry Bushes Spawn Again.md`.

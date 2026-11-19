@@ -1,6 +1,6 @@
 /*
 First Date: 12/11/2026
-Date: 13/11/2026
+Date: 19/11/2026
 Author: Tony
 Use by: An animated Humanoid character: the root of Assets/Prefabs/Player/PlayerCharacter.prefab. The Player's
         "Character" and the first-person hands copy (Main Camera > FirstPersonHands, a Prefab Variant of it) both get it
@@ -14,7 +14,8 @@ Purpose: When the selected hotbar item is a tool (Item Data > Item Type = Tool),
          a swing). The grip is worked out from the hand's own bones (wrist, knuckles, index and little finger), so it fits
          any Humanoid character. On the body it only casts a shadow in first person, like the body; on the first-person
          hands it's drawn with the hands, on top of the world.
-Requirement: ToolInHand.cs x-> Animator (Unity), PlayerInventory.cs, ItemData.cs, ToolStats.cs
+         Every other item (wood, food...) is held in the same fist by HeldItemView; both get the fist from HandGrip.
+Requirement: ToolInHand.cs x-> Animator (Unity), PlayerInventory.cs, ItemData.cs, ToolStats.cs, HandGrip.cs
              ToolInHand.cs o-> CameraController.cs, FirstPersonHands.cs, IconCapture.cs
              ToolInHand.cs <-x PlayerCharacterBuilder.cs, TierToolBuilder.cs
 */
@@ -152,34 +153,15 @@ public class ToolInHand : MonoBehaviour
         held.transform.localPosition = gripCenter - thumbSide * grip + gripRotation * (gripNudge * toHand);
     }
 
-    // The fist's directions in the hand's own space, from where the knuckles and fingers are. Those spots don't move
-    // in the hand's space whatever the pose, so this is measured once.
+    // The fist's directions in the hand's own space, worked out by HandGrip from where the knuckles and fingers are
+    // (HeldItemView holds other items the same way). Those spots don't move in the hand's space whatever the pose, so
+    // this is measured once.
     void MeasureGrip()
     {
-        Transform middle = animator.GetBoneTransform(HumanBodyBones.RightMiddleProximal);
-        Transform index = animator.GetBoneTransform(HumanBodyBones.RightIndexProximal);
-        Transform little = animator.GetBoneTransform(HumanBodyBones.RightLittleProximal);
-        Transform thumb = animator.GetBoneTransform(HumanBodyBones.RightThumbProximal);
-        Transform elbow = animator.GetBoneTransform(HumanBodyBones.RightLowerArm);
-        float defaultLength = 0.09f / Mathf.Max(0.0001f, hand.lossyScale.x);   // about a hand, if there are no finger bones
-
-        // Fingers: from the wrist to the knuckles (no finger bones: straight on from the forearm).
-        Vector3 knuckles = middle != null ? hand.InverseTransformPoint(middle.position)
-                         : elbow != null ? hand.InverseTransformDirection(hand.position - elbow.position).normalized * defaultLength
-                         : Vector3.right * defaultLength;
-        Vector3 fingers = knuckles.normalized;
-        float length = knuckles.magnitude;
-
-        // The thumb's side: from the little finger to the index finger (or toward the thumb).
-        Vector3 side = index != null && little != null ? hand.InverseTransformPoint(index.position) - hand.InverseTransformPoint(little.position)
-                     : thumb != null ? hand.InverseTransformPoint(thumb.position)
-                     : Vector3.forward;
-        thumbSide = Vector3.ProjectOnPlane(side, fingers).normalized;
-        if (thumbSide.sqrMagnitude < 0.5f) thumbSide = Vector3.Cross(fingers, Vector3.up).normalized;   // an odd rig
-        Vector3 palm = Vector3.Cross(fingers, thumbSide);   // the side the fingers close toward (right hand)
-
-        gripCenter = fingers * (length * 0.55f) + palm * (length * 0.3f);   // inside the closed fist
-        gripRotation = Quaternion.LookRotation(palm, thumbSide);            // tool z -> palm, y (handle) -> thumb side, x (blade) -> fingers
+        HandGrip grip = HandGrip.Measure(animator, hand);
+        gripCenter = grip.center;         // inside the closed fist
+        thumbSide = grip.thumbSide;       // the way the handle sticks out of the fist
+        gripRotation = grip.rotation;     // tool z -> palm, y (handle) -> thumb side, x (blade) -> fingers
     }
 
     void SetShadows(bool firstPerson)
