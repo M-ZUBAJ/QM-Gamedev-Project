@@ -21,8 +21,33 @@ public class EnemySpawner : MonoBehaviour
     // To undo: delete every line marked [Tony] in this file.
     [Tooltip("[Tony] On: enemies spawn when night starts (DaylightCycle.NightStarted) and are removed when day starts.")]
     public bool spawnAtNight = true;                                          // [Tony] added
-    [Tooltip("[Tony] How many enemies spawn each night.")]
-    public int enemiesPerNight = 3;                                           // [Tony] added
+
+
+    // total number of enemies allowed to exist in game at any one time.
+    public int maxEnemyNumber = 40;
+    private int enemyCounter = 0;
+
+    [Header("Spawn Interval By Night (Seconds)")]
+
+    [Min(0.1f)]
+    public float night1SpawnInterval = 10f;
+
+    [Min(0.1f)]
+    public float night2SpawnInterval = 7f;
+
+    [Min(0.1f)]
+    public float night3SpawnInterval = 5f;
+
+    [Min(0.1f)]
+    public float night4SpawnInterval = 5f;
+
+    [Min(0.1f)]
+    public float night5SpawnInterval = 5f;
+
+
+    private Coroutine nightSpawnRoutine;
+
+    // [Tony] added
 
     void OnEnable()                                                           // [Tony] added
     {                                                                         // [Tony] added
@@ -33,21 +58,97 @@ public class EnemySpawner : MonoBehaviour
     void OnDisable()                                                          // [Tony] added
     {                                                                         // [Tony] added
         DaylightCycle.NightStarted -= OnNightStarted;                         // [Tony] added
-        DaylightCycle.DayStarted -= OnDayStarted;                             // [Tony] added
+        DaylightCycle.DayStarted -= OnDayStarted;
+
+        StopNightSpawning();                           // [Tony] added
     }                                                                         // [Tony] added
 
     // [Tony] added: night started (day = the day number), spawn this night's enemies.
     void OnNightStarted(int day)                                              // [Tony] added
     {                                                                         // [Tony] added
         if (!spawnAtNight) return;                                            // [Tony] added
-        for (int i = 0; i < enemiesPerNight; i++) SpawnEnemy();               // [Tony] added
+
+        StopNightSpawning();
+
+        float interval = GetSpawnInterval(day);
+
+        if (interval <= 0f)
+        {
+            Debug.Log("No enemy spawning configured for night " + day);
+            return;
+        }
+
+        Debug.Log("Night " + day + " started. Enemies will spawn every " + interval + " seconds.");
+
+        nightSpawnRoutine = StartCoroutine(SpawnThroughoutNight(interval));
+
+
+
     }                                                                         // [Tony] added
 
+
+
     // [Tony] added: morning, remove the night's enemies (only the ones this spawner made).
-    void OnDayStarted(int day)                                                // [Tony] added
-    {                                                                         // [Tony] added
-        if (spawnAtNight) DespawnEnemies();                                   // [Tony] added
-    }                                                                         // [Tony] added
+    void OnDayStarted(int day)
+    {
+        StopNightSpawning();
+
+        DespawnEnemies();
+
+        Debug.Log("Day " + day + " started. All spawned enemies have been removed.");
+    }                                                                        // [Tony] added
+
+
+
+
+    // returns the configured enemy spawn interval for each day 
+    float GetSpawnInterval(int night)
+    {
+        switch (night)
+        {
+            case 1: return night1SpawnInterval;
+            case 2: return night2SpawnInterval;
+            case 3: return night3SpawnInterval;
+            case 4: return night4SpawnInterval;
+            case 5: return night5SpawnInterval;
+
+            default: return 0f;
+        }
+    }
+
+
+
+    IEnumerator SpawnThroughoutNight(float interval)
+    {
+        while (DaylightCycle.Current != null && DaylightCycle.Current.IsNight)
+        {
+            if (enemyCounter < maxEnemyNumber)
+            {
+                SpawnEnemy();
+
+            }
+
+            yield return new WaitForSeconds(interval);
+        }
+
+        nightSpawnRoutine = null;
+    }
+
+
+
+    // disables spawning at night
+    void StopNightSpawning()
+    {
+        if (nightSpawnRoutine != null)
+        {
+            StopCoroutine(nightSpawnRoutine);
+            nightSpawnRoutine = null;
+        }
+    }
+
+
+
+
 
     public void SpawnEnemy()
     {

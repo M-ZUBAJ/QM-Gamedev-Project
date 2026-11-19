@@ -110,7 +110,8 @@ public static class GameSetup
         foreach (EnemySpawner spawner in Object.FindObjectsByType<EnemySpawner>(FindObjectsSortMode.None))
         {
             if (SpawnEnemies.HasValue) spawner.spawnAtNight = SpawnEnemies.Value;
-            if (EnemiesPerNight.HasValue) spawner.enemiesPerNight = EnemiesPerNight.Value;
+            //if (EnemiesPerNight.HasValue) spawner.enemiesPerNight = EnemiesPerNight.Value; // COMMENTED OUT BY MARKO
+            // the game does not spawn a certain number of enemies per night. 
         }
 
         if (HungerDrainPerSecond.HasValue)
