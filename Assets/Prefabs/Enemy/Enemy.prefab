@@ -136,8 +136,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 0}
-  moveSpeed: 2
+  moveSpeed: 20
   stopDistance: 2
+  turnSpeed: 360
 --- !u!114 &675204513531898766
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -153,13 +153,31 @@ public class PlayerCombat : MonoBehaviour
                     damage = pickAxeDamage;
 
                 // [Tony] added (12/11/2026): a better sword hits harder: +25 % per tier above Wood (ToolRules.Boost).
-                damage *= ToolRules.Boost(tool, ToolKind.Sword);                                  // [Tony] added
-                damage *= PunchCombo.Power(swing);                                                // [Tony] added: a heavy punch hits harder (13/11/2026)
+                damage *= ToolRules.Boost(tool, ToolKind.Sword);
 
+                // Apply this particular sword's earned upgrade bonus.
+                // Capture the ID of the sword used for this attack.
+                // This is saved now because PunchEffect may apply the hit later.
+                string swordId = null;
+
+                if (inventory != null &&
+                    inventory.ActiveItem != null &&
+                    !inventory.ActiveItem.IsEmpty &&
+                    ToolRules.IsSword(inventory.ActiveItem))
+                {
+                    swordId = inventory.ActiveItem.id;
+
+                    if (WeaponUpgradeSystem.Instance != null)
+                    {
+                        damage *= WeaponUpgradeSystem.Instance.GetDamageMultiplier(swordId);
+                    }
+                }
+
+                damage *= PunchCombo.Power(swing);
                 // [Tony] replaced (12/11/2026): enemy.TakeDamage(damage);
                 // Every swing now hurts when it lands: Tony's PunchEffect waits that swing's delay (punch, sword / axe or
                 // pickaxe), then hurts the enemy; a punch also bursts wind on it. Without PunchEffect it hurts at once.
-                PunchEffect.Hit(enemy, hit, () => enemy.TakeDamage(damage), swing);               // [Tony] replaced
+                PunchEffect.Hit(enemy, hit, () => enemy.TakeDamage(damage, swordId), swing);               // [Tony] replaced
             }
             // Damage against trees, stone and animals.
             else if (resource != null)

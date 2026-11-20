@@ -3217,8 +3217,15 @@ MonoBehaviour:
     m_ColorSpace: -1
     m_NumColorKeys: 3
     m_NumAlphaKeys: 2
+  moonlight: 1
+  moonIntensity: 0.5
+  moonColor: {r: 0.62, g: 0.74, b: 1, a: 1}
+  moonShadowStrength: 0.6
   dayAmbient: 1
   nightAmbient: 0.2
+  nightAmbientColor: {r: 0.25, g: 0.3, b: 0.42, a: 1}
+  nightSkyExposure: 0.2
+  nightSkyTint: {r: 0.3, g: 0.42, b: 0.8, a: 1}
   resetOnPlayerDeath: 1
 --- !u!108 &1218533313
 Light:
@@ -3710,6 +3717,7 @@ GameObject:
   - component: {fileID: 1576947589}
   - component: {fileID: 1576947590}
   - component: {fileID: 1576947606}
+  - component: {fileID: 1576947619}
   - component: {fileID: 1576947611}
   - component: {fileID: 1576947613}
   - component: {fileID: 1576947591}
@@ -4346,6 +4354,22 @@ MonoBehaviour:
   healAmount: 2
   interval: 10
   minHungerFraction: 0.9
+--- !u!114 &1576947619
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1576947584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86446885e445c3d4488bda692c95689b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  killsPerUpgrade: 3
+  damageIncreasePercent: 2
+  maxTotalBonusPercent: 20
+  weapons: []
 --- !u!4 &1609570296 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1601464460967339328, guid: 62da010430b404922bc87adb93c05aa4, type: 3}
