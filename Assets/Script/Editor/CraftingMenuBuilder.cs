@@ -13,13 +13,15 @@ Purpose: Gives Turki's crafting list pictures and the tier tools, in one click:
              Prefab (his old CraftRow prefab is kept, just not used);
            - makes Turki's panel bigger (Panel Size) and puts its rows in a scroll list with a scroll bar, so any number
              of items fits (the mouse wheel scrolls it);
+           - tabs over the list (Panel > Tabs: All, Materials, Food, Tools, Armor; Tony's CraftingTabs on the panel)
+             and a "Nothing to craft here yet." text in the list (Scroll > Empty), built again every run;
            - sorts the list (Craftables): the items that aren't tools first, in their order (Plank, Stew...), then every
              tool with a recipe made at the Crafting page, Wooden > Stone > Iron, each Pickaxe, Axe, Sword, then every
              armor piece with a recipe, helmet to boots. Tools without a recipe (Gold, Diamond) are left out.
          SortList only sorts the list again (Tools > Items > Build Plate Armor uses it to add the armor).
          Turki's CraftingMenu script only gets one [Tony] line (it calls CraftingRow.Show).
          Log: Docs/TonyEditMate/Turki/19-11-2026 Crafting Menu Icons And Tier Tools.md
-Requirement: CraftingMenuBuilder.cs x-> CraftingMenu.cs, CraftingRow.cs, ItemData.cs, ToolStats.cs, UIBuildHelper.cs, MenuOrder.cs
+Requirement: CraftingMenuBuilder.cs x-> CraftingMenu.cs, CraftingRow.cs, CraftingTabs.cs, ItemData.cs, ToolStats.cs, IconArt.cs, UIBuildHelper.cs, MenuOrder.cs
              CraftingMenuBuilder.cs <-x ArmorBuilder.cs
 */
 
@@ -44,9 +46,13 @@ public static class CraftingMenuBuilder
     const float IconSize = 58f;
     const float TextLeft = 92f;      // where the name and the recipe start, after the picture
     const float StatusWidth = 150f;  // the CRAFT text on the right
+    const float TabHeight = 40f;     // the tabs over the list
+    const float TabWidth = 150f;     // each tab (the five sit in the middle, not stretched across the panel)
 
     static readonly Color NameColor = new Color(0.12f, 0.12f, 0.14f);
     static readonly Color StatusColor = new Color(0.1f, 0.55f, 0.25f);
+    static readonly Color TabIdle = new Color(0.86f, 0.87f, 0.9f);     // CraftingTabs makes the picked one gold
+    static readonly Color EmptyColor = new Color(0.45f, 0.46f, 0.5f);
 
     // ===== Menu (Unity calls this) =====
 
@@ -70,6 +76,7 @@ public static class CraftingMenuBuilder
                 "This changes Turki's CraftingCanvas prefab:\n\n" +
                 "- rows with pictures (the item and its recipe, green / red for enough / missing)\n" +
                 "- a bigger panel with a scroll list\n" +
+                "- tabs over the list: All, Materials, Food, Tools, Armor\n" +
                 "- the list sorted, with every Wooden, Stone and Iron tool that has a recipe\n\n" +
                 "The inventory's Crafting page and the C menu both follow. Continue?", "Build", "Cancel"))
             return;
@@ -185,6 +192,7 @@ public static class CraftingMenuBuilder
 
             ((RectTransform)panel.transform).sizeDelta = PanelSize;
             bool scroll = MakeScrollList(panel.transform, rows);
+            bool tabs = MakeTabs(panel.transform);
             so.FindProperty("rowPrefab").objectReferenceValue = rowPrefab.GetComponent<Button>();
             int tools = SortCraftables(so.FindProperty("craftables"));
             so.ApplyModifiedPropertiesWithoutUndo();
@@ -192,6 +200,7 @@ public static class CraftingMenuBuilder
             PrefabUtility.SaveAsPrefabAsset(root, path);
             return path + ": rows with pictures, panel " + PanelSize.x + " x " + PanelSize.y +
                    (scroll ? ", rows in a new scroll list" : ", scroll list already there") +
+                   (tabs ? ", tabs All / Materials / Food / Tools / Armor" : ", no tabs (no scroll list)") +
                    ", " + tools + " tools in the list (Wooden > Stone > Iron).";
         }
         finally
@@ -241,6 +250,72 @@ public static class CraftingMenuBuilder
         list.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
         list.verticalScrollbarSpacing = 6f;
         return true;
+    }
+
+    // The tabs over the list, between Turki's title and the scroll list (built again every run): one rounded button per
+    // CraftingTabs.Kind, sharing the panel's width; a "Nothing to craft here yet." text over the list (hidden); and
+    // CraftingTabs on the panel, which picks a tab and hides the other rows. False = there's no scroll list to put them on.
+    static bool MakeTabs(Transform panel)
+    {
+        Transform scroll = panel.Find("Scroll");
+        if (scroll == null) return false;
+        Transform oldTabs = panel.Find("Tabs");
+        if (oldTabs != null) Object.DestroyImmediate(oldTabs.gameObject);
+
+        GameObject tabs = NewUI("Tabs", panel);
+        tabs.transform.SetSiblingIndex(scroll.GetSiblingIndex());   // just above the list
+        ((RectTransform)tabs.transform).sizeDelta = new Vector2(0f, TabHeight);
+        LayoutElement size = tabs.AddComponent<LayoutElement>();
+        size.preferredHeight = size.minHeight = TabHeight;
+        // Flexible Height 0 on purpose: left empty, Unity asks the row's Horizontal Layout Group instead, which says 1
+        // (its tabs fill its height), and the panel then gave the tabs half of its spare height: huge tabs, a short list.
+        size.flexibleHeight = 0f;
+        HorizontalLayoutGroup row = tabs.AddComponent<HorizontalLayoutGroup>();
+        row.spacing = 8f;
+        row.childAlignment = TextAnchor.MiddleCenter;   // the tabs sit in the middle
+        row.childControlWidth = row.childControlHeight = true;
+        row.childForceExpandWidth = false;              // each tab its own width (Tab Width), not stretched
+        row.childForceExpandHeight = true;              // as tall as the row
+        foreach (CraftingTabs.Kind kind in System.Enum.GetValues(typeof(CraftingTabs.Kind))) MakeTab(tabs.transform, kind);
+
+        Transform oldEmpty = scroll.Find("Empty");
+        if (oldEmpty != null) Object.DestroyImmediate(oldEmpty.gameObject);
+        TextMeshProUGUI empty = AddText(NewUI("Empty", scroll), "Nothing to craft here yet.", 24f, TextAlignmentOptions.Center);
+        Stretch(empty.gameObject, 0f, 0f, 0f, 0f);
+        empty.color = EmptyColor;
+        empty.fontStyle = FontStyles.Italic;
+        empty.raycastTarget = false;   // never in the way of the scroll wheel
+        empty.gameObject.SetActive(false);
+
+        if (panel.GetComponent<CraftingTabs>() == null) panel.gameObject.AddComponent<CraftingTabs>();
+        return true;
+    }
+
+    // One tab: a rounded button with its name ("Tools"). CraftingTabs colors it (gold when picked) and fades it when
+    // there's nothing in it (its CanvasGroup); the Button only darkens it a little under the mouse.
+    static void MakeTab(Transform parent, CraftingTabs.Kind kind)
+    {
+        GameObject tab = NewUI(kind.ToString(), parent);
+        LayoutElement width = tab.AddComponent<LayoutElement>();
+        width.preferredWidth = width.minWidth = TabWidth;
+        width.flexibleWidth = 0f;
+        Image back = tab.AddComponent<Image>();
+        back.sprite = IconArt.RoundedBox();
+        back.type = Image.Type.Sliced;
+        back.color = TabIdle;
+        Button button = tab.AddComponent<Button>();
+        button.targetGraphic = back;
+        ColorBlock colors = button.colors;
+        colors.highlightedColor = new Color(0.92f, 0.92f, 0.92f);
+        colors.pressedColor = new Color(0.8f, 0.8f, 0.8f);
+        colors.selectedColor = Color.white;
+        button.colors = colors;
+        tab.AddComponent<CanvasGroup>();
+
+        TextMeshProUGUI label = AddText(NewUI("Label", tab.transform), kind.ToString(), 20f, TextAlignmentOptions.Center);
+        Stretch(label.gameObject, 0f, 0f, 0f, 0f);
+        label.color = NameColor;
+        label.raycastTarget = false;
     }
 
     // A slim scroll bar down the right side.

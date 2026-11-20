@@ -13,7 +13,7 @@ Purpose: A shy wild animal. It grazes and walks around its home, and runs away w
          plays idle / walk / run on its Animator by itself. Once the player is far enough away it calms down and that
          spot becomes its new home. It moves itself (no physics), so walls never get pushed and it never tips over.
 Requirement: WildAnimal.cs o-> Animator (Unity), ResourceNode.cs, PlayerController.cs, PlayerHealth.cs
-             WildAnimal.cs <-x DeathEffectBuilder.cs, WildAnimalBuilder.cs, WorldSpawnSetup.cs
+             WildAnimal.cs <-x DeathEffectBuilder.cs, NewWorldBuilder.cs, WildAnimalBuilder.cs, WorldSpawnSetup.cs
 */
 
 using UnityEngine;

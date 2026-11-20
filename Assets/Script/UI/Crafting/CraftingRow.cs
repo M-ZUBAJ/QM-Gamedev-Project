@@ -1,6 +1,6 @@
 /*
 First Date: 19/11/2026
-Date: 19/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: The crafting list's row prefab (Assets/Prefabs/UI/Crafting/CraftingRow.prefab, made by Tools > UI > Build Crafting
         Menu). Turki's CraftingMenu copies it for every item in its list and calls Show(item) (a [Tony] line).
@@ -12,9 +12,11 @@ Purpose: One row of the crafting list, with pictures: the item's icon and name (
          ingredient as its icon with "have / need" and its name, e.g. "1/2 Plank", green when the inventory has enough
          and red when not. While something is missing the whole row is faded; when everything is there it says CRAFT.
          It updates by itself whenever the inventory changes (e.g. right after crafting). Clicking it still crafts
-         (Turki's CraftingMenu does that).
+         (Turki's CraftingMenu does that). With tabs on the list (CraftingTabs), it hides itself when the picked tab
+         isn't its item's kind.
 Requirement: CraftingRow.cs x-> ItemData.cs, Recipe.cs, PlayerInventory.cs
-             CraftingRow.cs <-x CraftingMenu.cs, CraftingMenuBuilder.cs
+             CraftingRow.cs o-> CraftingTabs.cs
+             CraftingRow.cs <-x CraftingMenu.cs, CraftingMenuBuilder.cs, CraftingTabs.cs
 */
 
 using System.Collections.Generic;
@@ -50,6 +52,8 @@ public class CraftingRow : MonoBehaviour
     readonly List<Ingredient> shownIngredients = new List<Ingredient>();
     readonly List<TMP_Text> amounts = new List<TMP_Text>();   // one per ingredient, in the same order
 
+    public ItemData Item => item;   // what this row makes (CraftingTabs sorts the rows into tabs by it)
+
     // ===== Unity messages (Unity calls these) =====
 
     void OnEnable()
@@ -81,6 +85,10 @@ public class CraftingRow : MonoBehaviour
         if (nameText != null) nameText.text = item.DisplayName + (item.CraftAmount > 1 ? " x" + item.CraftAmount : "");
         MakeIngredients();
         Refresh();
+
+        // The list's tabs (All, Materials, Food, Tools, Armor): hidden if the picked tab isn't this item's kind.
+        CraftingTabs tabs = GetComponentInParent<CraftingTabs>(true);   // true: the panel may still be hidden
+        if (tabs != null) tabs.Filter(this);
     }
 
     // One small picture + text for every ingredient of the recipe, copied from the template.

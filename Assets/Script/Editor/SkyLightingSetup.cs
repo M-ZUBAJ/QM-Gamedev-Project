@@ -1,10 +1,11 @@
 /*
 First Date: 19/11/2026
-Date: 19/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Open GameScene, then Tools > World > Set Up Sky Lighting. It takes a few seconds and saves the scene.
               Run it again after changing the sky (Window > Rendering > Lighting > Environment).
+              Tools > World > Build New World Scene does the same for ProceduralGenerateScene by itself (SaveSkyLight).
               Test: open MainTitleScene, Play, START GAME: shadows look like when GameScene is played directly (soft,
               blue-grey), not pitch black. Hand-made steps: Docs/Sky Lighting Setup.md
 Purpose: Saves the light from the sky for the open scene, so it isn't dark when another scene opens it.
@@ -18,6 +19,7 @@ Purpose: Saves the light from the sky for the open scene, so it isn't dark when 
          Files: Assets/Scenes/<scene> Lighting.lighting (the settings) and the folder Assets/Scenes/<scene>/ (Unity's
          LightingData.asset + the sky's reflection). Commit them with the scene.
 Requirement: SkyLightingSetup.cs x-> MenuOrder.cs
+             SkyLightingSetup.cs <-x NewWorldBuilder.cs
 */
 
 using System.IO;
@@ -63,27 +65,39 @@ public static class SkyLightingSetup
                 "Save Sky Light", "Cancel"))
             return;
 
-        string settingsPath = UseSkyOnlySettings(scene);
-
-        // Unity's Generate Lighting (Window > Rendering > Lighting). With both Global Illumination systems off it only
-        // works out the sky's ambient light and reflection, and saves them in Assets/Scenes/<scene>/.
-        if (!Lightmapping.Bake())
+        string report = SaveSkyLight(scene);
+        if (report == null)
         {
             EditorUtility.DisplayDialog(ToolName, "Unity couldn't generate the lighting. The Console says why.", "OK");
             return;
         }
+        Debug.Log(ToolName + ": \"" + scene.name + "\" has its light from the sky saved (" + report + "). Commit them with " +
+                  "the scene. Test: open MainTitleScene, Play, START GAME: the shadows are no longer pitch black.");
+    }
+
+    // ===== My methods =====
+
+    // Saves a scene's light from the sky, with no questions asked (the menu above asks first; Build New World Scene
+    // uses this directly): sky-only Lighting Settings, Generate Lighting, then the scene is saved. Returns where the
+    // light was saved, or null if Unity couldn't generate it.
+    public static string SaveSkyLight(Scene scene)
+    {
+        if (Lightmapping.isRunning || string.IsNullOrEmpty(scene.path)) return null;
+        if (SceneManager.GetActiveScene() != scene) SceneManager.SetActiveScene(scene);   // Generate Lighting works on it
+
+        string settingsPath = UseSkyOnlySettings(scene);
+
+        // Unity's Generate Lighting (Window > Rendering > Lighting). With both Global Illumination systems off it only
+        // works out the sky's ambient light and reflection, and saves them in Assets/Scenes/<scene>/.
+        if (!Lightmapping.Bake()) return null;
 
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);   // keeps the scene's link to the saved light
 
         LightingDataAsset saved = Lightmapping.lightingDataAsset;
-        Debug.Log(ToolName + ": \"" + scene.name + "\" has its light from the sky saved (" +
-                  (saved != null ? AssetDatabase.GetAssetPath(saved) : "no Lighting Data found: see the Console") +
-                  ", settings " + settingsPath + "). Commit them with the scene. " +
-                  "Test: open MainTitleScene, Play, START GAME: the shadows are no longer pitch black.");
+        return (saved != null ? AssetDatabase.GetAssetPath(saved) : "no Lighting Data found: see the Console") +
+               ", settings " + settingsPath;
     }
-
-    // ===== My methods =====
 
     // Gives the open scene Lighting Settings with only the sky (made as Assets/Scenes/<scene> Lighting.lighting if it
     // has none). Returns their file.

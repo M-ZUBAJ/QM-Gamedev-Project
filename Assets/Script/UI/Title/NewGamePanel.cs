@@ -1,6 +1,6 @@
 /*
 First Date: 7/11/2026
-Date: 19/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: Put this on the New Game page (Tools > UI > Build Main Title Scene does it: TitleCanvas > Pages > NewGamePage).
 Unity Editor: Defaults = Assets/Config/NewGame/NewGameDefaults.asset (the game as it is now; the tool fills it in).
@@ -8,11 +8,15 @@ Unity Editor: Defaults = Assets/Config/NewGame/NewGameDefaults.asset (the game a
               "Dropdown"), DayLengthRow, DifficultyRow, DeathRow (ChoiceRows), PickupRow and MessagesRow (each with a
               "Toggle"), and the texts DayLengthRow/Info, DifficultyInfo, Summary, plus DefaultsButton.
               AllToolsRow (with a "Toggle", the Testing section) is optional: an older title scene without it still works.
+              WorldRow (a ChoiceRow: Old world / New world, with an "Info" text) is optional too: without it the game
+              always starts in the old world.
               Each row can have a small "Dot" picture: it pops up when that option differs from the game as it is now.
               Testing: Play, click PLAY, change the options; DEFAULTS puts them all back.
 Purpose: The New Game options. Every option starts at the game as it is now (the defaults). Changed options get a dot,
          the line under the panel says what the goal is, and DEFAULTS puts everything back.
          Commit() hands only the CHANGED options to GameSetup, which puts them into the game when it loads.
+           Map                      = Old world (GameScene, the hand-made map) or New world (ProceduralGenerateScene:
+                                      a new random 1000 x 1000 m world every game, WorldGenerator)
            Days to win / Win at     = when the player wins (VictoryScreen)
            Day length               = Short / Normal / Long (half / as now / double the day length)
            Start time               = when the first day starts
@@ -65,8 +69,10 @@ public class NewGamePanel : MonoBehaviour
     // The row names it looks for. If you rename them in the Hierarchy, rename them here too.
     static readonly string[] RowNames =
         { "DaysRow", "WinAtRow", "DayLengthRow", "StartTimeRow", "DifficultyRow", "DeathRow", "PickupRow", "MessagesRow",
-          "AllToolsRow" };
+          "AllToolsRow", "WorldRow" };
     const int NormalDay = 1;   // Short, Normal, Long
+    const int OldWorld = 0;    // Map: Old world (as now), New world
+    const int NewWorld = 1;
     const string AllDefault = "Everything is set to the game as it is now.";
 
     StepperRow days;
@@ -74,7 +80,8 @@ public class NewGamePanel : MonoBehaviour
     ChoiceRow dayLength, difficulty, death;
     Toggle pickup, messages;
     Toggle allTools;           // Testing: start with all tools (null in an older title scene without the row)
-    TMP_Text dayLengthInfo, difficultyInfo, summary;
+    ChoiceRow world;           // Map: Old world / New world (null in an older title scene without the row)
+    TMP_Text dayLengthInfo, difficultyInfo, summary, worldInfo;
     Button defaultsButton;
     readonly Dictionary<string, RectTransform> dots = new Dictionary<string, RectTransform>();   // row name -> its Dot
     readonly List<float> startTimes = new List<float>();   // the Time Of Day of each Start time option
@@ -119,6 +126,7 @@ public class NewGamePanel : MonoBehaviour
         pickup.isOn = defaults.AutoPickupDrops;
         messages.isOn = defaults.ShowNotifications;
         if (allTools != null) allTools.isOn = defaults.ToolTest;
+        if (world != null) world.Pick(OldWorld, false);
         Refresh(true);
     }
 
@@ -146,6 +154,7 @@ public class NewGamePanel : MonoBehaviour
         if (pickup.isOn != defaults.AutoPickupDrops) GameSetup.AutoPickupDrops = pickup.isOn;
         if (messages.isOn != defaults.ShowNotifications) GameSetup.ShowNotifications = messages.isOn;
         if (allTools != null && allTools.isOn != defaults.ToolTest) GameSetup.StartWithAllTools = allTools.isOn;
+        if (world != null && world.Picked == NewWorld) GameSetup.NewWorld = true;
     }
 
     void FindRows()
@@ -159,6 +168,8 @@ public class NewGamePanel : MonoBehaviour
         pickup = FindDeep(FindDeep(transform, "PickupRow"), "Toggle")?.GetComponent<Toggle>();
         messages = FindDeep(FindDeep(transform, "MessagesRow"), "Toggle")?.GetComponent<Toggle>();
         allTools = FindDeep(FindDeep(transform, "AllToolsRow"), "Toggle")?.GetComponent<Toggle>();
+        world = FindDeep(transform, "WorldRow")?.GetComponent<ChoiceRow>();
+        worldInfo = FindDeep(FindDeep(transform, "WorldRow"), "Info")?.GetComponent<TMP_Text>();
         dayLengthInfo = FindDeep(FindDeep(transform, "DayLengthRow"), "Info")?.GetComponent<TMP_Text>();
         difficultyInfo = FindDeep(transform, "DifficultyInfo")?.GetComponent<TMP_Text>();
         summary = FindDeep(transform, "Summary")?.GetComponent<TMP_Text>();
@@ -228,6 +239,7 @@ public class NewGamePanel : MonoBehaviour
         pickup.SetIsOnWithoutNotify(GameSetup.AutoPickupDrops ?? defaults.AutoPickupDrops);
         messages.SetIsOnWithoutNotify(GameSetup.ShowNotifications ?? defaults.ShowNotifications);
         if (allTools != null) allTools.SetIsOnWithoutNotify(GameSetup.StartWithAllTools ?? defaults.ToolTest);
+        if (world != null) world.Pick(GameSetup.NewWorld == true ? NewWorld : OldWorld, false);
     }
 
     void Listen()
@@ -243,6 +255,7 @@ public class NewGamePanel : MonoBehaviour
         pickup.onValueChanged.AddListener(_ => Refresh(true));
         messages.onValueChanged.AddListener(_ => Refresh(true));
         if (allTools != null) allTools.onValueChanged.AddListener(_ => Refresh(true));
+        if (world != null) world.Changed += _ => Refresh(true);
         if (defaultsButton != null) defaultsButton.onClick.AddListener(SetDefaults);
     }
 
@@ -262,6 +275,7 @@ public class NewGamePanel : MonoBehaviour
             pickup.isOn != defaults.AutoPickupDrops,
             messages.isOn != defaults.ShowNotifications,
             allTools != null && allTools.isOn != defaults.ToolTest,
+            world != null && world.Picked != OldWorld,
         };
 
         bool any = false;
@@ -272,6 +286,7 @@ public class NewGamePanel : MonoBehaviour
         }
 
         if (dayLengthInfo != null) dayLengthInfo.text = Mathf.RoundToInt(DayMinutes(dayLength.Picked)) + " min";
+        if (worldInfo != null && world != null) worldInfo.text = world.Picked == NewWorld ? "new random map" : "the map as it is";
         SetText(difficultyInfo, DifficultyText((GameSetup.Difficulty)difficulty.Picked), animate);
         SetText(summary, any ? GoalText() : AllDefault, animate);
         if (defaultsButton != null) defaultsButton.interactable = any;
@@ -304,7 +319,8 @@ public class NewGamePanel : MonoBehaviour
     string GoalText()
     {
         int n = days.Value;
-        return "Survive " + n + (n == 1 ? " day and night" : " days and nights") +
+        string where = world != null && world.Picked == NewWorld ? "In a new random world: survive " : "Survive ";
+        return where + n + (n == 1 ? " day and night" : " days and nights") +
                ", then win at " + winAt.options[winAt.value].text + " on day " + (n + 1) + ".";
     }
 

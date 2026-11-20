@@ -23,7 +23,7 @@ Purpose: Draws the small game pictures in code and saves them as PNG sprites, so
          GivePerkIcons puts the perk pictures in the player's PlayerPerks (its Icons list), for the HUD's perk icons
          and the Info tab.
 Requirement: IconArt.cs x-> UIBuildHelper.cs, UIFXSprites.cs, PlayerPerks.cs, ArmorStats.cs
-             IconArt.cs <-x GearPageBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, PerkPanelBuilder.cs
+             IconArt.cs <-x CraftingMenuBuilder.cs, GearPageBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, PerkPanelBuilder.cs
 */
 
 using System.IO;

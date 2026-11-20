@@ -15,7 +15,7 @@ Purpose: Keeps a number of wild animals (deer) around the player, and only ever 
          away, so the herds follow the player around the map.
 Requirement: AnimalSpawner.cs x-> PlayerSight.cs
              AnimalSpawner.cs o-> Terrain (Unity)
-             AnimalSpawner.cs <-x WorldSpawnSetup.cs
+             AnimalSpawner.cs <-x NewWorldBuilder.cs, WorldSpawnSetup.cs
 */
 
 using System.Collections.Generic;

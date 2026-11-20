@@ -193,6 +193,7 @@ In these tables, `health`, `stamina`, `daylight`, `player`… are the variables 
 | The crafting menu's key | `Input.GetKeyDown(KeyBindings.Crafting)` (default **C**, change it on the KeyBindings object). `CraftingMenu` already uses it; its old `openKey` field is gone |
 | Crafting inside the inventory | A CraftingCanvas under `InventoryWindow > Pages > CraftingPage` now shows itself whenever the Crafting tab is open (Tony's `[Tony]` lines in `CraftingMenu`, see `Docs/TonyEditMate/20-10-2026Edit.md`). The scene-root CraftingCanvas still opens with C |
 | Animate the player mining / picking up | `PlayerAnimator.Play(PlayerAction.Mine);` / `PlayerAnimator.Play(PlayerAction.Gather);` (upper body only; does nothing if the player has no character) |
+| Tabs on your crafting list | Tony's **Tools > UI > Build Crafting Menu** (20/11/2026, log `Docs/TonyEditMate/Turki/20-11-2026 Crafting Tabs.md`) added tabs over the list in your CraftingCanvas prefab: **All** (default), **Materials**, **Food**, **Tools**, **Armor**, sorted by each item's **Item Type**. Your CraftingMenu script is unchanged (Tony's CraftingRow rows ask Tony's CraftingTabs whether to show). A new item lands in its tab by itself |
 | Armor in your crafting list | Tony's **Tools > Items > Build Plate Armor** (20/11/2026, log `Docs/TonyEditMate/Turki/20-11-2026 Plate Armor In The Crafting List.md`) added the 6 iron armor items (Iron Helmet ... Iron Boots, Iron recipes; first called Plate ..., renamed the same day, same files) to CraftingCanvas's Craftables, after the tools. Your script is unchanged. An armor's Item Data has Item Type **Armor** (`item.IsArmor`, `item.Armor.slot / protection / set`). Guide: `Docs/Armor Setup.md` |
 | Your rocks are low-poly rocks now | Tony's **Tools > World > Use Low Poly Rocks** (20/11/2026, log `Docs/TonyEditMate/Turki/20-11-2026 Low Poly Rocks That Break.md`) rebuilt your StoneNode, CopperNode and IronNode prefabs: a random rock shape from Broken Vector's free Low Poly Rock Pack (Tony's RockLook), a Mesh Collider in that shape instead of the box, grey / copper / blue-grey stone, standing on the ground (StandOnGround). When your ResourceNode breaks one, Tony's RockBreak bursts it into chunks of the same stone, gravel and dust. Your script and its values (health, drops) are unchanged. Guide: `Docs/Rock Setup.md` |
 | Your trees fall now | Tony's **Tools > Effects > Build Tree Fall** (19/11/2026, log `Docs/TonyEditMate/Turki/19-11-2026 Trees Fall Into Wood Chips.md`) put Tony's **TreeFall** on your TreeNode prefab: when your `ResourceNode` breaks a tree (`currentHealth` 0, `Destroy`), a look-only copy falls over away from the player and breaks into brown wood chips (the copy's open trunk bottom is closed with cut wood, so nobody sees through it). Your script and the drops are unchanged; berry bushes are skipped. Guide: `Docs/Tree Fall Setup.md` |
@@ -286,10 +287,11 @@ void DropMeat(int amount)
 | Make a new building piece | Select it, **Tools > Building > Make Building From Selection**, fill the recipe. It appears in the build menu (B) by itself |
 | Know when the player built something | `FindFirstObjectByType<BlueprintPlacer>().Built += OnBuilt;` (gives the `BuildingData`) |
 | Is the player placing a building now? | `BlueprintPlacer.IsPlacing` |
-| Where the player respawns | `PlayerRespawn` on the Player, **Respawn Point** in the Inspector (default 0, 0.5, 0). Read it: `respawn.RespawnPoint` |
+| Where the player respawns | `PlayerRespawn` on the Player, **Respawn Point** in the Inspector (default 0, 0.5, 0). Read it: `respawn.RespawnPoint`, move it: `respawn.SetRespawnPoint(point)` (the new world sets it to its start clearing) |
 | Day / night | `DaylightCycle` on the Directional Light: `TimeOfDay`, `IsNight`; GameRules > **Do Daylight Cycle** stops time |
 | World rules | `GameRules` object in the scene (see section 3) |
-| Scenes / build order | The game starts at **MainTitleScene** (scene 0 in File > Build Settings), START GAME loads **GameScene**. Rebuild the title with **Tools > UI > Build Main Title Scene** (`Docs/Main Title Setup.md`) |
+| Scenes / build order | The game starts at **MainTitleScene** (scene 0 in File > Build Settings), START GAME loads **GameScene** (NEW GAME > Map: Old world) or **ProceduralGenerateScene** (Map: New world). Rebuild the title with **Tools > UI > Build Main Title Scene** (`Docs/Main Title Setup.md`) |
+| The new world (random every game) | Tony's **WorldGenerator** (20/11/2026) makes a new 1000 x 1000 m world in `ProceduralGenerateScene` every game: grassland start with rock caves (stone, copper, iron), desert, rocky hills. Your **ObjectScatter** fills it in unchanged (the World Generator gives it the new terrain before its Start; your rules are copied from GameScene, plus a `Hill Rocks` rule in that scene only). **Tools > World > Build New World Scene** makes the scene from GameScene again, so change things in GameScene. Ask `WorldGenerator.Current` (null in the old world) for `BiomeAt(position)` (Grassland / Desert / Hills), `SpawnPoint`, `Seed`, `Terrain`. Guide: `Docs/New World Setup.md` |
 | Change scene with a fade | `ScreenFader.LoadScene("GameScene", "DAY 1", "Survive 5 nights");` (fades to black, title card, loads, fades in) |
 
 Guides: `Docs/Build Menu Setup.md`, `Docs/Item Setup.md`, `Docs/Inventory Setup.md`.
@@ -496,6 +498,7 @@ Get it: `respawn = FindFirstObjectByType<PlayerRespawn>();`
 | Member | What it is |
 |---|---|
 | `Vector3 RespawnPoint` | where the player comes back (set in the Inspector) |
+| `void SetRespawnPoint(Vector3 point)` | move it (WorldGenerator puts it at the new world's start) |
 | `void Respawn()` | bring the player back now (full health, food, stamina) |
 | `event Action Respawned` | fired after every respawn |
 
@@ -660,6 +663,7 @@ The choices are put into the game by themselves when GameScene loads (before any
 | `bool? SpawnEnemies`, `int? EnemiesPerNight`, `float? HungerDrainPerSecond` | what the difficulty set (already given to EnemySpawner / PlayerHunger) |
 | `DeathRule? WhenDying`, `bool? AutoPickupDrops`, `bool? ShowNotifications` | the rules (already given to GameRules) |
 | `bool IsChosen` | START GAME was pressed this session (false when you press Play straight in GameScene) |
+| `bool? NewWorld` | true = Map: New world (ProceduralGenerateScene, a new random world every game); null = the old world |
 
 ### Menu effects you can reuse (title screen)
 

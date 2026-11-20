@@ -1,6 +1,6 @@
 /*
 First Date: 7/11/2026
-Date: 19/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Menu Tools > UI > Build Main Title Scene. It asks to save the open scene first, and asks before replacing
@@ -18,6 +18,8 @@ Purpose: Builds the whole title screen in one click:
            BackgroundCanvas (TitleBackground: the cycling sky and stars) + Embers (a Particle System rising in front)
            TitleCanvas (TitleMenu) > Vignette, Pages > TitlePage / NewGamePage (NewGamePanel) / SettingsPage,
                                      FX > Shockwave, IntroBlack
+         The New Game page's WORLD section starts with Map: Old world (GameScene) / New world (ProceduralGenerateScene,
+         a new random world every game: Tools > World > Build New World Scene makes it).
 Requirement: TitleSceneBuilder.cs x-> UIBuildHelper.cs, MenuOrder.cs, NewGameDefaultsSync.cs, NewGameDefaults.cs, UIFXSprites.cs, UITween.cs, TitleMenu.cs, TitleBackground.cs, TitleTextFX.cs, ButtonFX.cs, CascadeIn.cs, PulseFX.cs, TabFX.cs, TabGroup.cs, ChoiceRow.cs, StepperRow.cs, TogglePop.cs, DropdownUnfold.cs, NewGamePanel.cs, KeyBindingMenu.cs, IncomingMessage.cs, KeyBindings.cs
 */
 
@@ -418,7 +420,7 @@ public static class TitleSceneBuilder
         MakeHeader(page, "NEW GAME", true);
 
         GameObject panel = NewUI("Panel", page);
-        Place(panel, new Vector2(0.5f, 0.5f), new Vector2(0f, 35f), new Vector2(1200f, 740f));   // room for TESTING
+        Place(panel, new Vector2(0.5f, 0.5f), new Vector2(0f, 36f), new Vector2(1200f, 794f));   // room for TESTING and Map
         AddBox(panel).color = PanelColor;
 
         GameObject rows = NewUI("Rows", panel.transform);
@@ -434,6 +436,8 @@ public static class TitleSceneBuilder
         MakeStepperRow(rows.transform, "DaysRow", "Days to win", d.DaysToWin);
         MakeDropdownRow(rows.transform, "WinAtRow", "Win at");
         Section(rows.transform, "WORLD");
+        MakeChoiceRow(rows.transform, "WorldRow", "Map", new[] { "Old world", "New world" }, 190f, null, true);
+        WidenInfo(rows.transform.Find("WorldRow"), 260f);   // room for "new random map"
         MakeChoiceRow(rows.transform, "DayLengthRow", "Day length", new[] { "Short", "Normal", "Long" }, 150f, null, true);
         MakeDropdownRow(rows.transform, "StartTimeRow", "Start time");
         Section(rows.transform, "DIFFICULTY");
@@ -450,18 +454,18 @@ public static class TitleSceneBuilder
 
         TextMeshProUGUI summary = MakeText(page, "Summary", "Everything is set to the game as it is now.", 30f, SoftWhite,
                                        TextAlignmentOptions.Center);
-        Place(summary.gameObject, new Vector2(0.5f, 0f), new Vector2(0f, 175f), new Vector2(1500f, 44f));
+        Place(summary.gameObject, new Vector2(0.5f, 0f), new Vector2(0f, 155f), new Vector2(1500f, 44f));
 
         // START GAME: a pulsing gold glow behind it, and a Flash inside it for the click.
         Image glow = AddImage(NewUI("StartGlow", page), glowSprite, new Color(Gold.r, Gold.g, Gold.b, 0.55f));
-        Place(glow.gameObject, new Vector2(0.5f, 0f), new Vector2(0f, 90f), new Vector2(760f, 230f));
+        Place(glow.gameObject, new Vector2(0.5f, 0f), new Vector2(0f, 80f), new Vector2(760f, 230f));
         PulseFX pulse = glow.gameObject.AddComponent<PulseFX>();
         Set(pulse, "speed", 0.8f);
         Set(pulse, "growBy", 0.08f);
         Set(pulse, "lowestAlpha", 0.35f);
 
         Button start = MakeButton(page, "StartButton", "START GAME", new Vector2(480f, 96f), 44f, 18, false);
-        Place(start.gameObject, new Vector2(0.5f, 0f), new Vector2(0f, 90f), new Vector2(480f, 96f));
+        Place(start.gameObject, new Vector2(0.5f, 0f), new Vector2(0f, 80f), new Vector2(480f, 96f));
         Image flash = AddBox(NewUI("Flash", start.transform));
         flash.color = new Color(1f, 1f, 1f, 0f);
         flash.raycastTarget = false;
@@ -856,6 +860,16 @@ public static class TitleSceneBuilder
             for (int i = 0; i < colors.Length; i++) list.GetArrayElementAtIndex(i).colorValue = colors[i];
             so.ApplyModifiedPropertiesWithoutUndo();
         }
+    }
+
+    // Makes a choice row's Info text wider, keeping where it starts (left of it are the row's buttons).
+    static void WidenInfo(Transform row, float width)
+    {
+        RectTransform info = row != null ? row.Find("Info") as RectTransform : null;
+        if (info == null) return;
+        float left = info.anchoredPosition.x - info.sizeDelta.x / 2f;
+        info.sizeDelta = new Vector2(width, info.sizeDelta.y);
+        info.anchoredPosition = new Vector2(left + width / 2f, info.anchoredPosition.y);
     }
 
     // The line under Difficulty ("4 enemies every night, normal hunger").

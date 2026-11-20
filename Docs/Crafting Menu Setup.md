@@ -1,4 +1,4 @@
-# Crafting Menu Setup (pictures, a scroll list and the tier tools)
+# Crafting Menu Setup (pictures, tabs, a scroll list and the tier tools)
 
 **What the player sees** (inventory > **Crafting** tab, or **C**):
 - One row per item: its **picture** and **name** ("Plank x2" when one craft makes two), and under it the **recipe as
@@ -6,6 +6,10 @@
   not.
 - A row you can craft says **CRAFT** on the right; a row with something missing is faded.
 - Click a row to craft it (Turki's message line says what happened or what's missing). The amounts update at once.
+- **Tabs** over the list: **All** (picked at the start), **Materials**, **Food**, **Tools**, **Armor**. A tab shows
+  only that kind (by the item's Item Type: Material, Consumable, Tool, Armor), from the top of the list. A tab with
+  nothing to craft is faded, and picking it says "Nothing to craft here yet." The picked tab stays picked when the
+  list is closed and opened again.
 - The list scrolls (mouse wheel, or the bar on the right), so any number of items fits.
 - The list: Plank, Stew, then the tools **Wooden > Stone > Iron**, each Pickaxe, Axe, Sword.
 
@@ -16,6 +20,8 @@
      CraftingMenu > **Row Prefab** (his old `CraftRow.prefab` stays in the project, just unused);
    - makes Turki's **Panel** 960 x 640 and puts its **Rows** in a scroll list: Panel > **Scroll** (ScrollRect) >
      **Viewport** > Rows, with a **Scrollbar**;
+   - adds the tabs: Panel > **Tabs** (All, Materials, Food, Tools, Armor) above the list, Panel > Scroll > **Empty**
+     (the "nothing here" text), and Tony's **CraftingTabs** on the Panel (built again every run);
    - sorts **Craftables**: the items that aren't tools stay first, in their order, then every tool that has a recipe
      made at the Crafting page, weakest tier first. Gold and Diamond tools have no recipe, so they aren't listed.
 2. Nothing else: the inventory's Crafting page and the C menu are both copies of `Assets/Prefabs/UI/CraftingCanvas`.
@@ -60,6 +66,14 @@ Recipes** (it puts only the recipes on the existing tools).
    Horizontal off, Viewport = Viewport, Content = Rows, Vertical Scrollbar = the Scrollbar (Auto Hide And Expand
    Viewport).
 3. **The list:** drag the tools into Craftables, Wooden first.
+4. **The tabs:** in the Panel, between the Title and Scroll, an empty **Tabs** (Layout Element: Min and Preferred
+   Height 40, **Flexible Height 0** (left empty, the row takes half the panel's spare height and the tabs come out
+   huge); Horizontal Layout Group: Spacing 8, Child Alignment Middle Center, Control Child Size both ticked, Child Force
+   Expand Height ticked, Width not). In it five UI > Buttons named exactly **All**, **Materials**, **Food**, **Tools**,
+   **Armor** (each a Layout Element: Min and Preferred Width 150, Flexible Width 0), each with its text child renamed
+   **Label** (font size 20).
+   In Scroll, a TextMeshPro **Empty** (stretched, "Nothing to craft here yet.", switched off). Then Add Component >
+   **CraftingTabs** on the Panel. (The rows must be CraftingRow rows: they ask CraftingTabs whether to show.)
 
 ## Problems
 
@@ -69,5 +83,9 @@ Recipes** (it puts only the recipes on the existing tools).
 | A picture is missing | The item has no icon: its Item Data > Icon is Capture (photographed while playing) and needs a Prefab. |
 | A tool isn't in the list | It has no Recipe, or Crafted At isn't Crafting. Give it one, then run the tool again. |
 | The list doesn't scroll | Scroll needs **Scroll Rect** with Content = Rows, and Rows a **Content Size Fitter**. |
+| No tabs over the list | Run the tool again (it adds them). The tabs need the scroll list (Panel > Scroll). |
+| The tabs are huge and the list short | Tabs > Layout Element > **Flexible Height** must be 0. Run the tool again (it builds the tabs again, 40 high). |
+| A tab shows the wrong items | The item's Item Data > **Item Type** decides its tab (Material, Consumable = Food, Tool, Armor). |
+| Clicking a tab does nothing | The tabs must be named exactly All / Materials / Food / Tools / Armor inside Panel > Tabs, and CraftingTabs must be on the Panel. |
 
 Turki's change log: `Docs/TonyEditMate/Turki/19-11-2026 Crafting Menu Icons And Tier Tools.md`.

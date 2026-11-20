@@ -55,6 +55,7 @@ today's game. These values are read from GameScene and kept in `NewGameDefaults.
 
 | Option | What it changes in the game | Default |
 |---|---|---|
+| **Map** (WORLD) | **Old world** = GameScene, the hand-made map; **New world** = ProceduralGenerateScene, a new random 1000 x 1000 m world every game (made by **Tools > World > Build New World Scene**, guide `Docs/New World Setup.md`). START GAME loads TitleMenu's **Game Scene** or **New World Scene** | Old world |
 | **Days to win** (1 - 30) | GameEndCanvas > VictoryScreen > Days To Win | from GameScene |
 | **Win at** | VictoryScreen > Win Time (Dawn, Morning, Midday, Afternoon, Dusk, Night, Midnight; times from the sun) | from GameScene |
 | **Day length** | the sun's Day Length Minutes: Short = half, Normal = as now, Long = double | Normal |
@@ -124,7 +125,8 @@ keep these **names**: the scripts find their parts by name.
 - **NewGamePanel** (on NewGamePage) looks for: `DaysRow` (StepperRow with `Minus`, `Plus`, `Value`), `WinAtRow` and
   `StartTimeRow` (each with a TextMeshPro `Dropdown`), `DayLengthRow`, `DifficultyRow`, `DeathRow` (ChoiceRows with an
   `Options` holder and a `Highlight`), `PickupRow`, `MessagesRow` and `AllToolsRow` (each with a `Toggle`;
-  `AllToolsRow` is optional), `DayLengthRow/Info`,
+  `AllToolsRow` is optional), the optional `WorldRow` (a ChoiceRow: Old world / New world, with an `Info` text),
+  `DayLengthRow/Info`,
   `DifficultyInfo`, `Summary`, `DefaultsButton`, and a `Dot` in each row.
 - **KeyBindingMenu** (on KeyBindingsPage) looks for: `Content`, the switched-off `HeaderTemplate`, `RowTemplate`
   (`Label`, `Key`, `Key2`), `HotbarRowTemplate` (`Label`, `Key1` ... `Key8`), and optionally `Hint`, `ResetAllButton`.
@@ -146,6 +148,7 @@ keep these **names**: the scripts find their parts by name.
 |---|---|
 | The New Game options show nothing | NewGamePage > NewGamePanel > **Defaults** is empty: run the tool again. |
 | START GAME stays on black | GameScene must be in File > Build Settings (the tool adds it), and the scene name must match TitleMenu's **Game Scene**. |
+| Map: New world starts the old world | ProceduralGenerateScene isn't in Build Settings: run **Tools > World > Build New World Scene** (the Console says so). |
 | The defaults don't match GameScene | Save GameScene once (they're read on save), or run the tool again. |
 | No embers | Select **Embers**: its Renderer needs a material (Default-ParticleSystem). |
 | The game doesn't start on the title screen in a build | MainTitleScene must be scene **0** in File > Build Settings (the tool puts it there). |

@@ -20,6 +20,7 @@ Purpose: Builds the inventory window from Docs/Inventory Setup.md in one click:
          and HotbarSelector + ItemDropper are added to the player.
          An existing Slot prefab is reused (your changes to it are kept), so only InventoryCanvas is rebuilt.
 Requirement: InventoryUIBuilder.cs x-> UIBuildHelper.cs, TabGroup.cs, InventoryWindow.cs, SlotUI.cs, SlotGroup.cs, HeldItemUI.cs, HotbarSelector.cs, ItemDropper.cs, CraftingMenu.cs, PlayerInfoPage.cs, PlayerPerks.cs, ItemTooltip.cs, IconArt.cs, MenuOrder.cs
+             InventoryUIBuilder.cs <-x ArmorBuilder.cs
 */
 
 using TMPro;

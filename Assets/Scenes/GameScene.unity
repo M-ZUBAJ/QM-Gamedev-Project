@@ -3743,6 +3743,7 @@ GameObject:
   - component: {fileID: 1576947616}
   - component: {fileID: 1576947617}
   - component: {fileID: 1576947618}
+  - component: {fileID: 1576947620}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -4302,6 +4303,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6f6ca12bc80ca86408353a1fc4ddc498, type: 2}
   - {fileID: 11400000, guid: bbb7dad199046c34d9a25229b6ab255e, type: 2}
   - {fileID: 11400000, guid: 53937546a171ab64c9f1a9f89fded749, type: 2}
+  - {fileID: 11400000, guid: 1a17aec4c09f409469fad333b8157706, type: 2}
+  - {fileID: 11400000, guid: b25ab9c32bea2c1459603002637afbd2, type: 2}
+  - {fileID: 11400000, guid: f40843c5380aed146863a1f45694db01, type: 2}
+  - {fileID: 11400000, guid: 5d04b2ee946929d4d85e6f2dcb1e6315, type: 2}
+  - {fileID: 11400000, guid: 1199515bbcf981b4fa53d799abaea7e8, type: 2}
+  - {fileID: 11400000, guid: f20eb7af7a0f2b34286e348f87f55ac7, type: 2}
 --- !u!114 &1576947616
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4370,6 +4377,29 @@ MonoBehaviour:
   damageIncreasePercent: 2
   maxTotalBonusPercent: 20
   weapons: []
+--- !u!114 &1576947620
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1576947584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e3846f93fc98d04f8257236f19c2cb8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxProtection: 80
+  setBonuses:
+  - set: Iron
+    staminaRegen: 1.5
+  worn:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
 --- !u!4 &1609570296 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1601464460967339328, guid: 62da010430b404922bc87adb93c05aa4, type: 3}
