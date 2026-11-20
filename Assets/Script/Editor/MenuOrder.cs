@@ -11,7 +11,7 @@ Purpose: The order of every item in our Tools menu, in ONE place.
          - Numbers more than 10 apart = a separator line between them (a new group).
          - A submenu (UI, Building, Items...) sits where its smallest number is.
          Each tool's [MenuItem] uses one of these numbers, e.g. [MenuItem("Tools/UI/Build Inventory UI", false, MenuOrder.BuildInventoryUI)].
-Requirement: MenuOrder.cs <-x BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, ChestSetup.cs, CraftingMenuBuilder.cs, DeathEffectBuilder.cs, EnemyBuilder.cs, FirstPersonHandsBuilder.cs, GameEndUIBuilder.cs, GrasslandTreeBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, NotificationUIBuilder.cs, PerkPanelBuilder.cs, PlayerAnimationSetup.cs, PlayerCharacterBuilder.cs, PunchEffectBuilder.cs, ScriptMapTool.cs, SkyLightingSetup.cs, TierToolBuilder.cs, TitleSceneBuilder.cs, TreeFallBuilder.cs, WildAnimalBuilder.cs, WorldSpawnSetup.cs
+Requirement: MenuOrder.cs <-x BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, ChestSetup.cs, CraftingMenuBuilder.cs, DeathEffectBuilder.cs, EnemyBuilder.cs, FirstPersonHandsBuilder.cs, GameEndUIBuilder.cs, GrasslandTreeBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, NotificationUIBuilder.cs, PerkPanelBuilder.cs, PlayerAnimationSetup.cs, PlayerCharacterBuilder.cs, PunchEffectBuilder.cs, RockBreakBuilder.cs, RockBuilder.cs, ScriptMapTool.cs, SkyLightingSetup.cs, TierToolBuilder.cs, TitleSceneBuilder.cs, TreeFallBuilder.cs, WildAnimalBuilder.cs, WorldSpawnSetup.cs
 */
 
 public static class MenuOrder
@@ -51,6 +51,7 @@ public static class MenuOrder
     public const int SetUpWorldSpawning = 228;  // ObjectScatter spacing groups + forest patches, deer spawned out of the player's sight
     public const int SetUpChests = 229;         // chests stand on the floor (StandOnGround) and glow yellow when you can open them (InteractOutline)
     public const int SetUpSkyLighting = 230;    // saves the scene's light from the sky, so shadows aren't pitch black when the title screen opens it
+    public const int UseLowPolyRocks = 231;     // the placeholder cube rocks -> low-poly rocks (Broken Vector's pack) that break into pieces
 
     // ===== Tools > Player =====
     public const int AddCharacterModel = 250;   // the animated character on the Player's ball
@@ -64,6 +65,7 @@ public static class MenuOrder
     public const int BuildPunchWindBurst = 285; // the grey wind burst where a bare-handed punch hits something with health
     public const int BuildDeathParticles = 286; // creatures die into particles: harmless green, harmful red
     public const int BuildTreeFall = 287;       // a chopped tree falls over and breaks into brown wood chips
+    public const int BuildRockBreak = 288;      // a broken rock bursts into chunks of its own stone, gravel and dust
 
     // ===== Tools > Items =====
     public const int MakeItemFromSelection = 300;

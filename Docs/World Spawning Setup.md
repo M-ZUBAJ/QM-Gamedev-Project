@@ -67,7 +67,8 @@ Run the tool again any time: it only fills settings that are still empty.
    1. Remove the **Animals** rule (right-click it > **Delete Array Element**), or the deer come twice.
    2. On every `Trees: ...` rule: **Spacing Group** `Trees`, **Patch Size** 120, **Open Ground** 0.35, **Min Size**
       0.85, **Max Size** 1.2.
-   3. On **Forest Rocks** and **Desert Rocks**: **Min Size** 0.7, **Max Size** 1.3.
+   3. On **Forest Rocks** and **Desert Rocks**: **Min Size** 0.7, **Max Size** 1.3. (Since 20/11/2026 Desert Rocks
+      spawns the sand-colored `StoneNode Desert`: `Docs/Rock Setup.md`.)
    4. On every rule: **Clearance** 3.
 4. Save the scene.
 
