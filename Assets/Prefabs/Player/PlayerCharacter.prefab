@@ -78,6 +78,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1782702501690864755, guid: 60770bdb4dc667c45bea53db0339dc05, type: 3}
       insertIndex: -1
       addedObject: {fileID: 901868423315585117}
+    - targetCorrespondingSourceObject: {fileID: 1782702501690864755, guid: 60770bdb4dc667c45bea53db0339dc05, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1447661927697771115}
   m_SourcePrefab: {fileID: 100100000, guid: 60770bdb4dc667c45bea53db0339dc05, type: 3}
 --- !u!1 &6992694877398995046 stripped
 GameObject:
@@ -119,3 +122,16 @@ MonoBehaviour:
   heldSize: 0.8
   gripNudge: {x: 0, y: 0, z: 0}
   gripTurn: {x: 0, y: 0, z: 0}
+  axeTurn: 180
+--- !u!114 &1447661927697771115
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6992694877398995046}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e99e2fcee4ad97489977e1c9bfb9621, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

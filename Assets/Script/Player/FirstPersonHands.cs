@@ -1,6 +1,6 @@
 /*
 First Date: 12/11/2026
-Date: 13/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: A copy of the player's character under the Main Camera, on the same object as that copy's Animator.
         Tools > Player > Add First Person Hands puts one there, already set up.
@@ -21,8 +21,8 @@ Purpose: Minecraft-style hands for the first-person view. A copy of the player's
          fist the hands sit lower (Tool Lower, a share of the screen), so it doesn't cover the view.
 Requirement: FirstPersonHands.cs x-> Animator (Unity)
              FirstPersonHands.cs o-> PlayerAnimator.cs, CameraController.cs, PlayerInventory.cs, PlayerHealth.cs, PlayerController.cs, Camera (Unity)
-             FirstPersonHands.cs <-x FirstPersonArmsHelper.cs, FirstPersonHandsBuilder.cs, TierToolBuilder.cs
-             FirstPersonHands.cs <-o HeldItemView.cs, ToolInHand.cs
+             FirstPersonHands.cs <-x ArmorBuilder.cs, FirstPersonArmsHelper.cs, FirstPersonHandsBuilder.cs, TierToolBuilder.cs
+             FirstPersonHands.cs <-o ArmorLook.cs, GearPreview.cs, HeldItemView.cs, ToolInHand.cs
 */
 
 using System.Collections.Generic;
@@ -201,6 +201,10 @@ public class FirstPersonHands : MonoBehaviour
         }
         return false;
     }
+
+    // Does this copy draw the part with this name (an arm, a hand, a glove)? ArmorLook asks, so it doesn't switch off
+    // the arms here because the body's shirt covers them: this copy never draws the shirt.
+    public bool Draws(string partName) => IsHandPart(partName, shownParts);
 
     void Show(bool show)
     {

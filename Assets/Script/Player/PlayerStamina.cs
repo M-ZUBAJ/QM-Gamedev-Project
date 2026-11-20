@@ -1,6 +1,6 @@
 /*
 First Date: 11/10/2026
-Date: 19/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerController and PlayerJump).
 Unity Editor: The StaminaBar (StatBar, Stat = Stamina) finds this by itself.
@@ -9,8 +9,10 @@ Unity Editor: The StaminaBar (StatBar, Stat = Stamina) finds this by itself.
 Purpose: Holds the player's stamina. Sprinting (PlayerController) and jumping (PlayerJump) use it up,
          and it fills back up by itself after a short rest.
          When it hits 0 the player is tired: no sprinting or jumping until it has refilled to "Recover To".
+         Other scripts can make it fill faster (SetRegenBoost): the iron armor set's bonus (PlayerArmor) makes it
+         come back 50 % faster.
 Requirement: PlayerStamina.cs <-x PerkChest.cs, PerkManager.cs, PlayerCombat.cs
-             PlayerStamina.cs <-o ItemConsumer.cs, PlayerController.cs, PlayerInfoPage.cs, PlayerJump.cs, PlayerPerks.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
+             PlayerStamina.cs <-o ItemConsumer.cs, PlayerArmor.cs, PlayerController.cs, PlayerInfoPage.cs, PlayerJump.cs, PlayerPerks.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
 */
 
 using UnityEngine;
@@ -62,10 +64,15 @@ public class PlayerStamina : MonoBehaviour
     float startMaxStamina;       // max stamina before any perk (ResetMaxStamina goes back to it)
     float lastUsedTime = -10f;   // when stamina was last used (regen waits regenDelay after this)
     bool tired;                  // ran out and hasn't recovered to recoverTo yet
+    readonly System.Collections.Generic.Dictionary<Object, float> regenBoosts =
+        new System.Collections.Generic.Dictionary<Object, float>();   // who makes stamina come back faster, and how much
+    float regenBoost = 1f;       // all of them multiplied together (1.5 = 50 % faster)
 
     public float Stamina => stamina;          // other scripts can read but not set it
     public float MaxStamina => maxStamina;
     public float StartMaxStamina => startMaxStamina;   // max stamina before any perk (the inventory's Info tab shows the difference)
+    public float RegenBoost => regenBoost;             // how much faster it comes back now: 1 = normal, 1.5 = 50 % faster
+    public float RegenPerSecond => regenPerSecond * regenBoost;   // stamina gained back per second while resting, boosts included
     public bool IsTired => tired;
     public bool CanSprint => !tired && stamina > 0f;
     public bool CanJump => !tired && stamina > 0f;
@@ -158,6 +165,19 @@ public class PlayerStamina : MonoBehaviour
 
 
 
+    // Makes stamina come back faster (or slower) for as long as "from" wants: times 1.5 = 50 % faster, 1 = stops it.
+    // E.g. PlayerArmor's iron set bonus. Each script has one boost (calling again replaces it); several multiply.
+    // The rest before it starts (Regen Delay) stays the same.
+    public void SetRegenBoost(Object from, float times)
+    {
+        if (from == null) return;
+        if (Mathf.Approximately(times, 1f)) regenBoosts.Remove(from);
+        else regenBoosts[from] = Mathf.Max(0f, times);
+
+        regenBoost = 1f;
+        foreach (float boost in regenBoosts.Values) regenBoost *= boost;
+    }
+
     // Fill back up after resting for regenDelay seconds.
     void Regen()
     {
@@ -165,7 +185,7 @@ public class PlayerStamina : MonoBehaviour
         if (stamina >= maxStamina) return;                    // already full
 
         // Time.deltaTime = seconds since last frame, so the regen is per second, not per frame.
-        stamina = Mathf.Min(stamina + regenPerSecond * Time.deltaTime, maxStamina);
+        stamina = Mathf.Min(stamina + RegenPerSecond * Time.deltaTime, maxStamina);
         if (stamina >= Mathf.Min(recoverTo, maxStamina)) tired = false;
         UpdateBar();
     }

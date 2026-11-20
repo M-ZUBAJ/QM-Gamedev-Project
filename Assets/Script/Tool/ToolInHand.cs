@@ -18,6 +18,7 @@ Purpose: When the selected hotbar item is a tool (Item Data > Item Type = Tool),
 Requirement: ToolInHand.cs x-> Animator (Unity), PlayerInventory.cs, ItemData.cs, ToolStats.cs, HandGrip.cs
              ToolInHand.cs o-> CameraController.cs, FirstPersonHands.cs, IconCapture.cs
              ToolInHand.cs <-x PlayerCharacterBuilder.cs, TierToolBuilder.cs
+             ToolInHand.cs <-o GearPreview.cs
 */
 
 using System.Collections.Generic;

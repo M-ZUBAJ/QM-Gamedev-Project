@@ -1,18 +1,23 @@
 /*
 First Date: 29/9/2026
-Date: 19/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: Drag this script onto the player shape (any shape: Capsule, Cube, Sphere...). A Rigidbody is added automatically.
 Unity Editor: The shape needs a Collider (3D Objects come with one).
               Testing sprint: Play, hold W and Left Shift (the Sprint key, set in KeyBindings).
               Testing slopes: walk at a steep hill or cliff: the player stops at the bottom (or slides back down)
               instead of climbing it. Run over a hill top: the player stays on the ground instead of flying off.
+              Slide into a narrow V between two steep slopes: the player stands in it (no falling pose), walks along
+              it and can jump.
 Purpose: Move the player with W A S D (or the arrow keys, both set in KeyBindings), relative to the camera:
          W always moves the way the camera is facing.
          Walking and running only work ON THE GROUND (a surface no steeper than Max Slope Angle):
          - On the ground: full speed at once, stops at once, follows the ground up and down gentle slopes,
            and sticks to the ground over bumps and hill tops (Ground Snap Distance) instead of being launched.
          - Too steep (a cliff, a mountain side): can't walk up it, slides back down.
+         - Held up between too-steep slopes (slid into a narrow V between two hills, or a pit): that counts as standing
+           (IsWedged), so the player walks along the V and can jump, instead of hanging in the falling pose forever,
+           unable to move. Each slope still blocks walking into it, so they can't be climbed from there either.
          - In the air (jumping, falling): keeps its speed; the keys only steer a little (Air Control), never sprint.
            Only a jump can send the player upward: running off a hill top never launches them into the air.
          Collision checking is Continuous, so even a fast player can't pass through the terrain or a wall.
@@ -73,6 +78,16 @@ public class PlayerController : MonoBehaviour
     // so they don't cancel the jump.
     const float JumpGrace = 0.2f;
 
+    // Held up by too-steep slopes (see Wedged): touching them without moving faster than StillSpeed (meters per
+    // second) for StuckSeconds means something holds the player up, because gravity can't pull them down.
+    const float StillSpeed = 0.1f;
+    const float StuckSeconds = 0.25f;
+    const int MaxWalls = 8;   // walls / steep slopes remembered one by one each physics step (more still count in the sum)
+
+    // How much a slope must face up to hold anything: 0.087 = steeper than 85 degrees is an upright wall, which can't
+    // hold the player up, so falling down a gap between two upright walls is still falling.
+    const float UprightWall = 0.087f;
+
     float startSpeed;      // walking speed before any perk
     Rigidbody rb;          // the physics component: keeps gravity and collisions working
     Collider body;         // the player's shape (for sticking to the ground)
@@ -86,6 +101,10 @@ public class PlayerController : MonoBehaviour
     Vector3 groundNormal;  // which way the walkable ground faces (added up, then made length 1)
     bool touchingSteep;    // touching a wall or a too-steep slope
     Vector3 steepNormal;   // which way that wall faces (added up)
+    int steepCount;        // how many wall / too-steep contacts (the two sides of a V give 2 or more)
+    readonly Vector3[] steepNormals = new Vector3[MaxWalls];   // each one's direction, to block pushing into every one
+    bool wedged;           // held up between too-steep slopes (a narrow V, a pit): counts as standing (see Wedged)
+    float stillSince = -1f;   // when the player stopped moving while touching only too-steep slopes (-1 = not now)
     bool wasGrounded;      // grounded in the step before (for sticking over hill tops)
     bool jumpedSinceGrounded;   // in the air because of a jump (then going up is allowed)
     float lastJumpTime = -10f;
@@ -93,8 +112,13 @@ public class PlayerController : MonoBehaviour
     // True while the player is pressing a move key (PlayerHunger uses it: walking burns more food).
     public bool IsMoving => moveInput.sqrMagnitude > 0f;
 
-    // True while standing on walkable ground (not in the air, not on a too-steep slope).
-    public bool IsGrounded => grounded;
+    // True while standing on walkable ground (not in the air, not on a too-steep slope), or held up between too-steep
+    // slopes (IsWedged).
+    public bool IsGrounded => grounded || wedged;
+
+    // True while held up between too-steep slopes (a narrow V between two hills, a pit): that counts as standing, so the
+    // player can walk along it and jump out instead of "falling" forever. PlayerJump reads it.
+    public bool IsWedged => wedged;
 
     // Walking speed right now, in meters per second (perks can raise it: IncreaseMoveSpeed). PlayerPerks shows it.
     public float Speed => speed;
@@ -108,7 +132,7 @@ public class PlayerController : MonoBehaviour
 
     // True while really sprinting: the key is held, the player moves (forward, if Sprint Forward Only),
     // is on the ground (no sprinting in the air) and isn't too tired (only if there's a PlayerStamina).
-    public bool IsSprinting => sprintHeld && IsMoving && grounded && (!sprintForwardOnly || moveInput.y > 0f)
+    public bool IsSprinting => sprintHeld && IsMoving && IsGrounded && (!sprintForwardOnly || moveInput.y > 0f)
                                && (stamina == null || stamina.CanSprint);
 
     // ===== Unity messages (Unity calls these) =====
@@ -127,6 +151,10 @@ public class PlayerController : MonoBehaviour
         // the mountain ("tunneling"). Interpolate: smooth on screen between physics steps.
         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
+
+        // Never sleep: a body that rests for a moment "falls asleep" and stops reporting what it touches, so standing
+        // still in a V between two slopes would look like falling again. One body awake costs nothing.
+        rb.sleepThreshold = 0f;
 
         if (slipperyBody) MakeSlippery();
 
@@ -161,6 +189,17 @@ public class PlayerController : MonoBehaviour
     {
         bool justJumped = Time.time - lastJumpTime < JumpGrace;
 
+        // Held up between too-steep slopes (a narrow V, a pit): stand there, instead of hanging in the falling pose
+        // forever, unable to move. Their directions added up are the "floor" (in a V: straight up).
+        wedged = false;
+        if (grounded || justJumped) stillSince = -1f;
+        else if (Wedged())
+        {
+            wedged = true;
+            grounded = true;
+            groundNormal = SteepFloor() ? steepNormal : Vector3.up;
+        }
+
         // Lost the ground this step without jumping (e.g. ran over a hill top): stick back down if it's close.
         if (!grounded && wasGrounded && !justJumped) SnapToGround();
 
@@ -186,6 +225,7 @@ public class PlayerController : MonoBehaviour
         touchingSteep = false;
         groundNormal = Vector3.zero;
         steepNormal = Vector3.zero;
+        steepCount = 0;
     }
 
     // Unity calls these for every solid thing the player touches during a physics step.
@@ -241,17 +281,57 @@ public class PlayerController : MonoBehaviour
     }
 
     // Removes the part of a move that pushes INTO a wall or too-steep slope (moving away or along it is fine).
+    // Every wall touched counts on its own: in a V between two steep slopes only moving along the V is left.
+    // (Added up, the two sides of a V cancel out, and the player could push into one of them.)
     Vector3 BlockSteep(Vector3 move)
     {
         if (!touchingSteep) return move;
 
-        Vector3 wallOut = new Vector3(steepNormal.x, 0f, steepNormal.z);   // the flat direction away from the wall
-        if (wallOut.sqrMagnitude < 0.0001f) return move;
-        wallOut.Normalize();
+        int walls = Mathf.Min(steepCount, steepNormals.Length);
+        for (int pass = 0; pass < 2; pass++)   // twice: taking away the push into one wall can push a little into another
+        {
+            for (int i = 0; i < walls; i++)
+            {
+                Vector3 wallOut = new Vector3(steepNormals[i].x, 0f, steepNormals[i].z);   // the flat direction away from it
+                if (wallOut.sqrMagnitude < 0.0001f) continue;
+                wallOut.Normalize();
 
-        float into = Vector3.Dot(move, wallOut);
-        if (into < 0f) move -= wallOut * into;   // negative = pushing into the wall: take that part away
+                float into = Vector3.Dot(move, wallOut);
+                if (into < 0f) move -= wallOut * into;   // negative = pushing into the wall: take that part away
+            }
+        }
         return move;
+    }
+
+    // Is the player held up by too-steep slopes, which normally don't count as ground? Either:
+    // - several of them together face up like a floor (the two sides of a V: their directions added up point up), or
+    // - the player has stopped moving while touching them for StuckSeconds: they slide off a single steep slope, so if
+    //   they don't, something holds them up.
+    bool Wedged()
+    {
+        if (!touchingSteep)
+        {
+            stillSince = -1f;
+            return false;
+        }
+        if (SteepFloor()) return true;
+
+        if (rb.velocity.sqrMagnitude > StillSpeed * StillSpeed)
+        {
+            stillSince = -1f;   // still sliding: not stuck
+            return false;
+        }
+        if (stillSince < 0f) stillSince = Time.time;
+        return Time.time - stillSince >= StuckSeconds;
+    }
+
+    // Do the too-steep slopes touched face up like a floor when added up? The two sides of a V (or the walls of a pit)
+    // hold the player up between them. Upright walls hold nothing (they hardly face up at all, see UprightWall), so
+    // two of them facing each other don't count.
+    bool SteepFloor()
+    {
+        return steepCount >= 2 && steepNormal.y >= UprightWall * steepCount &&
+               Vector3.Angle(steepNormal, Vector3.up) <= maxSlopeAngle;
     }
 
     // Lost the ground for one step (hill top, bump): if walkable ground is just below, stay stuck to it
@@ -302,6 +382,8 @@ public class PlayerController : MonoBehaviour
             {
                 touchingSteep = true;
                 steepNormal += n;
+                if (steepCount < steepNormals.Length) steepNormals[steepCount] = n;
+                steepCount++;
             }
         }
     }

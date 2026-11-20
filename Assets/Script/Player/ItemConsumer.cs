@@ -1,6 +1,6 @@
 /*
 First Date: 11/10/2026
-Date: 11/10/2026
+Date: 20/11/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerInventory, PlayerHealth, PlayerHunger and PlayerStamina).
 Unity Editor: Make an item edible in its Item Data: Item Type = Consumable, then set its stats (see Consumable.cs).
@@ -86,7 +86,7 @@ public class ItemConsumer : MonoBehaviour
         if (health != null)
         {
             if (food.health > 0f) health.Heal(food.health);
-            else if (food.health < 0f) health.TakeDamage(-food.health);   // minus a minus = a positive damage amount
+            else if (food.health < 0f) health.LoseHealth(-food.health);   // minus a minus = a positive damage amount
         }
 
         if (hunger != null)

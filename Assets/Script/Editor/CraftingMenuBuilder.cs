@@ -1,6 +1,6 @@
 /*
 First Date: 19/11/2026
-Date: 19/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Menu Tools > UI > Build Crafting Menu. It asks first, because it changes Turki's CraftingCanvas prefab.
@@ -14,11 +14,13 @@ Purpose: Gives Turki's crafting list pictures and the tier tools, in one click:
            - makes Turki's panel bigger (Panel Size) and puts its rows in a scroll list with a scroll bar, so any number
              of items fits (the mouse wheel scrolls it);
            - sorts the list (Craftables): the items that aren't tools first, in their order (Plank, Stew...), then every
-             tool with a recipe made at the Crafting page, Wooden > Stone > Iron, each Pickaxe, Axe, Sword. Tools
-             without a recipe (Gold, Diamond) are left out.
+             tool with a recipe made at the Crafting page, Wooden > Stone > Iron, each Pickaxe, Axe, Sword, then every
+             armor piece with a recipe, helmet to boots. Tools without a recipe (Gold, Diamond) are left out.
+         SortList only sorts the list again (Tools > Items > Build Plate Armor uses it to add the armor).
          Turki's CraftingMenu script only gets one [Tony] line (it calls CraftingRow.Show).
          Log: Docs/TonyEditMate/Turki/19-11-2026 Crafting Menu Icons And Tier Tools.md
 Requirement: CraftingMenuBuilder.cs x-> CraftingMenu.cs, CraftingRow.cs, ItemData.cs, ToolStats.cs, UIBuildHelper.cs, MenuOrder.cs
+             CraftingMenuBuilder.cs <-x ArmorBuilder.cs
 */
 
 using System.Collections.Generic;
@@ -268,32 +270,68 @@ public static class CraftingMenuBuilder
         return bar;
     }
 
-    // Sorts Craftables: everything that isn't a tool first (in its order), then every tool with a recipe made at the
-    // Crafting page, weakest tier first (Wooden > Stone > Iron), each Pickaxe, Axe, Sword. Returns how many tools.
+    // Only sorts Turki's crafting list again (see SortCraftables), e.g. after new armor got recipes. Returns a report.
+    public static string SortList()
+    {
+        string path = CraftingPath;
+        if (AssetDatabase.LoadAssetAtPath<GameObject>(path) == null) return "no CraftingCanvas prefab, the list wasn't sorted.";
+
+        GameObject root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            CraftingMenu menu = root.GetComponentInChildren<CraftingMenu>(true);
+            if (menu == null) return "no CraftingMenu in " + path + ", the list wasn't sorted.";
+            SerializedObject so = new SerializedObject(menu);   // the name in quotes must match Turki's field
+            SerializedProperty list = so.FindProperty("craftables");
+            int tools = SortCraftables(list);
+            int total = list.arraySize;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            PrefabUtility.SaveAsPrefabAsset(root, path);
+            return path + " sorted: " + total + " items (" + tools + " tools, then the armor).";
+        }
+        finally
+        {
+            PrefabUtility.UnloadPrefabContents(root);
+        }
+    }
+
+    // Sorts Craftables: everything that isn't a tool or armor first (in its order), then every tool with a recipe made
+    // at the Crafting page, weakest tier first (Wooden > Stone > Iron), each Pickaxe, Axe, Sword, then every armor piece
+    // with a recipe made there, helmet to boots. Returns how many tools.
     static int SortCraftables(SerializedProperty list)
     {
         List<ItemData> others = new List<ItemData>();
         for (int i = 0; i < list.arraySize; i++)
         {
             ItemData item = list.GetArrayElementAtIndex(i).objectReferenceValue as ItemData;
-            if (item != null && !item.IsTool && !others.Contains(item)) others.Add(item);
+            if (item != null && !item.IsTool && !item.IsArmor && !others.Contains(item)) others.Add(item);
         }
 
         List<ItemData> tools = new List<ItemData>();
+        List<ItemData> armor = new List<ItemData>();
         foreach (string guid in AssetDatabase.FindAssets("t:ItemData"))
         {
             ItemData item = AssetDatabase.LoadAssetAtPath<ItemData>(AssetDatabase.GUIDToAssetPath(guid));
-            if (item != null && item.IsTool && item.IsCraftable && item.CraftedAt == CraftStation.Crafting) tools.Add(item);
+            if (item == null || !item.IsCraftable || item.CraftedAt != CraftStation.Crafting) continue;
+            if (item.IsTool) tools.Add(item);
+            else if (item.IsArmor) armor.Add(item);
         }
         tools.Sort((a, b) =>
         {
             int byTier = ((int)a.Tool.tier).CompareTo((int)b.Tool.tier);
             return byTier != 0 ? byTier : ((int)a.Tool.kind).CompareTo((int)b.Tool.kind);
         });
+        armor.Sort((a, b) =>
+        {
+            int bySlot = ((int)a.Armor.slot).CompareTo((int)b.Armor.slot);
+            return bySlot != 0 ? bySlot : string.CompareOrdinal(a.Id, b.Id);
+        });
 
-        list.arraySize = others.Count + tools.Count;
-        for (int i = 0; i < others.Count; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = others[i];
-        for (int i = 0; i < tools.Count; i++) list.GetArrayElementAtIndex(others.Count + i).objectReferenceValue = tools[i];
+        List<ItemData> sorted = new List<ItemData>(others);
+        sorted.AddRange(tools);
+        sorted.AddRange(armor);
+        list.arraySize = sorted.Count;
+        for (int i = 0; i < sorted.Count; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = sorted[i];
         return tools.Count;
     }
 }

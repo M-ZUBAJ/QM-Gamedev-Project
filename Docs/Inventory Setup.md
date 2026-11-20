@@ -16,7 +16,8 @@ What you will make:
   name. To rename an item, type a Display Name (don't rename the file: the file name is the Item Id that stacks and
   recipes use).
 
-The Gear page is a placeholder until its design is ready. The Crafting page holds Turki's crafting list (with
+The Gear page shows the player's character and the armor slots after **Tools > UI > Build Gear Page** (which
+**Tools > Items > Build Plate Armor** runs too): `Docs/Armor Setup.md`. The Crafting page holds Turki's crafting list (with
 pictures, a scroll list and the tier tools after **Tools > UI > Build Crafting Menu**: `Docs/Crafting Menu Setup.md`).
 **Info** shows the player's status (health, hunger, stamina, walk and sprint speed, jump height, fireball, coins),
 what perks added to it (in green, e.g. "+44 from perks"), and the perks the player has, with their icons.
@@ -69,7 +70,7 @@ InventoryCanvas            Canvas + InventoryWindow script
 │   │   │   └── CraftingCanvas  Turki's crafting list (CraftingMenu), shows when the tab is open
 │   │   └── InfoPage       PlayerInfoPage script: the player's status and perks
 │   │       ├── Status     HealthRow, HungerRow, StaminaRow (each Icon, Name, Value, Bonus, Bar > Fill),
-│   │       │              SpeedRow, SprintRow, JumpRow, FireballRow, CoinsRow (Icon, Name, Value, Bonus)
+│   │       │              ArmorRow, SpeedRow, SprintRow, JumpRow, FireballRow, CoinsRow (Icon, Name, Value, Bonus)
 │   │       └── PerkList   NoPerks text + PerkTemplate (switched off: Icon, Name, Stats), copied per perk
 │   └── HeldItem           HeldItemUI script: the stack on the mouse (LAST child = drawn on top)
 │       ├── Icon
@@ -209,16 +210,18 @@ To change all slots later: double click the Slot prefab in the Project window, e
 
 1. Right click **Pages** > **Create Empty**. Rename it **GearPage**.
    Anchor Presets: **Alt + Shift** + **stretch stretch**.
-2. Right click **GearPage** > **UI > Text - TextMeshPro**. Text: **Gear (coming soon)** (a placeholder).
+2. Right click **GearPage** > **UI > Text - TextMeshPro**. Text: **Gear (coming soon)** (a placeholder; later
+   **Tools > UI > Build Gear Page** fills the page with the character and the armor slots: `Docs/Armor Setup.md`).
 3. Make **CraftingPage** the same way (empty, stretch stretch), then drag Turki's **CraftingCanvas** prefab
    (`Assets/Prefabs/UI`) onto it. Nothing else to set: when the game runs it fills the page, fixes its size
    (the prefab is saved at scale 0) and shows itself whenever the Crafting tab is open.
    (The CraftingCanvas at the top of the scene is a separate copy that opens with **C**. Keep it if you want both.)
 4. **InfoPage**: the easy way is **Tools > UI > Add Inventory Scripts**, which builds the whole page. By hand: an empty
    **InfoPage** (stretch stretch) with **Add Component > PlayerInfoPage**. PlayerInfoPage finds its parts by name:
-   - rows named **HealthRow**, **HungerRow**, **StaminaRow**, **SpeedRow**, **SprintRow**, **JumpRow**,
+   - rows named **HealthRow**, **HungerRow**, **StaminaRow**, **ArmorRow**, **SpeedRow**, **SprintRow**, **JumpRow**,
      **FireballRow**, **CoinsRow**, each with a TextMeshPro **Value** and **Bonus** (and for the first three a
-     **Bar** with a **Fill** image inside it, stretched);
+     **Bar** with a **Fill** image inside it, stretched). A row's own **Image** (its background) turns gold while an
+     armor set bonus improves its stat (Stamina and Armor with the whole iron set on);
    - **PerkList** with a TextMeshPro **NoPerks** and a switched-off **PerkTemplate** row (an Image **Icon**, and
      TextMeshPro **Name** and **Stats**). One copy of PerkTemplate is made for every perk.
 
@@ -311,6 +314,7 @@ SlotUI and HeldItemUI find their Icon, Count and ItemName by name, so keep those
 |---|---|
 | Tab does nothing | Is InventoryWindow (script) on **InventoryCanvas**, with **Window** filled in? Any red errors in the Console? |
 | No Info tab | Run **Tools > UI > Add Inventory Scripts** (it adds the tab and its page to the inventory you have). |
+| No Armor row on the Info tab | Run **Tools > UI > Add Inventory Scripts** or **Tools > Items > Build Plate Armor** (both add it under Stamina). |
 | No name when the mouse is on an item | Run **Tools > UI > Add Inventory Scripts** (it adds the ItemTooltip). The Slot prefab needs **SlotUI**. |
 | The name is wrong / ugly (e.g. "IronOre") | Select the item's Item Data in `Assets/Config/Items` and type its **Display Name**. |
 | The Info page's perks have no icons | Run **Tools > UI > Build HUD** or **Add Inventory Scripts**: they put the perk pictures in the Player's **PlayerPerks > Icons**. |

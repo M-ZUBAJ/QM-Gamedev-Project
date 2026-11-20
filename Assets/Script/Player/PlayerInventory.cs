@@ -1,6 +1,6 @@
 /*
 First Date: 30/9/2026
-Date: 19/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: Drag this script onto the PlayerSphere.
 Purpose: Stores the player's items. Items with the same Item Id stack in one slot.
@@ -9,13 +9,15 @@ Purpose: Stores the player's items. Items with the same Item Id stack in one slo
          or none (ActiveHotbar = NoHotbar).
          New items go to the inventory first, then to the hotbar when the inventory is full.
          An upgraded tool goes where the old tool was instead (SlotOf before crafting uses it up, then AddInto).
+         PutBack adds items back without counting them as new (no "+1" message), e.g. armor taken off (PlayerArmor).
+         PutOnCursor puts items on the cursor stack (e.g. the armor swapped off when a held piece is put on).
          Like Minecraft, clicking a slot picks its stack onto the cursor (Held) and clicking again puts it down.
          Other scripts add items with PlayerInventory.Instance.Add(...)
          and listen to PlayerInventory.Changed to update the UI.
          PlayerInventory.ItemAdded tells which item came in and how many (harvested, picked up, crafted...),
          e.g. GainNotifier shows "+3 Wood". Items only moving inside the inventory don't fire it.
 Requirement: PlayerInventory.cs x-> IHand.cs, ItemData.cs
-             PlayerInventory.cs <-x AutoCollector.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingData.cs, CraftingMenu.cs, CraftingRow.cs, DroppedStack.cs, EquippedWeaponDisplay.cs, GainNotifier.cs, GiveSwordForTesting.cs, HeldItemUI.cs, HeldItemView.cs, HotbarSelector.cs, ItemConsumer.cs, ItemData.cs, ItemDropper.cs, ItemGrabber.cs, ItemIconRules.cs, ItemTooltip.cs, PlayerAnimationSetup.cs, PlayerCombat.cs, PlayerFireball.cs, PunchCombo.cs, Recipe.cs, ResourceNode.cs, SlotGroup.cs, SlotUI.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs, UIBuildHelper.cs
+             PlayerInventory.cs <-x ArmorBuilder.cs, ArmorSlotUI.cs, AutoCollector.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingData.cs, CraftingMenu.cs, CraftingRow.cs, DroppedStack.cs, EquippedWeaponDisplay.cs, GainNotifier.cs, GiveSwordForTesting.cs, HeldItemUI.cs, HeldItemView.cs, HotbarSelector.cs, ItemConsumer.cs, ItemData.cs, ItemDropper.cs, ItemGrabber.cs, ItemIconRules.cs, ItemTooltip.cs, PlayerAnimationSetup.cs, PlayerArmor.cs, PlayerCombat.cs, PlayerFireball.cs, PunchCombo.cs, Recipe.cs, ResourceNode.cs, SlotGroup.cs, SlotUI.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs, UIBuildHelper.cs
              PlayerInventory.cs <-o FirstPersonHands.cs
 */
 
@@ -153,6 +155,33 @@ public class PlayerInventory : MonoBehaviour, IHand
         slot.count = amount;
         Changed?.Invoke();
         ItemAdded?.Invoke(slot, amount);   // e.g. the "+1 Stone Axe" message
+        return true;
+    }
+
+    // Puts items back in without counting them as new (no ItemAdded, so no "+1" message), e.g. armor that was taken
+    // off (PlayerArmor). Stacks them on the same item, else the first empty slot. False = no room.
+    public bool PutBack(string id, string name, Sprite icon, int amount, ItemData data = null)
+    {
+        return Put(id, name, icon, amount, data) != null;
+    }
+
+    // Puts items on the cursor (the picked-up stack): when it holds nothing, or holds the same item. False otherwise.
+    // E.g. the armor taken off when the piece held on the cursor is put on in its place (PlayerArmor.EquipFromCursor).
+    public bool PutOnCursor(string id, string name, Sprite icon, int amount, ItemData data = null)
+    {
+        if (amount <= 0) return true;
+        if (!held.IsEmpty && held.id != id) return false;
+
+        if (held.IsEmpty)
+        {
+            held.id = id;
+            held.name = name;
+            held.icon = icon;
+            held.data = data;
+            held.count = 0;
+        }
+        held.count += amount;
+        Changed?.Invoke();
         return true;
     }
 

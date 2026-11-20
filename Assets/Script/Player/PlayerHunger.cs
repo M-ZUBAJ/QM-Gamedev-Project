@@ -1,6 +1,6 @@
 /*
 First Date: 3/10/2026
-Date: 9/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: Drag this script onto the Player sphere (next to PlayerController, PlayerHealth and ObjectLevitator).
 Unity Editor: The HungerBar (StatBar) finds this by itself. "On Changed" is only for extra things
@@ -131,11 +131,11 @@ public class PlayerHunger : MonoBehaviour
 
         if (instantDeath)
         {
-            health.TakeDamage(health.Health);   // all remaining health = dead
+            health.LoseHealth(health.Health);   // all remaining health = dead (armor doesn't help against hunger)
         }
         else
         {
-            health.TakeDamage(starveDamagePerSecond * Time.deltaTime);
+            health.LoseHealth(starveDamagePerSecond * Time.deltaTime);   // armor doesn't stop starving
         }
     }
 

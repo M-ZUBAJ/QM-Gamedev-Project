@@ -13,7 +13,7 @@ Purpose: Shows the name of the item under the mouse, next to the mouse, like Min
          It sits up and to the right of the mouse, on the other side near the screen's edges, on its own canvas on top
          of every window, and never blocks clicks.
 Requirement: ItemTooltip.cs x-> PlayerInventory.cs
-             ItemTooltip.cs <-x InventoryUIBuilder.cs, SlotUI.cs
+             ItemTooltip.cs <-x ArmorPicker.cs, ArmorSlotUI.cs, InventoryUIBuilder.cs, SlotUI.cs
 */
 
 using TMPro;

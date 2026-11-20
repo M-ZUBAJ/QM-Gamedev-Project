@@ -1,24 +1,29 @@
 /*
 First Date: 19/11/2026
-Date: 19/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: The inventory's Info page (InventoryCanvas > InventoryWindow > Pages > InfoPage). Tools > UI > Build Inventory UI
         (or Tools > UI > Add Inventory Scripts for an inventory built before) makes the page and puts this on it.
 Unity Editor: Nothing to connect: it finds the player's scripts by itself, and its parts by NAME:
-                HealthRow, HungerRow, StaminaRow, SpeedRow, SprintRow, JumpRow, FireballRow, CoinsRow:
+                HealthRow, HungerRow, StaminaRow, ArmorRow, SpeedRow, SprintRow, JumpRow, FireballRow, CoinsRow:
                   each with a "Value" text, a "Bonus" text and, for Health / Hunger / Stamina, a "Bar" with a "Fill"
+                  (ArmorRow: Tools > Items > Build Plate Armor adds it to an Info tab made before the armor)
                 PerkList: the perk rows go in here, copied from its switched-off "PerkTemplate" (Icon, Name, Stats)
                 NoPerks: the text shown while the player has no perk
               Testing: Play, press Tab and click Info. Open a chest and take a perk: its stat shows the bonus in green
-              and the perk joins the list.
+              and the perk joins the list. Wear all six iron armor pieces: the Stamina and Armor rows turn gold.
 Purpose: The player's status, updated 4 times a second while the Info tab is open:
            Health, Hunger, Stamina    now / max, with a bar
+           Armor                      how much the worn armor takes off every hit, and its set ("Iron set 4/6")
            Walk / Sprint speed        meters per second
            Jump height, Fireball (locked, or its cooldown), Coins
          What perks added shows in green next to the stat, e.g. "+44 from perks" (max health above its start) or
          "+15% from perks" (walk speed), and on the right the perks the player has, with their icons, names and
          stats (PlayerPerks).
-Requirement: PlayerInfoPage.cs o-> PlayerHealth.cs, PlayerHunger.cs, PlayerStamina.cs, PlayerController.cs, PlayerJump.cs, PlayerFireball.cs, PlayerCoins.cs, PlayerPerks.cs
+         An armor set bonus shows in gold, on a gold-tinted row, so it stands out from the perks' green: with the whole
+         iron set on, Stamina says "+50% recharge (Iron Set)" and Armor says "Iron Set bonus" (PlayerArmor).
+Requirement: PlayerInfoPage.cs x-> ArmorStats.cs
+             PlayerInfoPage.cs o-> PlayerHealth.cs, PlayerHunger.cs, PlayerStamina.cs, PlayerController.cs, PlayerJump.cs, PlayerFireball.cs, PlayerCoins.cs, PlayerPerks.cs, PlayerArmor.cs
              PlayerInfoPage.cs <-x InventoryUIBuilder.cs
 */
 
@@ -36,6 +41,8 @@ public class PlayerInfoPage : MonoBehaviour
         public TMP_Text value;      // e.g. "85 / 144"
         public TMP_Text bonus;      // e.g. "+44 from perks"
         public RectTransform fill;  // the bar's fill (only Health / Hunger / Stamina): its right edge = how full
+        public Image back;          // the row's rounded background (tinted while an armor set bonus improves the stat)
+        public Color backColor;     // its usual color
     }
 
     // ===== Fields =====
@@ -45,9 +52,17 @@ public class PlayerInfoPage : MonoBehaviour
     [Tooltip("The color of a hint that isn't a bonus, e.g. how to unlock the fireball.")]
     [SerializeField] Color hintColor = new Color(0.42f, 0.43f, 0.48f);
 
+    [Tooltip("The color of an armor set bonus, e.g. \"+50% recharge (Iron Set)\" while the whole iron set is worn: a " +
+             "strong gold, so it stands out from the green perk bonuses.")]
+    [SerializeField] Color setBonusColor = new Color(0.8f, 0.5f, 0.02f);
+
+    [Tooltip("The background of a row an armor set bonus improves (Stamina and Armor while the whole iron set is worn), " +
+             "so it catches the eye.")]
+    [SerializeField] Color setBonusRowColor = new Color(1f, 0.93f, 0.72f);
+
     const float RefreshEvery = 0.25f;   // seconds: 4 times a second, so the bars follow while the page is open
 
-    Row health, hunger, stamina, walk, sprint, jump, fireball, coins;
+    Row health, hunger, stamina, armorRow, walk, sprint, jump, fireball, coins;
     Transform perkList;
     GameObject perkTemplate;
     GameObject noPerks;
@@ -70,11 +85,14 @@ public class PlayerInfoPage : MonoBehaviour
         health = FindRow("HealthRow");
         hunger = FindRow("HungerRow");
         stamina = FindRow("StaminaRow");
+        armorRow = FindRow("ArmorRow");   // an Info tab made before the armor has none (Build Plate Armor adds it)
         walk = FindRow("SpeedRow");
         sprint = FindRow("SprintRow");
         jump = FindRow("JumpRow");
         fireball = FindRow("FireballRow");
         coins = FindRow("CoinsRow");
+        FitBonus(stamina);   // a perk bonus and a set bonus together can be long
+        FitBonus(armorRow);
 
         perkList = FindDeep(transform, "PerkList");
         Transform template = FindDeep(transform, "PerkTemplate");
@@ -108,8 +126,17 @@ public class PlayerInfoPage : MonoBehaviour
         else ShowMissing(health);
         if (playerHunger != null) ShowAmount(hunger, playerHunger.Hunger, playerHunger.MaxHunger, playerHunger.MaxHunger);
         else ShowMissing(hunger);
-        if (playerStamina != null) ShowAmount(stamina, playerStamina.Stamina, playerStamina.MaxStamina, playerStamina.StartMaxStamina);
+        // The armor's set bonus (the whole iron set: stamina recharges 50 % faster), in gold on the rows it improves.
+        PlayerArmor armor = PlayerArmor.Current;
+        PlayerArmor.SetBonus setBonus = armor != null ? armor.ActiveBonus : null;
+        bool fasterStamina = setBonus != null && setBonus.staminaRegen > 1.001f;
+        string staminaFromSet = fasterStamina
+            ? SetBonusText("+" + ArmorStats.Percent((setBonus.staminaRegen - 1f) * 100f) + " recharge (" + setBonus.set + " Set)")
+            : "";
+        if (playerStamina != null) ShowAmount(stamina, playerStamina.Stamina, playerStamina.MaxStamina, playerStamina.StartMaxStamina, staminaFromSet);
         else ShowMissing(stamina);
+        Highlight(stamina, fasterStamina && playerStamina != null);
+        ShowArmor(armor, setBonus);
 
         if (controller != null)
         {
@@ -151,13 +178,14 @@ public class PlayerInfoPage : MonoBehaviour
         if (perks == null) perks = PlayerPerks.Current;
     }
 
-    // Now / max with a bar, and how much perks raised the max above its start.
-    void ShowAmount(Row row, float now, float max, float startMax)
+    // Now / max with a bar, and how much perks raised the max above its start (then "more", e.g. a set bonus).
+    void ShowAmount(Row row, float now, float max, float startMax, string more = "")
     {
         if (row == null) return;
         float extra = max - startMax;
-        Show(row, Mathf.CeilToInt(now) + " / " + Mathf.RoundToInt(max),
-             extra >= 0.5f ? "+" + Mathf.RoundToInt(extra) + " from perks" : "", true);
+        string fromPerks = extra >= 0.5f ? "+" + Mathf.RoundToInt(extra) + " from perks" : "";
+        string both = string.IsNullOrEmpty(fromPerks) ? more : string.IsNullOrEmpty(more) ? fromPerks : fromPerks + "  " + more;
+        Show(row, Mathf.CeilToInt(now) + " / " + Mathf.RoundToInt(max), both, true);
         if (row.fill != null)
         {
             float full = max > 0f ? Mathf.Clamp01(now / max) : 0f;
@@ -175,6 +203,49 @@ public class PlayerInfoPage : MonoBehaviour
     void ShowMissing(Row row)
     {
         Show(row, "-", "", false);
+    }
+
+    // The Armor row: how much the worn armor takes off every hit, then its set: "Iron Set bonus" in gold (and the row
+    // tinted) once the whole set is worn, else how many of its pieces are on ("Iron set 4/6").
+    void ShowArmor(PlayerArmor armor, PlayerArmor.SetBonus setBonus)
+    {
+        if (armorRow == null) return;
+        Highlight(armorRow, setBonus != null);
+        if (armor == null)
+        {
+            ShowMissing(armorRow);
+            return;
+        }
+
+        float percent = armor.Protection * 100f;
+        string value = ArmorStats.Percent(percent);
+        string set = armor.MostWornSet(out int count);
+        if (setBonus != null) Show(armorRow, value, SetBonusText(setBonus.set + " Set bonus"), true);
+        else if (set != null) Show(armorRow, value, set + " set " + count + "/" + armor.SetSize, false);
+        else Show(armorRow, value, percent > 0f ? "less damage per hit" : "none worn", false);
+    }
+
+    // Bold text in the set bonus color, for inside a row's Bonus text (the rest of it keeps its own color).
+    string SetBonusText(string text)
+    {
+        return "<b><color=#" + ColorUtility.ToHtmlStringRGB(setBonusColor) + ">" + text + "</color></b>";
+    }
+
+    // Tints a row's background while an armor set bonus improves its stat, and puts it back after.
+    void Highlight(Row row, bool on)
+    {
+        if (row == null || row.back == null) return;
+        Color wanted = on ? setBonusRowColor : row.backColor;
+        if (row.back.color != wanted) row.back.color = wanted;
+    }
+
+    // A long Bonus text shrinks to fit the row instead of running off its edge.
+    static void FitBonus(Row row)
+    {
+        if (row == null || row.bonus == null || row.bonus.enableAutoSizing) return;
+        row.bonus.fontSizeMax = row.bonus.fontSize;
+        row.bonus.fontSizeMin = 12f;
+        row.bonus.enableAutoSizing = true;
     }
 
     // Writes a row: its value, and the text next to it (green if it's what perks added, grey for a hint).
@@ -234,11 +305,14 @@ public class PlayerInfoPage : MonoBehaviour
         Transform value = row.Find("Value");
         Transform bonus = row.Find("Bonus");
         Transform fill = row.Find("Bar/Fill");
+        Image back = row.GetComponent<Image>();
         return new Row
         {
             value = value != null ? value.GetComponent<TMP_Text>() : null,
             bonus = bonus != null ? bonus.GetComponent<TMP_Text>() : null,
             fill = fill as RectTransform,
+            back = back,
+            backColor = back != null ? back.color : Color.white,
         };
     }
 

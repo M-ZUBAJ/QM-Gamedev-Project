@@ -193,6 +193,7 @@ In these tables, `health`, `stamina`, `daylight`, `player`… are the variables 
 | The crafting menu's key | `Input.GetKeyDown(KeyBindings.Crafting)` (default **C**, change it on the KeyBindings object). `CraftingMenu` already uses it; its old `openKey` field is gone |
 | Crafting inside the inventory | A CraftingCanvas under `InventoryWindow > Pages > CraftingPage` now shows itself whenever the Crafting tab is open (Tony's `[Tony]` lines in `CraftingMenu`, see `Docs/TonyEditMate/20-10-2026Edit.md`). The scene-root CraftingCanvas still opens with C |
 | Animate the player mining / picking up | `PlayerAnimator.Play(PlayerAction.Mine);` / `PlayerAnimator.Play(PlayerAction.Gather);` (upper body only; does nothing if the player has no character) |
+| Armor in your crafting list | Tony's **Tools > Items > Build Plate Armor** (20/11/2026, log `Docs/TonyEditMate/Turki/20-11-2026 Plate Armor In The Crafting List.md`) added the 6 iron armor items (Iron Helmet ... Iron Boots, Iron recipes; first called Plate ..., renamed the same day, same files) to CraftingCanvas's Craftables, after the tools. Your script is unchanged. An armor's Item Data has Item Type **Armor** (`item.IsArmor`, `item.Armor.slot / protection / set`). Guide: `Docs/Armor Setup.md` |
 | Your rocks are low-poly rocks now | Tony's **Tools > World > Use Low Poly Rocks** (20/11/2026, log `Docs/TonyEditMate/Turki/20-11-2026 Low Poly Rocks That Break.md`) rebuilt your StoneNode, CopperNode and IronNode prefabs: a random rock shape from Broken Vector's free Low Poly Rock Pack (Tony's RockLook), a Mesh Collider in that shape instead of the box, grey / copper / blue-grey stone, standing on the ground (StandOnGround). When your ResourceNode breaks one, Tony's RockBreak bursts it into chunks of the same stone, gravel and dust. Your script and its values (health, drops) are unchanged. Guide: `Docs/Rock Setup.md` |
 | Your trees fall now | Tony's **Tools > Effects > Build Tree Fall** (19/11/2026, log `Docs/TonyEditMate/Turki/19-11-2026 Trees Fall Into Wood Chips.md`) put Tony's **TreeFall** on your TreeNode prefab: when your `ResourceNode` breaks a tree (`currentHealth` 0, `Destroy`), a look-only copy falls over away from the player and breaks into brown wood chips (the copy's open trunk bottom is closed with cut wood, so nobody sees through it). Your script and the drops are unchanged; berry bushes are skipped. Guide: `Docs/Tree Fall Setup.md` |
 | An upgraded tool keeps its slot | Your `CraftingMenu.Craft` has two `[Tony]` lines (19/11/2026, log `Docs/TonyEditMate/Turki/19-11-2026 Upgraded Tool Keeps Its Slot.md`): an upgrade (Wooden Axe -> Stone Axe) goes into the slot the old tool was in (`PlayerInventory.SlotOf` + `AddInto`), not the first free slot. Anything that isn't an upgrade is added exactly as before |
@@ -225,7 +226,7 @@ The inventory's **Crafting** tab (`InventoryCanvas > InventoryWindow > Pages > C
 
 | You want to… | Use |
 |---|---|
-| Hurt the player | `health.TakeDamage(10f)` |
+| Hurt the player | `health.TakeDamage(10f)` (since 20/11/2026 the armor the player wears makes it smaller: Tony's PlayerArmor; your EnemyAttack needs no change) |
 | Heal the player | `health.Heal(10f)` |
 | Is the player dead? | `health.IsDead` (stop attacking a dead player) |
 | Know when the player dies | `health.Died += OnPlayerDied;` (fires once per death) |
@@ -306,7 +307,8 @@ Get it: `health = FindFirstObjectByType<PlayerHealth>();` in `Start()`
 | `float Health`, `float MaxHealth` | current / max (default 100) |
 | `float StartMaxHealth` | max health before any perk (`MaxHealth - StartMaxHealth` = what perks added) |
 | `bool IsDead` | health is 0 |
-| `void TakeDamage(float amount)` | lose health; at 0 the player dies (`Died` fires once) |
+| `void TakeDamage(float amount)` | a hit: the armor the player wears takes its share off first (PlayerArmor, since 20/11/2026: the full iron set takes 10 % off), then health goes down; at 0 the player dies (`Died` fires once) |
+| `void LoseHealth(float amount)` | lose health that no armor stops (starving, bad food) |
 | `void Heal(float amount)` | gain health, never above max |
 | `void Revive()` | full health again (PlayerRespawn uses it) |
 | `event Action Died` | fired once when health reaches 0 |
@@ -335,6 +337,8 @@ Get it: `stamina = FindFirstObjectByType<PlayerStamina>();`
 | `void Use(float amount)` | spend stamina (attack, dodge…); hitting 0 makes the player tired |
 | `void Restore(float amount)` | give stamina back at once |
 | `bool CanSprint`, `bool CanJump` | used by movement |
+| `void SetRegenBoost(Object from, float times)` | make it refill faster while you want (e.g. a perk or a potion): `stamina.SetRegenBoost(this, 1.5f)` = 50 % faster, `SetRegenBoost(this, 1f)` = back to normal. One boost per script (calling again replaces it); several multiply. The iron armor set's bonus uses it. |
+| `float RegenBoost`, `float RegenPerSecond` | how much faster it refills now (1 = normal), and the refill per second with that |
 
 It refills by itself after a short rest.
 
@@ -345,7 +349,8 @@ Get them: `controller = FindFirstObjectByType<PlayerController>();`, `jump = Fin
 | Member | What it is |
 |---|---|
 | `bool IsMoving`, `bool IsSprinting` | PlayerController: moving / sprinting (Left Shift) right now. Sprinting only counts on the ground |
-| `bool IsGrounded` | PlayerController: standing on walkable ground (not in the air, not on a too-steep slope). PlayerJump has one too (standing on something not too steep) |
+| `bool IsGrounded` | PlayerController: standing on walkable ground (not in the air, not on a too-steep slope), or held up between too-steep slopes (below). PlayerJump has one too (standing on something not too steep, or held up like that) |
+| `bool IsWedged` | PlayerController: held up between too-steep slopes (slid into a narrow V between two hills, a pit). Counts as standing, so the player can walk along the V and jump instead of being stuck in the falling pose |
 | `float MaxSlopeAngle` | PlayerController: the steepest slope the player can walk up (default 45 degrees); steeper = a wall |
 | `event Action Jumped` | PlayerJump: fired on every jump |
 | `float Speed`, `float StartSpeed`, `float SprintMultiplier` | PlayerController: walking speed now / before any perk (m/s); sprinting = Speed x SprintMultiplier |
@@ -409,9 +414,10 @@ and once a chest is opened. Settings: Color, Width, Fill, Pulse, Show When (Look
 
 ### PlayerInfoPage (the inventory's Info tab)
 
-The player's status, 4 times a second while the tab is open: health / hunger / stamina (now / max with a bar), walk
-and sprint speed, jump height, the fireball (locked, or its cooldown) and coins. What perks added shows in green (e.g.
-"+44 from perks"), and the perks the player has are listed with their icons. Nothing to call: it reads PlayerHealth,
+The player's status, 4 times a second while the tab is open: health / hunger / stamina (now / max with a bar), the
+armor (how much it takes off a hit, its set), walk and sprint speed, jump height, the fireball (locked, or its cooldown)
+and coins. What perks added shows in green (e.g. "+44 from perks"), an armor set bonus in gold on a gold-tinted row
+(e.g. "+50% recharge (Iron Set)"), and the perks the player has are listed with their icons. Nothing to call: it reads PlayerHealth,
 PlayerHunger, PlayerStamina, PlayerController, PlayerJump, your PlayerFireball (`HasFireballPerk`, `PerkStacks`,
 `CurrentCooldown`) and PlayerCoins, and PlayerPerks. Made by **Tools > UI > Add Inventory Scripts** (guide
 `Docs/Inventory Setup.md`). **A new perk that changes a stat:** its row shows the change by itself if the stat's
@@ -468,6 +474,21 @@ Built by **Tools > World > Build Wild Animal** (any ithappy animal; the deer by 
 Tools are made by **Tools > Items > Build Tier Tools**. The selected tool shows in the hand by itself (`ToolInHand`), and
 GameRules > **Tool Test** gives one of each. Guide: `Docs/Tool Setup.md`.
 
+### PlayerArmor (on the Player): the armor the player wears
+
+Get it: `PlayerArmor.Current` (it adds itself to the Player if the Player has none; null only without a player). Guide: `Docs/Armor Setup.md`.
+
+| Member | What it is |
+|---|---|
+| `ItemData WornIn(ArmorSlot slot)` | what's worn in a slot (null = nothing) |
+| `float ProtectionPercent`, `float Protection` | every worn piece's Protection added up, in percent (the full iron set: 10); how much of a hit it takes off (0.1 = 10 %, at most 0.8) |
+| `string MostWornSet(out int count)`, `string FullSet`, `int SetSize` | the set most worn pieces belong to and how many ("Iron", 4); the set worn in every slot or null; 6 |
+| `SetBonus ActiveBonus`, `SetBonus BonusFor(string set)` | the set bonus given now (null = none) / a set's bonus: `.set`, `.staminaRegen` (1.5 = stamina 50 % faster), `.Describe()` ("stamina recharges 50% faster") |
+| `float Reduce(float damage)` | a hit after the armor's share (PlayerHealth.TakeDamage uses it) |
+| `bool Equip(ItemData item)`, `bool TakeOff(ArmorSlot slot)` | put a piece on from the inventory / back into it (false = can't, e.g. no room) |
+| `bool EquipFromCursor(ArmorSlot slot)` | put on the piece held on the cursor; the old piece goes onto the cursor |
+| `static event Action Changed` | a piece was put on or taken off |
+
 ### PlayerRespawn (on the Player)
 
 Get it: `respawn = FindFirstObjectByType<PlayerRespawn>();`
@@ -487,6 +508,8 @@ Get it: nothing to find, write `PlayerInventory.Instance` (or keep it: `PlayerIn
 | Member | What it is |
 |---|---|
 | `bool Add(id, name, icon, amount, ItemData data)` | add items (stacks by id); `false` = inventory full |
+| `bool PutOnCursor(id, name, icon, amount, ItemData data)` | put items on the cursor stack (when it's empty or the same item) |
+| `bool PutBack(id, name, icon, amount, ItemData data)` | add items back without counting them as new (no `ItemAdded`, no "+1" message), e.g. armor taken off |
 | `int SlotOf(ItemData item)` | index in `Slots` of the first slot with this item (the one `Remove` takes from first), -1 = none |
 | `bool AddInto(int slot, id, name, icon, amount, ItemData data)` | add into that slot if it's empty (e.g. where an upgrade's old tool was); otherwise the same as `Add` |
 | `int Count(string id)` | how many of this item, all slots together |
@@ -514,6 +537,7 @@ Get them: ItemData = a `public ItemData wood;` field with the file dragged in. I
 | `ItemType Type`, `bool IsConsumable`, `Consumable Consumable` | Material / Consumable; `Consumable.health / hunger / stamina` |
 | `IReadOnlyList<Ingredient> Recipe`, `int CraftAmount`, `CraftStation CraftedAt` | crafting info |
 | `bool IsCraftable`, `bool CanCraft(inv)`, `bool TakeRecipeFrom(inv)`, `string Missing(inv)` | crafting checks |
+| `bool IsArmor`, `ArmorStats Armor` | worn armor: `Armor.slot` (Helmet, Shoulders, Chest, Gloves, Legs, Boots), `Armor.protection` (percent of every hit, e.g. 1.5), `Armor.set` (e.g. "Iron") |
 | `ItemData UpgradedFrom` | for a tool: the tool in its recipe that crafting uses up (a Stone Axe's Wooden Axe); null otherwise |
 
 | ItemPickup member | What it is |

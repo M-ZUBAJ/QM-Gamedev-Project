@@ -22,7 +22,7 @@ Purpose: Turns the placeholder rocks (Turki's StoneNode, CopperNode and IronNode
            - in the open scene (asks first): Sanyam's ObjectScatter rule with "Desert" in its name that spawns
              StoneNodes spawns StoneNode Desert instead, and the rocks placed by hand are put on the ground (their
              pivot used to be the middle of the cube).
-Requirement: RockBuilder.cs x-> RockLook.cs, StandOnGround.cs, RockBreakBuilder.cs, ObjectScatter.cs, ResourceNode.cs, ShapeColor.cs, UIBuildHelper.cs, MenuOrder.cs
+Requirement: RockBuilder.cs x-> RockLook.cs, StandOnGround.cs, RockBreakBuilder.cs, MeshAssetHelper.cs, ObjectScatter.cs, ResourceNode.cs, ShapeColor.cs, UIBuildHelper.cs, MenuOrder.cs
 */
 
 using System.Collections.Generic;
@@ -106,7 +106,7 @@ public static class RockBuilder
             string path = AssetDatabase.GUIDToAssetPath(guid);
             string fileName = Path.GetFileNameWithoutExtension(path);
             if (!fileName.StartsWith("Rock Type")) continue;
-            Mesh mesh = RockBreakBuilder.MeshIn(path);
+            Mesh mesh = MeshAssetHelper.MeshIn(path);
             if (mesh != null) rocks.Add((fileName, mesh, path));
         }
         rocks.Sort((a, b) => string.CompareOrdinal(a.Item1, b.Item1));
@@ -147,7 +147,7 @@ public static class RockBuilder
 
             float size = Mathf.Pow(box.size.x * box.size.y * box.size.z, 1f / 3f);
             Vector3 pivot = new Vector3(box.center.x, box.min.y + box.size.y * SinkShare, box.center.z);
-            Mesh shape = RockBreakBuilder.SaveMovedCopy(mesh, pivot, TargetSize / size, ShapeFolder + "/" + name + " Shape.asset");
+            Mesh shape = MeshAssetHelper.SaveCopy(mesh, pivot, TargetSize / size, ShapeFolder + "/" + name + " Shape.asset");
             if (shape != null) shapes.Add(shape);
         }
         return shapes;

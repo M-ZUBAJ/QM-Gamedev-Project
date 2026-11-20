@@ -11,7 +11,7 @@ Purpose: The order of every item in our Tools menu, in ONE place.
          - Numbers more than 10 apart = a separator line between them (a new group).
          - A submenu (UI, Building, Items...) sits where its smallest number is.
          Each tool's [MenuItem] uses one of these numbers, e.g. [MenuItem("Tools/UI/Build Inventory UI", false, MenuOrder.BuildInventoryUI)].
-Requirement: MenuOrder.cs <-x BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, ChestSetup.cs, CraftingMenuBuilder.cs, DeathEffectBuilder.cs, EnemyBuilder.cs, FirstPersonHandsBuilder.cs, GameEndUIBuilder.cs, GrasslandTreeBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, NotificationUIBuilder.cs, PerkPanelBuilder.cs, PlayerAnimationSetup.cs, PlayerCharacterBuilder.cs, PunchEffectBuilder.cs, RockBreakBuilder.cs, RockBuilder.cs, ScriptMapTool.cs, SkyLightingSetup.cs, TierToolBuilder.cs, TitleSceneBuilder.cs, TreeFallBuilder.cs, WildAnimalBuilder.cs, WorldSpawnSetup.cs
+Requirement: MenuOrder.cs <-x ArmorBuilder.cs, BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, ChestSetup.cs, CraftingMenuBuilder.cs, DeathEffectBuilder.cs, EnemyBuilder.cs, FirstPersonHandsBuilder.cs, GameEndUIBuilder.cs, GearPageBuilder.cs, GrasslandTreeBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, NotificationUIBuilder.cs, PerkPanelBuilder.cs, PlayerAnimationSetup.cs, PlayerCharacterBuilder.cs, PunchEffectBuilder.cs, RockBreakBuilder.cs, RockBuilder.cs, ScriptMapTool.cs, SkyLightingSetup.cs, TierToolBuilder.cs, TitleSceneBuilder.cs, TreeFallBuilder.cs, WildAnimalBuilder.cs, WorldSpawnSetup.cs
 */
 
 public static class MenuOrder
@@ -20,6 +20,7 @@ public static class MenuOrder
     // Inventory
     public const int BuildInventoryUI = 100;
     public const int AddInventoryScripts = 101;
+    public const int BuildGearPage = 103;       // the inventory's Gear page: the character on the left, the armor slots on the right
     public const int BuildCraftingMenu = 102;   // Turki's crafting list: rows with pictures, a scroll list, the tier tools
     // --- line ---
     // Build menu (B)
@@ -72,6 +73,7 @@ public static class MenuOrder
     public const int BuildTierTools = 301;      // 15 tools (pickaxe / axe / sword x Wood ... Diamond) from the Low Poly Tool Pack
     public const int RebuildToolModels = 302;   // only the 15 tool prefabs again (handle length, materials); Item Data untouched
     public const int UpdateToolRecipes = 303;   // only the tools' recipes again (the crafting chain Wooden > Stone > Iron)
+    public const int BuildPlateArmor = 304;     // Blink's plate armor as 6 items to craft and wear (+ the Gear page)
     // --- line ---
     public const int ConvertTaggedObjectsToItems = 320;   // one-time move from tags, rarely needed
 

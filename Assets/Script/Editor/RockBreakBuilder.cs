@@ -15,9 +15,7 @@ Purpose: Rocks that break into pieces, in one click:
              material), with Gravel and Dust inside. They make nothing by themselves: RockBreak emits them;
            - RockBreak on every rock prefab in Assets/Prefabs (a ResourceNode of type Stone), Debris filled in and Dust
              Color = the average color of the rock's material, a bit lighter. Prefabs first, then their Prefab Variants.
-         Also shares two helpers with RockBuilder: MeshIn (the mesh inside a model file) and SaveMovedCopy (a mesh
-         copy with a new pivot and size, saved as an asset).
-Requirement: RockBreakBuilder.cs x-> RockBreak.cs, ResourceNode.cs, UIBuildHelper.cs, MenuOrder.cs
+Requirement: RockBreakBuilder.cs x-> RockBreak.cs, ResourceNode.cs, MeshAssetHelper.cs, UIBuildHelper.cs, MenuOrder.cs
              RockBreakBuilder.cs <-x RockBuilder.cs
 */
 
@@ -64,56 +62,6 @@ public static class RockBreakBuilder
         AssetDatabase.SaveAssets();
         return FindPrefabPath(DefaultPrefabPath) + " made; RockBreak on " +
                (done.Count > 0 ? string.Join(", ", done) : "no rock prefab (a ResourceNode of type Stone in " + RockFolder + ")") + ".";
-    }
-
-    // The mesh inside a model file (e.g. one of the pack's .dae rocks), or null.
-    public static Mesh MeshIn(string modelPath)
-    {
-        foreach (Object part in AssetDatabase.LoadAllAssetsAtPath(modelPath))
-        {
-            if (part is Mesh mesh) return mesh;
-        }
-        return null;
-    }
-
-    // A copy of a mesh with "newPivot" moved to (0, 0, 0) and everything scaled by "scale", saved as an asset at "path"
-    // (an existing file is refilled, so links to it stay). The mesh is read here in the Editor, where Unity allows it
-    // even when the model's Read/Write is off; the copy itself stays readable (RockLook gives it to a Mesh Collider
-    // while playing, which needs that). Null = the mesh couldn't be read.
-    public static Mesh SaveMovedCopy(Mesh source, Vector3 newPivot, float scale, string path)
-    {
-        Vector3[] corners = source.vertices;
-        if (corners.Length == 0)
-        {
-            Debug.LogWarning(ToolName + ": the corners of " + source.name + " can't be read.");
-            return null;
-        }
-        for (int i = 0; i < corners.Length; i++) corners[i] = (corners[i] - newPivot) * scale;
-
-        Mesh copy = AssetDatabase.LoadAssetAtPath<Mesh>(path);
-        bool isNew = copy == null;
-        if (isNew) copy = new Mesh();
-        else copy.Clear();
-
-        copy.name = Path.GetFileNameWithoutExtension(path);
-        copy.indexFormat = source.indexFormat;
-        copy.SetVertices(corners);
-        Vector3[] normals = source.normals;   // one size for all directions: the normals stay the same
-        if (normals.Length == corners.Length) copy.SetNormals(normals);
-        Vector2[] uvs = source.uv;            // the color sheet's colors
-        if (uvs.Length == corners.Length) copy.SetUVs(0, uvs);
-        Color32[] colors = source.colors32;
-        if (colors.Length == corners.Length) copy.SetColors(colors);
-        Vector4[] tangents = source.tangents;
-        if (tangents.Length == corners.Length) copy.SetTangents(tangents);
-        copy.subMeshCount = source.subMeshCount;
-        for (int s = 0; s < source.subMeshCount; s++) copy.SetTriangles(source.GetTriangles(s), s, false);
-        if (normals.Length != corners.Length) copy.RecalculateNormals();
-        copy.RecalculateBounds();
-
-        if (isNew) AssetDatabase.CreateAsset(copy, path);
-        else EditorUtility.SetDirty(copy);
-        return copy;
     }
 
     // ----- The rock prefabs -----
@@ -416,7 +364,7 @@ public static class RockBreakBuilder
             foreach (string guid in AssetDatabase.FindAssets(source + " t:Model", new[] { "Assets" }))
             {
                 string modelPath = AssetDatabase.GUIDToAssetPath(guid);
-                if (Path.GetFileNameWithoutExtension(modelPath) == source) mesh = MeshIn(modelPath);
+                if (Path.GetFileNameWithoutExtension(modelPath) == source) mesh = MeshAssetHelper.MeshIn(modelPath);
                 if (mesh != null) break;
             }
             if (mesh == null) continue;
@@ -424,7 +372,7 @@ public static class RockBreakBuilder
             Bounds box = mesh.bounds;
             float biggest = Mathf.Max(box.size.x, box.size.y, box.size.z);
             if (biggest <= 0f) continue;
-            Mesh chunk = SaveMovedCopy(mesh, box.center, 1f / biggest, ArtFolder + "/Chunk " + (shapes.Count + 1) + ".asset");
+            Mesh chunk = MeshAssetHelper.SaveCopy(mesh, box.center, 1f / biggest, ArtFolder + "/Chunk " + (shapes.Count + 1) + ".asset");
             if (chunk != null) shapes.Add(chunk);
         }
         if (shapes.Count == 0) shapes.Add(Resources.GetBuiltinResource<Mesh>("Cube.fbx"));

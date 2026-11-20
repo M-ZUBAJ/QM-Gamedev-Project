@@ -1,6 +1,6 @@
 /*
 First Date: 3/10/2026
-Date: 19/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: Drag this script onto the Player sphere.
 Unity Editor: The HealthBar (StatBar) finds this by itself. "On Changed" is only for extra things
@@ -9,9 +9,12 @@ Unity Editor: The HealthBar (StatBar) finds this by itself. "On Changed" is only
               Testing: in Play mode, change "Health" in the Inspector (0 = die), or right-click the component's
               title and choose "Test: Take Damage" / "Test: Heal" / "Test: Die" (uses "Test Amount").
 Purpose: Holds the player's health. TakeDamage / Heal change it and fire On Changed (current, max).
+         TakeDamage is a hit (an enemy's attack): the armor the player wears (PlayerArmor) takes its share off first.
+         LoseHealth is for what no armor stops (starving, bad food).
          At 0 health the player dies: the Died event fires once (PlayerRespawn listens to it and brings the
          player back). Revive fills health back up.
-Requirement: PlayerHealth.cs <-x DeathScreen.cs, EnemyAttack.cs, PerkChest.cs, PerkManager.cs, PlayerCoins.cs, PlayerRespawn.cs
+Requirement: PlayerHealth.cs o-> PlayerArmor.cs
+             PlayerHealth.cs <-x DeathScreen.cs, EnemyAttack.cs, PerkChest.cs, PerkManager.cs, PlayerCoins.cs, PlayerRespawn.cs
              PlayerHealth.cs <-o AutoCollector.cs, ChestPrompt.cs, DaylightCycle.cs, EnemyAnimator.cs, FirstPersonHands.cs, GainNotifier.cs, InteractOutline.cs, ItemConsumer.cs, ItemDropper.cs, PassiveRegen.cs, PlayerAnimator.cs, PlayerHunger.cs, PlayerInfoPage.cs, PlayerPerks.cs, PlayerSight.cs, PlayerStats.cs, StatBar.cs, WildAnimal.cs
 */
 
@@ -86,8 +89,18 @@ public class PlayerHealth : MonoBehaviour
 
     // ===== My methods =====
 
-    // Lose health. Negative amounts are ignored (use Heal for that).
+    // A hit from outside (e.g. an enemy's attack): the worn armor takes its share off first (PlayerArmor: the full
+    // iron set takes 10 % off). Negative amounts are ignored (use Heal for that).
     public void TakeDamage(float amount)
+    {
+        if (amount <= 0f || IsDead) return;
+        PlayerArmor armor = PlayerArmor.Current;   // asked now, not in Awake: it may be added to the player later
+        if (armor != null) amount = armor.Reduce(amount);
+        LoseHealth(amount);
+    }
+
+    // Lose health that no armor can stop (starving, bad food, the test menu's Die). Negative amounts are ignored.
+    public void LoseHealth(float amount)
     {
         if (amount <= 0f || IsDead) return;
 
@@ -177,6 +190,6 @@ public class PlayerHealth : MonoBehaviour
     [ContextMenu("Test: Die")]
     void TestDie()
     {
-        TakeDamage(health);   // all remaining health
+        LoseHealth(health);   // all remaining health, whatever armor is worn
     }
 }

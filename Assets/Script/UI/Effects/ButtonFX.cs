@@ -14,7 +14,7 @@ Purpose: Makes a button feel alive:
                        a ripple spreads from the exact point clicked, and a burst of sparks flies out (UISparks).
          A button that can't be clicked (Interactable off) is shown faded and ignores the mouse.
 Requirement: ButtonFX.cs x-> UITween.cs, UIFXSprites.cs, UISparks.cs, UISound.cs, Button (Unity)
-             ButtonFX.cs <-x PerkPanelBuilder.cs, TitleMenu.cs, TitleSceneBuilder.cs
+             ButtonFX.cs <-x GearPageBuilder.cs, PerkPanelBuilder.cs, TitleMenu.cs, TitleSceneBuilder.cs
 */
 
 using System.Collections.Generic;

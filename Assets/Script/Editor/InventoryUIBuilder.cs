@@ -1,6 +1,6 @@
 /*
 First Date: 7/10/2026
-Date: 19/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Open the scene you want the inventory in, then menu Tools > UI > Build Inventory UI.
@@ -10,8 +10,9 @@ Unity Editor: Open the scene you want the inventory in, then menu Tools > UI > B
               The Crafting page gets Turki's CraftingCanvas prefab (the crafting list), if it's in the project.
               Needs TMP Essentials (it tells you if they are missing).
               Already built the inventory before? Use Tools > UI > Add Inventory Scripts instead: it adds the
-              newer pieces (SlotUI, SlotGroup, HeldItem, ItemName texts, the crafting list, the Info tab, the item
-              name box, HotbarSelector, ItemDropper) to what you have, without rebuilding (your changes are kept).
+              newer pieces (SlotUI, SlotGroup, HeldItem, ItemName texts, the crafting list, the Info tab and its
+              Armor row, the item name box, HotbarSelector, ItemDropper) to what you have, without rebuilding (your
+              changes are kept).
 Purpose: Builds the inventory window from Docs/Inventory Setup.md in one click:
          InventoryCanvas > InventoryWindow > TabBar (4 tabs) + Pages (Inventory with 20 slots, Gear, Crafting
          with the crafting list, Info: the player's status and perks), the HeldItem on the mouse, the 8-slot
@@ -182,6 +183,7 @@ public static class InventoryUIBuilder
         if (craftingPage != null) AddCraftingList(craftingPage);
 
         AddInfoTab(window);   // the 4th tab: the player's status and perks
+        AddArmorRow(window);  // an Info tab made before the armor: its Armor row
         AddTooltip(canvas.transform);   // the item's name next to the mouse
         return true;
     }
@@ -243,6 +245,40 @@ public static class InventoryUIBuilder
         so.ApplyModifiedPropertiesWithoutUndo();
     }
 
+    // The Info page's Armor row (how much the worn armor protects, and its set bonus), under Stamina, in the
+    // InventoryCanvas prefab. Added once: Tools > Items > Build Plate Armor calls this for an inventory made before
+    // the armor. Returns what it did, for the Console.
+    public static string AddArmorRowToCanvas()
+    {
+        string path = CanvasPath;
+        if (AssetDatabase.LoadAssetAtPath<GameObject>(path) == null) return "no InventoryCanvas prefab";
+        GameObject root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            Transform window = root.transform.Find("InventoryWindow");
+            if (window == null || window.Find("Pages/InfoPage/Status") == null) return "no Info tab (Tools > UI > Add Inventory Scripts adds it)";
+            if (!AddArmorRow(window)) return "Armor row already there";
+            PrefabUtility.SaveAsPrefabAsset(root, path);
+            return "Armor row added under Stamina";
+        }
+        finally
+        {
+            PrefabUtility.UnloadPrefabContents(root);
+        }
+    }
+
+    // Adds the Armor row under the Stamina row of an Info page that hasn't got one. False = nothing to do.
+    static bool AddArmorRow(Transform window)
+    {
+        Transform status = window.Find("Pages/InfoPage/Status");
+        if (status == null || status.Find("ArmorRow") != null) return false;
+
+        MakeStatRow(status, "ArmorRow", "Armor", IconArt.StatArmor(), Color.clear, false);
+        Transform staminaRow = status.Find("StaminaRow");
+        if (staminaRow != null) status.Find("ArmorRow").SetSiblingIndex(staminaRow.GetSiblingIndex() + 1);
+        return true;
+    }
+
     // InfoPage: STATUS on the left (a row per stat), PERKS on the right (PlayerInfoPage copies PerkTemplate per perk).
     static GameObject MakeInfoPage(Transform pages)
     {
@@ -254,6 +290,7 @@ public static class InventoryUIBuilder
         MakeStatRow(status, "HealthRow", "Health", IconArt.PerkHealth(), HealthColor, true);
         MakeStatRow(status, "HungerRow", "Hunger", IconArt.StatHunger(), HungerColor, true);
         MakeStatRow(status, "StaminaRow", "Stamina", IconArt.PerkStamina(), StaminaColor, true);
+        MakeStatRow(status, "ArmorRow", "Armor", IconArt.StatArmor(), Color.clear, false);
         MakeStatRow(status, "SpeedRow", "Walk speed", IconArt.PerkSpeed(), Color.clear, false);
         MakeStatRow(status, "SprintRow", "Sprint speed", IconArt.PerkSpeed(), Color.clear, false);
         MakeStatRow(status, "JumpRow", "Jump height", IconArt.StatJump(), Color.clear, false);

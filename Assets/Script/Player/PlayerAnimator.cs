@@ -21,7 +21,7 @@ Purpose: Makes the player's character move like the player: it stands, runs (for
 Requirement: PlayerAnimator.cs x-> Animator (Unity)
              PlayerAnimator.cs o-> PlayerController.cs, PlayerJump.cs, PlayerHealth.cs, CameraController.cs, Rigidbody (Unity)
              PlayerAnimator.cs <-x FirstPersonHandsBuilder.cs, PlayerAnimationSetup.cs, PlayerCharacterBuilder.cs, PlayerCombat.cs, PunchCombo.cs, PunchEffect.cs, PunchEffectBuilder.cs, TierToolBuilder.cs, ToolRules.cs
-             PlayerAnimator.cs <-o FirstPersonHands.cs
+             PlayerAnimator.cs <-o FirstPersonHands.cs, GearPreview.cs
 */
 
 using System.Collections.Generic;

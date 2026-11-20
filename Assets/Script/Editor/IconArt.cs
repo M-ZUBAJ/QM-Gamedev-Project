@@ -1,6 +1,6 @@
 /*
 First Date: 19/11/2026
-Date: 19/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Not used directly. Tools > UI > Build HUD and Tools > UI > Build Perk Panel use it for their pictures.
@@ -16,11 +16,14 @@ Purpose: Draws the small game pictures in code and saves them as PNG sprites, so
            Assets/UI/Perks/PerkFireball.png   an orange flame      (Fireball)
            Assets/UI/Stats/Hunger.png         a drumstick          (the inventory's Info tab: hunger)
            Assets/UI/Stats/Jump.png           a green up arrow     (the inventory's Info tab: jump height)
+           Assets/UI/Stats/Armor.png          a steel breastplate  (the inventory's Info tab: armor)
+           Assets/UI/Armor/<Slot>.png         a white outline of each armor piece (helmet, shoulders, chestplate, gloves,
+                                              leggings, boots): shown faintly in an empty slot on the Gear page
          Each pixel is the average of 4 x 4 points, so the edges come out smooth, not jagged.
          GivePerkIcons puts the perk pictures in the player's PlayerPerks (its Icons list), for the HUD's perk icons
          and the Info tab.
-Requirement: IconArt.cs x-> UIBuildHelper.cs, UIFXSprites.cs, PlayerPerks.cs
-             IconArt.cs <-x HUDBuilder.cs, InventoryUIBuilder.cs, PerkPanelBuilder.cs
+Requirement: IconArt.cs x-> UIBuildHelper.cs, UIFXSprites.cs, PlayerPerks.cs, ArmorStats.cs
+             IconArt.cs <-x GearPageBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, PerkPanelBuilder.cs
 */
 
 using System.IO;
@@ -34,6 +37,7 @@ public static class IconArt
     public const string CommonFolder = "Assets/UI/Common";
     public const string PerkFolder = "Assets/UI/Perks";
     public const string StatFolder = "Assets/UI/Stats";
+    public const string ArmorFolder = "Assets/UI/Armor";
 
     const int IconSize = 128;    // pixels: sharp up to about 128 pixels on screen
     const int BoxSize = 64;      // the round box is small: 9-slicing stretches it to any size
@@ -52,6 +56,24 @@ public static class IconArt
     static readonly Vector2[] ChevronFront = Chevron(0.26f);
     static readonly Vector2[] FlameTip = { new Vector2(-0.5f, -0.22f), new Vector2(0.5f, -0.22f), new Vector2(0.06f, 0.92f) };
     static readonly Vector2[] FlameCoreTip = { new Vector2(-0.27f, -0.38f), new Vector2(0.27f, -0.38f), new Vector2(0.03f, 0.36f) };
+    static readonly Vector2[] Breastplate =
+    {
+        new Vector2(-0.72f, 0.5f), new Vector2(-0.34f, 0.72f), new Vector2(-0.16f, 0.5f), new Vector2(0.16f, 0.5f),
+        new Vector2(0.34f, 0.72f), new Vector2(0.72f, 0.5f), new Vector2(0.56f, 0.1f), new Vector2(0.5f, -0.72f),
+        new Vector2(-0.5f, -0.72f), new Vector2(-0.56f, 0.1f),
+    };
+    static readonly Vector2[] Palm = { new Vector2(-0.36f, -0.7f), new Vector2(0.36f, -0.7f), new Vector2(0.38f, 0.12f), new Vector2(-0.38f, 0.12f) };
+    static readonly Vector2[] Cuff = { new Vector2(-0.44f, -0.92f), new Vector2(0.44f, -0.92f), new Vector2(0.4f, -0.62f), new Vector2(-0.4f, -0.62f) };
+    static readonly Vector2[] Trousers =
+    {
+        new Vector2(-0.52f, 0.72f), new Vector2(0.52f, 0.72f), new Vector2(0.56f, -0.82f), new Vector2(0.14f, -0.82f),
+        new Vector2(0f, 0.08f), new Vector2(-0.14f, -0.82f), new Vector2(-0.56f, -0.82f),
+    };
+    static readonly Vector2[] Boot =
+    {
+        new Vector2(-0.42f, 0.76f), new Vector2(0.12f, 0.76f), new Vector2(0.14f, -0.22f), new Vector2(0.56f, -0.34f),
+        new Vector2(0.72f, -0.54f), new Vector2(0.7f, -0.78f), new Vector2(-0.44f, -0.78f),
+    };
     static readonly Vector2[] UpArrow =
     {
         new Vector2(0f, 0.86f), new Vector2(0.62f, 0.18f), new Vector2(0.24f, 0.18f), new Vector2(0.24f, -0.82f),
@@ -69,6 +91,11 @@ public static class IconArt
     public static Sprite PerkFireball() => Save(PerkFolder + "/PerkFireball.png", () => Draw(IconSize, FlamePaint), Vector4.zero);
     public static Sprite StatHunger() => Save(StatFolder + "/Hunger.png", () => Draw(IconSize, HungerPaint), Vector4.zero);
     public static Sprite StatJump() => Save(StatFolder + "/Jump.png", () => Draw(IconSize, JumpPaint), Vector4.zero);
+    public static Sprite StatArmor() => Save(StatFolder + "/Armor.png", () => Draw(IconSize, ArmorPaint), Vector4.zero);
+
+    // A white outline of an armor piece, shown faintly in an empty slot on the Gear page (tinted by the slot).
+    public static Sprite ArmorSlotIcon(ArmorSlot slot) =>
+        Save(ArmorFolder + "/" + slot + ".png", () => Draw(IconSize, (x, y) => InArmor(slot, x, y) ? Color.white : Color.clear), Vector4.zero);
 
     // The drawn picture of one of the player's perks (PlayerPerks' PerkType).
     public static Sprite ForPerk(PerkType type)
@@ -164,6 +191,10 @@ public static class IconArt
     static Color JumpPaint(float x, float y) =>
         Icon(x, y, (px, py) => InPolygon(px, py, UpArrow), new Color(0.18f, 0.58f, 0.28f), new Color(0.55f, 0.92f, 0.5f), new Color(0.07f, 0.28f, 0.11f));
 
+    // A steel breastplate (the same shape as the Gear page's chestplate outline).
+    static Color ArmorPaint(float x, float y) =>
+        Icon(x, y, (px, py) => InPolygon(px, py, Breastplate), new Color(0.42f, 0.47f, 0.55f), new Color(0.86f, 0.89f, 0.94f), new Color(0.18f, 0.2f, 0.26f));
+
     // A shape with a shadow (down right), a darker edge around it, and a fill that is lighter at the top.
     static Color Icon(float x, float y, System.Func<float, float, bool> shape, Color bottom, Color top, Color edge)
     {
@@ -189,6 +220,34 @@ public static class IconArt
     }
 
     static bool InChevrons(float x, float y) => InPolygon(x, y, ChevronBack) || InPolygon(x, y, ChevronFront);
+
+    // The armor outlines: a helmet with a T-shaped visor, two round shoulder plates, a breastplate, a glove, leggings, a boot.
+    static bool InArmor(ArmorSlot slot, float x, float y)
+    {
+        switch (slot)
+        {
+            case ArmorSlot.Helmet:
+                bool shell = (Circle(x, y + 0.02f, 0.66f) && y > -0.12f) || (Mathf.Abs(x) <= 0.66f && y <= -0.12f && y >= -0.7f);
+                bool eyes = y > -0.26f && y < -0.1f && Mathf.Abs(x) < 0.48f;   // the eye slit
+                bool nose = Mathf.Abs(x) < 0.09f && y < -0.1f;                  // the slit down the middle
+                return shell && !eyes && !nose;
+            case ArmorSlot.Shoulders:
+                bool plates = (Circle(x + 0.42f, y, 0.44f) || Circle(x - 0.42f, y, 0.44f)) && y > -0.18f;
+                return plates && !Circle(x, y - 0.42f, 0.24f) && Mathf.Abs(x) > 0.04f;   // a gap for the neck
+            case ArmorSlot.Chest:
+                return InPolygon(x, y, Breastplate);
+            case ArmorSlot.Gloves:
+                bool fingers = Segment(x, y, -0.27f, 0.05f, -0.29f, 0.66f, 0.085f) || Segment(x, y, -0.09f, 0.05f, -0.09f, 0.76f, 0.085f) ||
+                               Segment(x, y, 0.09f, 0.05f, 0.1f, 0.74f, 0.085f) || Segment(x, y, 0.27f, 0.05f, 0.3f, 0.6f, 0.08f);
+                return InPolygon(x, y, Palm) || InPolygon(x, y, Cuff) || fingers || Segment(x, y, -0.34f, -0.12f, -0.66f, 0.24f, 0.1f);
+            case ArmorSlot.Legs:
+                return InPolygon(x, y, Trousers);
+            case ArmorSlot.Boots:
+                return InPolygon(x, y, Boot);
+            default:
+                return Circle(x, y, 0.6f);
+        }
+    }
     static bool InMeat(float x, float y) => Circle(x - 0.18f, y - 0.2f, 0.52f) || Circle(x + 0.06f, y + 0.06f, 0.32f);
     static bool InBone(float x, float y) =>
         Segment(x, y, -0.1f, -0.1f, -0.6f, -0.6f, 0.08f) || Circle(x + 0.72f, y + 0.5f, 0.13f) || Circle(x + 0.5f, y + 0.72f, 0.13f);
