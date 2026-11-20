@@ -25,7 +25,7 @@ public class EnemyCombat : MonoBehaviour
     // Notice this method is public
     // You can call it from other Scripts !!!
     // whenever player attacks an enemy
-    public void TakeDamage(float damage)
+    public void TakeDamage(float damage, string weaponId = null)
     {
         if (dead) return; // [Tony] added: a dying enemy can't be hit again
 
@@ -44,14 +44,19 @@ public class EnemyCombat : MonoBehaviour
 
         if (currentHealth <= 0)
         {
-            Die();
+            Die(weaponId);
         }
     }
 
-
-    void Die()
+    void Die(string weaponId)
     {
-        dead = true; // [Tony] added
+        dead = true;
+
+        // Count a kill for the sword that delivered the lethal hit.
+        if (!string.IsNullOrEmpty(weaponId) && WeaponUpgradeSystem.Instance != null)
+        {
+            WeaponUpgradeSystem.Instance.RecordKill(weaponId);
+        }
         Debug.Log("Enemy defeated!");
 
         int coinsEarned = Random.Range(3, 7);// player can get 1-3 coins per kill

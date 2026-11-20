@@ -22,6 +22,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 - PlayerFireball.cs has no /* */ header at the top.
 - PlayerStats.cs: can't read this Requirement line: "ItemConsumer.cs, BlueprintPlacer.cs, PlayerRespawn.cs"
 - TestPlayerHealth.cs has no /* */ header at the top.
+- WeaponUpgrade.cs has no /* */ header at the top.
 - ObjectScatter.cs has no /* */ header at the top.
 - PerkSelectionUI.cs has no /* */ header at the top.
 - CraftingMenuBuilder.cs lists ToolStats.cs, but its code doesn't use it.
@@ -161,6 +162,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [PunchEffect.cs](<Assets/Script/Player/PunchEffect.cs>) | Player | PlayerAnimator.cs, PunchCombo.cs | PlayerAnimationSetup.cs, PlayerCombat.cs, PunchEffectBuilder.cs, TierToolBuilder.cs |
 | [RespawnOnFall.cs](<Assets/Script/Player/RespawnOnFall.cs>) | Player | - | - |
 | [TestPlayerHealth.cs](<Assets/Script/Player/TestPlayerHealth.cs>) | Player | - | - |
+| [WeaponUpgrade.cs](<Assets/Script/Player/WeaponUpgrade.cs>) | Player | - | EnemyCombat.cs, PlayerCombat.cs |
 | [PassiveRegen.cs](<Assets/Script/Survival/PassiveRegen.cs>) | Survival | PlayerHealth.cs (optional), PlayerHunger.cs (optional) | - |
 | [ToolInHand.cs](<Assets/Script/Tool/ToolInHand.cs>) | Tool | Animator (Unity), PlayerInventory.cs, ItemData.cs, ToolStats.cs, HandGrip.cs, CameraController.cs (optional), FirstPersonHands.cs (optional), IconCapture.cs (optional) | GearPreview.cs (optional), PlayerCharacterBuilder.cs, TierToolBuilder.cs |
 | [ToolRules.cs](<Assets/Script/Tool/ToolRules.cs>) | Tool | ToolStats.cs, ItemData.cs, PlayerInventory.cs, ResourceNode.cs, PlayerAnimator.cs, NotificationFeed.cs | PlayerCombat.cs, PlayerFireball.cs, PunchCombo.cs, TierToolBuilder.cs |
