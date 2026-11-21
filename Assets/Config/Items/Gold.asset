@@ -37,7 +37,7 @@ MonoBehaviour:
     piece: 
     hides: []
     look: {fileID: 0}
-  minedWith: 2
+  minedWith: 3
   recipe: []
   craftAmount: 1
   craftedAt: 0

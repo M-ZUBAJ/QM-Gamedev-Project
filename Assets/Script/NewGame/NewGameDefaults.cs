@@ -47,6 +47,8 @@ public class NewGameDefaults : ScriptableObject
     [SerializeField] bool clearItemOnDead = false;
     [SerializeField] bool autoPickupDrops = false;
     [SerializeField] bool showNotifications = true;
+    [Tooltip("Pause Game: the Esc pause menu stops the game while it's open.")]
+    [SerializeField] bool pauseGame = true;
 
     [Header("Testing (GameRules)")]
     [Tooltip("Tool Test: start with one of every tier tool.")]
@@ -76,6 +78,7 @@ public class NewGameDefaults : ScriptableObject
     public bool ClearItemOnDead => clearItemOnDead;
     public bool AutoPickupDrops => autoPickupDrops;
     public bool ShowNotifications => showNotifications;
+    public bool PauseGame => pauseGame;
     public bool ToolTest => toolTest;
     public bool ArmorTest => armorTest;
     public bool NewChests => newChests;

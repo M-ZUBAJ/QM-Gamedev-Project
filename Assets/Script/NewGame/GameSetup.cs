@@ -12,7 +12,7 @@ Purpose: Remembers the player's New Game choices and puts them into the game whe
            Day length, Start time      -> DaylightCycle.SetDayLength / SetStartTime
            Difficulty                  -> EnemySpawner's spawnAtNight / enemiesPerNight (Marko's public settings,
                                           his file isn't changed) and PlayerHunger.SetDrainPerSecond
-           When I die, pickups, "+3 Wood" messages -> GameRules
+           When I die, pickups, "+3 Wood" messages, the pause menu pausing the game -> GameRules
            Testing: start with all tools           -> GameRules Tool Test (ToolTestKit gives the 15 tier tools)
            Testing: start with all armor           -> GameRules Armor Test (ArmorTestKit gives the Copper and
                                                       Iron sets)
@@ -52,6 +52,7 @@ public static class GameSetup
     public static DeathRule? WhenDying;
     public static bool? AutoPickupDrops;
     public static bool? ShowNotifications;
+    public static bool? PauseGame;             // Rules: the Esc pause menu stops the game (GameRules > Pause Game)
     public static bool? StartWithAllTools;     // Testing: one of every tier tool from the start
     public static bool? StartWithAllArmor;     // Testing: every armor piece (the Copper and Iron sets) from the start
     public static bool? NewWorld;              // Map: true = the new world (a new random one every game), null = the old
@@ -83,6 +84,7 @@ public static class GameSetup
         WhenDying = null;
         AutoPickupDrops = null;
         ShowNotifications = null;
+        PauseGame = null;
         StartWithAllTools = null;
         StartWithAllArmor = null;
         NewWorld = null;
@@ -141,6 +143,7 @@ public static class GameSetup
         }
         if (AutoPickupDrops.HasValue) GameRules.Set(GameRule.AutoPickupDrops, AutoPickupDrops.Value);
         if (ShowNotifications.HasValue) GameRules.Set(GameRule.ShowNotifications, ShowNotifications.Value);
+        if (PauseGame.HasValue) GameRules.Set(GameRule.PauseGame, PauseGame.Value);
         if (StartWithAllTools.HasValue) GameRules.Set(GameRule.ToolTest, StartWithAllTools.Value);
         if (StartWithAllArmor.HasValue) GameRules.Set(GameRule.ArmorTest, StartWithAllArmor.Value);
         if (NewChests.HasValue) GameRules.Set(GameRule.NewChests, NewChests.Value);

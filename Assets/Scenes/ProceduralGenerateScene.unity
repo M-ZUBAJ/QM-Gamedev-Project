@@ -919,6 +919,62 @@ MonoBehaviour:
     openGround: 0.35
     minSize: 1
     maxSize: 1
+  - name: ChestsSnow
+    prefab: {fileID: 8644458751390724045, guid: caebce93f6b77cd43aed49b2216edb87, type: 3}
+    count: 40
+    yOffset: 0.6
+    terrainLayer: 2
+    minStrength: 0.6
+    maxSlope: 15
+    minSpacing: 20
+    spacingGroup: Chests
+    clearance: 3
+    patchSize: 0
+    openGround: 0.35
+    minSize: 1
+    maxSize: 1
+  - name: Rare Chests Snow
+    prefab: {fileID: 5508622133717038746, guid: 046bd5d07fbdfdb488db4fca94657675, type: 3}
+    count: 20
+    yOffset: 0.6
+    terrainLayer: 2
+    minStrength: 0.6
+    maxSlope: 15
+    minSpacing: 20
+    spacingGroup: Chests
+    clearance: 3
+    patchSize: 0
+    openGround: 0.35
+    minSize: 1
+    maxSize: 1
+  - name: Epic Chests Snow
+    prefab: {fileID: 778164086490228726, guid: 5f095398cd0813e4fab04a6c5015b22c, type: 3}
+    count: 8
+    yOffset: 0.6
+    terrainLayer: 2
+    minStrength: 0.6
+    maxSlope: 15
+    minSpacing: 20
+    spacingGroup: Chests
+    clearance: 3
+    patchSize: 0
+    openGround: 0.35
+    minSize: 1
+    maxSize: 1
+  - name: Legendary Chests Snow
+    prefab: {fileID: 7850518171655344300, guid: 36b8aa0d1acbb814dbaa9cd012866652, type: 3}
+    count: 4
+    yOffset: 0.6
+    terrainLayer: 2
+    minStrength: 0.6
+    maxSlope: 15
+    minSpacing: 20
+    spacingGroup: Chests
+    clearance: 3
+    patchSize: 0
+    openGround: 0.35
+    minSize: 1
+    maxSize: 1
   - name: 'Trees: Round Oak'
     prefab: {fileID: 3245735666504203572, guid: 586d1bc6a3cce44eb9b011b8d05ebd30, type: 3}
     count: 500
@@ -1059,6 +1115,76 @@ MonoBehaviour:
     openGround: 0.35
     minSize: 1
     maxSize: 1.6
+  - name: 'Trees: Snow Pine'
+    prefab: {fileID: 6975590230468206617, guid: 45b717a570a63a34191dfcfbc63a6dbb, type: 3}
+    count: 120
+    yOffset: 0
+    terrainLayer: 2
+    minStrength: 0.7
+    maxSlope: 25
+    minSpacing: 9
+    spacingGroup: Trees
+    clearance: 3
+    patchSize: 120
+    openGround: 0.35
+    minSize: 0.85
+    maxSize: 1.2
+  - name: 'Trees: Tall Snow Pine'
+    prefab: {fileID: 5954610273143037401, guid: 5bdb909a888445642a824d61da07f80b, type: 3}
+    count: 120
+    yOffset: 0
+    terrainLayer: 2
+    minStrength: 0.7
+    maxSlope: 25
+    minSpacing: 9
+    spacingGroup: Trees
+    clearance: 3
+    patchSize: 120
+    openGround: 0.35
+    minSize: 0.85
+    maxSize: 1.2
+  - name: 'Trees: Snow Spruce'
+    prefab: {fileID: 7763886059790792376, guid: 53e57fc427b96f54fb61fe8f2bbca4c8, type: 3}
+    count: 120
+    yOffset: 0
+    terrainLayer: 2
+    minStrength: 0.7
+    maxSlope: 25
+    minSpacing: 9
+    spacingGroup: Trees
+    clearance: 3
+    patchSize: 120
+    openGround: 0.35
+    minSize: 0.85
+    maxSize: 1.2
+  - name: 'Trees: Tall Snow Spruce'
+    prefab: {fileID: 6264687380981051997, guid: 0fb3a09eca12b8844a39bb97220cbe0a, type: 3}
+    count: 120
+    yOffset: 0
+    terrainLayer: 2
+    minStrength: 0.7
+    maxSlope: 25
+    minSpacing: 9
+    spacingGroup: Trees
+    clearance: 3
+    patchSize: 120
+    openGround: 0.35
+    minSize: 0.85
+    maxSize: 1.2
+  - name: Snow Rocks
+    prefab: {fileID: 4199426812534921785, guid: b56c8778feaa8f54c8a904bd51cc0bf0, type: 3}
+    count: 40
+    yOffset: 0
+    terrainLayer: 2
+    minStrength: 0.6
+    maxSlope: 30
+    minSpacing: 14
+    spacingGroup: 
+    clearance: 3
+    patchSize: 0
+    openGround: 0.35
+    minSize: 0.8
+    maxSize: 1.5
 --- !u!4 &408319592
 Transform:
   m_ObjectHideFlags: 0
@@ -1069,6 +1195,115 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 1471.0448, y: -133.67627, z: 1495.698}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &506245266
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 506245268}
+  - component: {fileID: 506245267}
+  m_Layer: 0
+  m_Name: World Generator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &506245267
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506245266}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 815f53014f3e5c94ab410734934c3ead, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  seed: 0
+  newWorldOnDeath: 1
+  maxHeight: 140
+  chunkSize: 256
+  chunkHeights: 129
+  chunkTextures: 128
+  loadDistance: 300
+  showDistance: 170
+  hideDistance: 240
+  frameBudget: 4
+  startRadius: 250
+  desertFrom: 400
+  snowFrom: 700
+  climateSize: 1100
+  hillsSize: 700
+  snowLine: 92
+  layers:
+  - {fileID: 8574412962073106934, guid: a84712c9f49f8e245a33c6b6912a8a16, type: 2}
+  - {fileID: 8574412962073106934, guid: 26ba7f262ee2d8846a2f547249875130, type: 2}
+  - {fileID: 8574412962073106934, guid: 040e1301c150ccc488fca928bc242ca8, type: 2}
+  - {fileID: 8574412962073106934, guid: 6e3544ab4f145144cbc6fc99b92c5b7e, type: 2}
+  - {fileID: 8574412962073106934, guid: 47ec3f903031d6941a0a4e18d309f536, type: 2}
+  grassLayer: 0
+  sandLayer: 1
+  rockLayer: 3
+  snowLayer: 2
+  mudLayer: 4
+  terrainMaterial: {fileID: 10652, guid: 0000000000000000f000000000000000, type: 0}
+  grassTexture: {fileID: 2800000, guid: f4c847e455e272e45bb92499a9837e9a, type: 3}
+  grassDensity: 6
+  grassWidth: {x: 0.45, y: 0.7}
+  grassHeight: {x: 0.55, y: 0.9}
+  grassBending: 0.2
+  grassWindSpeed: 0.4
+  grassHealthy: {r: 0.82, g: 1, b: 0.7, a: 1}
+  grassDry: {r: 0.86, g: 0.88, b: 0.55, a: 1}
+  grassDistance: 80
+  cavePrefabs:
+  - {fileID: 7537836816699140433, guid: b2d1ef6b0195ad64b814ec602b044e46, type: 3}
+  - {fileID: 3482727551194880824, guid: 0a29d22101066e44f92bb3d91e79576e, type: 3}
+  - {fileID: 3602163153455789024, guid: 8f677c0825162cf48b01a676b8cc4b8a, type: 3}
+  caveChance: 0.45
+  caveRadius: 13
+  stoneOre: {fileID: 1867434810978412031, guid: 62da010430b404922bc87adb93c05aa4, type: 3}
+  copperOre: {fileID: 3402797924704981900, guid: 93d4be1e9823f4dfb99c3b95e44b1df5, type: 3}
+  ironOre: {fileID: 3091310371889792107, guid: 25e53ca1353ad4a068b08b4bf85c21f1, type: 3}
+  ironPerCave: {x: 2, y: 3}
+  copperPerCave: {x: 2, y: 3}
+  desertCavePrefabs:
+  - {fileID: 2932826037742657095, guid: d14de47b393e39c44901b167defb04db, type: 3}
+  - {fileID: 5761925387350302027, guid: a51638e77c4cc6c47b73ce37256b7e99, type: 3}
+  desertCaveChance: 0.5
+  goldOre: {fileID: 905641813461942899, guid: 7a8d2359a42d29145af7a809d9220c7a, type: 3}
+  sandstoneOre: {fileID: 644092515104945314, guid: e9ed3e00707107f4c872daeff2235d66, type: 3}
+  goldPerCave: {x: 2, y: 3}
+  snowCavePrefabs:
+  - {fileID: 6919435933739057417, guid: 8bf2ee1c5bc3d9c4e83abbaa430bbbe0, type: 3}
+  - {fileID: 26794712438816091, guid: cda314f304bb50247a6b5d6c410b078f, type: 3}
+  - {fileID: 1021783066964483606, guid: d86e7d71ce3a3934da22681abfbb5675, type: 3}
+  snowCaveChance: 0.7
+  diamondOre: {fileID: 1872389438602731840, guid: 3013b078704bdab4db23112c623cbef2, type: 3}
+  diamondPerCave: {x: 2, y: 3}
+  scatter: {fileID: 408319591}
+  rulesArea: 400000
+  player: {fileID: 1576947588}
+--- !u!4 &506245268
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506245266}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1209,104 +1444,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5a9635006fad84d4ea4caabe92368ab8, type: 3}
---- !u!1 &679922114
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 679922116}
-  - component: {fileID: 679922115}
-  m_Layer: 0
-  m_Name: World Generator
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &679922115
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 679922114}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 815f53014f3e5c94ab410734934c3ead, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  seed: 0
-  newWorldOnDeath: 1
-  worldSize: 1000
-  maxHeight: 140
-  landBeyondBarrier: 60
-  heightResolution: 513
-  textureResolution: 512
-  grasslandRadius: 280
-  desertWidth: 140
-  snowLine: 92
-  layers:
-  - {fileID: 8574412962073106934, guid: a84712c9f49f8e245a33c6b6912a8a16, type: 2}
-  - {fileID: 8574412962073106934, guid: 26ba7f262ee2d8846a2f547249875130, type: 2}
-  - {fileID: 8574412962073106934, guid: 040e1301c150ccc488fca928bc242ca8, type: 2}
-  - {fileID: 8574412962073106934, guid: 6e3544ab4f145144cbc6fc99b92c5b7e, type: 2}
-  - {fileID: 8574412962073106934, guid: 47ec3f903031d6941a0a4e18d309f536, type: 2}
-  grassLayer: 0
-  sandLayer: 1
-  rockLayer: 3
-  snowLayer: 2
-  mudLayer: 4
-  terrainMaterial: {fileID: 10652, guid: 0000000000000000f000000000000000, type: 0}
-  grassTexture: {fileID: 2800000, guid: f4c847e455e272e45bb92499a9837e9a, type: 3}
-  grassDensity: 6
-  grassWidth: {x: 0.45, y: 0.7}
-  grassHeight: {x: 0.55, y: 0.9}
-  grassBending: 0.2
-  grassWindSpeed: 0.4
-  grassHealthy: {r: 0.82, g: 1, b: 0.7, a: 1}
-  grassDry: {r: 0.86, g: 0.88, b: 0.55, a: 1}
-  grassDistance: 80
-  cavePrefabs:
-  - {fileID: 7537836816699140433, guid: b2d1ef6b0195ad64b814ec602b044e46, type: 3}
-  - {fileID: 3482727551194880824, guid: 0a29d22101066e44f92bb3d91e79576e, type: 3}
-  - {fileID: 3602163153455789024, guid: 8f677c0825162cf48b01a676b8cc4b8a, type: 3}
-  caveCount: 6
-  caveMinDistance: 60
-  caveMaxDistance: 230
-  caveSpacing: 70
-  caveRadius: 13
-  stoneOre: {fileID: 1867434810978412031, guid: 62da010430b404922bc87adb93c05aa4, type: 3}
-  copperOre: {fileID: 3402797924704981900, guid: 93d4be1e9823f4dfb99c3b95e44b1df5, type: 3}
-  ironOre: {fileID: 3091310371889792107, guid: 25e53ca1353ad4a068b08b4bf85c21f1, type: 3}
-  ironPerCave: {x: 2, y: 3}
-  copperPerCave: {x: 2, y: 3}
-  desertCavePrefabs:
-  - {fileID: 2932826037742657095, guid: d14de47b393e39c44901b167defb04db, type: 3}
-  - {fileID: 5761925387350302027, guid: a51638e77c4cc6c47b73ce37256b7e99, type: 3}
-  desertCaveCount: 3
-  goldOre: {fileID: 905641813461942899, guid: 7a8d2359a42d29145af7a809d9220c7a, type: 3}
-  sandstoneOre: {fileID: 644092515104945314, guid: e9ed3e00707107f4c872daeff2235d66, type: 3}
-  goldPerCave: {x: 2, y: 3}
-  scatter: {fileID: 408319591}
-  player: {fileID: 1576947588}
---- !u!4 &679922116
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 679922114}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &751114478
 GameObject:
   m_ObjectHideFlags: 0
@@ -1674,6 +1811,7 @@ MonoBehaviour:
   jump: 32
   sprint: 304
   grab: 102
+  interactKey: 101
   inventory: 9
   crafting: 99
   keyMenu: 107
@@ -1681,7 +1819,6 @@ MonoBehaviour:
   swing: 323
   consume: 324
   build: 98
-  interact: 324
   placeBuilding: 323
   cancelBuilding: 324
   autoPlace: 325
@@ -1893,6 +2030,103 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1001 &1375466461
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1914579318891844308, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914579318891844308, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914579318891844308, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914579318891844308, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914579318891844308, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914579318891844308, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914579318891844308, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914579318891844308, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914579318891844308, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914579318891844308, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914579318891844308, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914579318891844308, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914579318891844308, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914579318891844308, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914579318891844308, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914579318891844308, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914579318891844308, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914579318891844308, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914579318891844308, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1914579318891844308, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6302788918682169007, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
+      propertyPath: m_Name
+      value: PauseCanvas
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 631eb138a8cda554f98efab52e12725f, type: 3}
 --- !u!1 &1576947584
 GameObject:
   m_ObjectHideFlags: 0
@@ -2684,6 +2918,7 @@ MonoBehaviour:
   toolTest: 0
   armorTest: 0
   newChests: 1
+  pauseGame: 1
 --- !u!4 &1690935958
 Transform:
   m_ObjectHideFlags: 0
@@ -5052,7 +5287,7 @@ PrefabInstance:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 679922116}
+  - {fileID: 506245268}
   - {fileID: 1777018448}
   - {fileID: 1690935958}
   - {fileID: 1218533314}
@@ -5079,3 +5314,4 @@ SceneRoots:
   - {fileID: 538607312}
   - {fileID: 898840731}
   - {fileID: 985800447}
+  - {fileID: 1375466461}

@@ -1,6 +1,6 @@
 /*
 First Date: 7/10/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Open the scene you want the inventory in, then menu Tools > UI > Build Inventory UI.
@@ -20,7 +20,7 @@ Purpose: Builds the inventory window from Docs/Inventory Setup.md in one click:
          and HotbarSelector + ItemDropper are added to the player.
          An existing Slot prefab is reused (your changes to it are kept), so only InventoryCanvas is rebuilt.
 Requirement: InventoryUIBuilder.cs x-> UIBuildHelper.cs, TabGroup.cs, InventoryWindow.cs, SlotUI.cs, SlotGroup.cs, HeldItemUI.cs, HotbarSelector.cs, ItemDropper.cs, CraftingMenu.cs, PlayerInfoPage.cs, PlayerPerks.cs, ItemTooltip.cs, IconArt.cs, MenuOrder.cs
-             InventoryUIBuilder.cs <-x ArmorBuilder.cs
+             InventoryUIBuilder.cs <-x ArmorBuilder.cs, DeathScreenBuilder.cs
 */
 
 using TMPro;
@@ -285,8 +285,17 @@ public static class InventoryUIBuilder
     {
         GameObject page = NewUI("InfoPage", pages);
         Stretch(page, 40f, 30f, 40f, 30f);
+        FillInfoPage(page.transform);
+        page.SetActive(false);   // TabGroup shows it when its tab is clicked
+        return page;
+    }
 
-        Transform status = InfoColumn(page.transform, "Status", 0f, StatusWidth);
+    // The Info page's content inside "page" (at least 1100 x 640): the STATUS column on its left, the PERKS column on its
+    // right and PlayerInfoPage on it, which fills them in. Tools > UI > Upgrade Death Screen makes the death page's
+    // stats panel with it too (DeathScreenBuilder), so both look the same.
+    public static PlayerInfoPage FillInfoPage(Transform page)
+    {
+        Transform status = InfoColumn(page, "Status", 0f, StatusWidth);
         InfoTitle(status, "STATUS");
         MakeStatRow(status, "HealthRow", "Health", IconArt.PerkHealth(), HealthColor, true);
         MakeStatRow(status, "HungerRow", "Hunger", IconArt.StatHunger(), HungerColor, true);
@@ -298,7 +307,7 @@ public static class InventoryUIBuilder
         MakeStatRow(status, "FireballRow", "Fireball", IconArt.PerkFireball(), Color.clear, false);
         MakeStatRow(status, "CoinsRow", "Coins", IconArt.Coin(), Color.clear, false);
 
-        Transform perks = InfoColumn(page.transform, "PerkList", 1f, PerksWidth);
+        Transform perks = InfoColumn(page, "PerkList", 1f, PerksWidth);
         InfoTitle(perks, "PERKS");
         GameObject none = NewUI("NoPerks", perks);
         none.AddComponent<LayoutElement>().preferredHeight = 60f;
@@ -307,9 +316,7 @@ public static class InventoryUIBuilder
         noneText.fontStyle = FontStyles.Italic;
         MakePerkTemplate(perks);
 
-        page.AddComponent<PlayerInfoPage>();
-        page.SetActive(false);   // TabGroup shows it when its tab is clicked
-        return page;
+        return page.gameObject.AddComponent<PlayerInfoPage>();
     }
 
     // A column of rows down one side of the page (side 0 = left, 1 = right), the page's full height, this wide.

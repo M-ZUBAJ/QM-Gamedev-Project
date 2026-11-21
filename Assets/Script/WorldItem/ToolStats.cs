@@ -14,7 +14,7 @@ Purpose: What a tool is: its kind (what it's good at) and its tier (how strong).
          - Axe: chops trees faster.
          - Sword: hits enemies and animals harder.
          Each tier is 25 % stronger than the one before at the tool's own job.
-Requirement: ToolStats.cs <-x CraftingMenuBuilder.cs, DesertBuilder.cs, ItemData.cs, PlayerCombat.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs
+Requirement: ToolStats.cs <-x CraftingMenuBuilder.cs, DesertBuilder.cs, ItemData.cs, PlayerCombat.cs, SnowBuilder.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs
 */
 
 using UnityEngine;

@@ -1,6 +1,6 @@
 /*
 First Date: 20/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Menu Tools > World > Build Rock Caves (Tools > World > Build New World Scene runs it too). Needs the rock
@@ -21,8 +21,10 @@ Purpose: Three walk-in rock caves for the new world (Assets/Prefabs/World/Caves:
          The floor is the terrain: WorldGenerator flattens the ground under each cave.
          BuildDesert makes the desert's two the same way, all of sandstone (Desert Cave Small, Desert Cave: wider and a
          little lower), for Tools > World > Build Desert Content; WorldGenerator puts gold in them.
+         BuildSnow makes the snow's three, all of frosty rock (Snow Cave Small, Snow Cave, Snow Cave Big: a little
+         taller), for Tools > World > Build Snow Content; WorldGenerator puts diamonds in them.
 Requirement: RockCaveBuilder.cs x-> UIBuildHelper.cs, MenuOrder.cs
-             RockCaveBuilder.cs <-x DesertBuilder.cs, NewWorldBuilder.cs
+             RockCaveBuilder.cs <-x DesertBuilder.cs, NewWorldBuilder.cs, SnowBuilder.cs
 */
 
 using System.Collections.Generic;
@@ -68,6 +70,14 @@ public static class RockCaveBuilder
         new Design { name = "Desert Cave",       radius = 8f, wallHeight = 5.2f, seed = 71 },
     };
 
+    // The snow's caves (BuildSnow, with the frosty Snow Rock material): a little taller, like piled-up icy boulders.
+    static readonly Design[] SnowDesigns =
+    {
+        new Design { name = "Snow Cave Small", radius = 7f,   wallHeight = 5.2f, seed = 89 },
+        new Design { name = "Snow Cave",       radius = 7.5f, wallHeight = 5.8f, seed = 97 },
+        new Design { name = "Snow Cave Big",   radius = 8.5f, wallHeight = 6.4f, seed = 113 },
+    };
+
     // ===== Menu (Unity calls this) =====
 
     [MenuItem("Tools/World/Build Rock Caves", false, MenuOrder.BuildRockCaves)]
@@ -95,6 +105,12 @@ public static class RockCaveBuilder
     public static List<GameObject> BuildDesert(Material sandstone, out string report)
     {
         return BuildDesigns(DesertDesigns, sandstone != null ? sandstone : RockMaterial(), out report);
+    }
+
+    // Builds (refills) the snow's three caves, all of the given rock (Tools > World > Build Snow Content: Snow Rock).
+    public static List<GameObject> BuildSnow(Material snowRock, out string report)
+    {
+        return BuildDesigns(SnowDesigns, snowRock != null ? snowRock : RockMaterial(), out report);
     }
 
     static List<GameObject> BuildDesigns(Design[] designs, Material rock, out string report)

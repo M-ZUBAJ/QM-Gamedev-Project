@@ -27,12 +27,13 @@ They replaced Marko's three placeholder tools (Sword, Axe, PickAxe). Change logs
 | **Pickaxe can mine** | stone | + copper, iron | + gold | + diamond | everything |
 | **Strength at its job** (x Marko's numbers) | x1 | x1.25 | x1.56 | x1.95 | x2.44 |
 | **Sword damage** (Marko's Sword Damage 25) | 25 | 31 | 39 | 49 | 61 |
-| **Recipe** | 3 Plank + Wood (pickaxe 3, axe 3, sword 6) | the Wooden one + 3 Plank + Stone (pickaxe 6, axe 6, sword 9) | the Stone one + 3 Plank + Iron (same counts) | the Iron one + 3 Plank + Gold (same counts) | none yet |
+| **Recipe** | 3 Plank + Wood (pickaxe 3, axe 3, sword 6) | the Wooden one + 3 Plank + Stone (pickaxe 6, axe 6, sword 9) | the Stone one + 3 Plank + Iron (same counts) | the Iron one + 3 Plank + Gold (same counts) | the Gold one + 3 Plank + Diamond (same counts) |
 
 - **The recipes are a chain** (19/11/2026): each tier is made from the same tool of the tier below, which crafting
   uses up (Wooden Axe + 3 Plank + 6 Stone = Stone Axe), and the new tool goes into the old tool's slot (hotbar or
   inventory). **Tools > Items > Update Tool Recipes** puts them on existing tools and then sorts Turki's crafting
-  list, so a tool that just got a recipe (Gold) shows there; Build Tier Tools uses them too.
+  list, so a tool that just got a recipe (Gold, Diamond) shows there; Build Tier Tools uses them too, and **Tools >
+  World > Build Snow Content** runs it without asking.
   Table: `Docs/Crafting Menu Setup.md`.
 - **A bare hand** can still punch trees, stone and animals (slowly), but no ore.
 - **Copper and iron:** copper counts as the same tier as iron ("copper or iron can mine gold"). The pack has no copper
@@ -40,9 +41,10 @@ They replaced Marko's three placeholder tools (Sword, Axe, PickAxe). Change logs
 - **Gold:** the Gold item comes from the gold rocks in the new world's desert caves (an Iron Pickaxe or better;
   `Docs/Desert Setup.md`). Since 21/11/2026 the gold tools have their recipe (Iron tool + 3 Plank + 6 Gold, the sword
   9 Gold) and are in the crafting list. The old world has no gold rocks: there, gold tools come from the test rule.
-- **Diamond:** there's no diamond ore or item in the game yet. The rules are ready: give the new item's Item Data a
-  **Mined With** (Gold), and the diamond tools get their recipe from **Tools > Items > Update Tool Recipes** (the
-  Gold tool + 3 Plank + Diamond). Until then they come from the test rule.
+- **Diamond:** since 21/11/2026 the Diamond item comes from the diamond rocks in the new world's snow caves (a Gold
+  Pickaxe or better: its Mined With = Gold; `Docs/Snow Setup.md`). The diamond tools have their recipe (the Gold tool
+  + 3 Plank + 6 Diamond, the sword 9 Diamond) and are in the crafting list. The old world has no diamond rocks:
+  there, diamond tools come from the test rule.
 - **Marko's damage numbers are unchanged** (on the Player's PlayerCombat: Hand Damage, Sword Damage, Axe Tree Damage,
   Pick Axe Stone Damage...). They're what a wooden tool does, and the tiers multiply them.
 

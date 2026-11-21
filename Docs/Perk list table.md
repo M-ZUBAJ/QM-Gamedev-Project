@@ -44,13 +44,15 @@ the perk's Perk Data in `Assets/Config/Perks`, so change it there (and here). Ho
 
 | Box | Where | Price | Old system | New system |
 |---|---|---|---|---|
-| Common | grassland (20), desert (30) | 2, then +1 each | choose 1 of 3 from its 7 perks | **one random perk** from the 15 common + rare perks |
-| Rare | grassland (6), desert (12) | 10, then x1.5 each | choose 1 of 3 from its 8 perks | choose 1 of 3 from the same 15 |
-| Epic | desert only (4) | 100, then x2 each | choose 1 of 3 from its 8 perks, REROLL | **one random perk** from its 8 perks |
-| Legendary | desert only (2) | 150, then x2 each | not in the old system | choose 1 of 3 from the epic perks |
+| Common | grassland (20), desert (30), snow (40) | 2, then +1 each | choose 1 of 3 from its 7 perks | **one random perk** from the 15 common + rare perks |
+| Rare | grassland (6), desert (12), snow (20) | 10, then x1.5 each | choose 1 of 3 from its 8 perks | choose 1 of 3 from the same 15 |
+| Epic | desert (4), snow (8) | 100, then x2 each | choose 1 of 3 from its 8 perks, REROLL | **one random perk** from its 8 perks |
+| Legendary | desert (2), snow (4) | 150, then x2 each | not in the old system | choose 1 of 3 from the epic perks |
 
+- **Where:** the spawn rules' counts. The snow is only in the new world (where a count is for every 400,000 m² of
+  that ground: `Docs/Snow Setup.md`).
 - **REROLL** only works once you have the **Reroll** perk. Then: old system = the epic box only, new system = every box.
   It costs a tenth of the box's price, and twice as much each time at the same box.
 - **Unlocked after:** such a perk only shows up once you have the perk named there.
 - **When you die** every perk is lost, and every box's price starts again.
-- **The whole gold armor set** makes every box 10 % cheaper (rounded down: 10 -> 9, 100 -> 90).
+- **The whole gold or diamond armor set** makes every box 10 % cheaper (rounded down: 10 -> 9, 100 -> 90).

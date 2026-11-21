@@ -1,4 +1,4 @@
-# Armor Setup (the Copper, Iron and Gold sets and the inventory's Gear page)
+# Armor Setup (the Copper, Iron, Gold and Diamond sets and the inventory's Gear page)
 
 **What the player sees:**
 - **The copper set (copper colored):** six armor items to craft from Copper in the Crafting tab: Copper Helmet, Copper
@@ -15,11 +15,18 @@
   100 costs 90; the perk panel shows the old price crossed out). Gold pieces count as Iron (and so as Copper). Gold
   comes from the gold rocks in the new world's desert caves (`Docs/Desert Setup.md`); the old world has none, so there
   the gold set comes from the Armor Test.
-- **Copper first, then iron, then gold:** each is the next tier. (Until 20/11/2026 Iron came first and "Reinforced
+- **The diamond set (ice blue, sapphire trims, silver cloth, glossy; 21/11/2026):** six more pieces, each crafted from its
+  Gold piece + Diamond (Diamond Helmet = Gold Helmet + 4 Diamond, then + 3 / 6 / 2 / 5 / 3). **40 %** for the whole set,
+  and all six give **+8 coins for every monster killed** and make **every chest 10 % cheaper** (like the gold set; the
+  discounts don't add up). Diamond pieces count as Gold (and so as Iron and Copper). Diamonds come from the diamond rocks
+  in the new world's snow caves (`Docs/Snow Setup.md`); the old world has none, so there the diamond set comes from the
+  Armor Test.
+- **Copper first, then iron, then gold, then diamond:** each is the next tier. (Until 20/11/2026 Iron came first and "Reinforced
   Iron" = an Iron piece + Copper was its upgrade. Running the tool renames those old files by tier.)
 - **Colors:** every set uses Blink's plate shapes, so their colors tell them apart: Copper is copper with dark bronze
   trims, dark leather straps and a teal cloth; Iron is steel grey with dark iron trims, brown straps and a navy cloth;
-  Gold is bright gold with dark gold trims, red leather straps and a crimson cloth, and shinier.
+  Gold is bright gold with dark gold trims, red leather straps and a crimson cloth, and shinier; Diamond is ice blue
+  with sapphire trims, dark slate straps and a silver cloth, the glossiest.
 - **In the crafting list,** each set's pieces sit together in one box in the set's color, with the set's name, how
   much the whole set protects, what wearing all six gives, and how many are worn ("BONUS ON" in gold with all six).
   A piece you already have shows a green tick on its picture and "(owned)" / "(worn)" after its name.
@@ -34,11 +41,11 @@
   (or the pop-up's **Take off**) puts the piece back in the inventory.
 - **Protection:** every copper piece takes a share off each hit: **1.5 %** for the helmet, shoulders, gloves, leggings
   and boots, **2.5 %** for the chestplate. The whole copper set takes **10 %** off, the whole iron set **15 %**, the
-  whole gold set **25 %** (the most any armor can take is 80 %). Each slot shows its piece's share in its corner
+  whole gold set **25 %**, the whole diamond set **40 %** (the most any armor can take is 80 %). Each slot shows its piece's share in its corner
   ("+1.5%"), and the line under the slots says the total ("Hits do 10% less damage"). How much each set gets comes
   from one formula (see **How much each set protects** below).
 - **Set bonus:** wearing all six copper pieces gives **+1 coin for every monster killed** (all six iron: +2, all six
-  gold: +4 and every chest 10 % cheaper), on top of the monster's own coins (and the Bounty Hunter perk's:
+  gold: +4 and every chest 10 % cheaper, all six diamond: +8 and every chest 10 % cheaper), on top of the monster's own coins (and the Bounty Hunter perk's:
   `Docs/Loot Chests Setup.md`). Until 21/11/2026 the set bonus made stamina recharge faster. The Gear
   page counts the pieces next to the leggings ("Copper set 4/6") and turns gold with all six ("COPPER SET BONUS"). The
   inventory's **Info** tab shows it in gold too: the Coins row says "+1 per kill (Copper Set)" and the Armor row
@@ -56,13 +63,17 @@ clothes** below).
 3. Save the scene (**Ctrl + S**).
 
 The tool:
-- **Items:** makes 18 Item Data files in `Assets/Config/Items/Armor`:
+- **Items:** makes 24 Item Data files in `Assets/Config/Items/Armor`:
   - `CopperHelmet` ... `CopperBoots`: **Protection** 1.5 (2.5 for the chestplate), **Set** = Copper, a recipe of
     Copper (5, 4, 8, 3, 7 and 4).
   - `IronHelmet` ... `IronBoots`: **Protection** 2.25 (3.75 for the chestplate; 15 % for all six), **Set** = Iron, a
     recipe of the Copper piece for the same slot + Iron (4, 3, 6, 2, 5 and 3).
   - `GoldHelmet` ... `GoldBoots`: **Protection** 3.75 (6.25 for the chestplate; 25 % for all six), **Set** = Gold, a
     recipe of the Iron piece for the same slot + Gold (4, 3, 6, 2, 5 and 3).
+  - `DiamondHelmet` ... `DiamondBoots`: **Protection** 6 (10 for the chestplate; 40 % for all six), **Set** = Diamond,
+    a recipe of the Gold piece for the same slot + Diamond (4, 3, 6, 2, 5 and 3).
+  - the recipes need the **Gold** and **Diamond** items (made by Tools > World > Build Desert / Snow Content): when one
+    is missing, the tool makes it the same way first (a copy of Turki's Iron), so every set gets its recipes.
   - **Protection** is set again every time the tool runs (from the formula below), so the iron pieces made before go
     from 16 % to 15 % by themselves.
   - each with Item Type **Armor**, its slot, the character's part to show and what that part hides, **Look** = its
@@ -72,7 +83,7 @@ The tool:
     crafting list keeps them. Their recipes get Iron and Copper swapped; the amounts (and anything else you changed)
     stay. The first version's `Plate...` files were renamed to `Iron...` back then (in v2.12).
 - **Colors:** makes each set's material in `Assets/Materials/Armor` (`Copper Armor.mat`, `Iron Armor.mat`,
-  `Gold Armor.mat`), each with its own copy of Blink's
+  `Gold Armor.mat`, `Diamond Armor.mat`), each with its own copy of Blink's
   palette picture (`... Armor Palette.png`; the old `Reinforced Iron Armor` files, already copper, are renamed to
   `Copper Armor`). Blink's armor takes its colors from
   strips of that picture; the four strips the plate parts use (the plates, the trims, the straps and the cloth) are
@@ -85,16 +96,16 @@ The tool:
   and the Gear page's character all have it, so they all show the worn pieces. It also fills in ArmorLook's **Skin
   Under Clothes** list and makes the trimmed skin copies in `Assets/Prefabs/Player/SkinUnderClothes` (see below).
 - **The Player:** puts **PlayerArmor** on the Player (what's worn, and how much it protects) with every set's bonus
-  (a list saved before the swap loses its old Iron and Reinforced Iron lines first; a list without Gold gets it).
-  It also puts **ArmorTestKit** on the Player with all 18 pieces, so GameRules **Testing > Armor Test** gives the whole
+  (a list saved before the swap loses its old Iron and Reinforced Iron lines first; a list without Gold or Diamond
+  gets them). It also puts **ArmorTestKit** on the Player with all 24 pieces, so GameRules **Testing > Armor Test** gives the whole
   of every set (its own rule since 20/11/2026: **Tool Test** gives only tools now, and the tool takes the armor out of
   the ToolTestKit's list, where the first version had put it). This part needs the game scene open: run with another
   scene open (e.g. the title screen) and it's skipped. That's fine for testing: a game scene without an ArmorTestKit
   gets one by itself when it loads, and every kit gives, after its list, every other armor piece the game has loaded
-  (the crafting list links them all), so the new world's kit gives the gold set too without opening that scene.
-  PlayerArmor also adds itself when it's missing, and puts an old bonus list right when the game starts (a missing
-  Gold line is added then too).
-- **Crafting list:** adds the armor to Turki's crafting list, after the tools, set by set (Copper, Iron, Gold), and makes
+  (the crafting list links them all), so the new world's kit gives the gold and diamond sets too without opening that
+  scene. PlayerArmor also adds itself when it's missing, and puts an old bonus list right when the game starts (missing
+  Gold and Diamond lines are added then too).
+- **Crafting list:** adds the armor to Turki's crafting list, after the tools, set by set (Copper, Iron, Gold, Diamond), and makes
   the set boxes (Tools > UI > Build Crafting Menu's sorting and set panels).
 - **Gear page:** builds it (**Tools > UI > Build Gear Page**: the character on the left, the slots on the right, the
   set line and the pop-up). It changes the InventoryCanvas prefab, so every copy of the inventory follows.
@@ -107,12 +118,12 @@ Run it again any time. It refills everything in place.
 | Part | Where | What it does |
 |---|---|---|
 | **ArmorStats** | the Armor section of an armor's Item Data | Slot, Protection (percent of every hit it takes off), Set (e.g. Copper), Piece (the character's part to switch on, e.g. `PlateSet1_Helmet`), Hides (parts to switch off while worn, e.g. `Hair` under the helmet, `Starter_Chest` under the chestplate), Look (the set's material) |
-| **PlayerArmor** | the Player (added by itself if the Player has none, e.g. when the scene wasn't saved after the tool) | What's worn (one per slot). EquipFromCursor puts on the piece held on the cursor. Equip takes the piece out of the inventory and puts the old one back in; TakeOff puts it back if there's room. Every hit through `PlayerHealth.TakeDamage` is made smaller by the worn pieces' Protection added up (starving and bad food use `LoseHealth`, which armor can't stop). A piece of one set in every slot gives that set's bonus from **Set Bonuses** (**Coins Per Kill**: copper 1, iron 2, gold 4; Marko's EnemyCombat gives them through MonsterBounty, which asks `CoinsPerKill`; **Chest Discount**: gold 0.1, which Tony's ChestTier takes off every loot box price through `ChestDiscount`). A set with **Counts As** fills that set's slots too (Iron counts as Copper, Gold as Iron); when two sets are full, the one with more pieces of its own wins. Sets missing from the list are added when the game starts, and a list saved before 21/11/2026 (stamina bonuses, or Iron first then Reinforced Iron) is replaced by today's first (**UpdateOldBonuses**). **LendForUpgrade / FinishUpgrade**: crafting an upgrade of a worn piece takes it off for the recipe and wears the new one. |
+| **PlayerArmor** | the Player (added by itself if the Player has none, e.g. when the scene wasn't saved after the tool) | What's worn (one per slot). EquipFromCursor puts on the piece held on the cursor. Equip takes the piece out of the inventory and puts the old one back in; TakeOff puts it back if there's room. Every hit through `PlayerHealth.TakeDamage` is made smaller by the worn pieces' Protection added up (starving and bad food use `LoseHealth`, which armor can't stop). A piece of one set in every slot gives that set's bonus from **Set Bonuses** (**Coins Per Kill**: copper 1, iron 2, gold 4, diamond 8; Marko's EnemyCombat gives them through MonsterBounty, which asks `CoinsPerKill`; **Chest Discount**: gold and diamond 0.1, which Tony's ChestTier takes off every loot box price through `ChestDiscount`). A set with **Counts As** fills that set's slots too (Iron counts as Copper, Gold as Iron, Diamond as Gold); when two sets are full, the one with more pieces of its own wins. Sets missing from the list are added when the game starts, and a list saved before 21/11/2026 (stamina bonuses, or Iron first then Reinforced Iron) is replaced by today's first (**UpdateOldBonuses**). **LendForUpgrade / FinishUpgrade**: crafting an upgrade of a worn piece takes it off for the recipe and wears the new one. |
 | **CraftingMenu** (Turki's) | the crafting list | `[Tony]` lines call PlayerArmor's LendForUpgrade before checking an armor recipe and FinishUpgrade after (log `Docs/TonyEditMate/Turki/20-11-2026 Reinforced Iron Armor And Set Panels.md`). |
 | **CraftingRow** | each crafting row | Counts the worn piece in an armor upgrade's recipe ("1/1 Copper Helmet (worn)"). |
 | **CraftingSetPanels** | the crafting list's Panel | Puts each set's rows in one box in the set's color (see `Docs/Crafting Menu Setup.md`). |
 | **MonsterBounty** | (code only) | The extra coins when a monster dies: the set bonus's Coins Per Kill + the Bounty Hunter perk. |
-| **ChestTier** | each loot box | Takes the set bonus's Chest Discount off the box's price and its rerolls (the gold set: 10 % off, rounded down, at least 1 coin); the perk panel and the roll pop-up show the full price crossed out in front. |
+| **ChestTier** | each loot box | Takes the set bonus's Chest Discount off the box's price and its rerolls (the gold or diamond set: 10 % off, rounded down, at least 1 coin); the perk panel and the roll pop-up show the full price crossed out in front. |
 | **ArmorLook** | the PlayerCharacter prefab | Shows the worn pieces on that character in their set's material (Armor > Look) and hides what they cover; taking a piece off puts every part (and its material) back how it was. It also hides the skin under whatever clothes show (**Skin Under Clothes**, below). |
 | **GearPage** | the Gear page | The line under the slots ("Hits do 10% less damage"), the set line ("Copper set 4/6", gold with all six, and under it the better set being worn toward: "Iron 3/6: +2 coins per kill"); closes the pop-up when the page is left. |
 | **PlayerInfoPage** | the inventory's Info tab | The Armor row (the total protection, the set) and the set bonus on the Coins row, both in gold on a gold-tinted row while the whole set is worn. |
@@ -167,13 +178,13 @@ makes a trimmed copy for any skin that lies on the piece (at least 1 % of it wit
 | Where | Setting | What it does |
 |---|---|---|
 | PlayerArmor (Player) | **Max Protection** (80) | the most armor can take off a hit, in percent |
-| | **Set Bonuses** | per set: **Set** (its name, as in the pieces' Armor > Set), **Coins Per Kill** (extra coins for every monster killed while the whole set is worn: copper 1, iron 2, gold 4), **Chest Discount** (every loot box this share cheaper while the whole set is worn: gold 0.1), **Counts As** (a lower set its pieces also fill: Iron = Copper, Gold = Iron) and **Color** (its box in the crafting list). Better sets go lower in the list. |
+| | **Set Bonuses** | per set: **Set** (its name, as in the pieces' Armor > Set), **Coins Per Kill** (extra coins for every monster killed while the whole set is worn: copper 1, iron 2, gold 4, diamond 8), **Chest Discount** (every loot box this share cheaper while the whole set is worn: gold and diamond 0.1), **Counts As** (a lower set its pieces also fill: Iron = Copper, Gold = Iron, Diamond = Gold) and **Color** (its box in the crafting list). Better sets go lower in the list. |
 | an armor's Item Data | **Armor > Protection** | how much of every hit it takes off, in percent (copper: 1.5, the chestplate 2.5). Build Plate Armor sets it again from the formula every run: change the formula (or `SlotShares`) in `Editor/ArmorBuilder.cs`, not the items, to keep a change |
-| | **Armor > Set** | the set it belongs to (Copper, Iron, Gold) |
+| | **Armor > Set** | the set it belongs to (Copper, Iron, Gold, Diamond) |
 | | **Armor > Piece / Hides** | which part of the character it shows / hides |
 | | **Armor > Look** | the material it's drawn with when worn, dropped and in its icon (the set's) |
-| | **Recipe** | what crafting it costs (Copper; Iron: the Copper piece + Iron; Gold: the Iron piece + Gold) |
-| `Assets/Materials/Armor` | **Copper Armor**, **Iron Armor**, **Gold Armor** | each set's material: **Albedo** color tints the whole set, **Metallic** / **Smoothness** its shine; its **... Armor Palette** picture holds the set's colors |
+| | **Recipe** | what crafting it costs (Copper; Iron: the Copper piece + Iron; Gold: the Iron piece + Gold; Diamond: the Gold piece + Diamond) |
+| `Assets/Materials/Armor` | **Copper Armor**, **Iron Armor**, **Gold Armor**, **Diamond Armor** | each set's material: **Albedo** color tints the whole set, **Metallic** / **Smoothness** its shine; its **... Armor Palette** picture holds the set's colors |
 | GearPage (Gear page) | **Bonus Color** / **Hint Color** | the set line with the whole set on / before |
 | PlayerInfoPage (Info tab) | **Set Bonus Color**, **Set Bonus Row Color** | the gold of the set bonus text, and of the rows it improves |
 | GearPreview (Gear page > Preview > Character) | **Start Turn**, **Turn Speed**, **Field Of View** | the view of the character |
@@ -190,11 +201,12 @@ quarter, every other piece 15 %.
 | 1 | Copper | 10 % | 1.5 % each | 2.5 % | +1 coin per monster killed |
 | 2 | Iron | 15 % | 2.25 % each | 3.75 % | +2 coins per monster killed |
 | 3 | Gold | 25 % | 3.75 % each | 6.25 % | +4 coins per monster killed, every chest 10 % cheaper |
-| 4 | (Diamond, not made) | 40 % | 6 % each | 10 % | - |
+| 4 | Diamond | 40 % | 6 % each | 10 % | +8 coins per monster killed, every chest 10 % cheaper |
 
 In code: `SetTotal(n)` and `SlotShares` in `Editor/ArmorBuilder.cs`; each set in `Sets` says `Spread(SetTotal(n))`. A
-diamond set later: a Diamond item, a `DiamondColors` palette, a `Sets` line with `Spread(SetTotal(4))` and
-`upgradeOf = "Gold"`, and its bonus in `PlayerArmor.DefaultBonuses()` (counts as Gold).
+fifth set would get `SetTotal(5)` = 60 % (the most armor can take is 80 %): a palette like `DiamondColors`, a `Sets`
+line with `upgradeOf = "Diamond"` and its cost item, and its bonus in `PlayerArmor.DefaultBonuses()` (counts as
+Diamond).
 
 ## A new piece of armor by hand
 
@@ -215,7 +227,7 @@ paid armor packs add more).
 
 ## Testing
 
-1. Tick **GameRules > Testing > Armor Test** (or craft the pieces), press Play: all 18 pieces (Copper, Iron, Gold) are in
+1. Tick **GameRules > Testing > Armor Test** (or craft the pieces), press Play: all 24 pieces (Copper, Iron, Gold, Diamond) are in
    the inventory. Ticking it while playing gives them at once; pieces you have or wear aren't given twice. From the
    title screen: **NEW GAME > TESTING > Start with all armor** does the same.
 2. **Tab > Gear**: drag the character to turn it. Move the mouse over a slot: it grows and turns gold, and its name
@@ -242,6 +254,11 @@ paid armor packs add more).
 12. **Gold:** with the iron set on and some Gold, the gold box's Gold Helmet row says "1/1 Iron Helmet (worn)". Upgrade
     all six: "GOLD SET BONUS: +4 coins for every monster killed, 10% off every chest", the Info tab's Armor row "25%"
     with "Gold Set bonus, chests -10%", Test: Take Damage (10) takes 7.5, and a 10-coin rare box asks ~~10~~ 9.
+13. **Diamond:** with the gold set on and some Diamonds, the ice-blue box's Diamond Helmet row says "1/1 Gold Helmet
+    (worn)". Upgrade three pieces: the Gold bonus stays and the set line adds "Diamond 3/6: +8 coins per kill, chests
+    -10%". Upgrade all six: "DIAMOND SET BONUS: +8 coins for every monster killed, 10% off every chest", the Info tab's
+    Armor row "40%" with "Diamond Set bonus, chests -10%", Test: Take Damage (10) takes 6, a slime gives 8 more coins,
+    and a 10-coin rare box still asks ~~10~~ 9.
 
 ## Problems
 
@@ -260,10 +277,11 @@ paid armor packs add more).
 | The pieces still say "Reinforced Iron", the Iron pieces cost Iron alone, or the first set is still Iron | Their Item Data is from before the swap: run Build Plate Armor once (it renames the files by tier, swaps Iron and Copper in their recipes and sets Protection, Set and Look). |
 | No set bonus with all six on | Every piece needs the same **Armor > Set** (e.g. Copper), and PlayerArmor's **Set Bonuses** needs a line for that set. |
 | No set line on the Gear page, or no Armor row on the Info tab | They came with this version: run Build Plate Armor again (it rebuilds the Gear page and adds the row). |
-| No Copper, Iron or Gold pieces, or the armor still has Blink's colors | Run Build Plate Armor again (with GameScene open, then save). The recipes need the **Copper**, **Iron** and **Gold** items (`Assets/Config/Items/Copper`, `.../Iron`, `.../Gold`: Gold comes from Tools > World > Build Desert Content). |
+| No Copper, Iron, Gold or Diamond pieces, or the armor still has Blink's colors | Run Build Plate Armor again (with GameScene open, then save). The recipes need the **Copper**, **Iron**, **Gold** and **Diamond** items (`Assets/Config/Items/...`: the tool makes Gold and Diamond itself when they're missing, as Tools > World > Build Desert / Snow Content do). |
 | The iron pieces still say +2.5% / 16 % | Their Protection is from before the formula: run Build Plate Armor again (it sets Protection on every run). |
-| No gold rocks to mine | Gold only grows in the new world's desert caves. In the old world, use GameRules > Testing > Armor Test / Tool Test. |
-| Chests aren't cheaper with the gold set | All six slots need Gold pieces (a mix with Iron gives the Iron bonus), and PlayerArmor's Set Bonuses needs a Gold line with Chest Discount 0.1 (added by itself when the game starts). |
+| No gold rocks / diamond rocks to mine | Gold only grows in the new world's desert caves, diamonds in its snow caves (a Gold Pickaxe or better). In the old world, use GameRules > Testing > Armor Test / Tool Test. |
+| Chests aren't cheaper with the gold or diamond set | All six slots need pieces of that set (a mix with the set below gives the lower set's bonus: 3 Diamond + 3 Gold = the Gold bonus, which also takes 10 % off), and PlayerArmor's Set Bonuses needs its line with Chest Discount 0.1 (added by itself when the game starts). |
+| Only +4 coins with all six diamond pieces on | PlayerArmor's Set Bonuses has no Diamond line yet: it's added when the game starts (and by Build Plate Armor). If you made one by hand, check Coins Per Kill 8 and Counts As Gold. |
 | The set colors don't change after editing them in the tool | The materials are only made if missing: delete `Assets/Materials/Armor/<Set> Armor.mat` and its palette picture, then run the tool. Or change the material's Albedo color by hand. |
 | The Iron row says "0/1 Copper Helmet" | The Copper Helmet is neither worn nor in the inventory. A worn one counts ("(worn)"). |
 | No Iron bonus with all six on, or only +1 coin | PlayerArmor's **Set Bonuses** needs an Iron line with Coins Per Kill 2 that counts as Copper. A list from before 21/11/2026 is put right by itself when the game starts (and by Build Plate Armor / Build Loot Chests). |
@@ -271,4 +289,5 @@ paid armor packs add more).
 
 Change logs for Turki's crafting list: `Docs/TonyEditMate/Turki/20-11-2026 Plate Armor In The Crafting List.md`,
 `.../20-11-2026 Reinforced Iron Armor And Set Panels.md` (with the Copper-first update at its end) and
-`.../21-11-2026 Gold Tools And Gold Armor In The Crafting List.md`.
+`.../21-11-2026 Gold Tools And Gold Armor In The Crafting List.md` and `.../21-11-2026 Diamond Armor In The Crafting
+List.md`.

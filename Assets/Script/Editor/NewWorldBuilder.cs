@@ -13,7 +13,7 @@ Purpose: Makes the "New world" of the title screen's NEW GAME page: Assets/Scene
              HUD and menus, GameRules, key bindings, enemy, deer and tree spawners, Marko's fireball...),
            - without GameScene's hand-made map: its terrains, the trees, rocks, ores, chests, apples and deer placed
              by hand, building pieces, its walls (Boundaries) and World Barrier, and helper objects (Spawn, Ore
-             Testing). The World Generator makes the new world's barrier itself;
+             Testing). The new world is endless (since 21/11/2026): it has no barrier;
            - a view distance on its Main Camera (ViewDistance, 100 m: nothing further is drawn, a mist hides the edge;
              faster, most of all in the web build), and the scene saved with its fog on (Linear): a built game keeps
              fog only if a scene in it has fog on, and the mist is the fog;
@@ -23,19 +23,24 @@ Purpose: Makes the "New world" of the title screen's NEW GAME page: Assets/Scene
              copied once to Assets/Effects/Grass/GrassBlades.png with clamped edges; Polytope's own file isn't changed);
              GameScene has two terrains (the painted Terrain (1) inside Sanyam's WorldMap and an unpainted top-level
              Terrain): the textures come from the one with the most of them;
-           - ObjectScatter (Sanyam's; his script has one [Tony] line: nothing spawns outside a barrier) gets two
-             more rules in this scene, Hill Rocks (stone rocks on the rocky hills) and Sandstone Rocks (the desert's
-             hard sandstone, DesertBuilder), loses the rules that put plain stone rocks on the sand (his Desert Rocks;
-             GameScene keeps it), and has no terrain of its own: the World Generator gives it the new one;
+           - ObjectScatter (Sanyam's; his script has one [Tony] line: nothing spawns outside a barrier) gets more
+             rules in this scene: Hill Rocks (stone rocks on the rocky hills), Sandstone Rocks (the desert's hard
+             sandstone, DesertBuilder), and for the snow (SnowBuilder) the snowy conifers (Trees: Snow Pine...), Snow
+             Rocks and the snow's chests: copies of the desert's chest rules on the snow texture with more boxes (40
+             common, 20 rare, 8 epic, 4 legendary; the desert has 30, 12, 4, 2). It loses the rules that put plain stone
+             rocks on the sand (his Desert Rocks; GameScene keeps it) and has no terrain of its own: the World Generator
+             switches it off and uses its rules chunk by chunk as the land is made;
            - the desert's content first (Tools > World > Build Desert Content: Gold, GoldNode, SandstoneNode, the
              sandstone caves, the turtle), given to the World Generator (desert caves, gold, sandstone). The turtle is
              a night monster (since 21/11/2026): it comes with GameScene's EnemySpawner and its NightMonsters (Tools >
              Enemies > Set Up Night Monsters), copied with the scene; no day monster spawner is added;
+           - then the snow's content (Tools > World > Build Snow Content: Diamond, DiamondNode, StoneNode Snow, the snow
+             caves, the snowy conifers, the Diamond tools' recipes), given to the World Generator (snow caves, diamonds);
            - its light from the sky is saved (like Tools > World > Set Up Sky Lighting), and it's added to Build
              Settings, so the title screen can load it;
            - Unity's terrain grass shaders go into Project Settings > Graphics > Always Included Shaders (no saved
              scene has terrain grass, so a built game would leave them out).
-Requirement: NewWorldBuilder.cs x-> WorldGenerator.cs, RockCaveBuilder.cs, DesertBuilder.cs, SkyLightingSetup.cs, ObjectScatter.cs, AnimalSpawner.cs, PlayerController.cs, ResourceNode.cs, PerkChest.cs, ItemPickup.cs, WildAnimal.cs, WorldBarrier.cs, ViewDistance.cs, UIBuildHelper.cs, MenuOrder.cs
+Requirement: NewWorldBuilder.cs x-> WorldGenerator.cs, RockCaveBuilder.cs, DesertBuilder.cs, SnowBuilder.cs, GrasslandTreeBuilder.cs, SkyLightingSetup.cs, ObjectScatter.cs, AnimalSpawner.cs, PlayerController.cs, ResourceNode.cs, PerkChest.cs, ItemPickup.cs, WildAnimal.cs, WorldBarrier.cs, ViewDistance.cs, UIBuildHelper.cs, MenuOrder.cs
 */
 
 using System.Collections.Generic;
@@ -59,6 +64,20 @@ public static class NewWorldBuilder
     const string IronPath = "Assets/Prefabs/ResourceNodes/IronNode.prefab";
     const string HillRule = "Hill Rocks";
     const string SandstoneRule = "Sandstone Rocks";   // the desert's hard rock (DesertBuilder's SandstoneNode)
+    const string SnowRockRule = "Snow Rocks";         // frosty stone rocks on the snow (SnowBuilder's StoneNode Snow)
+    const string SnowTreeRule = "Trees: ";            // + the look, e.g. "Trees: Snow Pine" (like the grassland's tree rules)
+    const int SnowTrees = 480;                        // snowy conifers for every Rules Area of snow, shared out by the looks
+    const string ChestGroup = "Chests";               // every box keeps Min Spacing from every other box
+
+    // The snow's chest rules: a copy of the desert's rule, its name and count for the snow. More (and more of the better
+    // boxes) than the desert's 30 / 12 / 4 / 2: the snow is the farthest and best place.
+    static readonly (string desert, string snow, int count)[] SnowChests =
+    {
+        ("ChestsDesert", "ChestsSnow", 40),
+        ("Rare Chests Desert", "Rare Chests Snow", 20),
+        ("Epic Chests Desert", "Epic Chests Snow", 8),
+        ("Legendary Chests Desert", "Legendary Chests Snow", 4),
+    };
     const string GrassSource = "PT_Grass_01";                              // Polytope's grass blades picture (found by name)
     const string GrassPath = "Assets/Effects/Grass/GrassBlades.png";       // our copy, with clamped edges
 
@@ -85,10 +104,13 @@ public static class NewWorldBuilder
                 "This makes " + NewScenePath + ", the title screen's \"New world\":\n\n" +
                 "- a copy of GameScene's game (player, HUD, menus, sun, spawners)\n" +
                 "- without its hand-made map (terrain, placed trees, rocks, ores, chests, walls)\n" +
-                "- with the World Generator: a new random 1000 x 1000 m world every game (grassland start, desert, " +
-                "rocky hills, rock caves with stone, copper and iron) inside a glowing barrier\n" +
+                "- with the World Generator: a new random world every game that never ends (made in squares as you " +
+                "walk: a grassland start, rocky hills, farther out the desert and farthest the snow; rock caves with " +
+                "stone, copper and iron), with no barrier\n" +
                 "- the desert's content (Tools > World > Build Desert Content): sandstone caves with gold and hard " +
                 "sandstone rocks (the turtles come at night from night 2, with GameScene's night spawner)\n" +
+                "- the snow's content (Tools > World > Build Snow Content): snowy pines, frosty rocks, snow caves with " +
+                "diamonds (Diamond tools can then be crafted) and more and better chests than the desert\n" +
                 "- a 100 m view distance (ViewDistance on the Main Camera, with a mist)\n" +
                 "- the rock caves (Assets/Prefabs/World/Caves), its sky light, and a place in Build Settings\n\n" +
                 (exists ? "It replaces the ProceduralGenerateScene you have (changes made by hand there are lost).\n\n" : "") +
@@ -99,13 +121,14 @@ public static class NewWorldBuilder
 
         List<GameObject> caves = RockCaveBuilder.BuildAll(out string caveReport);
         DesertBuilder.Parts desert = DesertBuilder.BuildAll();
+        SnowBuilder.Parts snow = SnowBuilder.BuildAll();
         CopyScene(exists);
         Scene scene = EditorSceneManager.OpenScene(NewScenePath, OpenSceneMode.Single);
 
         Terrain oldTerrain = PaintedTerrain(scene);
-        WorldGenerator generator = AddGenerator(oldTerrain, caves, desert, scene, out string layerReport);   // before the old map goes
+        WorldGenerator generator = AddGenerator(oldTerrain, caves, desert, snow, scene, out string layerReport);   // before the old map goes
         List<string> removed = RemoveOldMap(scene);
-        string scatter = SetUpScatter(scene, generator, desert.sandstone);
+        string scatter = SetUpScatter(scene, generator, desert.sandstone, snow);
         foreach (AnimalSpawner spawner in FindAll<AnimalSpawner>(scene)) SetField(spawner, "terrain", null);   // whichever terrain is there
         string monsters = "Night monsters: GameScene's EnemySpawner (and its NightMonsters: the turtle from night 2) came with the copy.";
         string view = AddViewDistance(scene);
@@ -120,7 +143,8 @@ public static class NewWorldBuilder
 
         Debug.Log(ToolName + ": " + NewScenePath + " made from GameScene. Removed the old map: " +
                   (removed.Count > 0 ? string.Join(", ", removed) : "nothing") + ". " + layerReport + " Caves: " + caveReport +
-                  ". Desert: " + desert.report + ". " + scatter + " " + monsters + " " + view + " Sky light: " + light +
+                  ". Desert: " + desert.report + ". Snow: " + snow.report + ". " + scatter + " " + monsters + " " + view +
+                  " Sky light: " + light +
                   ". It's in Build Settings. Test: MainTitleScene > Play > " +
                   "NEW GAME > Map: New world > START GAME (rebuild the title screen first: Tools > UI > Build Main Title Scene).");
         if (caves.Count == 0)
@@ -145,7 +169,8 @@ public static class NewWorldBuilder
 
     // The World Generator object, filled in: the old terrain's textures (same order) and material, the caves, the ores,
     // ObjectScatter and the player. "report" says which texture is which, for the Console.
-    static WorldGenerator AddGenerator(Terrain oldTerrain, List<GameObject> caves, DesertBuilder.Parts desert, Scene scene, out string report)
+    static WorldGenerator AddGenerator(Terrain oldTerrain, List<GameObject> caves, DesertBuilder.Parts desert, SnowBuilder.Parts snow,
+                                       Scene scene, out string report)
     {
         GameObject go = new GameObject("World Generator");
         SceneManager.MoveGameObjectToScene(go, scene);
@@ -181,6 +206,10 @@ public static class NewWorldBuilder
         for (int i = 0; i < desert.caves.Count; i++) desertCaves.GetArrayElementAtIndex(i).objectReferenceValue = desert.caves[i];
         so.FindProperty("goldOre").objectReferenceValue = desert.goldOre;
         so.FindProperty("sandstoneOre").objectReferenceValue = desert.sandstone;
+        SerializedProperty snowCaves = so.FindProperty("snowCavePrefabs");   // the snow's (SnowBuilder)
+        snowCaves.arraySize = snow.caves.Count;
+        for (int i = 0; i < snow.caves.Count; i++) snowCaves.GetArrayElementAtIndex(i).objectReferenceValue = snow.caves[i];
+        so.FindProperty("diamondOre").objectReferenceValue = snow.diamondOre;
         so.FindProperty("scatter").objectReferenceValue = Find<ObjectScatter>(scene);
         PlayerController player = Find<PlayerController>(scene);
         so.FindProperty("player").objectReferenceValue = player != null ? player.transform : null;
@@ -299,11 +328,12 @@ public static class NewWorldBuilder
         return !string.IsNullOrEmpty(source) && source.StartsWith(BuildingFolder);   // a building piece (e.g. a floor)
     }
 
-    // ObjectScatter (Sanyam's): no terrain of its own (the World Generator gives it the new one when the game starts),
-    // no plain stone rocks in the desert (its Desert Rocks rule is left out of this scene; GameScene keeps it), a Hill
-    // Rocks rule (stone rocks on the hills' rock texture) and a Sandstone Rocks rule (the desert's own hard rock, on the
-    // sand) if it hasn't got them. Its other rules stay as in GameScene. Returns a sentence for the Console.
-    static string SetUpScatter(Scene scene, WorldGenerator generator, GameObject sandstone)
+    // ObjectScatter (Sanyam's): no terrain of its own (the World Generator switches it off and uses its rules chunk by
+    // chunk), no plain stone rocks in the desert (its Desert Rocks rule is left out of this scene; GameScene keeps it),
+    // a Hill Rocks rule (stone rocks on the hills' rock texture), a Sandstone Rocks rule (the desert's own hard rock, on
+    // the sand) and the snow's rules (snowy conifers, Snow Rocks, the snow's chests) if it hasn't got them. Its other
+    // rules stay as in GameScene. Returns a sentence for the Console.
+    static string SetUpScatter(Scene scene, WorldGenerator generator, GameObject sandstone, SnowBuilder.Parts snow)
     {
         ObjectScatter scatter = Find<ObjectScatter>(scene);
         if (scatter == null) return "No ObjectScatter in GameScene: the new world gets no trees, bushes, rocks or chests.";
@@ -313,6 +343,7 @@ public static class NewWorldBuilder
         SerializedObject layers = new SerializedObject(generator);
         int rockLayer = layers.FindProperty("rockLayer").intValue;
         int sandLayer = layers.FindProperty("sandLayer").intValue;
+        int snowLayer = layers.FindProperty("snowLayer").intValue;
         GameObject stone = AssetDatabase.LoadAssetAtPath<GameObject>(FindPrefabPath(StonePath));
 
         SerializedProperty rules = so.FindProperty("rules");
@@ -331,20 +362,91 @@ public static class NewWorldBuilder
             added += " + " + HillRule + " (60 stone rocks on the hills)";
         if (sandLayer >= 0 && sandstone != null && AddRule(rules, SandstoneRule, sandstone, 40, sandLayer, 0.6f, 30f, 16f, 1f, 1.6f))
             added += " + " + SandstoneRule + " (40 hard sandstone rocks in the desert)";
+        if (snowLayer >= 0) added += AddSnowRules(rules, snow, snowLayer);
         so.ApplyModifiedPropertiesWithoutUndo();
         string removed = leftOut.Count > 0 ? ", left out " + string.Join(", ", leftOut) + " (plain stones in the desert)" : "";
         return "ObjectScatter: " + rules.arraySize + " rules" + added + removed + ".";
     }
 
-    // A new rule at the end of ObjectScatter's list (the names in quotes must match its ScatterRule's fields), unless one
-    // with that name is there already. True = added.
-    static bool AddRule(SerializedProperty rules, string name, GameObject prefab, int count, int layer, float minStrength,
-                        float maxSlope, float spacing, float minSize, float maxSize)
+    // The snow's rules (on the snow texture; the World Generator grows them only in the snow biome): the chests first
+    // (copies of the desert's chest rules, right behind them, with the snow's counts), then the snowy conifers (one rule
+    // per look, one forest: spacing group Trees, in patches like the grassland's) and Snow Rocks. Rules already there
+    // are left as they are. Returns what was added, for the Console.
+    static string AddSnowRules(SerializedProperty rules, SnowBuilder.Parts snow, int snowLayer)
+    {
+        List<string> added = new List<string>();
+        string after = LastChestRule(rules);
+        foreach ((string desert, string name, int count) in SnowChests)
+        {
+            string from = FindRule(rules, desert) >= 0 ? desert : desert == "ChestsDesert" ? "ChestsForest" : null;
+            if (from != null && after != null && CopyRule(rules, from, after, name, count, snowLayer)) added.Add(name + " " + count);
+            if (FindRule(rules, name) >= 0) after = name;
+        }
+        if (FindRule(rules, "Rare Chests Desert") < 0)
+            added.Add("no rare / epic / legendary boxes in the snow: run Tools > World > Build Loot Chests, then this again");
+
+        int shares = 0;
+        foreach (GameObject tree in snow.trees) shares += GrasslandTreeBuilder.SnowShare(tree);
+        foreach (GameObject tree in snow.trees)
+        {
+            int count = Mathf.RoundToInt(SnowTrees * (float)GrasslandTreeBuilder.SnowShare(tree) / Mathf.Max(1, shares));
+            string name = SnowTreeRule + tree.name.Replace("TreeNode ", "");
+            if (AddRule(rules, name, tree, count, snowLayer, 0.7f, 25f, 9f, 0.85f, 1.2f, "Trees", 120f)) added.Add(name + " " + count);
+        }
+        if (snow.snowStone != null && AddRule(rules, SnowRockRule, snow.snowStone, 40, snowLayer, 0.6f, 30f, 14f, 0.8f, 1.5f))
+            added.Add(SnowRockRule + " 40");
+        return added.Count > 0 ? " + snow: " + string.Join(", ", added) : "";
+    }
+
+    // The last box rule in the list (the snow's chest rules go right behind it), or null when there's none.
+    static string LastChestRule(SerializedProperty rules)
+    {
+        string last = null;
+        int at = -1;
+        foreach (string name in new[] { "ChestsForest", "Rare Chests Grass", "ChestsDesert", "Rare Chests Desert", "Epic Chests Desert", "Legendary Chests Desert" })
+        {
+            int i = FindRule(rules, name);
+            if (i <= at) continue;
+            at = i;
+            last = name;
+        }
+        return last;
+    }
+
+    // A copy of the rule "from" (its prefab, spacing, height and the rest) right behind the rule "after", renamed, on
+    // another texture, with its own count, in the boxes' spacing group. Only if no rule has that name yet. True = added.
+    static bool CopyRule(SerializedProperty rules, string from, string after, string name, int count, int layer)
+    {
+        if (FindRule(rules, name) >= 0) return false;
+        int source = FindRule(rules, from);
+        int behind = FindRule(rules, after);
+        if (source < 0 || behind < 0) return false;
+        rules.InsertArrayElementAtIndex(source);               // the copy goes right behind its source...
+        rules.MoveArrayElement(source + 1, behind + 1);        // ...then right behind "after"
+        SerializedProperty rule = rules.GetArrayElementAtIndex(behind + 1);
+        rule.FindPropertyRelative("name").stringValue = name;
+        rule.FindPropertyRelative("count").intValue = count;
+        rule.FindPropertyRelative("terrainLayer").intValue = layer;
+        rule.FindPropertyRelative("spacingGroup").stringValue = ChestGroup;
+        return true;
+    }
+
+    static int FindRule(SerializedProperty rules, string name)
     {
         for (int i = 0; i < rules.arraySize; i++)
         {
-            if (rules.GetArrayElementAtIndex(i).FindPropertyRelative("name").stringValue == name) return false;
+            if (rules.GetArrayElementAtIndex(i).FindPropertyRelative("name").stringValue == name) return i;
         }
+        return -1;
+    }
+
+    // A new rule at the end of ObjectScatter's list (the names in quotes must match its ScatterRule's fields), unless one
+    // with that name is there already. group = its Spacing Group (empty = its prefab), patch = its Patch Size (0 = no
+    // patches). True = added.
+    static bool AddRule(SerializedProperty rules, string name, GameObject prefab, int count, int layer, float minStrength,
+                        float maxSlope, float spacing, float minSize, float maxSize, string group = "", float patch = 0f)
+    {
+        if (FindRule(rules, name) >= 0) return false;
         rules.InsertArrayElementAtIndex(rules.arraySize);
         SerializedProperty rule = rules.GetArrayElementAtIndex(rules.arraySize - 1);
         rule.FindPropertyRelative("name").stringValue = name;
@@ -355,9 +457,9 @@ public static class NewWorldBuilder
         rule.FindPropertyRelative("minStrength").floatValue = minStrength;
         rule.FindPropertyRelative("maxSlope").floatValue = maxSlope;
         rule.FindPropertyRelative("minSpacing").floatValue = spacing;
-        rule.FindPropertyRelative("spacingGroup").stringValue = "";
+        rule.FindPropertyRelative("spacingGroup").stringValue = group;
         rule.FindPropertyRelative("clearance").floatValue = 3f;
-        rule.FindPropertyRelative("patchSize").floatValue = 0f;
+        rule.FindPropertyRelative("patchSize").floatValue = patch;
         rule.FindPropertyRelative("openGround").floatValue = 0.35f;
         rule.FindPropertyRelative("minSize").floatValue = minSize;
         rule.FindPropertyRelative("maxSize").floatValue = maxSize;

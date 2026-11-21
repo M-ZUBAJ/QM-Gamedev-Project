@@ -30,6 +30,17 @@ birches.
 
 For size: the old placeholder tree was 5.65 m tall, and the player's character is 1.8 m.
 
+**The snow's trees** (21/11/2026, made by **Tools > World > Build Snow Content**, not by this tool's menu; guide
+`Docs/Snow Setup.md`): 4 more Prefab Variants of TreeNode in the pack's winter **Cold** colors, spawned only on the new
+world's snow (not mixed into the grassland):
+
+| Look | Prefab | Pack tree | Height |
+|---|---|---|---|
+| Snow Pine | `ResourceNodes/Trees/TreeNode Snow Pine` | Tree Type1 04 | 10 m |
+| Tall Snow Pine | `ResourceNodes/Trees/TreeNode Tall Snow Pine` | Tree Type1 05 | 13 m |
+| Snow Spruce | `ResourceNodes/Trees/TreeNode Snow Spruce` | Tree Type2 04 | 10 m |
+| Tall Snow Spruce | `ResourceNodes/Trees/TreeNode Tall Snow Spruce` | Tree Type2 05 | 12.5 m |
+
 ## Quick way: one click
 
 1. Import the **Low Poly Tree Pack** (free, Broken Vector): **Window > Package Manager > My Assets > Import**.
@@ -93,7 +104,7 @@ Kept out of the grassland, for later:
 
 | Pack trees | What they are | Biome |
 |---|---|---|
-| Type1, Type2, Type0 03 | pines, spruces, a redwood | forest, snow |
+| Type1, Type2, Type0 03 | pines, spruces (Type1 04 / 05 and Type2 04 / 05 are the snow's trees now), a redwood | forest, snow |
 | Type3, Type0 04 | umbrella trees, an acacia | savanna |
 | Type6 | willows | lake shore, swamp |
 | Type7 | palms | beach, desert |

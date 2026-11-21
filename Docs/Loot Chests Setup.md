@@ -7,18 +7,25 @@ In the game it's the GameRules tick box **New Chests** (on = new). Every perk in
 
 | Box | Looks like | Where | First price | Each perk bought from it | How you get a perk | Perks |
 |---|---|---|---|---|---|---|
-| **Common** | Marko's wooden chest, yellow outline | grassland (20) and desert (30) | 2 coins | +1 (2, 3, 4...) | choose 1 of 3 | Vitality, Stamina, Agility, Fireball, Second Wind, Precision*, Spring Legs* |
-| **Rare** | blue loot box, blue outline | grassland (6) and desert (12) | 10 coins | x1.5 (10, 15, 23...) | choose 1 of 3 | Bounty Hunter, Gourmet, Lumberjack, Prospector, Sprinter, Brawler, Attack Speed, Long Reach* |
-| **Epic** | purple loot box, purple outline | desert only (4) | 100 coins | x2 (100, 200, 400...) | choose 1 of 3, REROLL** | Last Stand, Critical Strike, Glide, Vampire, Thorns, Night Power, **Reroll**, **Keen Eye** |
+| **Common** | Marko's wooden chest, yellow outline | grassland (20), desert (30), snow (40) | 2 coins | +1 (2, 3, 4...) | choose 1 of 3 | Vitality, Stamina, Agility, Fireball, Second Wind, Precision*, Spring Legs* |
+| **Rare** | blue loot box, blue outline | grassland (6), desert (12), snow (20) | 10 coins | x1.5 (10, 15, 23...) | choose 1 of 3 | Bounty Hunter, Gourmet, Lumberjack, Prospector, Sprinter, Brawler, Attack Speed, Long Reach* |
+| **Epic** | purple loot box, purple outline | desert (4) and snow (8) only | 100 coins | x2 (100, 200, 400...) | choose 1 of 3, REROLL** | Last Stand, Critical Strike, Glide, Vampire, Thorns, Night Power, **Reroll**, **Keen Eye** |
 
 **New chests** (the default):
 
 | Box | Where | First price | Each perk bought | How you get a perk | Perks |
 |---|---|---|---|---|---|
-| **Common** | grassland (20) and desert (30) | 2 coins | +1 | **a random one** (a slot-machine roll), REROLL** | the old common **and** rare perks together (15) |
-| **Rare** | grassland (6) and desert (12) | 10 coins | x1.5 | choose 1 of 3, REROLL** | the same 15 |
-| **Epic** | desert only (4) | 100 coins | x2 | **a random one**, REROLL** | the epic perks (with Reroll and Keen Eye) |
-| **Legendary** | orange loot box, orange outline; desert only (2) | 150 coins | x2 (150, 300, 600...) | choose 1 of 3, REROLL** | the epic perks (with Reroll and Keen Eye) |
+| **Common** | grassland (20), desert (30), snow (40) | 2 coins | +1 | **a random one** (a slot-machine roll), REROLL** | the old common **and** rare perks together (15) |
+| **Rare** | grassland (6), desert (12), snow (20) | 10 coins | x1.5 | choose 1 of 3, REROLL** | the same 15 |
+| **Epic** | desert (4) and snow (8) only | 100 coins | x2 | **a random one**, REROLL** | the epic perks (with Reroll and Keen Eye) |
+| **Legendary** | orange loot box, orange outline; desert (2) and snow (4) only | 150 coins | x2 (150, 300, 600...) | choose 1 of 3, REROLL** | the epic perks (with Reroll and Keen Eye) |
+
+The numbers in **Where** are the ObjectScatter rules' counts. In the old world (GameScene) a count is for the whole
+map. In the new world (endless since 21/11/2026) a count is for every 400,000 m² of that ground, so a 256 m square of
+desert has about 5 common boxes, 2 rare, a 2 in 3 chance of an epic and 1 in 3 of a legendary. The snow (only in the
+new world, the farthest biome) has more and better boxes than the desert: its rules (ChestsSnow, Rare / Epic /
+Legendary Chests Snow) are made by **Tools > World > Build New World Scene** as copies of the desert's
+(`Docs/Snow Setup.md`).
 
 \* Precision only shows up once you have **Critical Strike**; Spring Legs only once you have **Glide**; Long Reach only
 once you have **Keen Eye** (in the new system the common boxes offer it too).
@@ -28,7 +35,7 @@ system). Until then no box shows the REROLL button, in either system.
 
 - Every box of one kind costs the same, and a perk bought from one box makes all boxes of that kind dearer. The prices
   start again when you die (your perks are lost then too) and in a new game.
-- **The whole gold armor set** makes every box **10 % cheaper**, rerolls too (rounded down, never under 1 coin: 2 -> 1,
+- **The whole gold or diamond armor set** makes every box **10 % cheaper** (they don't add up), rerolls too (rounded down, never under 1 coin: 2 -> 1,
   10 -> 9, 100 -> 90). The panel and the roll pop-up show the full price crossed out in front (`Docs/Armor Setup.md`).
 - Under the crosshair: **[E] Open rare box (coin) 10**. The title of the panel / pop-up is the box's name in its color.
 - **When you buy a perk the box bursts into particles in its color** (common gold, rare blue, epic purple, legendary
@@ -175,7 +182,7 @@ Change logs: `Docs/TonyEditMate/Marko/21-11-2026 Loot Boxes And New Perks.md`,
 |---|---|---|
 | GameRules (scene) | **New Chests** | on = the new system (the New Game page sets it when you change it there) |
 | ChestTier (box prefab) | **Tier** | Common / Rare / Epic / Legendary (every box of a kind shares one price) |
-| PlayerArmor (Player) | **Set Bonuses > Chest Discount** | the gold set's 0.1 = every box 10 % cheaper while all six are worn |
+| PlayerArmor (Player) | **Set Bonuses > Chest Discount** | the gold and the diamond set's 0.1 = every box 10 % cheaper while all six are worn |
 | | **Box Name**, **Color** | the prompt ("Open rare box"), the title and the burst's color |
 | | **Start Price**, **Growth** (Add / Multiply), **Grows By** | 2, Add, 1 (common); 10, Multiply, 1.5 (rare); 100, Multiply, 2 (epic); 150, Multiply, 2 (legendary) |
 | | **Can Reroll** | old system: the REROLL button (the epic box) |

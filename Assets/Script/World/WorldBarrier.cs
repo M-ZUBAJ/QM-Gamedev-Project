@@ -1,9 +1,9 @@
 /*
 First Date: 20/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
-Use by: An object named "World Barrier" in a world's scene. The new world's World Generator makes one by itself; for
-        the old world (or any map), Tools > World > Add World Barrier puts one around the map. By hand: Create Empty,
+Use by: An object named "World Barrier" in a world's scene. The old world (or any map): Tools > World > Add World
+        Barrier puts one around the map. (The new world is endless since 21/11/2026: it has none.) By hand: Create Empty,
         add this, put the object in the middle of the map at (or below) the lowest ground, and set Size and Height.
         Keep its Rotation 0 and Scale 1.
 Unity Editor: The cyan box in the Scene view is where the barrier stands. Size = how wide (x) and long (z) the inside
@@ -19,7 +19,7 @@ Purpose: The edge of the world, so a player can tell by looking that they can't 
          - WorldBarrier.Inside(spot) tells other scripts whether a spot is inside, so deer don't walk out and nothing
            is spawned outside (Sanyam's ObjectScatter, the AnimalSpawner and Marko's EnemySpawner ask it).
 Requirement: WorldBarrier.cs o-> PlayerController.cs
-             WorldBarrier.cs <-x EnemySpawner.cs, NewWorldBuilder.cs, ObjectScatter.cs, WorldBarrierBuilder.cs, WorldGenerator.cs
+             WorldBarrier.cs <-x EnemySpawner.cs, NewWorldBuilder.cs, ObjectScatter.cs, WorldBarrierBuilder.cs
              WorldBarrier.cs <-o AnimalSpawner.cs, DesertMonsterSpawner.cs, NightMonsters.cs, WildAnimal.cs
 */
 

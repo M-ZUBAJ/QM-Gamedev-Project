@@ -7,8 +7,9 @@ Use by: The Player (next to PlayerInventory and PlayerHealth). Tools > Items > B
 Unity Editor: Worn = what the player wears now (one per slot), for checking while playing; dragging an armor's Item Data
               in there while playing puts it on at once (without taking it from the inventory).
               Set Bonuses = what wearing a whole set gives (Copper: +1 coin for every monster killed; Iron: +2, and it
-              counts as Copper; Gold: +4 and every chest 10 % cheaper, and it counts as Iron), and each set's color in
-              menus. Better sets go lower in the list.
+              counts as Copper; Gold: +4 and every chest 10 % cheaper, and it counts as Iron; Diamond: +8 and every
+              chest 10 % cheaper, and it counts as Gold), and each set's color in menus. Better sets go lower in the
+              list.
               Testing: Play, get a piece of armor (craft it, or tick GameRules > Testing > Armor Test), Tab > Gear, click
               a slot and pick it. Then PlayerHealth's ⋮ > Test: Take Damage takes less off. With all six copper pieces
               on, kill a monster: one more coin than before, and the Info tab shows the bonus in gold.
@@ -17,15 +18,18 @@ Purpose: The armor the player wears: one piece per slot (Helmet, Shoulders, Ches
          off puts it back in the inventory (only if there's room). A piece held on the cursor (picked up on the Inventory
          page) can be put straight on by clicking its slot: the old piece then goes onto the cursor, like Minecraft.
          It protects: every worn piece's Protection is added up, in percent (the copper set: 1.5 % a piece, 2.5 % for
-         the chestplate, so 10 % for all six; the iron set 15 %, the gold set 25 %), up to Max Protection. PlayerHealth
+         the chestplate, so 10 % for all six; the iron set 15 %, the gold set 25 %, the diamond set 40 %), up to Max
+         Protection. PlayerHealth
          asks it about every hit (TakeDamage), but not about starving or bad food (LoseHealth).
          Set bonus: a piece of the same set in every slot (Armor > Set, e.g. Copper) gives that set's bonus from Set
          Bonuses: extra coins for every monster killed (Coins Per Kill: the copper set +1, the iron set +2, the gold set
-         +4; Marko's EnemyCombat gives them through MonsterBounty, which asks CoinsPerKill), and cheaper chests (Chest
-         Discount: the gold set takes 10 % off every loot box price; ChestTier asks ChestDiscount). A set can count as a
-         lower one (Counts As): Iron pieces fill Copper's slots too, and Gold pieces Iron's (and so Copper's), so
-         upgrading one piece at a time never loses the bonus you had; all six of the better set give its bonus.
-         Upgrading a worn piece: crafting an Iron (Gold) piece can use the Copper (Iron) piece the player wears (Turki's
+         +4, the diamond set +8; Marko's EnemyCombat gives them through MonsterBounty, which asks CoinsPerKill), and
+         cheaper chests (Chest Discount: the gold and the diamond set take 10 % off every loot box price; ChestTier asks
+         ChestDiscount). A set can count as a lower one (Counts As): Iron pieces fill Copper's slots too, Gold pieces
+         Iron's and Diamond pieces Gold's (and so on down), so upgrading one piece at a time never loses the bonus you
+         had; all six of the better set give its bonus.
+         Upgrading a worn piece: crafting an Iron (Gold, Diamond) piece can use the Copper (Iron, Gold) piece the player
+         wears (Turki's
          CraftingMenu calls LendForUpgrade, then FinishUpgrade): it comes off for the recipe, and the new piece is
          worn in its place.
          A Set Bonuses list saved before 21/11/2026 (stamina bonuses, Iron first then Reinforced Iron) is replaced by
@@ -105,16 +109,19 @@ public class PlayerArmor : MonoBehaviour
     public static readonly Color CopperColor = new Color(0.85f, 0.5f, 0.27f);        // copper
     public static readonly Color IronColor = new Color(0.56f, 0.6f, 0.67f);          // steel grey
     public static readonly Color GoldColor = new Color(0.95f, 0.75f, 0.2f);          // gold
+    public static readonly Color DiamondColor = new Color(0.35f, 0.85f, 1f);         // ice blue
 
     // The sets Tools > Items > Build Plate Armor makes, weakest first: Copper (+1 coin per monster killed), Iron (each
-    // piece a Copper piece + iron: +2 coins, and it counts as Copper) and Gold (each piece an Iron piece + gold: +4 coins
-    // and 10 % off every chest, and it counts as Iron). A list saved before a set existed gets the missing ones added
-    // when the game starts, so a new set always has its bonus.
+    // piece a Copper piece + iron: +2 coins, and it counts as Copper), Gold (each piece an Iron piece + gold: +4 coins
+    // and 10 % off every chest, and it counts as Iron) and Diamond (each piece a Gold piece + diamonds: +8 coins and
+    // 10 % off every chest, and it counts as Gold; 21/11/2026). A list saved before a set existed gets the missing ones
+    // added when the game starts, so a new set always has its bonus.
     public static List<SetBonus> DefaultBonuses() => new List<SetBonus>
     {
         new SetBonus("Copper", 1, "", CopperColor),
         new SetBonus("Iron", 2, "Copper", IronColor),
         new SetBonus("Gold", 4, "Iron", GoldColor, 0.1f),
+        new SetBonus("Diamond", 8, "Gold", DiamondColor, 0.1f),
     };
 
     // Which version of the set bonuses a saved list has: 2 = coins per kill (21/11/2026). Older lists (stamina bonuses)
@@ -130,7 +137,8 @@ public class PlayerArmor : MonoBehaviour
     [Header("Set bonus")]
     [Tooltip("What wearing a whole set gives: a piece of that set (Armor > Set) in every slot. Copper: +1 coin for every " +
              "monster killed; Iron: +2 (and its pieces count as Copper); Gold: +4 and 10 % off every chest (and its " +
-             "pieces count as Iron). Better sets go lower in the list.")]
+             "pieces count as Iron); Diamond: +8 and 10 % off every chest (and its pieces count as Gold). Better sets go " +
+             "lower in the list.")]
     [SerializeField] List<SetBonus> setBonuses = DefaultBonuses();
 
     [HideInInspector]

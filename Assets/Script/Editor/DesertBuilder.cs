@@ -23,8 +23,11 @@ Purpose: Everything the new world's desert needs, in one click:
            - the turtle, Assets/Prefabs/Enemy/TurtleShellEnemy (NightMonsterBuilder.BuildTurtle): since 21/11/2026 a
              night monster from night 2, with its shell (ShellDefense), no longer the desert's day monster. Tools >
              Enemies > Set Up Night Monsters puts it in the scenes' night spawner.
+         MakeOreItem, RockMaterial and MakeVariant are shared with SnowBuilder (the snow's Diamond, DiamondNode and
+         StoneNode Snow); MakeGold with ArmorBuilder (the gold armor's recipes need the Gold item). Since 21/11/2026 an ore item copied from Iron also gets its own Mined With when it still has
+         the one the copy brought from Iron (Stone): Gold had kept it, so a Stone Pickaxe mined gold.
 Requirement: DesertBuilder.cs x-> ItemData.cs, ToolStats.cs, ItemPickup.cs, ShapeColor.cs, ResourceNode.cs, NightMonsterBuilder.cs, RockCaveBuilder.cs, RockBreakBuilder.cs, UIBuildHelper.cs, MenuOrder.cs
-             DesertBuilder.cs <-x NewWorldBuilder.cs
+             DesertBuilder.cs <-x ArmorBuilder.cs, NewWorldBuilder.cs, SnowBuilder.cs
 */
 
 using System.Collections.Generic;
@@ -102,12 +105,17 @@ public static class DesertBuilder
         return parts;
     }
 
-    // The Gold item and its prefab: copies of Turki's Iron item and prefab (a small colored cube), made once, then
-    // linked to each other, gold colored and Mined With = Iron (each run, only what's still wrong is changed).
-    static ItemData MakeGold(List<string> report)
+    // The Gold item and its prefab (made once, then kept right). Tools > Items > Build Plate Armor makes it too when
+    // it's missing, so the gold armor gets its recipes.
+    public static ItemData MakeGold(List<string> report) => MakeOreItem("Gold", GoldCube, ToolTier.Iron, report);
+
+    // An ore's item and its prefab (e.g. Gold): copies of Turki's Iron item and prefab (a small colored cube), made
+    // once, then linked to each other, colored and given the pickaxe its rock needs (Mined With). Each run only changes
+    // what's still wrong. SnowBuilder makes the Diamond with it.
+    public static ItemData MakeOreItem(string id, Color cube, ToolTier minedWith, List<string> report)
     {
         ItemData iron = FindItem("Iron");
-        string prefabPath = FindPrefabPath(ItemPrefabFolder + "/Gold.prefab");
+        string prefabPath = FindPrefabPath(ItemPrefabFolder + "/" + id + ".prefab");
         GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
         if (prefab == null && iron != null && iron.Prefab != null)
         {
@@ -115,48 +123,56 @@ public static class DesertBuilder
             prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
         }
 
-        ItemData gold = FindItem("Gold");
-        bool made = gold == null;
+        ItemData item = FindItem(id);
+        bool made = item == null;
         if (made)
         {
-            string itemPath = ItemFolder + "/Gold.asset";
+            string itemPath = ItemFolder + "/" + id + ".asset";
             if (iron != null) AssetDatabase.CopyAsset(AssetDatabase.GetAssetPath(iron), itemPath);
             else AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<ItemData>(), itemPath);
-            gold = AssetDatabase.LoadAssetAtPath<ItemData>(itemPath);
+            item = AssetDatabase.LoadAssetAtPath<ItemData>(itemPath);
         }
-        if (gold == null)
+        if (item == null)
         {
-            report.Add("the Gold item couldn't be made");
+            report.Add("the " + id + " item couldn't be made");
             return null;
         }
 
-        SerializedObject so = new SerializedObject(gold);   // the names in quotes must match ItemData's fields
+        SerializedObject so = new SerializedObject(item);   // the names in quotes must match ItemData's fields
         SerializedProperty link = so.FindProperty("prefab");
         if (prefab != null && (made || link.objectReferenceValue == null || link.objectReferenceValue == (iron != null ? iron.Prefab : null)))
             link.objectReferenceValue = prefab;
-        if (made) so.FindProperty("displayName").stringValue = "";   // = the file name: Gold
-        SerializedProperty minedWith = so.FindProperty("minedWith");
-        if (minedWith.enumValueIndex == (int)ToolTier.None) minedWith.enumValueIndex = (int)ToolTier.Iron;
+        if (made) so.FindProperty("displayName").stringValue = "";   // = the file name, e.g. Gold
+        // Mined With: set while it's None, or still the one the copy brought from Iron (Stone). Before 21/11/2026 only
+        // None was set, so Gold kept Iron's Stone and a Stone Pickaxe mined gold.
+        SerializedProperty needs = so.FindProperty("minedWith");
+        int copied = iron != null && iron != item ? (int)iron.MinedWith : (int)ToolTier.None;
+        bool fixedNow = needs.enumValueIndex != (int)minedWith && (needs.enumValueIndex == (int)ToolTier.None || needs.enumValueIndex == copied);
+        if (fixedNow) needs.enumValueIndex = (int)minedWith;
         so.ApplyModifiedPropertiesWithoutUndo();
 
-        if (prefab != null) PaintGoldPrefab(AssetDatabase.GetAssetPath(prefab), gold);
-        report.Add(made ? "Gold item made (" + AssetDatabase.GetAssetPath(gold) + ", needs an Iron Pickaxe)" : "Gold item kept");
-        return gold;
+        if (prefab != null) PaintItemPrefab(AssetDatabase.GetAssetPath(prefab), item, cube);
+        string tier = minedWith.ToString();
+        string pickaxe = "needs " + ("AEIOU".IndexOf(tier[0]) >= 0 ? "an " : "a ") + tier + " Pickaxe";   // "an Iron", "a Gold"
+        report.Add(made ? id + " item made (" + AssetDatabase.GetAssetPath(item) + ", " + pickaxe + ")"
+                        : id + " item kept" + (fixedNow ? " (now " + pickaxe + ")" : ""));
+        return item;
     }
 
-    // The Gold prefab: gold colored (its ShapeColor), picked up as Gold (its ItemPickup), its top object called Gold.
-    static void PaintGoldPrefab(string path, ItemData gold)
+    // An ore item's prefab: its cube colored (its ShapeColor), picked up as that item (its ItemPickup), its top object
+    // named after it.
+    static void PaintItemPrefab(string path, ItemData item, Color cube)
     {
         GameObject root = PrefabUtility.LoadPrefabContents(path);
         try
         {
-            root.name = "Gold";
+            root.name = item.name;
             foreach (MonoBehaviour script in root.GetComponentsInChildren<MonoBehaviour>(true))
             {
                 if (script == null) continue;
                 SerializedObject so = new SerializedObject(script);
-                if (script is ShapeColor) so.FindProperty("color").colorValue = GoldCube;   // the cube's color
-                if (script is ItemPickup) so.FindProperty("data").objectReferenceValue = gold;
+                if (script is ShapeColor) so.FindProperty("color").colorValue = cube;   // the cube's color
+                if (script is ItemPickup) so.FindProperty("data").objectReferenceValue = item;
                 so.ApplyModifiedPropertiesWithoutUndo();
             }
             PrefabUtility.SaveAsPrefabAsset(root, path);
@@ -179,8 +195,9 @@ public static class DesertBuilder
         return null;
     }
 
-    // A copy of a color sheet material, tinted, with its own shine (metallic, smoothness). Made once, so your changes stay.
-    static Material RockMaterial(string fileName, Material from, Color tint, float metallic, float smoothness)
+    // A copy of a color sheet material, tinted, with its own shine (metallic, smoothness), in Assets/Materials/Rocks.
+    // Made once, so your changes stay. (SnowBuilder uses it too.)
+    public static Material RockMaterial(string fileName, Material from, Color tint, float metallic, float smoothness)
     {
         MakeFolders(MaterialFolder);
         string path = MaterialFolder + "/" + fileName + ".mat";
@@ -197,8 +214,9 @@ public static class DesertBuilder
 
     // A Prefab Variant of one of Turki's rocks (made once in a preview scene, then refilled in place every run): its
     // material, health and drops changed; its shapes, ground standing and breaking come from the rock it's made from.
-    static GameObject MakeVariant(string from, string name, Material material, ItemData drop, float health, int min, int max,
-                                  List<string> report)
+    // drop null = the rock's own drop; health 0 = its own health; max 0 = its own drop amounts. (SnowBuilder uses it too.)
+    public static GameObject MakeVariant(string from, string name, Material material, ItemData drop, float health, int min, int max,
+                                         List<string> report)
     {
         GameObject parent = AssetDatabase.LoadAssetAtPath<GameObject>(FindPrefabPath(NodeFolder + "/" + from + ".prefab"));
         if (parent == null)
@@ -221,14 +239,17 @@ public static class DesertBuilder
             {
                 SerializedObject so = new SerializedObject(node);   // the names in quotes must match Turki's fields
                 if (drop != null) so.FindProperty("dropItem").objectReferenceValue = drop;
-                so.FindProperty("maxHealth").floatValue = health;
-                so.FindProperty("dropMin").intValue = min;
-                so.FindProperty("dropMax").intValue = max;
+                if (health > 0f) so.FindProperty("maxHealth").floatValue = health;
+                if (max > 0)
+                {
+                    so.FindProperty("dropMin").intValue = min;
+                    so.FindProperty("dropMax").intValue = max;
+                }
                 so.ApplyModifiedPropertiesWithoutUndo();
             }
             GameObject saved = PrefabUtility.SaveAsPrefabAsset(root, path);   // a copy of a prefab saved as a new one = a Prefab Variant
-            report.Add(name + (existed ? " refilled" : " made") + " (" + health + " health, " + min + " - " + max + " " +
-                       (drop != null ? drop.name : "of its own drop") + ")");
+            report.Add(name + (existed ? " refilled" : " made") + " (" + (health > 0f ? health + " health" : from + "'s health") +
+                       ", " + (max > 0 ? min + " - " + max + " " : from + "'s amount of ") + (drop != null ? drop.name : "its own drop") + ")");
             return saved;
         }
         finally

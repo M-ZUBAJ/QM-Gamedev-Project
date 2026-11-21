@@ -9,7 +9,7 @@ Unity Editor: Turn the rule on: select the GameRules object > Testing > Armor Te
               armor at once (then Tab > Gear to put it on, or Tab > Crafting > Armor to try the upgrades). From the
               title screen: New Game > Testing > Start with all armor.
 Purpose: For testing armor: while the game rule Armor Test is on, the player gets one of each armor piece (the Copper,
-         Iron and Gold sets: 18) in the inventory, when the game starts or the moment the rule is turned on. Pieces
+         Iron, Gold and Diamond sets: 24) in the inventory, when the game starts or the moment the rule is turned on. Pieces
          the player already has, in the inventory or worn, aren't given twice, and turning the rule off takes nothing
          away. Tools come from the separate rule Tool Test (ToolTestKit). It gives its list's pieces first, then every
          other armor Item Data the game has loaded (the crafting list links them all), so a set added after the list

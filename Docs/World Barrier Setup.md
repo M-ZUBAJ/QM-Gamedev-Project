@@ -11,10 +11,11 @@ there (instead of mountains along the edge).
   ObjectScatter), deer (AnimalSpawner) and night enemies (Marko's EnemySpawner moves a spot past the barrier to the
   player's other side).
 
-## New world: nothing to do
+## New world: no barrier
 
-The World Generator makes the barrier itself every game: a 1000 x 1000 m square around the world, from below the
-lowest ground to 60 m above the highest hills. The land goes on 60 m past it (bare rock and mud, fading into the mist).
+Since 21/11/2026 the new world is endless (`Docs/New World Setup.md`): its land keeps coming as you walk, so it has no
+barrier and no edge. `WorldBarrier.Inside` says yes everywhere there, so the spawners work as before. (From 20/11 to
+21/11/2026 the World Generator made a 1000 x 1000 m barrier around it.)
 
 ## Old world (GameScene): one click
 
@@ -63,7 +64,7 @@ The look settings change at once while playing (Unity forgets Play-mode changes 
 | `Assets/Script/World/WorldBarrier.cs` | Makes the see-through wall (four upright sides, made in code) and the solid walls when the game starts, and tells the wall's material where the player is every frame. `WorldBarrier.Inside(spot, margin)` = is a spot inside (true when the scene has no barrier). |
 | `Assets/Effects/WorldBarrier/Resources/WorldBarrier.shader` | The look: diagonal stripes, a faint base, brighter and rippling around the player, fading out high above them, drawn from both sides, hidden by the fog far away. In a Resources folder, so a built game keeps it. |
 | `Assets/Script/Editor/WorldBarrierBuilder.cs` | **Tools > World > Add World Barrier**. |
-| `WorldGenerator` | Makes the new world's barrier (`MakeBarrier`). |
+| `WorldGenerator` | Made the new world's barrier until 21/11/2026 (the new world is endless now: none). |
 
 Teammates' scripts that ask it (each change marked `[Tony]`):
 - Sanyam's `World/ObjectScatter.cs`: skips spots outside (log `Docs/TonyEditMate/Sanyam/20-11-2026 Nothing Spawns Outside The Barrier.md`).
@@ -71,8 +72,8 @@ Teammates' scripts that ask it (each change marked `[Tony]`):
 
 ## Testing
 
-1. Play the new world (or GameScene after Add World Barrier). Walk to the edge of the map: the stripes show up, get
-   brighter, and light up where you are. Push into it: you stop.
+1. Play GameScene after Add World Barrier. Walk to the edge of the map: the stripes show up, get brighter, and light
+   up where you are. Push into it: you stop.
 2. Jump at it, sprint into it: still stopped.
 3. Watch deer near the edge: they turn away from it.
 

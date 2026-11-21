@@ -41,8 +41,10 @@ Purpose: On / off rules for the world, like Minecraft's /gamerule.
          - NewChests (default on): the new chest system (ChestTier: random common and epic boxes, a legendary box,
            REROLL at every box); off = the old one (every box: choose 1 of 3; REROLL only at the epic box).
            Read when a box wakes up (the New Game page sets it before that).
+         - PauseGame (default on): the Esc pause menu stops the game while it's open (monsters, the sun, hunger); off =
+           the game goes on behind it (PauseMenu reads it each time it opens). The New Game page has a tick box for it.
          Adding a rule = new GameRule entry + bool field + a case in Get and Set + static property.
-Requirement: GameRules.cs <-x ArmorTestKit.cs, AutoCollector.cs, ChestTier.cs, DaylightCycle.cs, GameRulesEditor.cs, GameSetup.cs, HeldItemUI.cs, ItemDropper.cs, ItemIconRules.cs, NewGameDefaultsSync.cs, NotificationFeed.cs, PerkBar.cs, SlotUI.cs, ToolTestKit.cs
+Requirement: GameRules.cs <-x ArmorTestKit.cs, AutoCollector.cs, ChestTier.cs, DaylightCycle.cs, GameRulesEditor.cs, GameSetup.cs, HeldItemUI.cs, ItemDropper.cs, ItemIconRules.cs, NewGameDefaultsSync.cs, NotificationFeed.cs, PauseMenu.cs, PerkBar.cs, SlotUI.cs, ToolTestKit.cs
 */
 
 using UnityEngine;
@@ -62,6 +64,7 @@ public enum GameRule
     PerkIcons,
     ArmorTest,
     NewChests,
+    PauseGame,
 }
 
 // Which side of the screen the "+3 Wood" messages show on while Show Notifications is on (a dropdown).
@@ -147,6 +150,11 @@ public class GameRules : MonoBehaviour
              "picks it (Testing > Old chests / New chests).")]
     [SerializeField] bool newChests = true;
 
+    [Header("Pause menu")]
+    [Tooltip("On: the Esc pause menu stops the game while it's open (monsters, the sun, hunger, the player), like most " +
+             "games. Off: the game goes on behind it. The New Game page has a tick box for it (Rules).")]
+    [SerializeField] bool pauseGame = true;
+
     static GameRules instance;   // the one GameRules in the scene
 
     // Other scripts subscribe to this to be told when any rule changes.
@@ -165,6 +173,7 @@ public class GameRules : MonoBehaviour
     public static bool PerkIcons        => Get(GameRule.PerkIcons);
     public static bool ArmorTest        => Get(GameRule.ArmorTest);
     public static bool NewChests        => Get(GameRule.NewChests);
+    public static bool PauseGame        => Get(GameRule.PauseGame);
 
     // The dropdown under Overwrite Item Icon (only used while that rule is on).
     public static ItemIconStyle ItemIconStyle => Current.itemIconStyle;
@@ -233,6 +242,7 @@ public class GameRules : MonoBehaviour
             case GameRule.PerkIcons:        return r.perkIcons;
             case GameRule.ArmorTest:        return r.armorTest;
             case GameRule.NewChests:        return r.newChests;
+            case GameRule.PauseGame:        return r.pauseGame;
         }
         return false;   // a new GameRule with no field yet
     }
@@ -255,6 +265,7 @@ public class GameRules : MonoBehaviour
             case GameRule.PerkIcons:        r.perkIcons = value;         break;
             case GameRule.ArmorTest:        r.armorTest = value;         break;
             case GameRule.NewChests:        r.newChests = value;         break;
+            case GameRule.PauseGame:        r.pauseGame = value;         break;
         }
 
         Changed?.Invoke();   // tell every listening script (if there are any)

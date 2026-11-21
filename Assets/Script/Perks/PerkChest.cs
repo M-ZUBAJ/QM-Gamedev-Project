@@ -12,7 +12,9 @@ public class PerkChest : MonoBehaviour
     [Min(0)]
     [SerializeField] int maxCost = 15;
 
-    [SerializeField] KeyCode interactKey = KeyCode.E;
+    // [SerializeField] KeyCode interactKey = KeyCode.E;   // [Tony] replaced (21/11/2026): the key is KeyBindings.Interact (E),
+    //                                                     so the title screen's Key Bindings page shows and changes it.
+    //                                                     Log: Docs/TonyEditMate/Marko/21-11-2026 Chest Key On The Key Bindings Page.md
 
     [Header("Interaction")]
     [Min(1f)]
@@ -39,7 +41,8 @@ public class PerkChest : MonoBehaviour
     // Log: Docs/TonyEditMate/Marko/19-11-2026 Perk Panel, E Toggle And Pay On Pick.md
     public int OpeningCost => tier != null ? tier.Price : openingCost;   // [Tony] added: the price (21/11/2026: Tony's ChestTier's when the chest has one)
     public float InteractionRange => interactionRange;      // [Tony] added: how close E works
-    public KeyCode InteractKey => interactKey;              // [Tony] added: the key (E)
+    // public KeyCode InteractKey => interactKey;           // [Tony] edited (21/11/2026): was this
+    public KeyCode InteractKey => KeyBindings.Interact;     // [Tony] added: the key (E; changed on the Key Bindings page)
     public static PerkChest Showing { get; private set; }   // [Tony] added: the chest whose perks are on screen (null = none)
     List<PerkData> choices;                                 // [Tony] added: this chest's 3 perks, rolled the first time it opens
     static int closedFrame = -1;                            // [Tony] added: the frame E closed the panel (nothing opens in it)
@@ -92,14 +95,16 @@ public class PerkChest : MonoBehaviour
             {                                                                         // [Tony] added
                 // [Tony] edited (21/11/2026): while Tony's roll pop-up is still rolling, E skips the roll instead of
                 // closing (PerkRollUI.BlocksClose). Was: if (Input.GetKeyDown(interactKey) || TooFar()) ClosePanel();
-                if ((Input.GetKeyDown(interactKey) && !PerkRollUI.BlocksClose) || TooFar()) ClosePanel();   // [Tony] edited
+                // if ((Input.GetKeyDown(interactKey) && !PerkRollUI.BlocksClose) || TooFar()) ClosePanel();   // [Tony] replaced (21/11/2026): the key from KeyBindings
+                if ((Input.GetKeyDown(InteractKey) && !PerkRollUI.BlocksClose) || TooFar()) ClosePanel();   // [Tony] edited
                 return;                                                               // [Tony] added
             }                                                                         // [Tony] added
         }                                                                             // [Tony] added
         // [Tony] added: another chest's panel is open, or E just closed one this frame, or another menu is open.
         if (Showing != null || closedFrame == Time.frameCount || MenuState.AnyOpen) return;   // [Tony] added
 
-        if (!Input.GetKeyDown(interactKey)) return;
+        // if (!Input.GetKeyDown(interactKey)) return;   // [Tony] replaced (21/11/2026): the key from KeyBindings (E)
+        if (!Input.GetKeyDown(InteractKey)) return;      // [Tony] replaced
 
         Camera cam = Camera.main;
         if (cam == null) return;

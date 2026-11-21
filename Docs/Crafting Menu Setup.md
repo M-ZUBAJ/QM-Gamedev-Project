@@ -39,8 +39,9 @@
      **CraftingSetPanels** on the Panel (built again every run);
    - sorts **Craftables**: the items that aren't tools stay first, in their order, then every tool that has a recipe
      made at the Crafting page, weakest tier first, then every armor piece with a recipe, set by set (the weakest set
-     first, by all its pieces' Protection added up: Copper, Iron, Gold), each helmet to boots. Diamond tools have no
-     recipe, so they aren't listed. (Tools > Items > Build Plate Armor and Tools > Items > Update Tool Recipes sort the
+     first, by all its pieces' Protection added up: Copper, Iron, Gold, Diamond), each helmet to boots. The Diamond tools are
+     listed once they have a recipe (since 21/11/2026, when the snow's Diamond item exists: Tools > World > Build Snow
+     Content). (Tools > Items > Build Plate Armor, Tools > Items > Update Tool Recipes and Build Snow Content sort the
      list too; Build Plate Armor also adds the set panels.)
 2. Nothing else: the inventory's Crafting page and the C menu are both copies of `Assets/Prefabs/UI/CraftingCanvas`.
 

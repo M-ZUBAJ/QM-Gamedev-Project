@@ -1,11 +1,12 @@
 /*
 First Date: 19/11/2026
-Date: 19/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Menu Tools > Effects > Build Tree Fall. Run it again any time (and after adding a tree look): it refills
               the chips and the closed trunks in place and only adds TreeFall where it's missing. Nothing in the scene
-              changes (the trees there are copies of the prefabs). Guide: Docs/Tree Fall Setup.md
+              changes (the trees there are copies of the prefabs). Tools > World > Build Snow Content runs it too (for
+              the snow trees). Guide: Docs/Tree Fall Setup.md
 Purpose: A falling tree and brown wood chips when a tree is chopped down, in one click:
            - Assets/Effects/WoodChips/WoodChip.png + WoodChip.mat (only if missing): a small splinter picture and a
              see-through particle material that the sun lights (darker at night);
@@ -19,6 +20,7 @@ Purpose: A falling tree and brown wood chips when a tree is chopped down, in one
              so not a berry bush): Turki's TreeNode first, its looks get it from there; Chips, Cut Wood and Closed
              Meshes (each prefab's own meshes) filled in.
 Requirement: TreeFallBuilder.cs x-> TreeFall.cs, ResourceNode.cs, UIBuildHelper.cs, MenuOrder.cs
+             TreeFallBuilder.cs <-x SnowBuilder.cs
 */
 
 using System.Collections.Generic;
@@ -52,12 +54,24 @@ public static class TreeFallBuilder
             return;
         }
 
-        ParticleSystem chips = BuildChips();
-        if (chips == null)
+        string report = BuildAll();
+        if (report == null)
         {
             EditorUtility.DisplayDialog(ToolName, "The WoodChips prefab couldn't be saved. The Console says why.", "OK");
             return;
         }
+        Debug.Log(ToolName + ": " + report + " Test: Play and chop a tree down.");
+    }
+
+    // ===== My methods =====
+
+    // The chips, the cut wood and the closed trunks (refilled), and TreeFall on every tree prefab, without asking
+    // (Tools > World > Build Snow Content runs it for the snow trees). Returns a report for the Console, or null if the
+    // WoodChips prefab couldn't be saved.
+    public static string BuildAll()
+    {
+        ParticleSystem chips = BuildChips();
+        if (chips == null) return null;
 
         Material cutWood = MakeCutWood();
         Dictionary<Mesh, Mesh> closedOnce = new Dictionary<Mesh, Mesh>();   // each mesh closed once, even if trees share it
@@ -71,12 +85,10 @@ public static class TreeFallBuilder
         {
             if (closed != null) closedCount++;
         }
-        Debug.Log(ToolName + ": " + FindPrefabPath(DefaultPrefabPath) + " made; TreeFall on " +
-                  (done.Count > 0 ? string.Join(", ", done) : "no tree prefab (a ResourceNode of type Tree in " + TreeFolder + ")") +
-                  "; " + closedCount + " trunk mesh(es) closed at the bottom in " + MeshFolder + ". Test: Play and chop a tree down.");
+        return FindPrefabPath(DefaultPrefabPath) + " made; TreeFall on " +
+               (done.Count > 0 ? string.Join(", ", done) : "no tree prefab (a ResourceNode of type Tree in " + TreeFolder + ")") +
+               "; " + closedCount + " trunk mesh(es) closed at the bottom in " + MeshFolder + ".";
     }
-
-    // ===== My methods =====
 
     // Every tree prefab (not a berry bush), the ones that aren't Prefab Variants first: a variant gets TreeFall from
     // the prefab it's made from, so that one has to have it first.

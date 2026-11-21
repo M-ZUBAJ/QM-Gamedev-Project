@@ -35,7 +35,7 @@ Purpose: Draws the small game pictures in code and saves them as PNG sprites, so
          GivePerkIcons puts the perk pictures in the player's PlayerPerks (its Icons list), for the HUD's perk icons
          and the Info tab. ForPerk gives each perk kind (Marko's ChestPerkType) its picture.
 Requirement: IconArt.cs x-> UIBuildHelper.cs, UIFXSprites.cs, PlayerPerks.cs, ArmorStats.cs, PerkData.cs
-             IconArt.cs <-x CraftingMenuBuilder.cs, GearPageBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, LootChestBuilder.cs, PerkPanelBuilder.cs, PerkRollBuilder.cs
+             IconArt.cs <-x CraftingMenuBuilder.cs, DeathScreenBuilder.cs, GearPageBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, LootChestBuilder.cs, PerkPanelBuilder.cs, PerkRollBuilder.cs
 */
 
 using System.IO;

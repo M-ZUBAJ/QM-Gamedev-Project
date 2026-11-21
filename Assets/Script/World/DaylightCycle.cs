@@ -30,7 +30,7 @@ Purpose: Day and night. Turns the sun around the world and changes its brightnes
 Requirement: DaylightCycle.cs x-> GameRules.cs, Light (Unity)
              DaylightCycle.cs o-> PlayerHealth.cs
              DaylightCycle.cs <-x DayCounter.cs, EnemySpawner.cs, GameSetup.cs, NewGameDefaultsSync.cs, TimeCounter.cs, VictoryScreen.cs
-             DaylightCycle.cs <-o DesertMonsterSpawner.cs, PerkEffects.cs, ViewDistance.cs
+             DaylightCycle.cs <-o DeathScreen.cs, DesertMonsterSpawner.cs, PerkEffects.cs, ViewDistance.cs
 */
 
 using UnityEngine;
@@ -192,6 +192,11 @@ public class DaylightCycle : MonoBehaviour
 
     // When each part of the day starts (Time Of Day, 0 - 1), e.g. for a "win at dawn" rule.
     public float DawnStart => dawnStart;
+
+    // How long this life has lasted, in days of game time: from the start (the day and time the game started; after a
+    // death the day goes back there) to now. 2.25 = two days and six hours. The death page shows it. (The victory
+    // screen counts from Day 1's dawn instead, for its goal.)
+    public float DaysSurvived => DawnDays(day, timeOfDay) - DawnDays(startDay, startTimeOfDay);
     public float MorningStart => morningStart;
     public float NoonStart => noonStart;
     public float AfternoonStart => afternoonStart;
@@ -315,6 +320,9 @@ public class DaylightCycle : MonoBehaviour
 
     // Back to how the game started: the starting day, time of day and light. Listening scripts hear about it
     // (e.g. dying at night = DayStarted, so Marko's EnemySpawner removes the night's enemies).
+    // Days since Day 1's dawn: the whole days (a new day starts at dawn) plus today's share since dawn.
+    float DawnDays(int dayNumber, float time) => (dayNumber - 1) + Mathf.Repeat(time - dawnStart, 1f);
+
     public void ResetToStart()
     {
         timeOfDay = startTimeOfDay;

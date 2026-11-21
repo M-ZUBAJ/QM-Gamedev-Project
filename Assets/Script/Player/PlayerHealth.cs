@@ -14,8 +14,9 @@ Purpose: Holds the player's health. TakeDamage / Heal change it and fire On Chan
          The epic box's Last Stand perk (PerkEffects): once a life, a hit that would kill leaves 1 health instead, and
          nothing can hurt the player for a moment (Is Shielded).
          The Night Power perk (PerkEffects) raises max health at night (SetMaxBoost); health keeps its share of the bar.
-         At 0 health the player dies: the Died event fires once (PlayerRespawn listens to it and brings the
-         player back). Revive fills health back up.
+         At 0 health the player dies: first the Dying event (everything is still as it was in that life: the death
+         page reads the day, perks, max health, armor and coins there), then Died, once (PlayerRespawn listens to it
+         and brings the player back; other scripts reset or drop things on it). Revive fills health back up.
 Requirement: PlayerHealth.cs o-> PlayerArmor.cs, PerkEffects.cs
              PlayerHealth.cs <-x DeathScreen.cs, EnemyAttack.cs, PerkChest.cs, PerkManager.cs, PlayerCoins.cs, PlayerRespawn.cs
              PlayerHealth.cs <-o AutoCollector.cs, ChestPrompt.cs, DaylightCycle.cs, EnemyAggro.cs, EnemyAnimator.cs, FirstPersonHands.cs, GainNotifier.cs, InteractOutline.cs, ItemConsumer.cs, ItemDropper.cs, PassiveRegen.cs, PerkEffects.cs, PlayerAnimator.cs, PlayerHunger.cs, PlayerInfoPage.cs, PlayerPerks.cs, PlayerSight.cs, PlayerStats.cs, ShellDefense.cs, StatBar.cs, WildAnimal.cs
@@ -52,6 +53,11 @@ public class PlayerHealth : MonoBehaviour
     bool dieNextFrame;   // 0 was typed into Health in the Inspector: die in the next Update (see OnValidate)
     float shieldedUntil; // Last Stand: no hit hurts until this time
     float maxBoost = 1f; // Night Power: max health x this at night (SetMaxBoost), 1 = normal
+
+    // Fired once when health reaches 0, just BEFORE Died: at this moment everything is still as it was in that life
+    // (the day, the perks, max health, the armor worn, the coins), because Died is when those are reset or dropped.
+    // DeathScreen reads the days survived and the full stats here.
+    public event System.Action Dying;
 
     // Fired once when health reaches 0. Scripts subscribe in code, e.g. PlayerRespawn: health.Died += Respawn;
     public event System.Action Died;
@@ -201,6 +207,7 @@ public class PlayerHealth : MonoBehaviour
         dead = true;
 
         Debug.Log(gameObject.name + " died.");
+        Dying?.Invoke();    // first: the life as it was (DeathScreen remembers it)
         onDied?.Invoke();
         Died?.Invoke();     // e.g. PlayerRespawn brings the player back
     }

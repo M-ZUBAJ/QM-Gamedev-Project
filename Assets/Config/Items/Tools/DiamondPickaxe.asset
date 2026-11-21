@@ -38,6 +38,12 @@ MonoBehaviour:
     hides: []
     look: {fileID: 0}
   minedWith: 0
-  recipe: []
+  recipe:
+  - item: {fileID: 11400000, guid: b55781f48c48f4b42b2bb8dfe0ea809a, type: 2}
+    amount: 1
+  - item: {fileID: 11400000, guid: d524931321f754afdaeefd6219e3fa3c, type: 2}
+    amount: 3
+  - item: {fileID: 11400000, guid: c483f8b20e5357a418124f1e769fdcb4, type: 2}
+    amount: 6
   craftAmount: 1
   craftedAt: 0

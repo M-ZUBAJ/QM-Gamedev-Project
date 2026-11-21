@@ -43,6 +43,7 @@ The script is **ViewDistance** (`Assets/Script/Camera/ViewDistance.cs`), on the 
 | **Fog** (Lighting window) | On, Linear, from Distance x Clear Share to Distance, its color following the time of day. |
 | **The sky's mist** | A flat card at the far end of the camera's view, the fog's color, solid near the horizon and fading out higher up (shader `Assets/Effects/ViewDistance/Resources/ViewDistanceMist.shader`, in a Resources folder so a built game keeps it). Anything closer hides it, so it only covers the sky and the empty space past the last drawn hill. |
 | **Terrain grass** | Drawn only up to Distance (the World Generator's Grass Distance, 80 m, is capped). |
+| **The new world's land** | The World Generator shows its squares of land (chunks) up to Distance + 60 m and makes them further ahead (`Docs/New World Setup.md`), so the land is always there before the mist uncovers it. |
 | **PlayerSight** (on the Player) | Its range is Distance (instead of its own Sight Range), so the AnimalSpawner brings deer just past the mist, where they can't be seen appearing. |
 
 Untick the component (or remove it) and the camera, fog and grass go back to how the scene had them.

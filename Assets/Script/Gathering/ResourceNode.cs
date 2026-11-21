@@ -43,8 +43,10 @@ public class ResourceNode : MonoBehaviour
     [Tooltip("On: attacks do nothing. The player collects it by looking at it and pressing the collect key.")]
     [SerializeField] bool collectWithKey = false;
 
-    [Tooltip("The key that collects it (same key as the chests).")]
-    [SerializeField] KeyCode collectKey = KeyCode.E;
+    // [Tooltip("The key that collects it (same key as the chests).")]
+    // [SerializeField] KeyCode collectKey = KeyCode.E;   // [Tony] replaced (21/11/2026): the key is KeyBindings.Interact (E),
+    //                                                   the same key as the chests, shown and changed on the title screen's
+    //                                                   Key Bindings page. Log: Docs/TonyEditMate/Turki/21-11-2026 Berry Key On The Key Bindings Page.md
 
     [Tooltip("How close the player must be, in metres.")]
     [Min(1f)]
@@ -67,7 +69,8 @@ public class ResourceNode : MonoBehaviour
     void Update()
     {
         if (!collectWithKey) return;                   // normal nodes are mined with attacks
-        if (!Input.GetKeyDown(collectKey)) return;
+        // if (!Input.GetKeyDown(collectKey)) return;   // [Tony] replaced (21/11/2026): the key from KeyBindings (E)
+        if (!Input.GetKeyDown(KeyBindings.Interact)) return;   // [Tony] replaced
         if (MenuState.AnyOpen) return;                 // no collecting while a menu is open
 
         Camera cam = Camera.main;

@@ -20,7 +20,8 @@ The wood (and maybe an apple) is in the inventory the moment the tree breaks, as
      `ResourceNodes/Trees` get it from there) and fills in its **Chips**, **Cut Wood** and **Closed Meshes**. Berry
      bushes are skipped.
 2. Nothing else: the trees in the scene and the ones the ObjectScatter spawns are copies of those prefabs. Run the
-   tool again after adding a new tree look.
+   tool again after adding a new tree look. (**Tools > World > Build Snow Content** runs it by itself for the snow's
+   pines and spruces.)
 
 ## How it works
 

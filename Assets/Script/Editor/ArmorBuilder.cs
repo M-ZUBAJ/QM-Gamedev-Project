@@ -6,10 +6,10 @@ Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so i
 Unity Editor: Open GameScene, then menu Tools > Items > Build Plate Armor (it asks first), and save the scene afterwards.
               Run it again any time: the items, their prefabs and the Gear page are refilled in place, and recipes you
               changed stay. Guide: Docs/Armor Setup.md
-Purpose: Blink's plate armor (the PlateSet1 parts already inside the player's character, switched off) as three
-         armor sets, 18 items the player can craft, wear and see, in one click. Copper comes first, Iron is its upgrade
-         and Gold Iron's. How much a whole set protects follows Tony's formula a[n] = 5/2 n^2 - 5/2 n + 10 percent for
-         the n-th set (copper 10 %, iron 15 %, gold 25 %; a diamond set would get 40 %), and each set splits it like
+Purpose: Blink's plate armor (the PlateSet1 parts already inside the player's character, switched off) as four
+         armor sets, 24 items the player can craft, wear and see, in one click. Copper comes first, Iron is its upgrade,
+         Gold Iron's and Diamond Gold's. How much a whole set protects follows Tony's formula a[n] = 5/2 n^2 - 5/2 n + 10
+         percent for the n-th set (copper 10 %, iron 15 %, gold 25 %, diamond 40 %), and each set splits it like
          copper: the chestplate a quarter, every other piece 15 % (SetTotal, SlotShares):
            - Copper: Assets/Config/Items/Armor/Copper<Slot>.asset: Copper Helmet, Copper Shoulders, Copper Chestplate,
              Copper Gloves, Copper Leggings, Copper Boots. Protection 1.5 % each and 2.5 % for the chestplate (10 % off
@@ -21,6 +21,12 @@ Purpose: Blink's plate armor (the PlateSet1 parts already inside the player's ch
            - Gold: Gold<Slot>.asset ("Gold Helmet"...): 3.75 % each, 6.25 % for the chestplate (25 % for all six); all
              six: +4 coins for every monster killed and 10 % off every chest, and its pieces count as Iron; each crafted
              from its Iron piece + Gold (4 / 3 / 6 / 2 / 5 / 3); bright gold with red leather and crimson cloth;
+           - Diamond (21/11/2026): Diamond<Slot>.asset ("Diamond Helmet"...): 6 % each, 10 % for the chestplate (40 % for
+             all six); all six: +8 coins for every monster killed and 10 % off every chest, and its pieces count as Gold;
+             each crafted from its Gold piece + Diamond (4 / 3 / 6 / 2 / 5 / 3); ice blue with sapphire trims, dark
+             slate leather and silver cloth, glossy;
+           - the Gold and Diamond items (from Tools > World > Build Desert / Snow Content) are made here too when one is
+             missing, the same way those tools make them (a copy of Turki's Iron), so every set gets its recipes;
            - files from before the tiers were swapped (20/11/2026: Iron came first, and Reinforced Iron = an Iron piece
              + Copper) are renamed by tier: Iron... -> Copper..., ReinforcedIron... -> Iron..., with Iron and Copper
              swapped in their recipes, so everything linked to them stays linked;
@@ -45,7 +51,7 @@ Purpose: Blink's plate armor (the PlateSet1 parts already inside the player's ch
              Crafting Menu's sorting and set panels);
            - Tools > UI > Build Gear Page: the inventory's Gear page (the character on the left, the slots on the right);
            - the Armor row on the inventory's Info tab (how much the armor protects, the set bonus in gold).
-Requirement: ArmorBuilder.cs x-> ItemData.cs, ArmorStats.cs, IconSource.cs, ItemPickup.cs, ArmorLook.cs, FirstPersonHands.cs, PlayerArmor.cs, PlayerInventory.cs, ArmorTestKit.cs, ToolTestKit.cs, MeshAssetHelper.cs, CraftingMenuBuilder.cs, GearPageBuilder.cs, InventoryUIBuilder.cs, UIBuildHelper.cs, MenuOrder.cs
+Requirement: ArmorBuilder.cs x-> ItemData.cs, ArmorStats.cs, IconSource.cs, ItemPickup.cs, ArmorLook.cs, FirstPersonHands.cs, PlayerArmor.cs, PlayerInventory.cs, ArmorTestKit.cs, ToolTestKit.cs, MeshAssetHelper.cs, CraftingMenuBuilder.cs, GearPageBuilder.cs, InventoryUIBuilder.cs, DesertBuilder.cs, SnowBuilder.cs, UIBuildHelper.cs, MenuOrder.cs
 */
 
 using System.Collections.Generic;
@@ -135,9 +141,17 @@ public static class ArmorBuilder
         new Strip { x = ClothX, dark = new Color(0.12f, 0.01f, 0.03f), light = new Color(0.85f, 0.12f, 0.2f) },             // crimson cloth
     };
 
+    static readonly Strip[] DiamondColors =
+    {
+        new Strip { x = PlatesX, dark = new Color(0.1f, 0.3f, 0.4f), light = new Color(0.8f, 0.98f, 1f) },                  // ice blue
+        new Strip { x = TrimsX, dark = new Color(0.03f, 0.08f, 0.18f), light = new Color(0.28f, 0.52f, 0.85f) },            // sapphire
+        new Strip { x = StrapsX, top = true, dark = new Color(0.05f, 0.05f, 0.07f), light = new Color(0.38f, 0.4f, 0.48f) },  // dark slate leather
+        new Strip { x = ClothX, dark = new Color(0.12f, 0.14f, 0.18f), light = new Color(0.92f, 0.95f, 1f) },               // silver cloth
+    };
+
     // How much a whole set protects, in percent (Tony, 21/11/2026): a[n] = 5/2 x n^2 - 5/2 x n + 10 for the n-th set,
-    // so each set adds 5 % more than the step before it: copper (n = 1) 10 %, iron (2) 15 %, gold (3) 25 %, and a
-    // diamond set (4) would get 40 %.
+    // so each set adds 5 % more than the step before it: copper (n = 1) 10 %, iron (2) 15 %, gold (3) 25 %, diamond
+    // (4) 40 %.
     static float SetTotal(int n) => 2.5f * n * n - 2.5f * n + 10f;
 
     // Each slot's share of its set's protection, as copper's first numbers had it (1.5 % a piece and 2.5 % for the
@@ -194,6 +208,16 @@ public static class ArmorBuilder
             cost = new[] { 4, 3, 6, 2, 5, 3 },                            // Gold, on top of the Iron piece
             palette = GoldColors, metallic = 0.75f, smoothness = 0.7f,
         },
+        // Diamond (21/11/2026, Tony: "a diamond armor, +8 coins set bonus and -10 % discount"; the Diamond item comes
+        // from the snow caves, Tools > World > Build Snow Content): its bonus is in PlayerArmor's DefaultBonuses (+8
+        // coins per kill, 10 % off every chest, counts as Gold).
+        new ArmorSet
+        {
+            name = "Diamond", idStart = "Diamond", costItem = "Diamond", upgradeOf = "Gold",
+            protection = Spread(SetTotal(4)),                             // 40 %: 6 each, 10 for the chestplate
+            cost = new[] { 4, 3, 6, 2, 5, 3 },                            // Diamond, on top of the Gold piece
+            palette = DiamondColors, metallic = 0.35f, smoothness = 0.85f, // less metal, more gloss: a gem's shine
+        },
     };
 
     const string LookFolder = "Assets/Materials/Armor";   // each set's material and palette picture
@@ -217,7 +241,7 @@ public static class ArmorBuilder
             return;
         }
         if (!EditorUtility.DisplayDialog(ToolName,
-                "This makes Blink's plate armor wearable, as three sets of 6 pieces (helmet, shoulders, chestplate, gloves, " +
+                "This makes Blink's plate armor wearable, as four sets of 6 pieces (helmet, shoulders, chestplate, gloves, " +
                 "leggings, boots) in " + ItemFolder + ":\n\n" +
                 "- Copper (copper colored): 1.5 % protection each, 2.5 % for the chestplate (10 % for all six); all six = " +
                 "+1 coin for every monster killed; recipes of Copper\n" +
@@ -225,6 +249,8 @@ public static class ArmorBuilder
                 "Copper; each piece = its Copper piece + Iron (a worn Copper piece can be upgraded where it's worn)\n" +
                 "- Gold (gold): 25 % for all six; all six = +4 coins for every monster killed and 10 % off every chest, and " +
                 "it counts as Iron; each piece = its Iron piece + Gold\n" +
+                "- Diamond (ice blue): 40 % for all six; all six = +8 coins for every monster killed and 10 % off every chest, " +
+                "and it counts as Gold; each piece = its Gold piece + Diamond (the Diamond item is made too if missing)\n" +
                 "- armor files from when Iron came first (and Reinforced Iron) renamed by tier: Iron to Copper, " +
                 "Reinforced Iron to Iron\n" +
                 "- each set's colors in " + LookFolder + " (only if missing)\n" +
@@ -241,6 +267,7 @@ public static class ArmorBuilder
         List<string> missing = new List<string>();
         List<string> noCost = new List<string>();
         List<string> looksMade = new List<string>();
+        List<string> oresMade = new List<string>();
         List<ArmorLook.SkinUnder> skin;
         List<string> trimmed = new List<string>();
         float height;
@@ -252,8 +279,8 @@ public static class ArmorBuilder
             Dictionary<string, ItemData> made = new Dictionary<string, ItemData>();   // by Item Id, for the upgrade recipes
             foreach (ArmorSet set in Sets)
             {
-                if (!set.build) continue;   // only its look for now (MakeLooks), e.g. Gold
-                ItemData cost = FindItem(set.costItem);
+                if (!set.build) continue;   // only its look for now (MakeLooks)
+                ItemData cost = CostItem(set, oresMade);
                 if (cost == null) noCost.Add(set.name + " (no " + set.costItem + " item)");
                 looks.TryGetValue(set.name, out Material setLook);
                 for (int s = 0; s < Slots.Length; s++)
@@ -295,7 +322,8 @@ public static class ArmorBuilder
         string info = InventoryUIBuilder.AddArmorRowToCanvas();
         AssetDatabase.SaveAssets();
 
-        Debug.Log(ToolName + ": " + items.Count + " armor items (Copper, Iron, Gold) in " + ItemFolder +
+        Debug.Log(ToolName + ": " + items.Count + " armor items (Copper, Iron, Gold, Diamond) in " + ItemFolder +
+                  (oresMade.Count > 0 ? " (recipe items: " + string.Join(", ", oresMade) + ")" : "") +
                   (renamed > 0 ? " (" + renamed + " old pieces renamed by tier: Iron to Copper, Reinforced Iron to Iron, " +
                                  "with Iron and Copper swapped in their recipes)" : "") +
                   (missing.Count > 0 ? " (not found on the character: " + string.Join(", ", missing) + ")" : "") +
@@ -401,6 +429,18 @@ public static class ArmorBuilder
         {
             if (part.name == partName) return part;
         }
+        return null;
+    }
+
+    // The item a set's recipe costs (e.g. Diamond). Gold and Diamond come from the desert's and the snow's tools; when
+    // one of them is missing it's made here the same way (a copy of Turki's Iron), so the set gets its recipes whichever
+    // tool runs first. "made" gets what those tools reported.
+    static ItemData CostItem(ArmorSet set, List<string> made)
+    {
+        ItemData cost = FindItem(set.costItem);
+        if (cost != null) return cost;
+        if (set.costItem == "Gold") return DesertBuilder.MakeGold(made);
+        if (set.costItem == "Diamond") return SnowBuilder.MakeDiamond(made);
         return null;
     }
 

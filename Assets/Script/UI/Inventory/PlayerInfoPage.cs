@@ -4,12 +4,16 @@ Date: 21/11/2026
 Author: Tony
 Use by: The inventory's Info page (InventoryCanvas > InventoryWindow > Pages > InfoPage). Tools > UI > Build Inventory UI
         (or Tools > UI > Add Inventory Scripts for an inventory built before) makes the page and puts this on it.
+        Also the death page's StatsPanel > Info (Tools > UI > Upgrade Death Screen), with Last Life on.
 Unity Editor: Nothing to connect: it finds the player's scripts by itself, and its parts by NAME:
                 HealthRow, HungerRow, StaminaRow, ArmorRow, SpeedRow, SprintRow, JumpRow, FireballRow, CoinsRow:
                   each with a "Value" text, a "Bonus" text and, for Health / Hunger / Stamina, a "Bar" with a "Fill"
                   (ArmorRow: Tools > Items > Build Plate Armor adds it to an Info tab made before the armor)
                 PerkList: the perk rows go in here, copied from its switched-off "PerkTemplate" (Icon, Name, Stats)
                 NoPerks: the text shown while the player has no perk
+              Last Life (the death page's copy): it doesn't update by itself; DeathScreen calls Capture the moment
+              the player dies, before dying resets the perks, max health, coins and armor, so it shows the life
+              that just ended.
               Testing: Play, press Tab and click Info. Open a chest and take a perk: its stat shows the bonus in green
               and the perk joins the list. Wear all six copper armor pieces: the Armor and Coins rows turn gold.
 Purpose: The player's status, updated 4 times a second while the Info tab is open:
@@ -26,7 +30,8 @@ Purpose: The player's status, updated 4 times a second while the Info tab is ope
          gold set's cheaper chests show there too ("Gold Set bonus, chests -10%").
 Requirement: PlayerInfoPage.cs x-> ArmorStats.cs
              PlayerInfoPage.cs o-> PlayerHealth.cs, PlayerHunger.cs, PlayerStamina.cs, PlayerController.cs, PlayerJump.cs, PlayerFireball.cs, PlayerCoins.cs, PlayerPerks.cs, PlayerArmor.cs, PerkEffects.cs
-             PlayerInfoPage.cs <-x InventoryUIBuilder.cs
+             PlayerInfoPage.cs <-x DeathScreenBuilder.cs, InventoryUIBuilder.cs
+             PlayerInfoPage.cs <-o DeathScreen.cs
 */
 
 using System.Collections.Generic;
@@ -62,6 +67,12 @@ public class PlayerInfoPage : MonoBehaviour
              "so it catches the eye.")]
     [SerializeField] Color setBonusRowColor = new Color(1f, 0.93f, 0.72f);
 
+    [Header("Death page")]
+    [Tooltip("On: the death page's copy. It shows the player as they were the moment they died (DeathScreen calls " +
+             "Capture then) and doesn't update by itself, because dying resets the perks, max health, coins and armor. " +
+             "Off: the inventory's Info tab, kept up to date.")]
+    [SerializeField] bool lastLife;
+
     const float RefreshEvery = 0.25f;   // seconds: 4 times a second, so the bars follow while the page is open
 
     Row health, hunger, stamina, armorRow, walk, sprint, jump, fireball, coins;
@@ -79,11 +90,45 @@ public class PlayerInfoPage : MonoBehaviour
     PlayerFireball fireballSkill;   // Marko's
     PlayerPerks perks;
     float nextRefresh;
+    bool ready;   // its parts are found (Init)
 
     // ===== Unity messages (Unity calls these) =====
 
     void Awake()
     {
+        Init();
+    }
+
+    // The tab opened: up to date at once.
+    void OnEnable()
+    {
+        if (lastLife) return;   // the death page: it keeps the moment of death (Capture)
+        nextRefresh = 0f;
+        Refresh();
+    }
+
+    void Update()
+    {
+        if (lastLife || Time.unscaledTime < nextRefresh) return;
+        nextRefresh = Time.unscaledTime + RefreshEvery;
+        Refresh();
+    }
+
+    // ===== My methods =====
+
+    // Writes the player as they are right now and keeps it (the death page: DeathScreen calls this the moment the player
+    // dies, even while the panel is hidden or was never shown yet).
+    public void Capture()
+    {
+        Init();
+        Refresh();
+    }
+
+    // Finds its parts by name (once; Capture can come before Awake when the panel has never been switched on).
+    void Init()
+    {
+        if (ready) return;
+        ready = true;
         health = FindRow("HealthRow");
         hunger = FindRow("HungerRow");
         stamina = FindRow("StaminaRow");
@@ -104,22 +149,6 @@ public class PlayerInfoPage : MonoBehaviour
         Transform none = FindDeep(transform, "NoPerks");
         noPerks = none != null ? none.gameObject : null;
     }
-
-    // The tab opened: up to date at once.
-    void OnEnable()
-    {
-        nextRefresh = 0f;
-        Refresh();
-    }
-
-    void Update()
-    {
-        if (Time.unscaledTime < nextRefresh) return;
-        nextRefresh = Time.unscaledTime + RefreshEvery;
-        Refresh();
-    }
-
-    // ===== My methods =====
 
     void Refresh()
     {

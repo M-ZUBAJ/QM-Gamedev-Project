@@ -8,7 +8,8 @@ Unity Editor: Needs Abduo Bricks' free "Low Poly Tool Pack" (Assets/Imported3D/A
               - makes 15 tools: a pickaxe, axe and sword in Wood, Stone, Iron, Gold and Diamond
                 (Assets/Config/Items/Tools/<Id>.asset + Assets/Prefabs/Item/Tools/<Id>.prefab, e.g. StonePickaxe), with
                 Standard copies of the pack's URP materials in Assets/Materials/Tools. Wood, Stone, Iron and Gold tools
-                get recipes (Diamond waits for its ore). Running it again rebuilds them in the same files.
+                get recipes, Diamond too once the Diamond item exists (the snow's diamonds: Tools > World > Build Snow
+                Content). Running it again rebuilds them in the same files.
               - ores need pickaxes: Copper's and Iron's Mined With = Stone (and Gold = Iron, Diamond = Gold if they exist);
               - PlayerCharacter.prefab gets ToolInHand, so the body and the first-person hands hold the selected tool;
                 the Player gets ToolTestKit (the game rule Tool Test), and its PunchEffect's swing timing is measured;
@@ -20,7 +21,8 @@ Unity Editor: Needs Abduo Bricks' free "Low Poly Tool Pack" (Assets/Imported3D/A
               Tools > Items > Rebuild Tool Models rebuilds only the 15 tool prefabs (e.g. after changing HandleShare
               below): names, recipes, ores and the scene stay as they are.
               Tools > Items > Update Tool Recipes puts only the recipes (RecipeFor below) on the tools that exist, then
-              sorts Turki's crafting list again (CraftingMenuBuilder.SortList), so new recipes (e.g. Gold) show there.
+              sorts Turki's crafting list again (CraftingMenuBuilder.SortList), so new recipes (e.g. Gold, Diamond) show
+              there. Tools > World > Build Snow Content does the same without asking (ApplyRecipes).
               Hand-made steps: Docs/Tool Setup.md
 Purpose: Replaces Marko's three placeholder tools with 15 tiered tools from the Low Poly Tool Pack, in one click.
          Each tool:
@@ -31,6 +33,7 @@ Purpose: Replaces Marko's three placeholder tools with 15 tiered tools from the 
          Its Item Data: Item Type Tool, Kind + Tier, icon = a photo of the prefab, and the recipe: a chain where
          each tier is made from the tool of the tier below (Wooden Axe + 3 Plank + 6 Stone = Stone Axe, see RecipeFor).
 Requirement: TierToolBuilder.cs x-> UIBuildHelper.cs, MaterialBuildHelper.cs, MeshBounds.cs, PunchEffectBuilder.cs, ItemData.cs, ItemPickup.cs, ToolStats.cs, ToolInHand.cs, ToolTestKit.cs, PunchEffect.cs, FirstPersonHands.cs, PlayerAnimator.cs, CraftingMenu.cs, Recipe.cs, CraftingMenuBuilder.cs, MenuOrder.cs
+             TierToolBuilder.cs <-x SnowBuilder.cs
 */
 
 using System.Collections.Generic;
@@ -130,15 +133,25 @@ public static class TierToolBuilder
     static void UpdateRecipes()
     {
         if (!EditorUtility.DisplayDialog("Update Tool Recipes",
-                "Give the Wooden, Stone, Iron and Gold tools the crafting chain?\n\n" +
+                "Give the Wooden, Stone, Iron, Gold and Diamond tools the crafting chain?\n\n" +
                 "Wooden: 3 Plank + 3 Wood (pickaxe, axe), 3 Plank + 6 Wood (sword)\n" +
                 "Stone: the Wooden one + 3 Plank + 6 Stone (pickaxe, axe), + 9 Stone (sword)\n" +
                 "Iron: the Stone one + 3 Plank + 6 Iron (pickaxe, axe), + 9 Iron (sword)\n" +
-                "Gold: the Iron one + 3 Plank + 6 Gold (pickaxe, axe), + 9 Gold (sword)\n\n" +
+                "Gold: the Iron one + 3 Plank + 6 Gold (pickaxe, axe), + 9 Gold (sword)\n" +
+                "Diamond: the Gold one + 3 Plank + 6 Diamond (pickaxe, axe), + 9 Diamond (sword), once the Diamond item " +
+                "exists (Tools > World > Build Snow Content)\n\n" +
                 "Recipes changed by hand on these tools are replaced. Then Turki's crafting list is sorted again, so the " +
                 "tools with a recipe show in it.", "Update", "Cancel"))
             return;
 
+        Debug.Log("Update Tool Recipes: " + ApplyRecipes() + " (Play, Tab > Crafting).");
+    }
+
+    // The recipes of the tool Item Data that exist, without asking (Tools > World > Build Snow Content runs it, so the
+    // Diamond tools get theirs once the Diamond item exists), then Turki's crafting list sorted again. Ctrl + Z undoes
+    // the recipes. Returns a report for the Console.
+    public static string ApplyRecipes()
+    {
         List<string> done = new List<string>();
         foreach (ToolTier tier in Tiers)   // weakest first: a recipe needs the tool of the tier below
         {
@@ -154,9 +167,9 @@ public static class TierToolBuilder
             }
         }
         AssetDatabase.SaveAssets();
-        string crafting = CraftingMenuBuilder.SortList();   // a tool that just got its first recipe (Gold) joins the list
-        Debug.Log("Update Tool Recipes: " + (done.Count > 0 ? string.Join("; ", done) : "no tools in " + ItemFolder +
-                  " (run Tools > Items > Build Tier Tools)") + ". Crafting list: " + crafting + " (Play, Tab > Crafting).");
+        string crafting = CraftingMenuBuilder.SortList();   // a tool that just got its first recipe (Gold, Diamond) joins the list
+        return (done.Count > 0 ? string.Join("; ", done) : "no tools in " + ItemFolder + " (run Tools > Items > Build Tier Tools)") +
+               ". Crafting list: " + crafting;
     }
 
     // A recipe as words, e.g. "1 WoodenAxe + 3 Plank + 6 Stone" (empty = can't be crafted).
@@ -389,7 +402,9 @@ public static class TierToolBuilder
     //   Stone:  the Wooden one + 3 Plank + 6 Stone (pickaxe, axe), + 9 Stone (sword)
     //   Iron:   the Stone one  + 3 Plank + 6 Iron  (pickaxe, axe), + 9 Iron  (sword)
     //   Gold:   the Iron one   + 3 Plank + 6 Gold  (pickaxe, axe), + 9 Gold  (sword)
-    // Crafting uses the tool below up. Diamond: no recipe yet (there's no Diamond item: its ore doesn't exist).
+    //   Diamond: the Gold one  + 3 Plank + 6 Diamond (pickaxe, axe), + 9 Diamond (sword): since 21/11/2026, once the
+    //            Diamond item exists (the snow caves' diamonds, Tools > World > Build Snow Content)
+    // Crafting uses the tool below up.
     // (Before 19/11/2026: Wooden = 4 / 3 / 2 Plank, Stone and Iron = 2 Plank + 2 or 1 of the material.)
     static List<(ItemData, int)> RecipeFor(ToolKind kind, ToolTier tier)
     {
@@ -397,7 +412,7 @@ public static class TierToolBuilder
         string materialName = tier == ToolTier.Wood ? "Wood" : tier.ToString();   // Stone, Iron, Gold, Diamond: the item of that name
         ItemData plank = FindByName<ItemData>("Plank", "ItemData");
         ItemData material = FindByName<ItemData>(materialName, "ItemData");
-        if (plank == null || material == null) return recipe;   // Diamond (or a missing item): can't be crafted yet
+        if (plank == null || material == null) return recipe;   // a missing item (e.g. no Diamond yet): can't be crafted yet
 
         if (tier != ToolTier.Wood)
         {

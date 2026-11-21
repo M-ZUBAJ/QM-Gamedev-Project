@@ -1,6 +1,6 @@
 /*
 First Date: 20/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Open the scene (e.g. GameScene, the old world), then Tools > World > Add World Barrier. It asks first, and
@@ -12,7 +12,7 @@ Purpose: Puts a glowing barrier (WorldBarrier) around the open scene's map, so p
              triggers, which stop nothing; the barrier's own walls stop the player);
            - else just inside the edge of the terrain (the one with the most ground textures);
            - from below the lowest ground along that line to well above the highest.
-         The new world (a scene with a World Generator) makes its own barrier every game, so it's skipped there.
+         The new world (a scene with a World Generator) is endless (since 21/11/2026), so it's skipped there.
          An existing barrier in the scene is fitted again instead of adding a second one.
 Requirement: WorldBarrierBuilder.cs x-> WorldBarrier.cs, WorldGenerator.cs, MenuOrder.cs
 */
@@ -47,8 +47,8 @@ public static class WorldBarrierBuilder
         Scene scene = SceneManager.GetActiveScene();
         if (Find<WorldGenerator>(scene) != null)
         {
-            EditorUtility.DisplayDialog(ToolName, "\"" + scene.name + "\" has a World Generator (the new world): it makes " +
-                                        "its own barrier around the world it makes, every game. Nothing to add here.", "OK");
+            EditorUtility.DisplayDialog(ToolName, "\"" + scene.name + "\" has a World Generator (the new world): its land " +
+                                        "never ends, so it has no barrier. Nothing to add here.", "OK");
             return;
         }
         if (!FindArea(scene, out Rect area, out string from))

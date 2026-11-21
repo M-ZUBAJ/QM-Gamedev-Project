@@ -98,7 +98,7 @@ public static class NewGameDefaultsSync
         Copy(Find<EnemySpawner>(scene), d, "spawnAtNight", "enemiesPerNight");
         CopyAs(Find<PlayerHunger>(scene), "drainPerSecond", d, "hungerDrainPerSecond");
         Copy(Find<GameRules>(scene), d, "keepInventory", "clearItemOnDead", "autoPickupDrops", "showNotifications", "toolTest",
-             "armorTest", "newChests");
+             "armorTest", "newChests", "pauseGame");
 
         if (!d.ApplyModifiedPropertiesWithoutUndo()) return false;
 

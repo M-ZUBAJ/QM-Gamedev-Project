@@ -4,8 +4,10 @@ The game now starts on a title screen, **UNKNOWN SURVIVAL**, with three buttons:
 
 - **PLAY** opens the **New Game** page. Every option there starts at the game *as it is now*. **START GAME** loads
   GameScene with the player's choices.
-- **SETTINGS** opens the **Settings** page with tabs. **Key Bindings** works now; **Controls**, **Display** and **Audio**
-  show an animated "INCOMING..." message until they're made.
+- **SETTINGS** opens the **Settings** page with tabs. **Key Bindings** and **Controls** work (Controls since 21/11/2026:
+  **Mouse sensitivity** 1 - 10, 5 = the game's normal speed, on a slider with - / +, and **Invert mouse**); **Display**
+  and **Audio** show an animated "INCOMING..." message until they're made. The same KEY BINDINGS and CONTROLS are in the
+  Esc **pause menu** while playing (`Docs/Pause Menu Setup.md`), and both save to the computer, so they always match.
 - **QUIT** closes the game. It's hidden in the WebGL build, because a web page can't close itself.
 
 ## Quick way: one click
@@ -55,7 +57,7 @@ today's game. These values are read from GameScene and kept in `NewGameDefaults.
 
 | Option | What it changes in the game | Default |
 |---|---|---|
-| **Map** (WORLD) | **Old world** = GameScene, the hand-made map; **New world** = ProceduralGenerateScene, a new random 1000 x 1000 m world every game (made by **Tools > World > Build New World Scene**, guide `Docs/New World Setup.md`). START GAME loads TitleMenu's **Game Scene** or **New World Scene** | Old world |
+| **Map** (WORLD) | **Old world** = GameScene, the hand-made map; **New world** = ProceduralGenerateScene, a new random endless world every game (made by **Tools > World > Build New World Scene**, guide `Docs/New World Setup.md`). START GAME loads TitleMenu's **Game Scene** or **New World Scene** | Old world |
 | **Days to win** (1 - 30) | GameEndCanvas > VictoryScreen > Days To Win | from GameScene |
 | **Win at** | VictoryScreen > Win Time (Dawn, Morning, Midday, Afternoon, Dusk, Night, Midnight; times from the sun) | from GameScene |
 | **Day length** | the sun's Day Length Minutes: Short = half, Normal = as now, Long = double | Normal |
@@ -63,7 +65,8 @@ today's game. These values are read from GameScene and kept in `NewGameDefaults.
 | **Difficulty** | Peaceful = no enemies; Easy = half the enemies, slower hunger; **Normal = as now**; Hard = 1.5x enemies, faster hunger | Normal |
 | **When I die** | Keep items / Drop items / Lose items (GameRules Keep Inventory / Clear Item On Dead) | from GameScene |
 | **Pick up dropped items by walking over them** | GameRules Auto Pickup Drops | from GameScene |
-| **Show "+3 Wood" messages** | GameRules Show Notifications | from GameScene |
+| **Show "+3 Wood" messages** (RULES, left) | GameRules Show Notifications | from GameScene |
+| **Pause menu (Esc) pauses the game** (RULES, right; 21/11/2026) | GameRules Pause Game: on = the Esc pause menu stops the game while it's open (monsters, the sun, hunger); off = the game goes on behind it (`Docs/Pause Menu Setup.md`) | on (from GameScene) |
 | **Start with all tools** (TESTING, left) | GameRules Tool Test: one of every tier tool (pickaxe, axe, sword x Wood ... Diamond) in the inventory from the start (ToolTestKit) | off (from GameScene) |
 | **Start with all armor** (TESTING, middle) | GameRules Armor Test: every armor piece, the Copper and Iron sets (12), in the inventory from the start (ArmorTestKit) | off (from GameScene) |
 | **Old chests / New chests** (TESTING, right) | GameRules New Chests: the two loot box systems. Old = every box lets you choose 1 of 3; New = random common and epic boxes (a slot-machine roll), a legendary box, REROLL at every box (both: REROLL only once the Reroll perk is found; `Docs/Loot Chests Setup.md`) | New chests (from GameScene) |
@@ -85,7 +88,22 @@ panel has no room for another row.
   Normal play and building are separate, so left click can both place buildings and do other things.
 - **Attack (left click)** and **Fireball (Q)** are greyed out: they're read straight from the keyboard in Marko's
   PlayerCombat / PlayerFireball, so they can't change until those scripts use KeyBindings.
+- **ITEMS** (21/11/2026): **Grab item (on the ground)** = F (dropped stacks, apples: ItemGrabber), **Open chest / Pick
+  berries** = E (KeyBindings' Interact: Marko's chests and Turki's berry bushes read it, so changing it here changes
+  both, and the "[E] Open chest" prompt follows), **Eat / Levitate** = right click. Keys saved on a computer before
+  then had Interact on the right mouse button (where it did nothing): the game forgets that one once, so it's E.
 - **RESET ALL** puts every key back to its default (GameScene's KeyBindings).
+- **GAME > Pause menu** (21/11/2026) = Esc: in the game it opens the pause menu (it was "Free the mouse").
+
+## The Settings page: Controls
+
+- **Mouse sensitivity:** drag the slider (tenths) or click - / + (half a step); the number pops. 1 = a fifth of the
+  normal speed, 5 = normal (Main Camera > CameraController > Sensitivity), 10 = twice. Saved when the page closes.
+- **Invert mouse (up / down):** a tick box.
+- **RESET:** back to 5, not inverted.
+
+The page is `ControlsPage` (ControlsMenu, a SliderRow named SensitivityRow, a Toggle in InvertRow). The values live in
+`MouseSettings` (PlayerPrefs), which the camera reads every frame.
 
 The list is the **Rows** table at the top of `KeyBindingMenu.cs`. Add a line there for a new key.
 
@@ -131,6 +149,7 @@ keep these **names**: the scripts find their parts by name.
   `Options` holder and a `Highlight`), `PickupRow`, `MessagesRow`, `AllToolsRow` and `ArmorTestRow` (each with a
   `Toggle`) and `ChestRow` (a ChoiceRow: Old chests / New chests, no label); the last three are optional and sit side by
   side in `TestingRow`, a Horizontal Layout Group with Control Child Size and Child Force Expand ticked; the optional
+  `PauseRow` (a `Toggle`) sits beside `MessagesRow` in `RulesPairRow` the same way (the panel's rows are full); the optional
   `WorldRow` (a ChoiceRow: Old world / New world, with an `Info` text),
   `DayLengthRow/Info`,
   `DifficultyInfo`, `Summary`, `DefaultsButton`, and a `Dot` in each row.

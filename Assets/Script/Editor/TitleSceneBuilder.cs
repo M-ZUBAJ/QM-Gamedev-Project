@@ -22,7 +22,12 @@ Purpose: Builds the whole title screen in one click:
          a new random world every game: Tools > World > Build New World Scene makes it).
          Its TESTING section: Start with all tools, Start with all armor, and Old chests / New chests (the two loot
          box systems, GameRules > New Chests; New is the default).
-Requirement: TitleSceneBuilder.cs x-> UIBuildHelper.cs, MenuOrder.cs, NewGameDefaultsSync.cs, NewGameDefaults.cs, UIFXSprites.cs, UITween.cs, TitleMenu.cs, TitleBackground.cs, TitleTextFX.cs, ButtonFX.cs, CascadeIn.cs, PulseFX.cs, TabFX.cs, TabGroup.cs, ChoiceRow.cs, StepperRow.cs, TogglePop.cs, DropdownUnfold.cs, NewGamePanel.cs, KeyBindingMenu.cs, IncomingMessage.cs, KeyBindings.cs
+         Settings: KEY BINDINGS (KeyBindingMenu) and CONTROLS (ControlsMenu: Mouse sensitivity 1 - 10 on a SliderRow,
+         Invert mouse; since 21/11/2026, before it was "coming soon"), DISPLAY and AUDIO still "coming soon".
+         MakeSettingsTabs (the tab bar and pages) and its small helpers are shared with PauseMenuBuilder, so the Esc
+         pause menu's KEY BINDINGS and CONTROLS look and work the same.
+Requirement: TitleSceneBuilder.cs x-> UIBuildHelper.cs, MenuOrder.cs, SliderRow.cs, ControlsMenu.cs, MouseSettings.cs, NewGameDefaultsSync.cs, NewGameDefaults.cs, UIFXSprites.cs, UITween.cs, TitleMenu.cs, TitleBackground.cs, TitleTextFX.cs, ButtonFX.cs, CascadeIn.cs, PulseFX.cs, TabFX.cs, TabGroup.cs, ChoiceRow.cs, StepperRow.cs, TogglePop.cs, DropdownUnfold.cs, NewGamePanel.cs, KeyBindingMenu.cs, IncomingMessage.cs, KeyBindings.cs
+             TitleSceneBuilder.cs <-x PauseMenuBuilder.cs
 */
 
 using System.Collections.Generic;
@@ -47,13 +52,14 @@ public static class TitleSceneBuilder
     const string Credits = "Tony  ·  Turki  ·  Marko  ·  Sanyam";
 
     // The look: dark see-through boxes, white text, gold for what's picked (the same gold as the coins).
-    static readonly Color Gold = new Color(1f, 0.82f, 0.3f);
-    static readonly Color DarkText = new Color(0.12f, 0.09f, 0.04f);
-    static readonly Color BoxColor = new Color(0.07f, 0.08f, 0.11f, 0.9f);
-    static readonly Color PanelColor = new Color(0f, 0f, 0f, 0.55f);
-    static readonly Color KeyColor = new Color(0.18f, 0.2f, 0.26f, 1f);
-    static readonly Color SoftWhite = new Color(0.86f, 0.87f, 0.92f);
-    static readonly Color Dim = new Color(0.62f, 0.64f, 0.7f);
+    // (internal: PauseMenuBuilder uses the same colors)
+    internal static readonly Color Gold = new Color(1f, 0.82f, 0.3f);
+    internal static readonly Color DarkText = new Color(0.12f, 0.09f, 0.04f);
+    internal static readonly Color BoxColor = new Color(0.07f, 0.08f, 0.11f, 0.9f);
+    internal static readonly Color PanelColor = new Color(0f, 0f, 0f, 0.55f);
+    internal static readonly Color KeyColor = new Color(0.18f, 0.2f, 0.26f, 1f);
+    internal static readonly Color SoftWhite = new Color(0.86f, 0.87f, 0.92f);
+    internal static readonly Color Dim = new Color(0.62f, 0.64f, 0.7f);
     static readonly Color[] DifficultyColors =
     {
         new Color(0.36f, 0.85f, 0.46f),   // Peaceful: green
@@ -450,7 +456,7 @@ public static class TitleSceneBuilder
         MakeChoiceRow(rows.transform, "DeathRow", "When I die", new[] { "Keep items", "Drop items", "Lose items" }, 190f,
                       null, false);
         MakeToggleRow(rows.transform, "PickupRow", "Pick up dropped items by walking over them");
-        MakeToggleRow(rows.transform, "MessagesRow", "Show \"+3 Wood\" messages");
+        MakeRulesPairRow(rows.transform);   // "+3 Wood" messages | the pause menu pauses the game
         Section(rows.transform, "TESTING");
         MakeTestingRow(rows.transform);
 
@@ -483,18 +489,29 @@ public static class TitleSceneBuilder
     {
         RectTransform page = MakePage("SettingsPage", parent);
         MakeHeader(page, "SETTINGS", false);
+        MakeSettingsTabs(page, true);
+        page.gameObject.SetActive(false);   // TitleMenu slides it in
+    }
 
-        // The tab bar: four tab buttons side by side, and the gold underline that glides under the open one.
+    // The settings' tab bar and its pages, inside "page": KEY BINDINGS (KeyBindingMenu), CONTROLS (ControlsMenu: mouse
+    // sensitivity and invert) and, with withComingSoon (the title screen), DISPLAY and AUDIO, still "coming soon". The
+    // tab bar sits 140 px under the top of the page, the pages (1200 x 700) in its middle. The Esc pause menu has the
+    // same, without the "coming soon" ones (PauseMenuBuilder).
+    internal static void MakeSettingsTabs(Transform page, bool withComingSoon)
+    {
+        // The tab bar: the tab buttons side by side, and the gold underline that glides under the open one.
         GameObject bar = NewUI("Tabs", page);
-        Place(bar, new Vector2(0.5f, 1f), new Vector2(0f, -140f), new Vector2(1200f, 64f));
+        Place(bar, new Vector2(0.5f, 1f), new Vector2(0f, -140f), new Vector2(withComingSoon ? 1200f : 760f, 64f));
         ((RectTransform)bar.transform).pivot = new Vector2(0.5f, 1f);
         HorizontalLayoutGroup h = bar.AddComponent<HorizontalLayoutGroup>();
         h.spacing = 10f;
         h.childControlWidth = h.childControlHeight = true;
         h.childForceExpandWidth = h.childForceExpandHeight = true;
 
-        string[] tabNames = { "KEY BINDINGS", "CONTROLS", "DISPLAY", "AUDIO" };
-        string[] tabObjects = { "KeyBindingsTab", "ControlsTab", "DisplayTab", "AudioTab" };
+        string[] tabNames = withComingSoon ? new[] { "KEY BINDINGS", "CONTROLS", "DISPLAY", "AUDIO" }
+                                           : new[] { "KEY BINDINGS", "CONTROLS" };
+        string[] tabObjects = withComingSoon ? new[] { "KeyBindingsTab", "ControlsTab", "DisplayTab", "AudioTab" }
+                                             : new[] { "KeyBindingsTab", "ControlsTab" };
         Button[] tabButtons = new Button[tabNames.Length];
         for (int i = 0; i < tabNames.Length; i++) tabButtons[i] = MakeTab(bar.transform, tabObjects[i], tabNames[i]);
 
@@ -504,13 +521,13 @@ public static class TitleSceneBuilder
 
         GameObject holder = NewUI("TabPages", page);
         Place(holder, new Vector2(0.5f, 0.5f), new Vector2(0f, -60f), new Vector2(1200f, 700f));
-        GameObject[] tabPages =
+        List<GameObject> pageList = new List<GameObject> { MakeKeyBindingsPage(holder.transform), MakeControlsPage(holder.transform) };
+        if (withComingSoon)
         {
-            MakeKeyBindingsPage(holder.transform),
-            MakeIncomingPage(holder.transform, "ControlsPage", "Mouse sensitivity, invert mouse and more."),
-            MakeIncomingPage(holder.transform, "DisplayPage", "Fullscreen, quality and more."),
-            MakeIncomingPage(holder.transform, "AudioPage", "Music and sound volume."),
-        };
+            pageList.Add(MakeIncomingPage(holder.transform, "DisplayPage", "Fullscreen, quality and more."));
+            pageList.Add(MakeIncomingPage(holder.transform, "AudioPage", "Music and sound volume."));
+        }
+        GameObject[] tabPages = pageList.ToArray();
 
         TabGroup tabs = bar.AddComponent<TabGroup>();
         SerializedObject so = new SerializedObject(tabs);
@@ -526,8 +543,6 @@ public static class TitleSceneBuilder
         so.FindProperty("normalColor").colorValue = BoxColor;
         so.ApplyModifiedPropertiesWithoutUndo();
         bar.AddComponent<TabFX>();
-
-        page.gameObject.SetActive(false);   // TitleMenu slides it in
     }
 
     static GameObject MakeKeyBindingsPage(Transform parent)
@@ -589,6 +604,148 @@ public static class TitleSceneBuilder
         return page;
     }
 
+    // CONTROLS: the mouse. Mouse sensitivity (a SliderRow, 1 - 10, 5 = the game's normal speed) and Invert mouse (a
+    // tick box), a hint and RESET at the bottom; ControlsMenu shows and saves them (MouseSettings).
+    static GameObject MakeControlsPage(Transform parent)
+    {
+        GameObject page = NewUI("ControlsPage", parent);
+        Stretch(page, 0f, 0f, 0f, 0f);
+
+        GameObject list = NewUI("List", page.transform);
+        Stretch(list, 0f, 0f, 0f, 70f);
+        AddBox(list).color = PanelColor;
+        GameObject content = NewUI("Content", list.transform);
+        Stretch(content, 20f, 14f, 20f, 14f);
+        VerticalLayoutGroup v = content.AddComponent<VerticalLayoutGroup>();
+        v.spacing = 8f;
+        v.childControlWidth = v.childControlHeight = true;
+        v.childForceExpandWidth = true;
+        v.childForceExpandHeight = false;
+        SetCascade(content.AddComponent<CascadeIn>(), new Vector2(50f, 0f), 0.04f, 0.35f, UITween.Ease.OutCubic);
+
+        Section(content.transform, "MOUSE");
+        MakeSliderRow(content.transform, "SensitivityRow", "Mouse sensitivity", MouseSettings.MinSensitivity,
+                      MouseSettings.MaxSensitivity, MouseSettings.DefaultSensitivity);
+        MakeNoteRow(content.transform, "SensitivityNote", "1 = slowest, 10 = fastest. Drag it, or use - and + (half a step).");
+        MakeSettingToggle(content.transform, "InvertRow", "Invert mouse (up / down)", "Moving the mouse up looks down.");
+
+        TextMeshProUGUI hint = MakeText(page.transform, "Hint", "5 = the game's normal speed. Changes work at once and are saved.",
+                                        24f, SoftWhite, TextAlignmentOptions.Left);
+        Place(hint.gameObject, new Vector2(0f, 0f), new Vector2(10f, 14f), new Vector2(880f, 44f));
+        ((RectTransform)hint.transform).pivot = new Vector2(0f, 0f);
+
+        Button reset = MakeButton(page.transform, "ResetControlsButton", "RESET", new Vector2(240f, 56f), 24f, 10, false, false);
+        Place(reset.gameObject, new Vector2(1f, 0f), new Vector2(-126f, 34f), new Vector2(240f, 56f));
+
+        page.AddComponent<ControlsMenu>();
+        page.SetActive(false);   // TabGroup opens it
+        return page;
+    }
+
+    // Mouse sensitivity:  the name  [-] [====o====] [+] [5.0]   (SliderRow runs it).
+    static void MakeSliderRow(Transform parent, string objectName, string label, float min, float max, float value)
+    {
+        GameObject row = NewUI(objectName, parent);
+        LayoutElement le = row.AddComponent<LayoutElement>();
+        le.preferredHeight = le.minHeight = 60f;
+
+        TextMeshProUGUI name = MakeText(row.transform, "Label", label, 26f, Color.white, TextAlignmentOptions.Left);
+        Place(name.gameObject, new Vector2(0f, 0.5f), new Vector2(24f + 190f, 0f), new Vector2(380f, 60f));
+
+        Button minus = MakeButton(row.transform, "Minus", "-", new Vector2(56f, 44f), 34f, 6, false, false);
+        Place(minus.gameObject, new Vector2(0f, 0.5f), new Vector2(476f, 0f), new Vector2(56f, 44f));
+
+        Slider slider = MakeSlider(row.transform, "Slider", new Vector2(736f, 0f), new Vector2(440f, 30f));
+        slider.minValue = min;
+        slider.maxValue = max;
+        slider.value = value;
+
+        Button plus = MakeButton(row.transform, "Plus", "+", new Vector2(56f, 44f), 34f, 6, false, false);
+        Place(plus.gameObject, new Vector2(0f, 0.5f), new Vector2(1008f, 0f), new Vector2(56f, 44f));
+
+        GameObject box = NewUI("ValueBox", row.transform);
+        Place(box, new Vector2(0f, 0.5f), new Vector2(1106f, 0f), new Vector2(100f, 44f));
+        AddBox(box).color = KeyColor;
+        TextMeshProUGUI number = MakeText(box.transform, "Value", value.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture),
+                                          30f, Gold, TextAlignmentOptions.Center);
+        Stretch(number.gameObject, 0f, 0f, 0f, 0f);
+        number.fontStyle = FontStyles.Bold;
+
+        SliderRow sliderRow = row.AddComponent<SliderRow>();
+        Set(sliderRow, "min", min);
+        Set(sliderRow, "max", max);
+        Set(sliderRow, "step", 0.5f);
+        Set(sliderRow, "decimals", 1);
+        Set(sliderRow, "value", value);
+    }
+
+    // A Unity slider in the menu's colors: a dark bar, the filled part gold, a white knob (gold under the mouse).
+    static Slider MakeSlider(Transform parent, string objectName, Vector2 center, Vector2 size)
+    {
+        DefaultControls.Resources res = new DefaultControls.Resources
+        {
+            standard = Builtin("UISprite.psd"),
+            background = Builtin("Background.psd"),
+            knob = Builtin("Knob.psd"),
+        };
+        GameObject go = DefaultControls.CreateSlider(res);
+        go.name = objectName;
+        go.transform.SetParent(parent, false);
+        SetLayer(go);
+        Place(go, new Vector2(0f, 0.5f), center, size);
+
+        Image bar = go.transform.Find("Background")?.GetComponent<Image>();
+        if (bar != null) bar.color = KeyColor;
+        Image fill = go.transform.Find("Fill Area/Fill")?.GetComponent<Image>();
+        if (fill != null) fill.color = Gold;
+        RectTransform knob = go.transform.Find("Handle Slide Area/Handle") as RectTransform;
+        if (knob != null) knob.sizeDelta = new Vector2(size.y, 0f);   // round: as wide as the slider is tall
+
+        Slider slider = go.GetComponent<Slider>();
+        ColorBlock colors = slider.colors;
+        colors.highlightedColor = Gold;
+        colors.pressedColor = new Color(Gold.r * 0.85f, Gold.g * 0.85f, Gold.b * 0.85f, 1f);
+        colors.selectedColor = Color.white;
+        slider.colors = colors;
+        return slider;
+    }
+
+    // A small grey line under a setting (what it means).
+    static void MakeNoteRow(Transform parent, string objectName, string text)
+    {
+        GameObject row = NewUI(objectName, parent);
+        LayoutElement le = row.AddComponent<LayoutElement>();
+        le.preferredHeight = le.minHeight = 30f;
+        TextMeshProUGUI note = MakeText(row.transform, "Text", text, 22f, Dim, TextAlignmentOptions.Left);
+        Place(note.gameObject, new Vector2(0f, 0.5f), new Vector2(448f + 340f, 0f), new Vector2(680f, 30f));
+    }
+
+    // [x] Invert mouse: the name, a tick box (TogglePop) and what it does, in the CONTROLS layout.
+    static void MakeSettingToggle(Transform parent, string objectName, string label, string note)
+    {
+        GameObject row = NewUI(objectName, parent);
+        LayoutElement le = row.AddComponent<LayoutElement>();
+        le.preferredHeight = le.minHeight = 60f;
+
+        TextMeshProUGUI name = MakeText(row.transform, "Label", label, 26f, Color.white, TextAlignmentOptions.Left);
+        Place(name.gameObject, new Vector2(0f, 0.5f), new Vector2(24f + 190f, 0f), new Vector2(380f, 60f));
+
+        GameObject go = NewUI("Toggle", row.transform);
+        Place(go, new Vector2(0f, 0.5f), new Vector2(470f, 0f), new Vector2(44f, 44f));
+        Image box = AddBox(go);
+        box.color = KeyColor;
+        Image tick = AddImage(NewUI("Checkmark", go.transform), Builtin("Checkmark.psd"), Gold);
+        Stretch(tick.gameObject, 3f, 3f, 3f, 3f);
+        Toggle toggle = go.AddComponent<Toggle>();
+        toggle.targetGraphic = box;
+        toggle.graphic = tick;
+        toggle.isOn = false;
+        go.AddComponent<TogglePop>();
+
+        TextMeshProUGUI what = MakeText(row.transform, "Note", note, 22f, Dim, TextAlignmentOptions.Left);
+        Place(what.gameObject, new Vector2(0f, 0.5f), new Vector2(520f + 300f, 0f), new Vector2(600f, 60f));
+    }
+
     static GameObject MakeIncomingPage(Transform parent, string objectName, string note)
     {
         GameObject page = NewUI(objectName, parent);
@@ -648,8 +805,8 @@ public static class TitleSceneBuilder
     }
 
     // A menu button: dark box, bold white text, a hidden ">" Arrow, and ButtonFX for the hover / click effects.
-    static Button MakeButton(Transform parent, string objectName, string label, Vector2 size, float fontSize,
-                             int sparks = 14, bool dimOthers = true, bool arrow = true)
+    internal static Button MakeButton(Transform parent, string objectName, string label, Vector2 size, float fontSize,
+                                      int sparks = 14, bool dimOthers = true, bool arrow = true)
     {
         GameObject go = NewUI(objectName, parent);
         ((RectTransform)go.transform).sizeDelta = size;
@@ -893,6 +1050,21 @@ public static class TitleSceneBuilder
     // TESTING: three parts side by side: the tick boxes all tools (GameRules Tool Test) and all armor (Armor Test), and
     // Old chests / New chests (GameRules New Chests). Side by side because the panel has no room for another row (its
     // rows fill it to 2 px).
+    // Two rule tick boxes side by side in one row (the panel's rows are full): Show "+3 Wood" messages, and Pause menu
+    // (Esc) pauses the game (GameRules > Pause Game, on by default).
+    static void MakeRulesPairRow(Transform parent)
+    {
+        GameObject pair = NewUI("RulesPairRow", parent);
+        LayoutElement size = pair.AddComponent<LayoutElement>();
+        size.preferredHeight = size.minHeight = 46f;
+        HorizontalLayoutGroup h = pair.AddComponent<HorizontalLayoutGroup>();
+        h.spacing = 10f;
+        h.childControlWidth = h.childControlHeight = true;
+        h.childForceExpandWidth = h.childForceExpandHeight = true;   // two equal halves
+        MakeToggleRow(pair.transform, "MessagesRow", "Show \"+3 Wood\" messages", 430f);
+        MakeToggleRow(pair.transform, "PauseRow", "Pause menu (Esc) pauses the game", 430f);
+    }
+
     static void MakeTestingRow(Transform parent)
     {
         GameObject testing = NewUI("TestingRow", parent);
@@ -1016,8 +1188,8 @@ public static class TitleSceneBuilder
 
     // ----- Small helpers -----
 
-    static TextMeshProUGUI MakeText(Transform parent, string objectName, string text, float size, Color color,
-                                TextAlignmentOptions alignment)
+    internal static TextMeshProUGUI MakeText(Transform parent, string objectName, string text, float size, Color color,
+                                             TextAlignmentOptions alignment)
     {
         TextMeshProUGUI t = AddText(NewUI(objectName, parent), text, size, alignment);
         t.color = color;
@@ -1025,7 +1197,7 @@ public static class TitleSceneBuilder
         return t;
     }
 
-    static Image AddImage(GameObject go, Sprite sprite, Color color)
+    internal static Image AddImage(GameObject go, Sprite sprite, Color color)
     {
         Image image = go.AddComponent<Image>();
         image.sprite = sprite;
@@ -1035,7 +1207,7 @@ public static class TitleSceneBuilder
     }
 
     // Anchors a UI object to one point of its parent (0,0 = bottom left, 1,1 = top right) at this position and size.
-    static void Place(GameObject go, Vector2 anchor, Vector2 position, Vector2 size)
+    internal static void Place(GameObject go, Vector2 anchor, Vector2 position, Vector2 size)
     {
         RectTransform rt = (RectTransform)go.transform;
         rt.anchorMin = rt.anchorMax = anchor;
@@ -1043,7 +1215,7 @@ public static class TitleSceneBuilder
         rt.sizeDelta = size;
     }
 
-    static void AddScaler(GameObject canvasGo)
+    internal static void AddScaler(GameObject canvasGo)
     {
         CanvasScaler scaler = canvasGo.AddComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
