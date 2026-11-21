@@ -17,8 +17,8 @@ Purpose: Stores the player's items. Items with the same Item Id stack in one slo
          PlayerInventory.ItemAdded tells which item came in and how many (harvested, picked up, crafted...),
          e.g. GainNotifier shows "+3 Wood". Items only moving inside the inventory don't fire it.
 Requirement: PlayerInventory.cs x-> IHand.cs, ItemData.cs
-             PlayerInventory.cs <-x ArmorBuilder.cs, ArmorSlotUI.cs, ArmorTestKit.cs, AutoCollector.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingData.cs, CraftingMenu.cs, CraftingRow.cs, CraftingSetPanels.cs, DroppedStack.cs, EquippedWeaponDisplay.cs, GainNotifier.cs, GiveSwordForTesting.cs, HeldItemUI.cs, HeldItemView.cs, HotbarSelector.cs, ItemConsumer.cs, ItemData.cs, ItemDropper.cs, ItemGrabber.cs, ItemIconRules.cs, ItemTooltip.cs, PlayerAnimationSetup.cs, PlayerArmor.cs, PlayerCombat.cs, PlayerFireball.cs, PunchCombo.cs, Recipe.cs, ResourceNode.cs, SlotGroup.cs, SlotUI.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs, UIBuildHelper.cs
-             PlayerInventory.cs <-o FirstPersonHands.cs
+             PlayerInventory.cs <-x ArmorBuilder.cs, ArmorSlotUI.cs, ArmorTestKit.cs, AutoCollector.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingData.cs, CraftingMenu.cs, CraftingRow.cs, CraftingSetPanels.cs, DroppedStack.cs, EquippedWeaponDisplay.cs, GainNotifier.cs, GiveSwordForTesting.cs, HeldItemUI.cs, HeldItemView.cs, HotbarSelector.cs, ItemConsumer.cs, ItemData.cs, ItemDropper.cs, ItemGrabber.cs, ItemIconRules.cs, ItemTooltip.cs, LootChestBuilder.cs, PlayerAnimationSetup.cs, PlayerArmor.cs, PlayerCombat.cs, PlayerFireball.cs, PunchCombo.cs, Recipe.cs, ResourceNode.cs, SlotGroup.cs, SlotUI.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs, UIBuildHelper.cs
+             PlayerInventory.cs <-o FirstPersonHands.cs, PerkEffects.cs
 */
 
 using System.Collections.Generic;

@@ -14,7 +14,7 @@ Purpose: One place to change every key in the game.
          (Project Settings → Player → Active Input Handling = "Input Manager (Old)" or "Both").
          The title screen's Settings > Key Bindings page (KeyBindingMenu) changes keys with SetSeveral and
          ResetToDefaults; the choices are saved, so they work in the game too.
-Requirement: KeyBindings.cs <-x BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemGrabber.cs, KeyBindingMenu.cs, NewGameDefaultsSync.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs, TitleSceneBuilder.cs
+Requirement: KeyBindings.cs <-x BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemGrabber.cs, KeyBindingMenu.cs, NewGameDefaultsSync.cs, ObjectLevitator.cs, PlayerController.cs, PlayerGlide.cs, PlayerJump.cs, TitleSceneBuilder.cs
 */
 
 using UnityEngine;

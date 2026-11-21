@@ -1,6 +1,6 @@
 /*
 First Date: 19/11/2026
-Date: 19/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Open GameScene, then menu Tools > UI > Build Perk Panel, then save the scene. It asks before replacing the
@@ -11,12 +11,18 @@ Purpose: Builds the "CHOOSE YOUR REWARD" panel of Marko's perk chests in one cli
            PerkSelectCanvas (Marko's PerkSelectionUI + Tony's PerkPanelInfo)
              > PerkSelectionPanel (the dark backdrop: Marko's script switches it on and off)
                > Window > Title, Line, PriceRow (the price + your coins), Cards > PerkOption1..3 (Glow, Icon, PerkName,
-                          PerkDescription, ChooseButton > Label), NeedText, Hint
+                          PerkDescription, ChooseButton > Label), NeedText, Hint, RerollButton > Label
          It saves Assets/Prefabs/UI/Perks/PerkSelectCanvas.prefab and puts it in the open scene instead of the old
          panel (there can only be one PerkSelectionUI). Marko's script isn't changed: its fields are filled in here.
          It also draws the pictures (IconArt) and gives each of Marko's Perk Data without an icon the matching one:
-         a heart (Max Health), lightning (Max Stamina), double arrows (Move Speed), a flame (Fireball).
+         a heart (Max Health), lightning (Max Stamina), double arrows (Move Speed), a flame (Fireball), and the loot
+         boxes' perks theirs (IconArt.ForPerk).
+         The cards keep their width when a box shows only 1 or 2 perks (centered). REROLL (bottom right) only shows
+         for a box that allows rerolls (the epic box: PerkPanelInfo).
+         UpdatePrefab brings a panel built before the loot boxes up to date in place (Tools > World > Build Loot Chests
+         calls it): the cards' width, the REROLL button, the title and reroll fields of PerkPanelInfo.
 Requirement: PerkPanelBuilder.cs x-> UIBuildHelper.cs, IconArt.cs, PerkSelectionUI.cs, PerkPanelInfo.cs, PerkData.cs, ButtonFX.cs, MenuOrder.cs
+             PerkPanelBuilder.cs <-x LootChestBuilder.cs
 */
 
 using System.Collections.Generic;
@@ -59,7 +65,9 @@ public static class PerkPanelBuilder
     static readonly Vector2 WindowSize = new Vector2(1260f, 740f);
     static readonly Vector2 CardsSize = new Vector2(1170f, 420f);
     const float CardsY = -25f;      // the cards' middle, below the window's middle
+    const float CardSpacing = 30f;  // between the cards
     const float IconSize = 128f;
+    static float CardWidth => (CardsSize.x - CardSpacing * 2f) / 3f;   // three cards fill the row; fewer stay this wide
 
     static Sprite coin, box, glow;  // the pictures for this build (IconArt)
 
@@ -138,12 +146,10 @@ public static class PerkPanelBuilder
 
         GameObject cards = NewUI("Cards", window.transform);
         Place(cards, new Vector2(0.5f, 0.5f), new Vector2(0f, CardsY), CardsSize);
-        HorizontalLayoutGroup row = cards.AddComponent<HorizontalLayoutGroup>();
-        row.spacing = 30f;
-        row.childControlWidth = row.childControlHeight = true;
-        row.childForceExpandWidth = row.childForceExpandHeight = true;   // three cards sharing the row
+        cards.AddComponent<HorizontalLayoutGroup>();
         Card[] made = new Card[3];
         for (int i = 0; i < made.Length; i++) made[i] = MakeCard(cards.transform, i + 1);
+        FitCards(cards.transform);   // three cards fill the row; one or two stay as wide, in the middle
 
         TextMeshProUGUI need = MakeText(window.transform, "NeedText", "Not enough coins", 28f, Red, TextAlignmentOptions.Center);
         Place(need.gameObject, new Vector2(0.5f, 0f), new Vector2(0f, 96f), new Vector2(1100f, 40f));
@@ -151,6 +157,8 @@ public static class PerkPanelBuilder
 
         TextMeshProUGUI hint = MakeText(window.transform, "Hint", "E: close, or walk away", 24f, Dim, TextAlignmentOptions.Center);
         Place(hint.gameObject, new Vector2(0.5f, 0f), new Vector2(0f, 48f), new Vector2(1100f, 36f));
+
+        MakeReroll(window.transform, out Button reroll, out TextMeshProUGUI rerollLabel);
 
         // Marko's script. The names in quotes must match its field names.
         PerkSelectionUI selection = canvas.AddComponent<PerkSelectionUI>();
@@ -170,6 +178,10 @@ public static class PerkPanelBuilder
         p.FindProperty("needText").objectReferenceValue = need;
         p.FindProperty("hintText").objectReferenceValue = hint;
         p.FindProperty("window").objectReferenceValue = window.transform;
+        p.FindProperty("titleText").objectReferenceValue = title;
+        p.FindProperty("titleLine").objectReferenceValue = line;
+        p.FindProperty("rerollButton").objectReferenceValue = reroll;
+        p.FindProperty("rerollLabel").objectReferenceValue = rerollLabel;
         SetArray(p, "chooseButtons", made, c => c.choose);
         SetArray(p, "chooseLabels", made, c => c.chooseLabel);
         p.ApplyModifiedPropertiesWithoutUndo();
@@ -248,6 +260,109 @@ public static class PerkPanelBuilder
         return new Card { choose = choose, icon = icon, name = name, description = description, chooseLabel = label };
     }
 
+    // REROLL, bottom right of the window (PerkPanelInfo shows it only for a box that allows rerolls).
+    static void MakeReroll(Transform window, out Button button, out TextMeshProUGUI label)
+    {
+        GameObject go = NewUI("RerollButton", window);
+        Place(go, new Vector2(1f, 0f), new Vector2(-175f, 62f), new Vector2(290f, 56f));
+        Image back = Rounded(go, ButtonColor);
+        button = go.AddComponent<Button>();
+        button.targetGraphic = back;
+        label = MakeText(go.transform, "Label", "REROLL", 24f, Color.white, TextAlignmentOptions.Center);
+        Stretch(label.gameObject, 8f, 0f, 8f, 0f);
+        label.fontStyle = FontStyles.Bold;
+        label.enableAutoSizing = true;   // "NOTHING NEW TO ROLL" shrinks to fit
+        label.fontSizeMin = 14f;
+        label.fontSizeMax = 24f;
+        ButtonFX fx = go.AddComponent<ButtonFX>();
+        SerializedObject so = new SerializedObject(fx);   // the names in quotes must match ButtonFX's fields
+        SerializedProperty dimOthers = so.FindProperty("dimOthers");
+        if (dimOthers != null) dimOthers.boolValue = false;
+        so.ApplyModifiedPropertiesWithoutUndo();
+        go.SetActive(false);   // PerkPanelInfo shows it at a box that can reroll
+    }
+
+    // The cards' row: three cards fill it, one or two keep the same width in the middle (a box with fewer perks left).
+    static void FitCards(Transform cards)
+    {
+        HorizontalLayoutGroup row = cards.GetComponent<HorizontalLayoutGroup>();
+        if (row == null) row = cards.gameObject.AddComponent<HorizontalLayoutGroup>();
+        row.spacing = CardSpacing;
+        row.childAlignment = TextAnchor.MiddleCenter;
+        row.childControlWidth = row.childControlHeight = true;
+        row.childForceExpandWidth = false;
+        row.childForceExpandHeight = true;
+        foreach (Transform card in cards)
+        {
+            LayoutElement size = card.GetComponent<LayoutElement>();
+            if (size == null) size = card.gameObject.AddComponent<LayoutElement>();
+            size.preferredWidth = CardWidth;
+            size.flexibleWidth = 0f;
+        }
+    }
+
+    // Brings a PerkSelectCanvas prefab built before the loot boxes up to date, in place (so every scene's copy follows):
+    // the cards keep their width when fewer show, the REROLL button, and PerkPanelInfo's title / line / reroll fields.
+    // Returns a report for the Console.
+    public static string UpdatePrefab()
+    {
+        string path = PrefabPath;
+        if (AssetDatabase.LoadAssetAtPath<GameObject>(path) == null)
+            return "no perk panel yet: run Tools > UI > Build Perk Panel (it comes with the REROLL button)";
+
+        coin = IconArt.Coin();
+        box = IconArt.RoundedBox();
+        glow = IconArt.Glow();
+        GameObject root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            PerkPanelInfo info = root.GetComponentInChildren<PerkPanelInfo>(true);
+            Transform window = FindDeep(root.transform, "Window");
+            if (info == null || window == null) return "the perk panel has no PerkPanelInfo or Window: run Tools > UI > Build Perk Panel";
+
+            Transform cards = FindDeep(window, "Cards");
+            if (cards != null) FitCards(cards);
+
+            Button reroll;
+            TextMeshProUGUI rerollLabel;
+            Transform old = window.Find("RerollButton");
+            if (old == null) MakeReroll(window, out reroll, out rerollLabel);
+            else
+            {
+                reroll = old.GetComponent<Button>();
+                rerollLabel = old.GetComponentInChildren<TextMeshProUGUI>(true);
+            }
+
+            Transform title = FindDeep(window, "Title");
+            Transform line = FindDeep(window, "Line");
+            SerializedObject p = new SerializedObject(info);   // the names in quotes must match PerkPanelInfo's fields
+            p.FindProperty("titleText").objectReferenceValue = title != null ? title.GetComponent<TextMeshProUGUI>() : null;
+            p.FindProperty("titleLine").objectReferenceValue = line != null ? line.GetComponent<Image>() : null;
+            p.FindProperty("rerollButton").objectReferenceValue = reroll;
+            p.FindProperty("rerollLabel").objectReferenceValue = rerollLabel;
+            p.ApplyModifiedPropertiesWithoutUndo();
+
+            PrefabUtility.SaveAsPrefabAsset(root, path);
+            return "perk panel updated (" + path + "): REROLL button, the box's name as the title, cards keep their width";
+        }
+        finally
+        {
+            PrefabUtility.UnloadPrefabContents(root);
+        }
+    }
+
+    // The first object with this name under "parent" (any depth), or null.
+    static Transform FindDeep(Transform parent, string objectName)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.name == objectName) return child;
+            Transform found = FindDeep(child, objectName);
+            if (found != null) return found;
+        }
+        return null;
+    }
+
     // Gives each Perk Data (Marko's, e.g. Assets/Config/Perks) without an icon the matching picture. Returns a report.
     static string GiveIconsToPerks()
     {
@@ -268,17 +383,7 @@ public static class PerkPanelBuilder
         return given.Count > 0 ? "Icons given to " + string.Join(", ", given) + "." : "Every Perk Data already had an icon.";
     }
 
-    static Sprite IconFor(ChestPerkType type)
-    {
-        switch (type)
-        {
-            case ChestPerkType.MaxHealth:  return IconArt.PerkHealth();
-            case ChestPerkType.MaxStamina: return IconArt.PerkStamina();
-            case ChestPerkType.MoveSpeed:  return IconArt.PerkSpeed();
-            case ChestPerkType.Fireball:   return IconArt.PerkFireball();
-            default:                       return null;
-        }
-    }
+    static Sprite IconFor(ChestPerkType type) => IconArt.ForPerk(type);
 
     // ----- Pieces -----
 

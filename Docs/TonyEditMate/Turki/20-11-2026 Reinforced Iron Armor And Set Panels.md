@@ -40,8 +40,9 @@ Guides: `Docs/Armor Setup.md`, `Docs/Crafting Menu Setup.md`.
 ## Update (later on 20/11/2026): Copper armor first, Iron is the upgrade
 
 Tony felt iron is a higher tier than copper, so the two sets were swapped: **Copper** armor is crafted first (from
-Copper, 10 % protection, stamina recharges 50 % faster), and **Iron** armor is its upgrade (each Copper piece + Iron,
-e.g. Copper Helmet + 4 Iron = Iron Helmet; 16 %, 100 % faster). There is no Reinforced Iron set any more.
+Copper, 10 % protection), and **Iron** armor is its upgrade (each Copper piece + Iron, e.g. Copper Helmet + 4 Iron =
+Iron Helmet; 16 %). There is no Reinforced Iron set any more. Since 21/11/2026 the whole set's bonus is coins (copper
++1, iron +2 for every monster killed) instead of faster stamina; nothing in your files changed for that.
 
 - `CraftingMenu.cs` (yours): only the example in Tony's `[Tony] added` comment in `Craft()` changed (it said "Iron
   Helmet + 4 Copper = Reinforced Iron Helmet"). No code line changed: the 5 `[Tony] added` lines work for any upgrade.

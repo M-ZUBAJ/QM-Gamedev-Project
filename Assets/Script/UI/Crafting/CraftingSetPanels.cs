@@ -1,6 +1,6 @@
 /*
 First Date: 20/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: The crafting list's Panel (Turki's CraftingCanvas > Panel), next to CraftingTabs. Tools > UI > Build Crafting
         Menu (and Tools > Items > Build Plate Armor) put it there, with the panel's look: the switched-off Scroll >
@@ -14,7 +14,7 @@ Purpose: Groups the crafting list's armor by set, so a player sees at a glance w
          set is worth: every run of rows whose items are armor of the same set (Armor > Set) is put inside one panel
          in the set's color, with a header:
            IRON SET                                                    Worn 2/6
-           10% protection - all 6: stamina recharges 50% faster
+           10% protection - all 6: +1 coin for every monster killed
          Turki's CraftingMenu makes the list again every time it opens; its new rows ask for a new grouping
          (CraftingRow.Show calls MarkDirty), done in the same frame, before anything is drawn. A panel hides while the
          picked tab hides all its rows. The list is sorted set by set, helmet to boots (Build Crafting Menu's sorting).

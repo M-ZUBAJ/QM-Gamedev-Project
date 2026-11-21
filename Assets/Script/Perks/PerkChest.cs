@@ -37,13 +37,19 @@ public class PerkChest : MonoBehaviour
     // prompt under the crosshair (ChestPrompt) and the price on the panel (PerkPanelInfo).
     // To undo: delete every line marked [Tony] below and put the commented "Original" code back.
     // Log: Docs/TonyEditMate/Marko/19-11-2026 Perk Panel, E Toggle And Pay On Pick.md
-    public int OpeningCost => openingCost;                  // [Tony] added: the price
+    public int OpeningCost => tier != null ? tier.Price : openingCost;   // [Tony] added: the price (21/11/2026: Tony's ChestTier's when the chest has one)
     public float InteractionRange => interactionRange;      // [Tony] added: how close E works
     public KeyCode InteractKey => interactKey;              // [Tony] added: the key (E)
     public static PerkChest Showing { get; private set; }   // [Tony] added: the chest whose perks are on screen (null = none)
     List<PerkData> choices;                                 // [Tony] added: this chest's 3 perks, rolled the first time it opens
     static int closedFrame = -1;                            // [Tony] added: the frame E closed the panel (nothing opens in it)
     const float CloseMargin = 0.5f;                         // [Tony] added: meters past Interaction Range before it closes
+
+    // [Tony] added (21/11/2026): loot boxes. Tony's ChestTier on the chest (common, rare or epic box) sets the price,
+    // which grows with every perk bought from that kind of box, and whether the epic box can reroll its perks.
+    // A chest without one works exactly as before. Log: Docs/TonyEditMate/Marko/21-11-2026 Loot Boxes And New Perks.md
+    ChestTier tier;                                         // [Tony] added: found in Start (can be missing)
+    public ChestTier Tier => tier;                          // [Tony] added: for Tony's prompt and perk panel (the box's name)
 
 
 
@@ -58,7 +64,10 @@ public class PerkChest : MonoBehaviour
 
         openingCost = Random.Range(minCost, maxCost + 1);
 
-        Debug.Log(name + " costs " + openingCost + " coins to open.");
+        tier = GetComponent<ChestTier>();                                             // [Tony] added (21/11/2026)
+        // [Tony] edited (21/11/2026): the price comes from Tony's ChestTier when the chest has one. Original:
+        // Debug.Log(name + " costs " + openingCost + " coins to open.");
+        Debug.Log(name + " costs " + OpeningCost + " coins to open.");               // [Tony] edited
     }
 
     void Update()
@@ -115,11 +124,18 @@ public class PerkChest : MonoBehaviour
             return;
         }
 
-        if (availablePerks == null || availablePerks.Count < 3)
-        {
-            Debug.LogWarning("The chest needs at least 3 available perks.");
-            return;
-        }
+        // [Tony] replaced (21/11/2026): a chest may show 1 to 3 perks now (some perks can be picked only once, or only
+        // after another one), so it needs at least one. Original:
+        // if (availablePerks == null || availablePerks.Count < 3)
+        // {
+        //     Debug.LogWarning("The chest needs at least 3 available perks.");
+        //     return;
+        // }
+        if (availablePerks == null || availablePerks.Count == 0)                      // [Tony] replaced
+        {                                                                             // [Tony] replaced
+            Debug.LogWarning("The chest has nothing in its Available Perks list.");   // [Tony] replaced
+            return;                                                                   // [Tony] replaced
+        }                                                                             // [Tony] replaced
 
         if (PlayerCoins.Instance == null)
         {
@@ -140,22 +156,32 @@ public class PerkChest : MonoBehaviour
         // "choices" field, so opening it again shows the same 3 (another chest rolls its own). Your rolling code is
         // unchanged, one step further in, inside the new "if". Original first line (a new list every time):
         // List<PerkData> choices = new List<PerkData>();
+        // [Tony] added (21/11/2026): a perk picked somewhere else since this chest rolled (e.g. a once-a-life perk from
+        // another chest) can't be offered any more, so the chest rolls again.
+        if (choices != null && choices.Exists(perk => !PerkRules.CanOffer(perk))) choices = null;   // [Tony] added
         if (choices == null)                                                          // [Tony] added
         {                                                                             // [Tony] added
             List<PerkData> pool = new List<PerkData>(
-                availablePerks.FindAll(perk => perk != null)
+                availablePerks.FindAll(perk => perk != null && PerkRules.CanOffer(perk))   // [Tony] edited (21/11/2026): only perks the player may get now (was: perk != null)
             );
 
-            if (pool.Count < 3)
-            {
-                Debug.LogWarning("The chest needs at least 3 valid perk assets.");
-                return;
-            }
+            // [Tony] replaced (21/11/2026): fewer than 3 is fine now (1 or 2 cards show); none left = nothing to offer.
+            // Original:
+            // if (pool.Count < 3)
+            // {
+            //     Debug.LogWarning("The chest needs at least 3 valid perk assets.");
+            //     return;
+            // }
+            if (pool.Count == 0)                                                      // [Tony] replaced
+            {                                                                         // [Tony] replaced
+                NotificationFeed.Show("Nothing left in this box for you.", null);     // [Tony] replaced
+                return;                                                               // [Tony] replaced
+            }                                                                         // [Tony] replaced
 
             choices = new List<PerkData>();                                           // [Tony] edited: the field, made once
 
             // Randomly select three different perks.
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 3 && pool.Count > 0; i++)                             // [Tony] edited (21/11/2026): stops when the pool runs out (was: i < 3)
             {
                 int index = Random.Range(0, pool.Count);
                 choices.Add(pool[index]);
@@ -183,7 +209,7 @@ public class PerkChest : MonoBehaviour
         //
         // opened = true;
 
-        Debug.Log("Chest opened! Choose your perk (" + openingCost + " coins)."); // [Tony] edited: the price added
+        Debug.Log("Chest opened! Choose your perk (" + OpeningCost + " coins)."); // [Tony] edited: the price added (21/11/2026: OpeningCost, ChestTier's price)
     }
 
 
@@ -201,12 +227,16 @@ public class PerkChest : MonoBehaviour
 
         // [Tony] added (19/11/2026): the coins are paid now, when the perk is picked (before, when the panel opened).
         // Not enough = no perk, and the chest stays for later (PerkPanelInfo fades out the choices before that happens).
-        if (openingCost > 0 && (PlayerCoins.Instance == null || !PlayerCoins.Instance.SpendCoins(openingCost)))   // [Tony] added
+        // [Tony] edited (21/11/2026): the price now (OpeningCost: Tony's ChestTier's, it grows with every perk bought)
+        // instead of the openingCost field, and once paid, the next box of this kind costs more (tier.Bought).
+        int cost = OpeningCost;                                                       // [Tony] added (21/11/2026)
+        if (cost > 0 && (PlayerCoins.Instance == null || !PlayerCoins.Instance.SpendCoins(cost)))   // [Tony] added (21/11/2026: cost, was openingCost)
         {                                                                             // [Tony] added
-            Debug.Log("You need " + openingCost + " coins for a perk from this chest.");   // [Tony] added
+            Debug.Log("You need " + cost + " coins for a perk from this chest.");     // [Tony] added (21/11/2026: cost)
             return;                                                                   // [Tony] added
         }                                                                             // [Tony] added
         opened = true; // [Tony] added: moved here from TryOpen (the chest is used up now)
+        if (tier != null) tier.Bought();                                              // [Tony] added (21/11/2026)
 
         PerkManager.Instance.ApplyPerk(selectedPerk);
 
@@ -253,6 +283,34 @@ public class PerkChest : MonoBehaviour
         if (Showing == this) ClosePanel();                                            // [Tony] added
     }                                                                                 // [Tony] added
 
+    // [Tony] added (21/11/2026): rerolling, for Tony's REROLL button on the perk panel. Only a chest whose ChestTier
+    // allows it (the epic box). The first reroll at a box costs a tenth of its price, each next one there twice as
+    // much (ChestTier.RerollPrice). Log: Docs/TonyEditMate/Marko/21-11-2026 Loot Boxes And New Perks.md
+    public bool RerollAllowed => tier != null && tier.CanReroll;                      // [Tony] added: show the button
+    public int RerollCost => tier != null ? tier.RerollPrice : 0;                     // [Tony] added
+    public bool RerollWouldChange => choices != null && OtherPerksLeft();             // [Tony] added: else it'd show the same perks
+
+    // [Tony] added: pays and shows new perks (ones not on screen first). False = it can't (not allowed here, nothing
+    // new could come up, or not enough coins); nothing is paid then.
+    public bool TryReroll()                                                           // [Tony] added
+    {                                                                                 // [Tony] added
+        if (!RerollAllowed || !RerollWouldChange || Showing != this) return false;    // [Tony] added
+        if (PlayerCoins.Instance == null || PerkSelectionUI.Instance == null) return false;   // [Tony] added
+        if (!PlayerCoins.Instance.SpendCoins(RerollCost)) return false;               // [Tony] added
+        tier.Rerolled();                                                              // [Tony] added: the next reroll here costs twice as much
+        List<PerkData> pool = availablePerks.FindAll(perk => perk != null && PerkRules.CanOffer(perk));   // [Tony] added
+        choices = PerkRules.Pick(pool, 3, choices);                                   // [Tony] added
+        PerkSelectionUI.Instance.Refresh(choices);                                    // [Tony] added
+        return true;                                                                  // [Tony] added
+    }                                                                                 // [Tony] added
+
+    // [Tony] added: the list holds a perk the player may get that isn't on screen now.
+    bool OtherPerksLeft()                                                             // [Tony] added
+    {                                                                                 // [Tony] added
+        return availablePerks != null &&                                              // [Tony] added
+               availablePerks.Exists(perk => perk != null && PerkRules.CanOffer(perk) && !choices.Contains(perk));   // [Tony] added
+    }                                                                                 // [Tony] added
+
 
 
     void GrantRandomPerk()
@@ -270,7 +328,7 @@ public class PerkChest : MonoBehaviour
                         health.IncreaseMaxHealth(0.20f);
                     else
                         Debug.LogWarning("PlayerHealth was not found.");
-                    PlayerPerks.Record(PerkType.MaxHealth);   // [Tony] added: the HUD shows the perk (PerkBar)
+                    PlayerPerks.Record(ChestPerkType.MaxHealth);   // [Tony] added: the HUD shows the perk (PerkBar) (21/11/2026: ChestPerkType, was PerkType)
                     break;
                 }
 
@@ -283,7 +341,7 @@ public class PerkChest : MonoBehaviour
                         stamina.IncreaseMaxStamina(25f);
                     else
                         Debug.LogWarning("PlayerStamina was not found.");
-                    PlayerPerks.Record(PerkType.MaxStamina);   // [Tony] added: the HUD shows the perk (PerkBar)
+                    PlayerPerks.Record(ChestPerkType.MaxStamina);   // [Tony] added: the HUD shows the perk (PerkBar) (21/11/2026: ChestPerkType, was PerkType)
                     break;
                 }
 
@@ -296,7 +354,7 @@ public class PerkChest : MonoBehaviour
                         controller.IncreaseMoveSpeed(0.15f);
                     else
                         Debug.LogWarning("PlayerController was not found.");
-                    PlayerPerks.Record(PerkType.MoveSpeed);   // [Tony] added: the HUD shows the perk (PerkBar)
+                    PlayerPerks.Record(ChestPerkType.MoveSpeed);   // [Tony] added: the HUD shows the perk (PerkBar) (21/11/2026: ChestPerkType, was PerkType)
                     break;
                 }
 
@@ -312,7 +370,7 @@ public class PerkChest : MonoBehaviour
                         Debug.LogWarning(
                             "PlayerFireball was not found on the player."
                         );
-                    PlayerPerks.Record(PerkType.Fireball);   // [Tony] added: the HUD shows the perk (PerkBar)
+                    PlayerPerks.Record(ChestPerkType.Fireball);   // [Tony] added: the HUD shows the perk (PerkBar) (21/11/2026: ChestPerkType, was PerkType)
 
                     break;
                 }

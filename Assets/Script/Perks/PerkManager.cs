@@ -79,25 +79,24 @@ public class PerkManager : MonoBehaviour
 
                     break;
                 }
+
+            // [Tony] added (21/11/2026): the loot boxes' new perks (Second Wind, Critical Strike, Glide...): Tony's
+            // PerkEffects on the Player does what they do. Log: Docs/TonyEditMate/Marko/21-11-2026 Loot Boxes And New Perks.md
+            default:                                                                      // [Tony] added
+                PerkEffects.Apply(perk);                                                  // [Tony] added
+                break;                                                                    // [Tony] added
         }
 
         // [Tony] added (19/11/2026): tell the HUD's perk row (Tony's PlayerPerks, shown by PerkBar) which perk the
         // player got. Only the old random perk in PerkChest did that, so perks picked on the panel never showed.
         // To undo: delete the lines marked [Tony]. Log: Docs/TonyEditMate/Marko/19-11-2026 Perk Panel, E Toggle And Pay On Pick.md
-        PlayerPerks.Record(HudPerk(perk.perkType)); // [Tony] added
+        // [Tony] edited (21/11/2026): records the Perk Data itself (it was PlayerPerks.Record(HudPerk(perk.perkType))),
+        // so the HUD shows every perk with its own picture, and the chests know what was picked (Tony's PerkRules).
+        PlayerPerks.Record(perk); // [Tony] added
 
         Debug.Log("Perk selected: " + perk.displayName);
     }
 
-    // [Tony] added: your chest perk -> the same perk in Tony's HUD list (PerkType has the same four names).
-    static PerkType HudPerk(ChestPerkType type)                                       // [Tony] added
-    {                                                                                 // [Tony] added
-        switch (type)                                                                 // [Tony] added
-        {                                                                             // [Tony] added
-            case ChestPerkType.MaxHealth:  return PerkType.MaxHealth;                 // [Tony] added
-            case ChestPerkType.MaxStamina: return PerkType.MaxStamina;                // [Tony] added
-            case ChestPerkType.MoveSpeed:  return PerkType.MoveSpeed;                 // [Tony] added
-            default:                       return PerkType.Fireball;                  // [Tony] added
-        }                                                                             // [Tony] added
-    }                                                                                 // [Tony] added
+    // [Tony] removed (21/11/2026): Tony's own HudPerk helper (ChestPerkType -> Tony's PerkType). Tony's PlayerPerks
+    // uses your ChestPerkType now, so the two lists can't drift apart.
 }

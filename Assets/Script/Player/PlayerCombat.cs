@@ -174,10 +174,18 @@ public class PlayerCombat : MonoBehaviour
                 }
 
                 damage *= PunchCombo.Power(swing);
+
+                // [Tony] added (21/11/2026): the epic box's Critical Strike perk (Tony's PerkEffects): a chance for this
+                // hit to do double damage; the wind burst turns red. Log: Docs/TonyEditMate/Marko/21-11-2026 Loot Boxes And New Perks.md
+                bool critical = PerkEffects.RollCritical();                                                 // [Tony] added
+                if (critical) damage *= PerkEffects.CriticalMultiplier;                                     // [Tony] added
+
                 // [Tony] replaced (12/11/2026): enemy.TakeDamage(damage);
                 // Every swing now hurts when it lands: Tony's PunchEffect waits that swing's delay (punch, sword / axe or
                 // pickaxe), then hurts the enemy; a punch also bursts wind on it. Without PunchEffect it hurts at once.
-                PunchEffect.Hit(enemy, hit, () => enemy.TakeDamage(damage, swordId), swing);               // [Tony] replaced
+                // [Tony] edited (21/11/2026): + critical at the end (a red burst). Was:
+                // PunchEffect.Hit(enemy, hit, () => enemy.TakeDamage(damage, swordId), swing);
+                PunchEffect.Hit(enemy, hit, () => enemy.TakeDamage(damage, swordId), swing, critical);     // [Tony] replaced
             }
             // Damage against trees, stone and animals.
             else if (resource != null)
@@ -228,11 +236,15 @@ public class PlayerCombat : MonoBehaviour
                 // at trees, the pickaxe at rock and ores, the sword at animals (ToolRules.Boost).
                 damage *= ToolRules.Boost(tool, ToolRules.JobFor(resource));                      // [Tony] added
                 damage *= PunchCombo.Power(swing);                                                // [Tony] added: a heavy punch hits harder (13/11/2026)
+                bool critical = PerkEffects.RollCritical();                                       // [Tony] added (21/11/2026): Critical Strike perk, like above
+                if (critical) damage *= PerkEffects.CriticalMultiplier;                           // [Tony] added
 
                 // [Tony] replaced (12/11/2026): resource.TakeDamage(damage);
                 // Every swing now hurts when it lands, so a tree or rock that this swing breaks stays until the fist or
                 // tool lands (a punch also bursts wind, even on a running deer).
-                PunchEffect.Hit(resource, hit, () => resource.TakeDamage(damage), swing);         // [Tony] replaced
+                // [Tony] edited (21/11/2026): + critical at the end. Was:
+                // PunchEffect.Hit(resource, hit, () => resource.TakeDamage(damage), swing);
+                PunchEffect.Hit(resource, hit, () => resource.TakeDamage(damage), swing, critical);   // [Tony] replaced
             }
         }
     }

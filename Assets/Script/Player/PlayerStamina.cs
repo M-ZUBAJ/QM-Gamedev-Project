@@ -1,6 +1,6 @@
 /*
 First Date: 11/10/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerController and PlayerJump).
 Unity Editor: The StaminaBar (StatBar, Stat = Stamina) finds this by itself.
@@ -9,10 +9,10 @@ Unity Editor: The StaminaBar (StatBar, Stat = Stamina) finds this by itself.
 Purpose: Holds the player's stamina. Sprinting (PlayerController) and jumping (PlayerJump) use it up,
          and it fills back up by itself after a short rest.
          When it hits 0 the player is tired: no sprinting or jumping until it has refilled to "Recover To".
-         Other scripts can make it fill faster (SetRegenBoost): the iron armor set's bonus (PlayerArmor) makes it
-         come back 50 % faster.
+         Other scripts can make it fill faster (SetRegenBoost: the Second Wind perk, from PerkEffects) and make
+         sprinting cheaper (SetSprintCost: the Sprinter perk).
 Requirement: PlayerStamina.cs <-x PerkChest.cs, PerkManager.cs, PlayerCombat.cs
-             PlayerStamina.cs <-o ItemConsumer.cs, PlayerArmor.cs, PlayerController.cs, PlayerInfoPage.cs, PlayerJump.cs, PlayerPerks.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
+             PlayerStamina.cs <-o ItemConsumer.cs, PerkEffects.cs, PlayerController.cs, PlayerInfoPage.cs, PlayerJump.cs, PlayerPerks.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
 */
 
 using UnityEngine;
@@ -67,6 +67,7 @@ public class PlayerStamina : MonoBehaviour
     readonly System.Collections.Generic.Dictionary<Object, float> regenBoosts =
         new System.Collections.Generic.Dictionary<Object, float>();   // who makes stamina come back faster, and how much
     float regenBoost = 1f;       // all of them multiplied together (1.5 = 50 % faster)
+    float sprintCost = 1f;       // perks: 0.75 = sprinting uses a quarter less (SetSprintCost)
 
     public float Stamina => stamina;          // other scripts can read but not set it
     public float MaxStamina => maxStamina;
@@ -106,7 +107,7 @@ public class PlayerStamina : MonoBehaviour
     // PlayerController calls this every physics step while sprinting (seconds = that step's length).
     public void SpendSprint(float seconds)
     {
-        Use(sprintDrainPerSecond * seconds);
+        Use(sprintDrainPerSecond * sprintCost * seconds);
     }
 
     // PlayerJump calls this once per jump.
@@ -165,8 +166,15 @@ public class PlayerStamina : MonoBehaviour
 
 
 
+    // Sprinting uses "times" as much stamina as normal (1 = normal, 0.75 = a quarter less). The Sprinter perk
+    // (PerkEffects) sets it.
+    public void SetSprintCost(float times)
+    {
+        sprintCost = Mathf.Max(0f, times);
+    }
+
     // Makes stamina come back faster (or slower) for as long as "from" wants: times 1.5 = 50 % faster, 1 = stops it.
-    // E.g. PlayerArmor's iron set bonus. Each script has one boost (calling again replaces it); several multiply.
+    // E.g. the Second Wind perk (PerkEffects). Each script has one boost (calling again replaces it); several multiply.
     // The rest before it starts (Regen Delay) stays the same.
     public void SetRegenBoost(Object from, float times)
     {

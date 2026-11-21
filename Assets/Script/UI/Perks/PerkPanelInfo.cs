@@ -1,6 +1,6 @@
 /*
 First Date: 19/11/2026
-Date: 19/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: The perk panel's canvas (PerkSelectCanvas), next to Marko's PerkSelectionUI. Tools > UI > Build Perk Panel puts
         it there and connects it.
@@ -8,12 +8,17 @@ Unity Editor: Nothing to connect by hand (the tool fills the fields). Testing: P
               panel shows the chest's price and your coins. With too few coins the CHOOSE buttons are faded, say how
               many coins they need, and can't be clicked.
 Purpose: The extras on Marko's perk panel ("CHOOSE YOUR REWARD"):
+           - a loot box's name as the title, in its color ("RARE BOX": Tony's ChestTier on the chest);
            - the price of the chest that is open (PerkChest.Showing) and how many coins the player has;
            - while the player can't pay, the three CHOOSE buttons can't be clicked and say "NEED 2 COINS", and a red
              line says how many are missing (Marko's chest takes the coins when a perk is picked);
            - the close hint names the chest's key ("E: close, or walk away");
+           - the REROLL button, only for a box that allows it (the epic box): "REROLL  10 COINS" shows new perks for
+             coins (each reroll at the same box costs twice as much); faded while you can't pay, and it says so when
+             the box has no other perk to roll into;
            - the window pops in when the panel opens.
 Requirement: PerkPanelInfo.cs x-> PerkSelectionUI.cs, PerkChest.cs, PlayerCoins.cs, UITween.cs
+             PerkPanelInfo.cs o-> ChestTier.cs
              PerkPanelInfo.cs <-x PerkPanelBuilder.cs
 */
 
@@ -37,6 +42,19 @@ public class PerkPanelInfo : MonoBehaviour
 
     [Tooltip("How to close the panel (it names the chest's key).")]
     [SerializeField] TMP_Text hintText;
+
+    [Tooltip("The panel's title (a loot box's name goes there, in its color).")]
+    [SerializeField] TMP_Text titleText;
+
+    [Tooltip("The line under the title (a loot box's color).")]
+    [SerializeField] Image titleLine;
+
+    [Header("Reroll (the epic box)")]
+    [Tooltip("The REROLL button: shown only for a box whose ChestTier allows rerolls.")]
+    [SerializeField] Button rerollButton;
+
+    [Tooltip("The REROLL button's text (it shows the price).")]
+    [SerializeField] TMP_Text rerollLabel;
 
     [Header("Choose buttons (one per perk card)")]
     [SerializeField] Button[] chooseButtons = new Button[3];
@@ -63,8 +81,28 @@ public class PerkPanelInfo : MonoBehaviour
     PerkChest shownChest;   // what the texts say right now, so they're only rewritten when something changes
     int shownCost = -1;
     int shownCoins = -1;
+    int shownReroll = -2;
+    bool shownRerollChanges;
+    string defaultTitle;    // the title as built ("CHOOSE YOUR REWARD"), for a chest that isn't a loot box
+    Color defaultTitleColor = Color.white;
+    Color defaultLineColor = Color.white;
 
     // ===== Unity messages (Unity calls these) =====
+
+    void Awake()
+    {
+        if (titleText != null)
+        {
+            defaultTitle = titleText.text;
+            defaultTitleColor = titleText.color;
+        }
+        if (titleLine != null) defaultLineColor = titleLine.color;
+        if (rerollButton != null)
+        {
+            rerollButton.onClick.AddListener(Reroll);
+            rerollButton.gameObject.SetActive(false);
+        }
+    }
 
     // LateUpdate: after the chest opened the panel this frame, so the first picture already shows the right numbers.
     void LateUpdate()
@@ -87,12 +125,19 @@ public class PerkPanelInfo : MonoBehaviour
         PerkChest chest = PerkChest.Showing;
         int cost = chest != null ? chest.OpeningCost : 0;
         int coins = PlayerCoins.Instance != null ? PlayerCoins.Instance.Coins : 0;
-        if (chest == shownChest && cost == shownCost && coins == shownCoins) return;   // nothing changed
+        int reroll = chest != null && chest.RerollAllowed ? chest.RerollCost : -1;   // -1 = no reroll at this chest
+        bool rerollChanges = chest != null && chest.RerollWouldChange;
+        if (chest == shownChest && cost == shownCost && coins == shownCoins && reroll == shownReroll &&
+            rerollChanges == shownRerollChanges) return;   // nothing changed
 
         shownChest = chest;
         shownCost = cost;
         shownCoins = coins;
+        shownReroll = reroll;
+        shownRerollChanges = rerollChanges;
         bool canPay = coins >= cost;
+        WriteTitle(chest != null ? chest.Tier : null);
+        WriteReroll(reroll, rerollChanges, coins);
 
         if (priceText != null)
         {
@@ -114,6 +159,37 @@ public class PerkPanelInfo : MonoBehaviour
             if (i < chooseLabels.Length && chooseLabels[i] != null)
                 chooseLabels[i].text = canPay ? chooseText : "NEED " + cost + (cost == 1 ? " COIN" : " COINS");
         }
+    }
+
+    // A loot box's name and color as the title ("RARE BOX"); any other chest keeps the built title.
+    void WriteTitle(ChestTier tier)
+    {
+        Color color = tier != null ? tier.Color : defaultTitleColor;
+        if (titleText != null)
+        {
+            titleText.text = tier != null ? tier.BoxName.ToUpperInvariant() : defaultTitle;
+            titleText.color = color;
+        }
+        if (titleLine != null)
+            titleLine.color = tier != null ? new Color(color.r, color.g, color.b, defaultLineColor.a) : defaultLineColor;
+    }
+
+    // The REROLL button: hidden at a chest without rerolls; its price; faded while it can't be used.
+    void WriteReroll(int price, bool wouldChange, int coins)
+    {
+        if (rerollButton == null) return;
+        rerollButton.gameObject.SetActive(price >= 0);
+        if (price < 0) return;
+        rerollButton.interactable = wouldChange && coins >= price;
+        if (rerollLabel != null)
+            rerollLabel.text = wouldChange ? "REROLL  " + price + (price == 1 ? " COIN" : " COINS") : "NOTHING NEW TO ROLL";
+    }
+
+    // The REROLL button was clicked: Marko's chest pays and shows new perks (it says no if it can't).
+    void Reroll()
+    {
+        PerkChest chest = PerkChest.Showing;
+        if (chest != null && chest.TryReroll()) shownCost = -1;   // write everything again
     }
 
     // The window grows in from a little smaller, with a small bounce.

@@ -5,7 +5,7 @@
   Shoulders, Copper Chestplate, Copper Gloves, Copper Leggings and Copper Boots.
 - **The iron set (steel grey):** six better pieces, each crafted from its Copper piece + Iron: Iron Helmet (Copper
   Helmet + 4 Iron), Shoulders (+ 3), Chestplate (+ 6), Gloves (+ 2), Leggings (+ 5) and Boots (+ 3). They protect more
-  (16 % for the whole set) and all six make **stamina recharge 100 % faster**. A worn Copper piece can be upgraded
+  (16 % for the whole set) and all six give **+2 coins for every monster killed**. A worn Copper piece can be upgraded
   straight away: the recipe shows "1/1 Copper Helmet (worn)", and crafting takes it off and puts the new piece on in
   its place. Iron pieces also count as Copper, so a mix of the two sets still gives the Copper bonus while you upgrade
   one piece at a time.
@@ -28,9 +28,11 @@
   and boots, **2.5 %** for the chestplate. The whole copper set takes **10 %** off, the whole iron set **16 %** (the
   most any armor can take is 80 %). Each slot shows its piece's share in its corner ("+1.5%"), and the line under the
   slots says the total ("Hits do 10% less damage").
-- **Set bonus:** wearing all six copper pieces makes **stamina recharge 50 % faster** (all six iron: 100 %). The Gear
+- **Set bonus:** wearing all six copper pieces gives **+1 coin for every monster killed** (all six iron: +2), on top of
+  the monster's own coins (and the Bounty Hunter perk's: `Docs/Loot Chests Setup.md`). Until 21/11/2026 the set
+  bonus made stamina recharge faster. The Gear
   page counts the pieces next to the leggings ("Copper set 4/6") and turns gold with all six ("COPPER SET BONUS"). The
-  inventory's **Info** tab shows it in gold too: the Stamina row says "+50% recharge (Copper Set)" and the Armor row
+  inventory's **Info** tab shows it in gold too: the Coins row says "+1 per kill (Copper Set)" and the Armor row
   "Copper Set bonus", both on a gold-tinted background, so it stands out from the green perk bonuses.
 
 The armor is the plate set already inside Blink's character (the parts `PlateSet1_...`, switched off), so it fits the
@@ -90,14 +92,14 @@ Run it again any time. It refills everything in place.
 | Part | Where | What it does |
 |---|---|---|
 | **ArmorStats** | the Armor section of an armor's Item Data | Slot, Protection (percent of every hit it takes off), Set (e.g. Copper), Piece (the character's part to switch on, e.g. `PlateSet1_Helmet`), Hides (parts to switch off while worn, e.g. `Hair` under the helmet, `Starter_Chest` under the chestplate), Look (the set's material) |
-| **PlayerArmor** | the Player (added by itself if the Player has none, e.g. when the scene wasn't saved after the tool) | What's worn (one per slot). EquipFromCursor puts on the piece held on the cursor. Equip takes the piece out of the inventory and puts the old one back in; TakeOff puts it back if there's room. Every hit through `PlayerHealth.TakeDamage` is made smaller by the worn pieces' Protection added up (starving and bad food use `LoseHealth`, which armor can't stop). A piece of one set in every slot gives that set's bonus from **Set Bonuses** (Copper: it tells PlayerStamina to refill 1.5 times as fast; Iron: 2 times). A set with **Counts As** fills that set's slots too (Iron counts as Copper); when two sets are full, the one with more pieces of its own wins. Sets missing from the list are added when the game starts, and a list saved before the swap (Iron first, Reinforced Iron) is put right first (**UpdateOldBonuses**). **LendForUpgrade / FinishUpgrade**: crafting an upgrade of a worn piece takes it off for the recipe and wears the new one. |
+| **PlayerArmor** | the Player (added by itself if the Player has none, e.g. when the scene wasn't saved after the tool) | What's worn (one per slot). EquipFromCursor puts on the piece held on the cursor. Equip takes the piece out of the inventory and puts the old one back in; TakeOff puts it back if there's room. Every hit through `PlayerHealth.TakeDamage` is made smaller by the worn pieces' Protection added up (starving and bad food use `LoseHealth`, which armor can't stop). A piece of one set in every slot gives that set's bonus from **Set Bonuses** (**Coins Per Kill**: copper 1, iron 2; Marko's EnemyCombat gives them through MonsterBounty, which asks `CoinsPerKill`). A set with **Counts As** fills that set's slots too (Iron counts as Copper); when two sets are full, the one with more pieces of its own wins. Sets missing from the list are added when the game starts, and a list saved before 21/11/2026 (stamina bonuses, or Iron first then Reinforced Iron) is replaced by today's first (**UpdateOldBonuses**). **LendForUpgrade / FinishUpgrade**: crafting an upgrade of a worn piece takes it off for the recipe and wears the new one. |
 | **CraftingMenu** (Turki's) | the crafting list | `[Tony]` lines call PlayerArmor's LendForUpgrade before checking an armor recipe and FinishUpgrade after (log `Docs/TonyEditMate/Turki/20-11-2026 Reinforced Iron Armor And Set Panels.md`). |
 | **CraftingRow** | each crafting row | Counts the worn piece in an armor upgrade's recipe ("1/1 Copper Helmet (worn)"). |
 | **CraftingSetPanels** | the crafting list's Panel | Puts each set's rows in one box in the set's color (see `Docs/Crafting Menu Setup.md`). |
-| **PlayerStamina** | the Player | `SetRegenBoost`: how much faster stamina refills, given by other scripts (the set bonus). The short rest before it starts stays the same. |
+| **MonsterBounty** | (code only) | The extra coins when a monster dies: the set bonus's Coins Per Kill + the Bounty Hunter perk. |
 | **ArmorLook** | the PlayerCharacter prefab | Shows the worn pieces on that character in their set's material (Armor > Look) and hides what they cover; taking a piece off puts every part (and its material) back how it was. It also hides the skin under whatever clothes show (**Skin Under Clothes**, below). |
-| **GearPage** | the Gear page | The line under the slots ("Hits do 10% less damage"), the set line ("Copper set 4/6", gold with all six, and under it the better set being worn toward: "Iron 3/6: +100% stamina recharge"); closes the pop-up when the page is left. |
-| **PlayerInfoPage** | the inventory's Info tab | The Armor row (the total protection, the set) and the set bonus on the Stamina row, both in gold on a gold-tinted row while the whole set is worn. |
+| **GearPage** | the Gear page | The line under the slots ("Hits do 10% less damage"), the set line ("Copper set 4/6", gold with all six, and under it the better set being worn toward: "Iron 3/6: +2 coins per kill"); closes the pop-up when the page is left. |
+| **PlayerInfoPage** | the inventory's Info tab | The Armor row (the total protection, the set) and the set bonus on the Coins row, both in gold on a gold-tinted row while the whole set is worn. |
 | **ArmorSlotUI** | each slot | Shows the worn piece (or a faint outline), the name next to the mouse. With a stack on the cursor, a click puts that piece on (or says why not); otherwise left click = the pop-up, right click = take off. The grow / gold / shine hover is **ButtonFX**. |
 | **ArmorPicker** | the pop-up | Lists the armor in the inventory that fits (each kind once, "x2" for more); click = wear it. Esc, the X or a click outside closes it. |
 | **GearPreview** | the character picture | A copy of PlayerCharacter in a studio far below the world, on its own layer (29) with its own camera and light. The world's lights, the night and the game camera never touch it. It's drawn into the picture only while the page is open; drag to turn. |
@@ -149,7 +151,7 @@ makes a trimmed copy for any skin that lies on the piece (at least 1 % of it wit
 | Where | Setting | What it does |
 |---|---|---|
 | PlayerArmor (Player) | **Max Protection** (80) | the most armor can take off a hit, in percent |
-| | **Set Bonuses** | per set: **Set** (its name, as in the pieces' Armor > Set), **Stamina Regen** (1.5 = stamina refills 50 % faster while the whole set is worn; Iron 2), **Counts As** (a lower set its pieces also fill: Iron = Copper) and **Color** (its box in the crafting list). Better sets go lower in the list. |
+| | **Set Bonuses** | per set: **Set** (its name, as in the pieces' Armor > Set), **Coins Per Kill** (extra coins for every monster killed while the whole set is worn: copper 1, iron 2), **Counts As** (a lower set its pieces also fill: Iron = Copper) and **Color** (its box in the crafting list). Better sets go lower in the list. |
 | an armor's Item Data | **Armor > Protection** | how much of every hit it takes off, in percent (copper: 1.5, the chestplate 2.5) |
 | | **Armor > Set** | the set it belongs to (Copper, Iron) |
 | | **Armor > Piece / Hides** | which part of the character it shows / hides |
@@ -180,8 +182,8 @@ The colors for a gold set are ready, so it only takes a few lines once you want 
 2. **Item Type** = **Armor**. In the Armor section: **Slot**, **Protection** (percent), **Set** (e.g. Copper, or a new
    set's name), **Piece** = the exact name of the part inside the character that shows it, **Hides** = parts to switch
    off while it's worn.
-   A new set's bonus: on the Player's **PlayerArmor > Set Bonuses**, add a line with the set's name, its Stamina
-   Regen, its Color and (for an upgrade of another set) **Counts As**. The bonus needs a piece of that set (or of a set
+   A new set's bonus: on the Player's **PlayerArmor > Set Bonuses**, add a line with the set's name, its Coins Per
+   Kill, its Color and (for an upgrade of another set) **Counts As**. The bonus needs a piece of that set (or of a set
    that counts as it) in all six slots. Its colors: duplicate a set's material in `Assets/Materials/Armor` (and its
    palette picture), change them, and drag the material into each piece's **Armor > Look** and its prefab's Model.
    An upgrade's recipe = the lower set's piece for the same slot (1) + the materials: crafting can then use a worn piece.
@@ -202,10 +204,9 @@ paid armor packs add more).
    "+1.5%", the line under the slots says "Hits do 1.5% less damage", and the set line says "Copper set 1/6".
 4. Put on the whole set, close the inventory, switch to third person: the player wears it. Turn the Gear page's
    character with and without armor: the shoulders, gloves and boots don't flicker.
-5. With all six on, the set line turns gold ("COPPER SET BONUS: Stamina recharges 50% faster"). PlayerHealth's
-   **⋮ > Test: Take Damage** (10) now takes 9. Sprint until the stamina bar is empty: it refills in about 2.7 seconds
-   instead of 4 (after the usual 1 second rest).
-6. **Info** tab: the Stamina row says "+50% recharge (Copper Set)" in gold and the Armor row "10%" with "Copper Set
+5. With all six on, the set line turns gold ("COPPER SET BONUS: +1 coin for every monster killed"). PlayerHealth's
+   **⋮ > Test: Take Damage** (10) now takes 9. Kill a slime: one more coin than before ("+1 Coins" after its own).
+6. **Info** tab: the Coins row says "+1 per kill (Copper Set)" in gold and the Armor row "10%" with "Copper Set
    bonus", both rows tinted gold. Take one piece off: the gold goes, and the Armor row says "Copper set 5/6".
 7. Right-click a slot: the piece goes back to the inventory.
 8. On the Inventory page click the helmet (it sticks to the cursor), open Gear, click the Helmet slot: it goes on. With
@@ -213,9 +214,9 @@ paid armor packs add more).
 9. **Iron:** with the copper set on and some Iron, open **Crafting > Armor**: the Copper pieces are in a copper box
    ("BONUS ON"), the Iron pieces in a steel-grey box. The Iron Helmet's row says "1/1 Copper Helmet (worn)". Click it:
    the helmet on the character turns steel grey, the Gear page's Helmet slot shows "+2.5%", the Copper bonus stays (the
-   set line adds "Iron 1/6: +100% stamina recharge" under it).
-10. Upgrade all six: the set line says "IRON SET BONUS: Stamina recharges 100% faster", the steel-grey box says "BONUS
-    ON", and the Info tab's Stamina row "+100% recharge (Iron Set)". Test: Take Damage (10) takes 8.4.
+   set line adds "Iron 1/6: +2 coins per kill" under it).
+10. Upgrade all six: the set line says "IRON SET BONUS: +2 coins for every monster killed", the steel-grey box says
+    "BONUS ON", and the Info tab's Coins row "+2 per kill (Iron Set)". Test: Take Damage (10) takes 8.4.
 11. Without enough Iron, clicking an Iron row says what's missing ("Missing: 2 Iron") and the worn Copper piece stays
     on.
 
@@ -239,7 +240,7 @@ paid armor packs add more).
 | No Copper or Iron pieces, or the armor still has Blink's colors | Run Build Plate Armor again (with GameScene open, then save). The recipes need the **Copper** and **Iron** items (`Assets/Config/Items/Copper`, `.../Iron`). |
 | The set colors don't change after editing them in the tool | The materials are only made if missing: delete `Assets/Materials/Armor/<Set> Armor.mat` and its palette picture, then run the tool. Or change the material's Albedo color by hand. |
 | The Iron row says "0/1 Copper Helmet" | The Copper Helmet is neither worn nor in the inventory. A worn one counts ("(worn)"). |
-| No Iron bonus with all six on, or it's only 50 % | PlayerArmor's **Set Bonuses** needs an Iron line with Stamina Regen 2 that counts as Copper. It's put right by itself when the game starts (and by the tool). |
+| No Iron bonus with all six on, or only +1 coin | PlayerArmor's **Set Bonuses** needs an Iron line with Coins Per Kill 2 that counts as Copper. A list from before 21/11/2026 is put right by itself when the game starts (and by Build Plate Armor / Build Loot Chests). |
 | The armor isn't in boxes in the crafting list | Run **Tools > UI > Build Crafting Menu** (or Build Plate Armor) to add the set panels. |
 
 Change logs for Turki's crafting list: `Docs/TonyEditMate/Turki/20-11-2026 Plate Armor In The Crafting List.md` and

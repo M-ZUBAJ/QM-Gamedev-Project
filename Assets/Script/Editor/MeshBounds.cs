@@ -11,7 +11,7 @@ Purpose: Measures the box around the model you actually SEE, from its real corne
          tall and reached 0.37 m below its feet, so a tool using it made the slime small and floating.
          A scaled model measures at its real size too (the chest's model is scaled about 0.4).
          A tool calls MeshBounds.Of(model).
-Requirement: MeshBounds.cs <-x ChestSetup.cs, EnemyBuilder.cs, FirstPersonHandsBuilder.cs, PlayerCharacterBuilder.cs, TierToolBuilder.cs, WildAnimalBuilder.cs
+Requirement: MeshBounds.cs <-x ChestSetup.cs, EnemyBuilder.cs, FirstPersonHandsBuilder.cs, LootChestBuilder.cs, PlayerCharacterBuilder.cs, TierToolBuilder.cs, WildAnimalBuilder.cs
 */
 
 using UnityEngine;

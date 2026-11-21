@@ -119,6 +119,12 @@ public class ResourceNode : MonoBehaviour
         {
             Give(inv, dropItem, dropMin, dropMax);   // the normal drop, always
 
+            // [Tony] added (21/11/2026): the rare box's Lumberjack perk (+1 wood per tree) and Prospector perk (+1 per
+            // rock), from Tony's PerkEffects (0 without them; berries picked with the key get nothing extra).
+            // To undo: delete the 2 lines marked [Tony]. Log: Docs/TonyEditMate/Turki/21-11-2026 Lumberjack And Prospector Perks.md
+            int extra = PerkEffects.ExtraDrop(resourceType, collectWithKey);          // [Tony] added
+            if (extra > 0) Give(inv, dropItem, extra, extra);                         // [Tony] added
+
             // Random.value is a random number from 0 to 1. Below the chance = the bonus drops.
             if (bonusItem != null && Random.value < bonusChance)
                 Give(inv, bonusItem, bonusMin, bonusMax);

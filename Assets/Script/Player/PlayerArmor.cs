@@ -1,16 +1,16 @@
 /*
 First Date: 20/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: The Player (next to PlayerInventory and PlayerHealth). Tools > Items > Build Plate Armor puts it there. If the
         Player has none (e.g. GameScene wasn't saved after that tool), one is added to it the first time it's needed.
 Unity Editor: Worn = what the player wears now (one per slot), for checking while playing; dragging an armor's Item Data
               in there while playing puts it on at once (without taking it from the inventory).
-              Set Bonuses = what wearing a whole set gives (Copper: stamina comes back 50 % faster; Iron: 100 %, and it
+              Set Bonuses = what wearing a whole set gives (Copper: +1 coin for every monster killed; Iron: +2, and it
               counts as Copper), and each set's color in menus. Better sets go lower in the list.
               Testing: Play, get a piece of armor (craft it, or tick GameRules > Testing > Armor Test), Tab > Gear, click
               a slot and pick it. Then PlayerHealth's ⋮ > Test: Take Damage takes less off. With all six copper pieces
-              on, sprint until tired: the stamina bar refills faster, and the Info tab shows the bonus in gold.
+              on, kill a monster: one more coin than before, and the Info tab shows the bonus in gold.
 Purpose: The armor the player wears: one piece per slot (Helmet, Shoulders, Chest, Gloves, Legs, Boots).
          Putting a piece on takes it out of the inventory, and the piece worn there before goes back in; taking a piece
          off puts it back in the inventory (only if there's room). A piece held on the cursor (picked up on the Inventory
@@ -19,21 +19,21 @@ Purpose: The armor the player wears: one piece per slot (Helmet, Shoulders, Ches
          the chestplate, so 10 % for all six; the iron set 16 %), up to Max Protection. PlayerHealth asks it about every
          hit (TakeDamage), but not about starving or bad food (LoseHealth).
          Set bonus: a piece of the same set in every slot (Armor > Set, e.g. Copper) gives that set's bonus from Set
-         Bonuses. The copper set makes stamina come back 50 % faster, the iron set 100 % (it tells PlayerStamina). A
-         set can count as a lower one (Counts As): Iron pieces fill Copper's slots too, so upgrading one piece at a
-         time never loses the Copper bonus; all six Iron give the better bonus.
+         Bonuses: extra coins for every monster killed (Coins Per Kill: the copper set +1, the iron set +2; Marko's
+         EnemyCombat gives them through MonsterBounty, which asks CoinsPerKill). A set can count as a lower one (Counts
+         As): Iron pieces fill Copper's slots too, so upgrading one piece at a time never loses the Copper bonus; all six
+         Iron give the better bonus.
          Upgrading a worn piece: crafting an Iron piece can use the Copper piece the player wears (Turki's
          CraftingMenu calls LendForUpgrade, then FinishUpgrade): it comes off for the recipe, and the new piece is
          worn in its place.
-         A Set Bonuses list saved before the tiers were swapped (20/11/2026: Iron came first, then Reinforced Iron) is
-         put right when the game starts (UpdateOldBonuses).
+         A Set Bonuses list saved before 21/11/2026 (stamina bonuses, Iron first then Reinforced Iron) is replaced by
+         today's when the game starts (UpdateOldBonuses).
          Changed tells everyone when the armor changes: ArmorLook shows the pieces on the character (the body, the
          first-person hands and the Gear page's preview) and the Gear page updates its slots.
          When the player dies, ItemDropper takes the armor off with the items (GameRules Keep Inventory off).
 Requirement: PlayerArmor.cs x-> PlayerInventory.cs, ItemData.cs, ArmorStats.cs
-             PlayerArmor.cs o-> PlayerStamina.cs
-             PlayerArmor.cs <-x ArmorBuilder.cs, ArmorLook.cs, ArmorPicker.cs, ArmorSlotUI.cs, CraftingMenu.cs, CraftingSetPanels.cs, GearPage.cs
-             PlayerArmor.cs <-o ArmorTestKit.cs, CraftingRow.cs, ItemDropper.cs, PlayerHealth.cs, PlayerInfoPage.cs
+             PlayerArmor.cs <-x ArmorBuilder.cs, ArmorLook.cs, ArmorPicker.cs, ArmorSlotUI.cs, CraftingMenu.cs, CraftingSetPanels.cs, GearPage.cs, LootChestBuilder.cs
+             PlayerArmor.cs <-o ArmorTestKit.cs, CraftingRow.cs, ItemDropper.cs, MonsterBounty.cs, PlayerHealth.cs, PlayerInfoPage.cs
 */
 
 using System.Collections.Generic;
@@ -49,9 +49,9 @@ public class PlayerArmor : MonoBehaviour
         [Tooltip("The set's name, as in its pieces' Armor > Set (e.g. Iron).")]
         public string set = "Iron";
 
-        [Tooltip("How much faster stamina comes back while the whole set is worn: 1.5 = 50 % faster, 1 = no change.")]
-        [Min(1f)]
-        public float staminaRegen = 1.5f;
+        [Tooltip("Extra coins for every monster killed while the whole set is worn (on top of the monster's own coins).")]
+        [Min(0)]
+        public int coinsPerKill = 1;
 
         [Tooltip("A lower set this one also counts as (Iron counts as Copper): its pieces fill that set's slots too, so " +
                  "a mix of Copper and Iron pieces still gives the Copper bonus. Empty = none.")]
@@ -62,25 +62,27 @@ public class PlayerArmor : MonoBehaviour
 
         public SetBonus() { }
 
-        public SetBonus(string set, float staminaRegen, string countsAs, Color color)
+        public SetBonus(string set, int coinsPerKill, string countsAs, Color color)
         {
             this.set = set;
-            this.staminaRegen = staminaRegen;
+            this.coinsPerKill = coinsPerKill;
             this.countsAs = countsAs;
             this.color = color;
         }
 
-        // What it does, the way the Gear and Info pages say it (e.g. "stamina recharges 50% faster").
+        // What it does, the way the Gear page and the crafting list say it (e.g. "+1 coin for every monster killed").
         public string Describe()
         {
-            return staminaRegen > 1.001f ? "stamina recharges " + ArmorStats.Percent((staminaRegen - 1f) * 100f) + " faster" : "no bonus";
+            return coinsPerKill > 0 ? "+" + Coins(coinsPerKill) + " for every monster killed" : "no bonus";
         }
 
-        // The same, short (e.g. "+50% stamina recharge"), for a line with little room.
+        // The same, short (e.g. "+1 coin per kill"), for a line with little room.
         public string Short()
         {
-            return staminaRegen > 1.001f ? "+" + ArmorStats.Percent((staminaRegen - 1f) * 100f) + " stamina recharge" : "no bonus";
+            return coinsPerKill > 0 ? "+" + Coins(coinsPerKill) + " per kill" : "no bonus";
         }
+
+        static string Coins(int count) => count + (count == 1 ? " coin" : " coins");
     }
 
     // The sets' colors in menus.
@@ -88,15 +90,19 @@ public class PlayerArmor : MonoBehaviour
     public static readonly Color IronColor = new Color(0.56f, 0.6f, 0.67f);          // steel grey
     public static readonly Color GoldColor = new Color(0.95f, 0.75f, 0.2f);          // gold: ready for a Gold set (not made yet)
 
-    // The sets Tools > Items > Build Plate Armor makes, weakest first: Copper (stamina 50 % faster) and Iron (each piece
-    // a Copper piece + iron: stamina 100 % faster, and it counts as Copper). A list saved before a set existed gets the
+    // The sets Tools > Items > Build Plate Armor makes, weakest first: Copper (+1 coin per monster killed) and Iron (each
+    // piece a Copper piece + iron: +2 coins, and it counts as Copper). A list saved before a set existed gets the
     // missing ones added when the game starts, so a new set always has its bonus.
-    // A Gold set later: add new SetBonus("Gold", 2.5f, "Iron", GoldColor) at the end (see ArmorBuilder's Sets).
+    // A Gold set later: add new SetBonus("Gold", 3, "Iron", GoldColor) at the end (see ArmorBuilder's Sets).
     public static List<SetBonus> DefaultBonuses() => new List<SetBonus>
     {
-        new SetBonus("Copper", 1.5f, "", CopperColor),
-        new SetBonus("Iron", 2f, "Copper", IronColor),
+        new SetBonus("Copper", 1, "", CopperColor),
+        new SetBonus("Iron", 2, "Copper", IronColor),
     };
+
+    // Which version of the set bonuses a saved list has: 2 = coins per kill (21/11/2026). Older lists (stamina bonuses)
+    // are replaced by DefaultBonuses when the game starts.
+    const int BonusVersion = 2;
 
     // ===== Fields =====
     [Header("Protection")]
@@ -105,9 +111,12 @@ public class PlayerArmor : MonoBehaviour
     [SerializeField] float maxProtection = 80f;
 
     [Header("Set bonus")]
-    [Tooltip("What wearing a whole set gives: a piece of that set (Armor > Set) in every slot. Copper: stamina comes back " +
-             "50 % faster; Iron: 100 % (and its pieces count as Copper). Better sets go lower in the list.")]
+    [Tooltip("What wearing a whole set gives: a piece of that set (Armor > Set) in every slot. Copper: +1 coin for every " +
+             "monster killed; Iron: +2 (and its pieces count as Copper). Better sets go lower in the list.")]
     [SerializeField] List<SetBonus> setBonuses = DefaultBonuses();
+
+    [HideInInspector]
+    [SerializeField] int bonusVersion;   // the version of Set Bonuses (0 = saved before versions existed)
 
     [Header("Worn now")]
     [Tooltip("What the player wears, one per slot in this order: Helmet, Shoulders, Chest, Gloves, Legs, Boots. " +
@@ -118,7 +127,6 @@ public class PlayerArmor : MonoBehaviour
     public static readonly ArmorSlot[] Slots = (ArmorSlot[])System.Enum.GetValues(typeof(ArmorSlot));
 
     static PlayerArmor current;
-    PlayerStamina stamina;   // gets the set bonus (optional: no stamina = no bonus to give)
     ItemData lent;           // a worn piece taken off for an upgrade's recipe (LendForUpgrade), until FinishUpgrade
     const int MostSteps = 8; // how far a Counts As chain is followed (so a typo'd circle can't loop forever)
 
@@ -173,26 +181,17 @@ public class PlayerArmor : MonoBehaviour
     // The bonus given now (the whole set is worn and Set Bonuses has it), or null.
     public SetBonus ActiveBonus => BonusFor(FullSet);
 
+    // Extra coins for every monster killed right now (the active set bonus; 0 without one). MonsterBounty asks it.
+    public int CoinsPerKill => ActiveBonus != null ? ActiveBonus.coinsPerKill : 0;
+
     // ===== Unity messages (Unity calls these) =====
 
     void Awake()
     {
         current = this;
         FitSlots();
-        UpdateOldBonuses();     // a list from before Copper came first
+        UpdateOldBonuses();     // a list saved before the coin bonuses
         AddMissingBonuses();
-        stamina = GetComponent<PlayerStamina>();
-        if (stamina == null) stamina = FindFirstObjectByType<PlayerStamina>();
-    }
-
-    void OnEnable()
-    {
-        GiveBonus();
-    }
-
-    void OnDisable()
-    {
-        if (stamina != null) stamina.SetRegenBoost(this, 1f);   // no armor script, no bonus
     }
 
     void OnDestroy()
@@ -455,19 +454,10 @@ public class PlayerArmor : MonoBehaviour
         return found;
     }
 
-    // The armor changed: the set bonus first (so everyone who's told sees it), then tell everyone.
+    // The armor changed: tell everyone.
     void Announce()
     {
-        GiveBonus();
         Changed?.Invoke();
-    }
-
-    // Gives PlayerStamina the set bonus's faster refill (or takes it back: 1 = normal).
-    void GiveBonus()
-    {
-        if (stamina == null) return;
-        SetBonus bonus = ActiveBonus;
-        stamina.SetRegenBoost(this, bonus != null ? bonus.staminaRegen : 1f);
     }
 
     // Every set the worn pieces count toward: their own sets and the sets those count as.
@@ -488,14 +478,16 @@ public class PlayerArmor : MonoBehaviour
         return sets;
     }
 
-    // A list saved before the tiers were swapped (20/11/2026: Iron came first with 50 %, then Reinforced Iron) has no
-    // Copper. Its Iron would give today's Iron pieces the old first tier's bonus (and not count Copper pieces), so Iron
-    // and Reinforced Iron are taken out; AddMissingBonuses then puts in today's Copper and Iron. Other sets stay. The
-    // build tool (Tools > Items > Build Plate Armor) calls it on the scene's Player too. True = the list changed.
+    // A list saved before 21/11/2026 (its bonuses made stamina come back faster, and before 20/11/2026 Iron was the first
+    // set, then Reinforced Iron) is replaced by today's DefaultBonuses: Copper +1 and Iron +2 coins per kill. A set you
+    // added by hand to such an old list would need adding again. The build tool (Tools > Items > Build Plate Armor) calls
+    // it on the scene's Player too. True = the list was replaced.
     public bool UpdateOldBonuses()
     {
-        if (setBonuses == null || BonusFor("Copper") != null) return false;   // nothing saved, or saved after the swap
-        return setBonuses.RemoveAll(bonus => bonus == null || Same(bonus.set, "Iron") || Same(bonus.set, "Reinforced Iron")) > 0;
+        if (bonusVersion >= BonusVersion) return false;
+        setBonuses = DefaultBonuses();
+        bonusVersion = BonusVersion;
+        return true;
     }
 
     // Sets from DefaultBonuses the list hasn't got (it was saved before they existed) are added at its end.

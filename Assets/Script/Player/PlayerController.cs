@@ -1,6 +1,6 @@
 /*
 First Date: 29/9/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Drag this script onto the player shape (any shape: Capsule, Cube, Sphere...). A Rigidbody is added automatically.
 Unity Editor: The shape needs a Collider (3D Objects come with one).
@@ -23,11 +23,12 @@ Purpose: Move the player with W A S D (or the arrow keys, both set in KeyBinding
          Collision checking is Continuous, so even a fast player can't pass through the terrain or a wall.
          Hold Sprint (Left Shift) to run faster (Sprint Multiplier), forward only like Minecraft (Sprint Forward Only).
          With a PlayerStamina on the player, sprinting uses stamina and stops when the player is tired.
+         The Sprinter perk makes sprinting faster (SetSprintBoost, from PerkEffects).
          The shape never tips over or rolls. The player's collider has no friction (Slippery Body).
 Requirement: PlayerController.cs x-> KeyBindings.cs, MenuState.cs, Rigidbody (Unity)
              PlayerController.cs o-> PlayerStamina.cs, PlayerJump.cs
              PlayerController.cs <-x NewWorldBuilder.cs, PerkChest.cs, PerkManager.cs, PlayerCharacterBuilder.cs, ResourceNode.cs
-             PlayerController.cs <-o EnemyAggro.cs, FirstPersonHands.cs, InteractOutline.cs, PlayerAnimator.cs, PlayerHunger.cs, PlayerInfoPage.cs, PlayerJump.cs, PlayerPerks.cs, PlayerStats.cs, TreeFall.cs, WildAnimal.cs, WorldBarrier.cs, WorldGenerator.cs
+             PlayerController.cs <-o EnemyAggro.cs, FirstPersonHands.cs, InteractOutline.cs, PerkEffects.cs, PlayerAnimator.cs, PlayerGlide.cs, PlayerHunger.cs, PlayerInfoPage.cs, PlayerJump.cs, PlayerPerks.cs, PlayerStats.cs, TreeFall.cs, WildAnimal.cs, WorldBarrier.cs, WorldGenerator.cs
 */
 
 using UnityEngine;
@@ -89,6 +90,7 @@ public class PlayerController : MonoBehaviour
     const float UprightWall = 0.087f;
 
     float startSpeed;      // walking speed before any perk
+    float sprintBoost = 1f;    // perks: 1.15 = sprinting 15 % faster (SetSprintBoost)
     Rigidbody rb;          // the physics component: keeps gravity and collisions working
     Collider body;         // the player's shape (for sticking to the ground)
     PlayerStamina stamina; // sprinting uses it up (can be missing = sprint forever)
@@ -125,7 +127,8 @@ public class PlayerController : MonoBehaviour
 
     // Walking speed before any perk (the inventory's Info tab shows how much perks added), and sprint = Speed x this.
     public float StartSpeed => startSpeed;
-    public float SprintMultiplier => sprintMultiplier;
+    public float SprintMultiplier => sprintMultiplier * sprintBoost;   // perks included
+    public float BaseSprintMultiplier => sprintMultiplier;               // without perks
 
     // PlayerJump reads it: no jumping off a too-steep slope.
     public float MaxSlopeAngle => maxSlopeAngle;
@@ -245,7 +248,7 @@ public class PlayerController : MonoBehaviour
     // so walking up a gentle slope goes up and walking down goes down, without flying off.
     void MoveOnGround(Vector3 wish, bool sprinting)
     {
-        float currentSpeed = sprinting ? speed * sprintMultiplier : speed;
+        float currentSpeed = sprinting ? speed * SprintMultiplier : speed;
         Vector3 move = wish * currentSpeed;
 
         move = BlockSteep(move);   // never push into a wall / too-steep slope (that's how it used to climb them)
@@ -471,6 +474,13 @@ public class PlayerController : MonoBehaviour
     public void ResetMoveSpeed()
     {
         speed = startSpeed;
+    }
+
+    // Sprinting goes "times" as fast as it normally would (1 = normal, 1.15 = 15 % faster). The Sprinter perk
+    // (PerkEffects) sets it; walking isn't changed.
+    public void SetSprintBoost(float times)
+    {
+        sprintBoost = Mathf.Max(0.1f, times);
     }
 
 

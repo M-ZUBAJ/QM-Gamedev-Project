@@ -1,6 +1,6 @@
 /*
 First Date: 8/10/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerController). A Rigidbody is added automatically.
 Unity Editor: The jump key is set in KeyBindings (Jump, default Space).
@@ -15,9 +15,11 @@ Purpose: Jump with Space, only when standing on something (no jumping again in t
          A too-steep slope (steeper than PlayerController's Max Slope Angle) doesn't count as ground,
          so the player can't hop their way up a cliff. But held up between too-steep slopes (a narrow V between two
          hills, a pit: PlayerController.IsWedged) counts as standing, so the player can jump there too.
+         Perks: Spring Legs makes jumps higher (SetJumpBoost, from PerkEffects); Glide's dive forgets the tap that
+         started it (ForgetPress), so landing doesn't jump again by itself.
 Requirement: PlayerJump.cs x-> KeyBindings.cs, MenuState.cs, Rigidbody (Unity), Collider (Unity)
              PlayerJump.cs o-> PlayerStamina.cs, PlayerController.cs
-             PlayerJump.cs <-o PlayerAnimator.cs, PlayerController.cs, PlayerInfoPage.cs, PlayerStats.cs
+             PlayerJump.cs <-o PerkEffects.cs, PlayerAnimator.cs, PlayerController.cs, PlayerGlide.cs, PlayerInfoPage.cs, PlayerStats.cs
 */
 
 using UnityEngine;
@@ -50,13 +52,15 @@ public class PlayerJump : MonoBehaviour
     float lastGroundedTime = -10f;
     float lastPressedTime = -10f;
     float lastJumpTime = -10f;
+    float jumpBoost = 1f;    // perks: 1.25 = jumps 25 % higher (SetJumpBoost)
 
     // Right after a jump the sides of a V still touch for a moment: being held up there (Wedged) waits this long,
     // so it can't give a second jump.
     const float WedgeGrace = 0.2f;
 
     public bool IsGrounded { get; private set; }   // other scripts can read it (e.g. a landing sound later)
-    public float JumpHeight => jumpHeight;          // meters (the inventory's Info tab shows it)
+    public float JumpHeight => jumpHeight * jumpBoost;   // meters, perks included (the inventory's Info tab shows it)
+    public float BaseJumpHeight => jumpHeight;           // meters, without perks
 
     // Fired each time the player jumps. E.g. PlayerStats counts jumps.
     public event System.Action Jumped;
@@ -95,7 +99,7 @@ public class PlayerJump : MonoBehaviour
     void Jump()
     {
         // The speed that reaches exactly jumpHeight against gravity: v = square root of (2 x gravity x height).
-        float speed = Mathf.Sqrt(2f * -Physics.gravity.y * jumpHeight);
+        float speed = Mathf.Sqrt(2f * -Physics.gravity.y * JumpHeight);
 
         Vector3 v = rb.velocity;
         v.y = speed;   // replace (not add), so jumping while still falling a little goes just as high
@@ -109,6 +113,18 @@ public class PlayerJump : MonoBehaviour
         lastGroundedTime = -10f;
         lastJumpTime = Time.time;
         IsGrounded = false;
+    }
+
+    // Jumps go "times" as high (1 = normal, 1.25 = 25 % higher). The Spring Legs perk (PerkEffects) sets it.
+    public void SetJumpBoost(float times)
+    {
+        jumpBoost = Mathf.Max(0.1f, times);
+    }
+
+    // Forgets a jump press that hasn't jumped yet (Glide's dive: its tap mustn't jump the moment the player lands).
+    public void ForgetPress()
+    {
+        lastPressedTime = -10f;
     }
 
     // Held up between too-steep slopes (PlayerController.IsWedged: a narrow V between two hills, a pit). Those slopes

@@ -1,6 +1,6 @@
 /*
 First Date: 19/11/2026
-Date: 19/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: The prompt under the crosshair in the HUD (Tools > UI > Build HUD makes it: HUDCanvas > ChestPrompt > Pill >
         Key > KeyText, Label, CoinIcon, Price).
@@ -12,7 +12,7 @@ Purpose: Tells the player what E does and what the chest costs while the crossha
          menu is open (e.g. the perk panel itself), while the player is dead, and once the chest is used.
          Looking inside is free: Marko's chest only takes the coins when a perk is picked.
 Requirement: ChestPrompt.cs x-> PerkChest.cs, InteractOutline.cs, MenuState.cs, CanvasGroup (Unity)
-             ChestPrompt.cs o-> PlayerCoins.cs, PlayerHealth.cs
+             ChestPrompt.cs o-> PlayerCoins.cs, PlayerHealth.cs, ChestTier.cs
              ChestPrompt.cs <-x HUDBuilder.cs
 */
 
@@ -109,7 +109,8 @@ public class ChestPrompt : MonoBehaviour
         shownCost = cost;
         shownCanPay = canPay;
         if (keyText != null) keyText.text = chest.InteractKey.ToString();
-        if (label != null) label.text = openText;
+        ChestTier tier = chest.Tier;   // a loot box says which kind it is: "Open rare box"
+        if (label != null) label.text = tier != null ? "Open " + tier.BoxName.ToLowerInvariant() : openText;
         if (price != null)
         {
             price.text = cost.ToString();

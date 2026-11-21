@@ -1,6 +1,6 @@
 /*
 First Date: 3/10/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Drag this script onto the Player sphere.
 Unity Editor: The HealthBar (StatBar) finds this by itself. "On Changed" is only for extra things
@@ -11,9 +11,11 @@ Unity Editor: The HealthBar (StatBar) finds this by itself. "On Changed" is only
 Purpose: Holds the player's health. TakeDamage / Heal change it and fire On Changed (current, max).
          TakeDamage is a hit (an enemy's attack): the armor the player wears (PlayerArmor) takes its share off first.
          LoseHealth is for what no armor stops (starving, bad food).
+         The epic box's Last Stand perk (PerkEffects): once a life, a hit that would kill leaves 1 health instead, and
+         nothing can hurt the player for a moment (Is Shielded).
          At 0 health the player dies: the Died event fires once (PlayerRespawn listens to it and brings the
          player back). Revive fills health back up.
-Requirement: PlayerHealth.cs o-> PlayerArmor.cs
+Requirement: PlayerHealth.cs o-> PlayerArmor.cs, PerkEffects.cs
              PlayerHealth.cs <-x DeathScreen.cs, EnemyAttack.cs, PerkChest.cs, PerkManager.cs, PlayerCoins.cs, PlayerRespawn.cs
              PlayerHealth.cs <-o AutoCollector.cs, ChestPrompt.cs, DaylightCycle.cs, EnemyAggro.cs, EnemyAnimator.cs, FirstPersonHands.cs, GainNotifier.cs, InteractOutline.cs, ItemConsumer.cs, ItemDropper.cs, PassiveRegen.cs, PlayerAnimator.cs, PlayerHunger.cs, PlayerInfoPage.cs, PlayerPerks.cs, PlayerSight.cs, PlayerStats.cs, StatBar.cs, WildAnimal.cs
 */
@@ -47,6 +49,7 @@ public class PlayerHealth : MonoBehaviour
     float startMaxHealth;   // max health before any perk (ResetMaxHealth goes back to it)
     bool dead;           // already died (so Died fires only once per death)
     bool dieNextFrame;   // 0 was typed into Health in the Inspector: die in the next Update (see OnValidate)
+    float shieldedUntil; // Last Stand: no hit hurts until this time
 
     // Fired once when health reaches 0. Scripts subscribe in code, e.g. PlayerRespawn: health.Died += Respawn;
     public event System.Action Died;
@@ -93,11 +96,23 @@ public class PlayerHealth : MonoBehaviour
     // iron set takes 10 % off). Negative amounts are ignored (use Heal for that).
     public void TakeDamage(float amount)
     {
-        if (amount <= 0f || IsDead) return;
+        if (amount <= 0f || IsDead || IsShielded) return;
         PlayerArmor armor = PlayerArmor.Current;   // asked now, not in Awake: it may be added to the player later
         if (armor != null) amount = armor.Reduce(amount);
+
+        // A killing blow: the Last Stand perk (once a life) leaves 1 health and a moment of safety instead.
+        if (health - amount <= 0f && PerkEffects.TryLastStand(out float shieldSeconds))
+        {
+            health = Mathf.Min(1f, maxHealth);
+            shieldedUntil = Time.time + shieldSeconds;
+            UpdateBar();
+            return;
+        }
         LoseHealth(amount);
     }
+
+    // True for a moment after Last Stand saved the player: hits do nothing then.
+    public bool IsShielded => Time.time < shieldedUntil;
 
     // Lose health that no armor can stop (starving, bad food, the test menu's Die). Negative amounts are ignored.
     public void LoseHealth(float amount)

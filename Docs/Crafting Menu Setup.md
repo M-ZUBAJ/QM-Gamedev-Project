@@ -12,7 +12,7 @@
   list is closed and opened again.
 - **Armor set panels:** each armor set's pieces sit together in one box in the set's color (copper for Copper, steel
   grey for Iron), with a header: the set's name ("COPPER SET"), how much the whole set protects and what wearing all
-  six gives ("10% protection - all 6: stamina recharges 50% faster"; Iron also says "counts as Copper"), and on the
+  six gives ("10% protection - all 6: +1 coin for every monster killed"; Iron also says "counts as Copper"), and on the
   right how many pieces are worn ("Worn 2/6"), or **BONUS ON** in gold while the whole set is worn.
   A box shows in the All and Armor tabs and hides in the others.
 - An armor upgrade's recipe counts the piece you wear: "1/1 Copper Helmet (worn)". Crafting it takes the Copper Helmet

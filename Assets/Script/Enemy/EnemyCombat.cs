@@ -72,6 +72,11 @@ public class EnemyCombat : MonoBehaviour
             );
         }
 
+        // [Tony] added (21/11/2026): extra coins on top of yours, from Tony's armor set bonus (copper set +1, iron set
+        // +2) and the rare box's Bounty Hunter perk (+1 each). To undo: delete this line.
+        // Log: Docs/TonyEditMate/Marko/21-11-2026 Loot Boxes And New Perks.md
+        MonsterBounty.Killed();                                                       // [Tony] added
+
         // [Tony] replaced (10/11/2026): Destroy(gameObject);
         // With Tony's EnemyAnimator on the enemy, the death animation plays first (and the enemy stops moving,
         // attacking and being hit), then the body is removed. Without one it's removed at once, like before.

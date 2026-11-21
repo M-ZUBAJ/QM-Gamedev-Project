@@ -1,6 +1,6 @@
 /*
 First Date: 20/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: The inventory's Gear page (InventoryCanvas > InventoryWindow > Pages > GearPage). Tools > UI > Build Gear Page
         puts it there.
@@ -9,9 +9,9 @@ Unity Editor: Nothing to connect: it finds Armor > Total (the protection line), 
               Testing: Play, Tab > Gear: the line under the slots says how much the worn armor protects; the set line
               next to the leggings counts the set's pieces ("Copper set 4/6") and turns gold with all six.
 Purpose: Looks after the whole Gear page: the line under the armor slots ("Hits do 10% less damage", or how to start
-         when nothing is worn), the set line ("Copper set 4/6" and what all six give, or "COPPER SET BONUS: stamina
-         recharges 50% faster" in gold once the whole set is worn, and under it the better set being worn toward,
-         e.g. "Iron 3/6: +100% stamina recharge"), and closes the pop-up when the page is left
+         when nothing is worn), the set line ("Copper set 4/6" and what all six give, or "COPPER SET BONUS: +1 coin
+         for every monster killed" in gold once the whole set is worn, and under it the better set being worn toward,
+         e.g. "Iron 3/6: +2 coins per kill"), and closes the pop-up when the page is left
          (another tab, or the inventory closes). The character on the left is GearPreview, each slot is an ArmorSlotUI.
          Say shows a short message on the bottom line for a moment (e.g. "Iron Boots goes in the Boots slot.").
 Requirement: GearPage.cs x-> PlayerArmor.cs, ArmorPicker.cs, ArmorStats.cs
@@ -100,7 +100,7 @@ public class GearPage : MonoBehaviour
 
     // The set line: "Copper set 4/6" and what all six give (grey), or the set's bonus in gold once it's all worn (a
     // mix of Copper and Iron pieces counts as Copper), with the better set being worn toward under it, small and grey
-    // ("Iron 3/6: +100% stamina recharge"). Empty while no worn piece belongs to a set.
+    // ("Iron 3/6: +2 coins per kill"). Empty while no worn piece belongs to a set.
     void ShowSet(PlayerArmor armor)
     {
         if (setLine == null) return;

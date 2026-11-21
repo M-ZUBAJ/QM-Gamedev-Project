@@ -1,6 +1,6 @@
 /*
 First Date: 20/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Not a script you put on an object. It is the "Armor" section inside an Item Data asset whose Item Type is Armor
         (e.g. Assets/Config/Items/Armor/IronHelmet), and the list of armor slots.
@@ -12,7 +12,7 @@ Purpose: What a piece of armor is:
          - Protection: how much of every hit it takes off, in percent (PlayerArmor adds every worn piece up: the
            copper set is 1.5 % a piece and 2.5 % for the chestplate, 10 % for all six; the iron set 16 %).
          - Set: the armor set it belongs to (e.g. Copper). A piece of one set in every slot gives that set's bonus
-           (PlayerArmor's Set Bonuses: the copper set's stamina comes back 50 % faster, the iron set's 100 %).
+           (PlayerArmor's Set Bonuses: the whole copper set gives +1 coin for every monster killed, the iron set +2).
          - Piece: the part of the character's model it switches on when worn (Blink's character comes with its armor
            already inside, switched off, e.g. "PlateSet1_Helmet").
          - Hides: parts of the character it switches off while worn, so they don't poke through (e.g. the hair under

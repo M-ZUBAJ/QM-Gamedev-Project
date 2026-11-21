@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38c816e89a084134abd3627d24efe837, type: 3}
+  m_Name: Perk_SpringLegs
+  m_EditorClassIdentifier: 
+  displayName: Spring Legs
+  description: Jump 25% higher.
+  icon: {fileID: 21300000, guid: 058e47dd8d9ed7345b1fa4d78d3f39b7, type: 3}
+  perkType: 6
+  value: 0.25
+  requires: {fileID: 11400000, guid: 9bcc23092d96afe438282c721bd0e4ee, type: 2}
+  maxPicks: 0

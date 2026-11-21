@@ -1,6 +1,6 @@
 /*
 First Date: 19/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Menu Tools > UI > Build Crafting Menu. It asks first, because it changes Turki's CraftingCanvas prefab.
@@ -333,7 +333,7 @@ public static class CraftingMenuBuilder
     // rows while playing) and CraftingSetPanels on the panel. Built again every run. False = no scroll list to put it in.
     //   SetPanel: a rounded box (tinted in the set's color) stacking its children: Header, then the set's rows
     //   Header:   Stripe (a bar in the set's color) | Title "IRON SET"                    Progress "Worn 2/6"
-    //                                              | Info "10% protection - all 6: stamina recharges 50% faster"
+    //                                              | Info "10% protection - all 6: +1 coin for every monster killed"
     static bool MakeSetPanels(Transform panel)
     {
         Transform scroll = panel.Find("Scroll");

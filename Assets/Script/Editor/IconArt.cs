@@ -1,6 +1,6 @@
 /*
 First Date: 19/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Not used directly. Tools > UI > Build HUD and Tools > UI > Build Perk Panel use it for their pictures.
@@ -14,6 +14,12 @@ Purpose: Draws the small game pictures in code and saves them as PNG sprites, so
            Assets/UI/Perks/PerkStamina.png    a yellow lightning   (Max Stamina)
            Assets/UI/Perks/PerkSpeed.png      blue double arrows   (Move Speed)
            Assets/UI/Perks/PerkFireball.png   an orange flame      (Fireball)
+           Assets/UI/Perks/Perk<Name>.png     the loot boxes' new perks: wind lines (Second Wind), a red burst star
+                                              (Critical Strike), a target (Precision), an arrow on a spring (Spring
+                                              Legs), a coin and a plus (Bounty Hunter), a drumstick with a sparkle
+                                              (Gourmet), a log (Lumberjack), a rock with ore (Prospector), a running
+                                              boot (Sprinter), a fist (Brawler), a gold shield with a heart (Last
+                                              Stand), a feather (Glide)
            Assets/UI/Stats/Hunger.png         a drumstick          (the inventory's Info tab: hunger)
            Assets/UI/Stats/Jump.png           a green up arrow     (the inventory's Info tab: jump height)
            Assets/UI/Stats/Armor.png          a steel breastplate  (the inventory's Info tab: armor)
@@ -21,9 +27,9 @@ Purpose: Draws the small game pictures in code and saves them as PNG sprites, so
                                               leggings, boots): shown faintly in an empty slot on the Gear page
          Each pixel is the average of 4 x 4 points, so the edges come out smooth, not jagged.
          GivePerkIcons puts the perk pictures in the player's PlayerPerks (its Icons list), for the HUD's perk icons
-         and the Info tab.
-Requirement: IconArt.cs x-> UIBuildHelper.cs, UIFXSprites.cs, PlayerPerks.cs, ArmorStats.cs
-             IconArt.cs <-x CraftingMenuBuilder.cs, GearPageBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, PerkPanelBuilder.cs
+         and the Info tab. ForPerk gives each perk kind (Marko's ChestPerkType) its picture.
+Requirement: IconArt.cs x-> UIBuildHelper.cs, UIFXSprites.cs, PlayerPerks.cs, ArmorStats.cs, PerkData.cs
+             IconArt.cs <-x CraftingMenuBuilder.cs, GearPageBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, LootChestBuilder.cs, PerkPanelBuilder.cs
 */
 
 using System.IO;
@@ -79,6 +85,19 @@ public static class IconArt
         new Vector2(0f, 0.86f), new Vector2(0.62f, 0.18f), new Vector2(0.24f, 0.18f), new Vector2(0.24f, -0.82f),
         new Vector2(-0.24f, -0.82f), new Vector2(-0.24f, 0.18f), new Vector2(-0.62f, 0.18f),
     };
+    static readonly Vector2[] Star = StarPoints(8, 0.9f, 0.42f);       // a burst with 8 points
+    static readonly Vector2[] Sparkle = StarPoints(4, 0.3f, 0.09f);    // a small 4-point twinkle
+    static readonly Vector2[] SpringHead = { new Vector2(0f, 0.92f), new Vector2(0.5f, 0.4f), new Vector2(-0.5f, 0.4f) };
+    static readonly Vector2[] Rock =
+    {
+        new Vector2(-0.78f, -0.58f), new Vector2(-0.6f, 0.18f), new Vector2(-0.22f, 0.6f), new Vector2(0.34f, 0.54f),
+        new Vector2(0.78f, 0.08f), new Vector2(0.66f, -0.58f),
+    };
+    static readonly Vector2[] Shield =
+    {
+        new Vector2(-0.66f, 0.74f), new Vector2(0.66f, 0.74f), new Vector2(0.62f, 0.02f), new Vector2(0f, -0.88f),
+        new Vector2(-0.62f, 0.02f),
+    };
 
     // ===== My methods =====
 
@@ -92,21 +111,45 @@ public static class IconArt
     public static Sprite StatHunger() => Save(StatFolder + "/Hunger.png", () => Draw(IconSize, HungerPaint), Vector4.zero);
     public static Sprite StatJump() => Save(StatFolder + "/Jump.png", () => Draw(IconSize, JumpPaint), Vector4.zero);
     public static Sprite StatArmor() => Save(StatFolder + "/Armor.png", () => Draw(IconSize, ArmorPaint), Vector4.zero);
+    public static Sprite PerkSecondWind() => Save(PerkFolder + "/PerkSecondWind.png", () => Draw(IconSize, WindPaint), Vector4.zero);
+    public static Sprite PerkCritical() => Save(PerkFolder + "/PerkCritical.png", () => Draw(IconSize, StarPaint), Vector4.zero);
+    public static Sprite PerkPrecision() => Save(PerkFolder + "/PerkPrecision.png", () => Draw(IconSize, TargetPaint), Vector4.zero);
+    public static Sprite PerkSpringLegs() => Save(PerkFolder + "/PerkSpringLegs.png", () => Draw(IconSize, SpringPaint), Vector4.zero);
+    public static Sprite PerkBountyHunter() => Save(PerkFolder + "/PerkBountyHunter.png", () => Draw(IconSize, BountyPaint), Vector4.zero);
+    public static Sprite PerkGourmet() => Save(PerkFolder + "/PerkGourmet.png", () => Draw(IconSize, GourmetPaint), Vector4.zero);
+    public static Sprite PerkLumberjack() => Save(PerkFolder + "/PerkLumberjack.png", () => Draw(IconSize, LogPaint), Vector4.zero);
+    public static Sprite PerkProspector() => Save(PerkFolder + "/PerkProspector.png", () => Draw(IconSize, OrePaint), Vector4.zero);
+    public static Sprite PerkSprinter() => Save(PerkFolder + "/PerkSprinter.png", () => Draw(IconSize, SprintPaint), Vector4.zero);
+    public static Sprite PerkBrawler() => Save(PerkFolder + "/PerkBrawler.png", () => Draw(IconSize, FistPaint), Vector4.zero);
+    public static Sprite PerkLastStand() => Save(PerkFolder + "/PerkLastStand.png", () => Draw(IconSize, ShieldPaint), Vector4.zero);
+    public static Sprite PerkGlide() => Save(PerkFolder + "/PerkGlide.png", () => Draw(IconSize, FeatherPaint), Vector4.zero);
 
     // A white outline of an armor piece, shown faintly in an empty slot on the Gear page (tinted by the slot).
     public static Sprite ArmorSlotIcon(ArmorSlot slot) =>
         Save(ArmorFolder + "/" + slot + ".png", () => Draw(IconSize, (x, y) => InArmor(slot, x, y) ? Color.white : Color.clear), Vector4.zero);
 
-    // The drawn picture of one of the player's perks (PlayerPerks' PerkType).
-    public static Sprite ForPerk(PerkType type)
+    // The drawn picture of a perk kind (Marko's ChestPerkType, which PlayerPerks uses too). Null for a kind with no
+    // drawing yet.
+    public static Sprite ForPerk(ChestPerkType type)
     {
         switch (type)
         {
-            case PerkType.MaxHealth:  return PerkHealth();
-            case PerkType.MaxStamina: return PerkStamina();
-            case PerkType.MoveSpeed:  return PerkSpeed();
-            case PerkType.Fireball:   return PerkFireball();
-            default:                  return null;
+            case ChestPerkType.MaxHealth:      return PerkHealth();
+            case ChestPerkType.MaxStamina:     return PerkStamina();
+            case ChestPerkType.MoveSpeed:      return PerkSpeed();
+            case ChestPerkType.Fireball:       return PerkFireball();
+            case ChestPerkType.SecondWind:     return PerkSecondWind();
+            case ChestPerkType.CriticalStrike: return PerkCritical();
+            case ChestPerkType.SpringLegs:     return PerkSpringLegs();
+            case ChestPerkType.BountyHunter:   return PerkBountyHunter();
+            case ChestPerkType.Gourmet:        return PerkGourmet();
+            case ChestPerkType.Lumberjack:     return PerkLumberjack();
+            case ChestPerkType.Prospector:     return PerkProspector();
+            case ChestPerkType.Sprinter:       return PerkSprinter();
+            case ChestPerkType.Brawler:        return PerkBrawler();
+            case ChestPerkType.LastStand:      return PerkLastStand();
+            case ChestPerkType.Glide:          return PerkGlide();
+            default:                           return null;
         }
     }
 
@@ -119,7 +162,7 @@ public static class IconArt
         SerializedProperty list = so.FindProperty("icons");   // the names in quotes must match PlayerPerks' fields
         if (list == null) return;
 
-        foreach (PerkType type in System.Enum.GetValues(typeof(PerkType)))
+        foreach (ChestPerkType type in System.Enum.GetValues(typeof(ChestPerkType)))
         {
             SerializedProperty entry = null;
             for (int i = 0; i < list.arraySize && entry == null; i++)
@@ -195,6 +238,94 @@ public static class IconArt
     static Color ArmorPaint(float x, float y) =>
         Icon(x, y, (px, py) => InPolygon(px, py, Breastplate), new Color(0.42f, 0.47f, 0.55f), new Color(0.86f, 0.89f, 0.94f), new Color(0.18f, 0.2f, 0.26f));
 
+    // ----- The loot boxes' perks -----
+
+    // Three wind lines, the middle one curling up at its end.
+    static Color WindPaint(float x, float y) =>
+        Icon(x, y, InWind, new Color(0.05f, 0.55f, 0.5f), new Color(0.55f, 1f, 0.88f), new Color(0.02f, 0.25f, 0.24f));
+
+    // A red burst star with a hot middle.
+    static Color StarPaint(float x, float y)
+    {
+        Color c = Icon(x, y, (px, py) => InPolygon(px, py, Star), new Color(0.75f, 0.06f, 0.05f), new Color(1f, 0.5f, 0.25f), new Color(0.38f, 0.02f, 0.02f));
+        if (Circle(x, y, 0.2f)) c = Over(c, new Color(1f, 0.92f, 0.7f));
+        return c;
+    }
+
+    // A red target: a ring, a dot and four ticks.
+    static Color TargetPaint(float x, float y) =>
+        Icon(x, y, InTarget, new Color(0.8f, 0.1f, 0.08f), new Color(1f, 0.5f, 0.42f), new Color(0.38f, 0.03f, 0.03f));
+
+    // A green arrow on a spring.
+    static Color SpringPaint(float x, float y) =>
+        Icon(x, y, InSpring, new Color(0.25f, 0.62f, 0.12f), new Color(0.72f, 1f, 0.4f), new Color(0.1f, 0.3f, 0.04f));
+
+    // A gold coin (down left) and a green plus (up right).
+    static Color BountyPaint(float x, float y)
+    {
+        Color coin = CoinPaint((x + 0.14f) * 1.3f, (y + 0.14f) * 1.3f);
+        Color plus = Icon(x, y, InPlus, new Color(0.15f, 0.6f, 0.2f), new Color(0.55f, 0.95f, 0.45f), new Color(0.05f, 0.28f, 0.08f));
+        return Over(coin, plus);
+    }
+
+    // The drumstick (a little smaller) with a gold twinkle.
+    static Color GourmetPaint(float x, float y)
+    {
+        Color food = HungerPaint(x * 1.1f + 0.05f, y * 1.1f + 0.05f);
+        Color shine = Icon(x, y, (px, py) => InPolygon(px - 0.58f, py - 0.58f, Sparkle), new Color(1f, 0.78f, 0.15f), new Color(1f, 0.97f, 0.6f), new Color(0.55f, 0.38f, 0.05f));
+        return Over(food, shine);
+    }
+
+    // A log: brown bark, a light cut end with rings.
+    static Color LogPaint(float x, float y)
+    {
+        Color c = Icon(x, y, InLogBody, new Color(0.38f, 0.22f, 0.1f), new Color(0.62f, 0.4f, 0.2f), new Color(0.2f, 0.11f, 0.04f));
+        Color end = Icon(x, y, InLogEnd, new Color(0.86f, 0.66f, 0.4f), new Color(0.96f, 0.82f, 0.56f), new Color(0.2f, 0.11f, 0.04f));
+        c = Over(c, end);
+        if (InLogEnd(x, y))
+        {
+            float d = Mathf.Sqrt((x - 0.36f) * (x - 0.36f) + (y + 0.08f) * (y + 0.08f));
+            if (Mathf.Abs(d - 0.21f) < 0.025f || Mathf.Abs(d - 0.1f) < 0.022f) c = Over(c, new Color(0.62f, 0.42f, 0.2f));   // the rings
+            if (d > 0.3f) c = Over(c, new Color(0.45f, 0.27f, 0.12f));   // the bark around the cut
+        }
+        return c;
+    }
+
+    // A grey rock with copper and gold nuggets in it.
+    static Color OrePaint(float x, float y)
+    {
+        Color c = Icon(x, y, (px, py) => InPolygon(px, py, Rock), new Color(0.36f, 0.37f, 0.4f), new Color(0.72f, 0.74f, 0.78f), new Color(0.15f, 0.16f, 0.18f));
+        bool nugget = Circle(x + 0.25f, y - 0.05f, 0.14f) || Circle(x - 0.25f, y - 0.2f, 0.12f) || Circle(x - 0.05f, y + 0.3f, 0.11f);
+        if (nugget) c = Over(c, Color.Lerp(new Color(0.85f, 0.45f, 0.1f), new Color(1f, 0.85f, 0.35f), (y + 1f) * 0.5f));
+        return c;
+    }
+
+    // An orange boot with speed lines behind it.
+    static Color SprintPaint(float x, float y) =>
+        Icon(x, y, InSprint, new Color(0.85f, 0.32f, 0.08f), new Color(1f, 0.7f, 0.3f), new Color(0.42f, 0.13f, 0.02f));
+
+    // A fist: the back of the hand with four knuckles, the gaps between the fingers, and the thumb across the front.
+    static Color FistPaint(float x, float y)
+    {
+        Color dark = new Color(0.86f, 0.58f, 0.38f), light = new Color(1f, 0.84f, 0.66f), edge = new Color(0.42f, 0.24f, 0.12f);
+        Color c = Icon(x, y, InFistBack, dark, light, edge);
+        bool gap = y > 0.02f && y < 0.48f && (Mathf.Abs(x - 0.26f) < 0.022f || Mathf.Abs(x) < 0.022f || Mathf.Abs(x + 0.26f) < 0.022f);
+        if (gap && InFistBack(x, y)) c = Over(c, edge);
+        return Over(c, Icon(x, y, InThumb, dark, light, edge));
+    }
+
+    // A gold shield with a red heart on it.
+    static Color ShieldPaint(float x, float y)
+    {
+        Color c = Icon(x, y, (px, py) => InPolygon(px, py, Shield), new Color(0.75f, 0.52f, 0.08f), new Color(1f, 0.88f, 0.42f), new Color(0.38f, 0.24f, 0.02f));
+        Color heart = Icon(x, y, (px, py) => InHeart(px / 0.52f, (py - 0.04f) / 0.52f), new Color(0.75f, 0.1f, 0.16f), new Color(1f, 0.45f, 0.48f), new Color(0.42f, 0.04f, 0.08f));
+        return Over(c, heart);
+    }
+
+    // A white feather, tilted.
+    static Color FeatherPaint(float x, float y) =>
+        Icon(x, y, InFeather, new Color(0.7f, 0.82f, 1f), new Color(1f, 1f, 1f), new Color(0.25f, 0.35f, 0.55f));
+
     // A shape with a shadow (down right), a darker edge around it, and a fill that is lighter at the top.
     static Color Icon(float x, float y, System.Func<float, float, bool> shape, Color bottom, Color top, Color edge)
     {
@@ -261,6 +392,70 @@ public static class IconArt
         return px * px + py * py <= r * r;
     }
     static bool InFlame(float x, float y) => Circle(x, y + 0.32f, 0.55f) || InPolygon(x, y, FlameTip);
+
+    static bool InWind(float x, float y)
+    {
+        bool lines = Segment(x, y, -0.78f, 0.42f, 0.3f, 0.42f, 0.1f) || Segment(x, y, -0.5f, 0f, 0.55f, 0f, 0.1f) ||
+                     Segment(x, y, -0.78f, -0.42f, 0.2f, -0.42f, 0.1f);
+        float d = Mathf.Sqrt((x - 0.55f) * (x - 0.55f) + (y - 0.22f) * (y - 0.22f));
+        return lines || (x >= 0.55f && Mathf.Abs(d - 0.22f) <= 0.1f);   // the curl: half a ring on the right
+    }
+
+    static bool InTarget(float x, float y)
+    {
+        float d = Mathf.Sqrt(x * x + y * y);
+        bool rings = Mathf.Abs(d - 0.6f) <= 0.09f || Circle(x, y, 0.16f);
+        bool ticks = (Mathf.Abs(x) <= 0.065f && Mathf.Abs(y) >= 0.38f && Mathf.Abs(y) <= 0.92f) ||
+                     (Mathf.Abs(y) <= 0.065f && Mathf.Abs(x) >= 0.38f && Mathf.Abs(x) <= 0.92f);
+        return rings || ticks;
+    }
+
+    static bool InSpring(float x, float y) =>
+        InPolygon(x, y, SpringHead) || Segment(x, y, 0f, 0.44f, 0f, 0.22f, 0.1f) ||
+        Segment(x, y, 0f, 0.22f, 0.36f, 0.08f, 0.085f) || Segment(x, y, 0.36f, 0.08f, -0.36f, -0.12f, 0.085f) ||
+        Segment(x, y, -0.36f, -0.12f, 0.36f, -0.32f, 0.085f) || Segment(x, y, 0.36f, -0.32f, -0.36f, -0.52f, 0.085f) ||
+        Segment(x, y, -0.36f, -0.52f, 0f, -0.66f, 0.085f) || Segment(x, y, 0f, -0.66f, 0f, -0.8f, 0.085f) ||
+        Segment(x, y, -0.42f, -0.82f, 0.42f, -0.82f, 0.09f);
+
+    static bool InPlus(float x, float y) =>
+        Segment(x, y, 0.58f, 0.32f, 0.58f, 0.86f, 0.1f) || Segment(x, y, 0.31f, 0.59f, 0.85f, 0.59f, 0.1f);
+
+    static bool InLogBody(float x, float y) => Segment(x, y, -0.62f, -0.08f, 0.3f, -0.08f, 0.36f);
+    static bool InLogEnd(float x, float y) => Circle(x - 0.36f, y + 0.08f, 0.36f);
+
+    static bool InSprint(float x, float y) =>
+        InPolygon(x - 0.18f, y, Boot) || Segment(x, y, -0.92f, 0.3f, -0.45f, 0.3f, 0.07f) ||
+        Segment(x, y, -0.95f, 0f, -0.42f, 0f, 0.07f) || Segment(x, y, -0.92f, -0.3f, -0.45f, -0.3f, 0.07f);
+
+    static bool InFistBack(float x, float y) =>
+        (Mathf.Abs(x) <= 0.54f && y >= -0.45f && y <= 0.3f) ||
+        Circle(x + 0.39f, y - 0.3f, 0.17f) || Circle(x + 0.13f, y - 0.36f, 0.17f) ||
+        Circle(x - 0.13f, y - 0.36f, 0.17f) || Circle(x - 0.39f, y - 0.3f, 0.17f) ||
+        (Mathf.Abs(x) <= 0.32f && y >= -0.88f && y <= -0.4f);
+    static bool InThumb(float x, float y) => Segment(x, y, -0.48f, -0.1f, 0.15f, -0.22f, 0.14f);
+
+    // A lens (two overlapping circles) along a line tilted 35 degrees, with a thin stem: a feather.
+    static bool InFeather(float x, float y)
+    {
+        const float S = 0.574f, C = 0.819f;    // sin and cos of 35 degrees
+        float along = S * x + C * y;            // along the feather (up right)
+        float across = C * x - S * y;           // across it
+        bool vane = Circle(across - 0.34f, along - 0.05f, 0.72f) && Circle(across + 0.34f, along - 0.05f, 0.72f);
+        return vane || Segment(across, along, 0f, -0.92f, 0f, 0.5f, 0.05f);
+    }
+
+    // A star with "points" tips: corners alternating "outer" and "inner" from the middle, the first tip straight up.
+    static Vector2[] StarPoints(int points, float outer, float inner)
+    {
+        Vector2[] corners = new Vector2[points * 2];
+        for (int i = 0; i < corners.Length; i++)
+        {
+            float angle = Mathf.PI * 0.5f + i * Mathf.PI / points;
+            float r = i % 2 == 0 ? outer : inner;
+            corners[i] = new Vector2(Mathf.Cos(angle) * r, Mathf.Sin(angle) * r);
+        }
+        return corners;
+    }
     static bool InFlameCore(float x, float y) => Circle(x, y + 0.42f, 0.3f) || InPolygon(x, y, FlameCoreTip);
 
     // One thick ">" pointing right, its middle at x = cx.

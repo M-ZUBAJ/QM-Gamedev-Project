@@ -27,7 +27,7 @@ Purpose: Makes the new world while its scene loads, before anything else in it s
          The same seed always makes the same world, trees and rocks included.
 Requirement: WorldGenerator.cs x-> Terrain (Unity), WorldBarrier.cs
              WorldGenerator.cs o-> ObjectScatter.cs, PlayerController.cs, PlayerRespawn.cs, ViewDistance.cs, Rigidbody (Unity)
-             WorldGenerator.cs <-x NewWorldBuilder.cs, WorldBarrierBuilder.cs
+             WorldGenerator.cs <-x LootChestBuilder.cs, NewWorldBuilder.cs, WorldBarrierBuilder.cs
 */
 
 using System.Collections.Generic;

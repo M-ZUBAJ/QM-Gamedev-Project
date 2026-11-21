@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38c816e89a084134abd3627d24efe837, type: 3}
+  m_Name: Perk_Precision
+  m_EditorClassIdentifier: 
+  displayName: Precision
+  description: +1.25% chance for a critical strike (double damage).
+  icon: {fileID: 21300000, guid: 48ebf0245db7a7b4ab83c9893eb968bd, type: 3}
+  perkType: 5
+  value: 0.0125
+  requires: {fileID: 11400000, guid: fabe439a19e30db4ea80b9fda1928eed, type: 2}
+  maxPicks: 0

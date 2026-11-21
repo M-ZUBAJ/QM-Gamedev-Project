@@ -197,6 +197,8 @@ In these tables, `health`, `stamina`, `daylight`, `player`… are the variables 
 | Armor in your crafting list | Tony's **Tools > Items > Build Plate Armor** (20/11/2026, log `Docs/TonyEditMate/Turki/20-11-2026 Plate Armor In The Crafting List.md`) added the 6 iron armor items (Iron Helmet ... Iron Boots, Iron recipes; first called Plate ..., renamed the same day, same files) to CraftingCanvas's Craftables, after the tools. An armor's Item Data has Item Type **Armor** (`item.IsArmor`, `item.Armor.slot / protection / set / look`). Guide: `Docs/Armor Setup.md` |
 | Gold and desert rocks (new) | Tony's **Tools > World > Build Desert Content** (20/11/2026, guide `Docs/Desert Setup.md`) made a **Gold** item (`Assets/Config/Items/Gold`, a copy of your Iron item: Item Type Material, Mined With = Iron) with a gold cube prefab (copy of your Iron prefab), and two **Prefab Variants** of your rocks in `ResourceNodes/Rocks`: **GoldNode** (of IronNode: drops 2 - 4 Gold, 40 health, gold colored) and **SandstoneNode** (of StoneNode: drops 4 - 6 Stone, 75 health = harder to break, sandstone colored). Your IronNode / StoneNode and ResourceNode script aren't changed. Gold spawns in the new world's desert caves; a recipe can use it like any item |
 | Copper and Iron armor and set boxes (changed) | Tony's two armor sets (20/11/2026, log `Docs/TonyEditMate/Turki/20-11-2026 Reinforced Iron Armor And Set Panels.md`, see its Copper-first update): **Copper** Helmet ... Boots (`Assets/Config/Items/Armor/Copper...`) crafted from Copper (5 / 4 / 8 / 3 / 7 / 4), copper colored, 10 % for all six, stamina 50 % faster; **Iron** Helmet ... Boots (`.../Iron...`), each = its Copper piece + Iron (4 / 3 / 6 / 2 / 5 / 3), steel grey, 16 % for all six, stamina 100 % faster (iron is the higher tier; until later on 20/11/2026 Iron came first and "Reinforced Iron" was the upgrade). Your `Craft()` got 5 `[Tony] added` lines so a WORN Copper piece can be upgraded (Tony's `PlayerArmor.LendForUpgrade / FinishUpgrade`). Each armor set's rows now sit in one box in the set's color with its name, protection and bonus (Tony's `CraftingSetPanels` on your Panel + a switched-off `Scroll > SetPanel` in your prefab). Your `CopperArmor` item (a Material placeholder, not in the list) is untouched |
+| Lumberjack / Prospector perks (changed) | Tony's 2 `[Tony] added` lines in your `ResourceNode.Break()` (21/11/2026, log `Docs/TonyEditMate/Turki/21-11-2026 Lumberjack And Prospector Perks.md`): +1 wood per tree / +1 stone or ore per rock for each of those rare-box perks (`PerkEffects.ExtraDrop`), through your own `Give`. Nothing changes without the perks |
+| Food that does more | Tony's **Gourmet** perk makes good food 10 % stronger (Tony's ItemConsumer); your Consumable numbers stay as they are |
 | Your rocks are low-poly rocks now | Tony's **Tools > World > Use Low Poly Rocks** (20/11/2026, log `Docs/TonyEditMate/Turki/20-11-2026 Low Poly Rocks That Break.md`) rebuilt your StoneNode, CopperNode and IronNode prefabs: a random rock shape from Broken Vector's free Low Poly Rock Pack (Tony's RockLook), a Mesh Collider in that shape instead of the box, grey / copper / blue-grey stone, standing on the ground (StandOnGround). When your ResourceNode breaks one, Tony's RockBreak bursts it into chunks of the same stone, gravel and dust. Your script and its values (health, drops) are unchanged. Guide: `Docs/Rock Setup.md` |
 | Your trees fall now | Tony's **Tools > Effects > Build Tree Fall** (19/11/2026, log `Docs/TonyEditMate/Turki/19-11-2026 Trees Fall Into Wood Chips.md`) put Tony's **TreeFall** on your TreeNode prefab: when your `ResourceNode` breaks a tree (`currentHealth` 0, `Destroy`), a look-only copy falls over away from the player and breaks into brown wood chips (the copy's open trunk bottom is closed with cut wood, so nobody sees through it). Your script and the drops are unchanged; berry bushes are skipped. Guide: `Docs/Tree Fall Setup.md` |
 | An upgraded tool keeps its slot | Your `CraftingMenu.Craft` has two `[Tony]` lines (19/11/2026, log `Docs/TonyEditMate/Turki/19-11-2026 Upgraded Tool Keeps Its Slot.md`): an upgrade (Wooden Axe -> Stone Axe) goes into the slot the old tool was in (`PlayerInventory.SlotOf` + `AddInto`), not the first free slot. Anything that isn't an upgrade is added exactly as before |
@@ -265,6 +267,10 @@ The inventory's **Crafting** tab (`InventoryCanvas > InventoryWindow > Pages > C
 | Animals that run away | Already done: the sheep are deer now (ithappy's **Animals FREE** pack, `Assets/Prefabs/ResourceNodes/DeerNode`). Tony's `WildAnimal` makes them graze, wander, and run from the player when the player comes within 12 m or hits them. Your `PlayerCombat` damages them as `ResourceType.Animal`, like the sheep. More animals: select e.g. `Imported3D/ithappy/Animals_FREE/Prefabs/Horse_001`, then **Tools > World > Build Wild Animal**. Guide: `Docs/Animal Setup.md` |
 | A sight perk or buff | `PlayerSight.Current.AddRange(20f);` (a perk: until the player dies) or `PlayerSight.Current.AddRange(40f, 30f);` (a buff: 30 seconds). Deer then spawn farther out by themselves (Tony's `AnimalSpawner` reads the range live). `PlayerSight.Current.Range` = the range now. In a scene with a `ViewDistance` on the camera (the new world: 100 m, then mist), its Distance replaces the Sight Range (the player sees exactly that far); the perk still adds on top |
 | Your chest (changed) | Tony's **Tools > World > Set Up Chests** (19/11/2026, log `Docs/TonyEditMate/Marko/19-11-2026 Chest On The Floor And Yellow Outline.md`): the Chest prefab got Tony's **StandOnGround** (it now sits on the floor; it floated because the new model sits lower than the old box) and **InteractOutline** (a yellow outline while you can open it with E). Your PerkChest got `[Tony]` lines: `IsOpened` (read only) and the E ray now uses `InteractOutline.LooksAt(ray, interactionRange, transform)`, which skips the player's own ball (in first person the camera sits on its edge, so the old ray often hit the player and E did nothing). Guide: `Docs/Interact Outline Setup.md` |
+| Loot boxes and new perks (changed) | Tony's `[Tony]` lines (21/11/2026, log `Docs/TonyEditMate/Marko/21-11-2026 Loot Boxes And New Perks.md`, guide `Docs/Loot Chests Setup.md`): your chest is the **common box** (Tony's **ChestTier**: 2 coins, +1 for every perk bought), next to a **rare box** (10, x1.5) and an **epic box** (100, x2, REROLL) made of DuNguyn's loot boxes with your PerkChest. Your `ChestPerkType` got 11 new kinds at its end, your Perk Data **Requires** / **Max Picks**; your PerkManager hands the new kinds to Tony's **PerkEffects**; your PerkChest shows 1 to 3 perks and only ones the player may get; your PerkSelectionUI hides unused cards and can `Refresh`. Your four perks work as before |
+| Critical hits and knockback in your combat | `[Tony]` lines in your `PlayerCombat.Attack()`: `PerkEffects.RollCritical()` (the epic Critical Strike perk: x2 damage, a red burst). Punches push monsters back now (Tony's PunchEffect + `Knockback`; your `EnemyMovement` waits while `Knockback.IsPushed(body)`). Push something yourself: `Knockback.Push(enemy, velocity, 0.25f);` |
+| Extra coins per kill | Your `EnemyCombat.Die()` calls Tony's `MonsterBounty.Killed()` after your coins: the armor set bonus (copper +1, iron +2) and the Bounty Hunter perk |
+| A new perk | Same kind, other numbers: right click > **Create > Game > Perk Data**, then drag it into a chest's **Available Perks**. A new kind: see "A new perk" in `Docs/Loot Chests Setup.md` |
 
 **Example: drop meat when an animal dies**
 
@@ -300,6 +306,7 @@ void DropMeat(int amount)
 | Scenes / build order | The game starts at **MainTitleScene** (scene 0 in File > Build Settings), START GAME loads **GameScene** (NEW GAME > Map: Old world) or **ProceduralGenerateScene** (Map: New world). Rebuild the title with **Tools > UI > Build Main Title Scene** (`Docs/Main Title Setup.md`) |
 | The new world (random every game) | Tony's **WorldGenerator** (20/11/2026) makes a new 1000 x 1000 m world in `ProceduralGenerateScene` every game: grassland start with rock caves (stone, copper, iron), desert, rocky hills, a glowing barrier at the edge (no edge mountains; bare land past it), and a 100 m view distance (`ViewDistance` on the Main Camera: mist, nothing further drawn, for the web build's frame rate). Your **ObjectScatter** fills it in (the World Generator gives it the new terrain before its Start; your rules are copied from GameScene, minus Desert Rocks, plus `Hill Rocks` and `Sandstone Rocks` (the desert's hard rock) rules in that scene only). The desert also gets sandstone caves with gold and turtle day monsters (`Docs/Desert Setup.md`). **Tools > World > Build New World Scene** makes the scene from GameScene again, so change things in GameScene. Ask `WorldGenerator.Current` (null in the old world) for `BiomeAt(position)` (Grassland / Desert / Hills), `SpawnPoint`, `Seed`, `Terrain`. Guide: `Docs/New World Setup.md` |
 | The edge of the world (barrier) | Tony's `WorldBarrier` (20/11/2026): a see-through, glowing force field at the edge that players see and can't pass (guide `Docs/World Barrier Setup.md`). The new world makes its own; your GameScene gets one from **Tools > World > Add World Barrier** (on the inner faces of your `Boundaries` walls, which are left as they are; three of them are triggers and stopped nothing). Your **ObjectScatter** got one `[Tony] added` line: it skips spots outside the barrier, so no chest lands where nobody can reach it (log `Docs/TonyEditMate/Sanyam/20-11-2026 Nothing Spawns Outside The Barrier.md`). In your own spawning: `if (!WorldBarrier.Inside(spot, 2f)) continue;` |
+| Your chest spawn rules (changed) | Tony's **Tools > World > Build Loot Chests** (21/11/2026, log `Docs/TonyEditMate/Sanyam/21-11-2026 Loot Box Spawn Rules.md`, your script untouched): **ChestsDesert** used the grass layer (every chest spawned on grass): it's on the sand layer now, with 15 boxes; new rules **Rare Chests Grass** (3), **Rare Chests Desert** (6), **Epic Chests Desert** (2) right after your chest rules; all chest rules in Spacing Group "Chests" |
 | Change scene with a fade | `ScreenFader.LoadScene("GameScene", "DAY 1", "Survive 5 nights");` (fades to black, title card, loads, fades in) |
 
 Guides: `Docs/Build Menu Setup.md`, `Docs/Item Setup.md`, `Docs/Inventory Setup.md`.
@@ -347,6 +354,7 @@ Get it: `stamina = FindFirstObjectByType<PlayerStamina>();`
 | `void Use(float amount)` | spend stamina (attack, dodge…); hitting 0 makes the player tired |
 | `void Restore(float amount)` | give stamina back at once |
 | `bool CanSprint`, `bool CanJump` | used by movement |
+| `void SetSprintCost(float times)` | sprinting uses this many times the normal stamina (0.75 = a quarter less; the Sprinter perk). 1 = normal |
 | `void SetRegenBoost(Object from, float times)` | make it refill faster while you want (e.g. a perk or a potion): `stamina.SetRegenBoost(this, 1.5f)` = 50 % faster, `SetRegenBoost(this, 1f)` = back to normal. One boost per script (calling again replaces it); several multiply. The iron armor set's bonus uses it. |
 | `float RegenBoost`, `float RegenPerSecond` | how much faster it refills now (1 = normal), and the refill per second with that |
 
@@ -363,8 +371,11 @@ Get them: `controller = FindFirstObjectByType<PlayerController>();`, `jump = Fin
 | `bool IsWedged` | PlayerController: held up between too-steep slopes (slid into a narrow V between two hills, a pit). Counts as standing, so the player can walk along the V and jump instead of being stuck in the falling pose |
 | `float MaxSlopeAngle` | PlayerController: the steepest slope the player can walk up (default 45 degrees); steeper = a wall |
 | `event Action Jumped` | PlayerJump: fired on every jump |
-| `float Speed`, `float StartSpeed`, `float SprintMultiplier` | PlayerController: walking speed now / before any perk (m/s); sprinting = Speed x SprintMultiplier |
-| `float JumpHeight` | PlayerJump: how high a jump goes, in meters |
+| `float Speed`, `float StartSpeed`, `float SprintMultiplier` | PlayerController: walking speed now / before any perk (m/s); sprinting = Speed x SprintMultiplier (perks included; `BaseSprintMultiplier` = without) |
+| `void SetSprintBoost(float times)` | PlayerController: sprinting goes this many times as fast (the Sprinter perk); 1 = normal |
+| `float JumpHeight`, `float BaseJumpHeight` | PlayerJump: how high a jump goes, in meters (perks included / without) |
+| `void SetJumpBoost(float times)`, `void ForgetPress()` | PlayerJump: jumps go this many times as high (the Spring Legs perk); forget a jump press that hasn't jumped yet (Glide's dive) |
+| `PlayerGlide` | on the Player, switched on by the epic Glide perk: hold Space while falling = float down, Space twice in the air = dive. `IsGliding`, `IsDiving` |
 
 ### PlayerAnimator (on the Player's child "Character"): the animated body
 
@@ -405,9 +416,10 @@ and `Play` are static.
 | Member | What it is |
 |---|---|
 | `static void Punch(Component target, RaycastHit hit, Action hurt)` | a punch that lands after the Impact Delay: then `hurt` runs (e.g. `() => enemy.TakeDamage(10)`) and the burst pops on the spot of `target` that was hit, even if it moved. Not run if the target is gone by then. Without a PunchEffect, `hurt` runs at once. PlayerCombat uses it for bare-handed hits |
-| `static void Hit(Component target, RaycastHit hit, Action hurt, PlayerAction swing)` | the same for any swing, with its own delay: Punch = Impact Delay, Attack = Swing Delay, Mine = Mine Delay; every hit bursts wind (tools: Tool Burst Size). PlayerCombat uses it for every hit |
+| `static void Hit(Component target, RaycastHit hit, Action hurt, PlayerAction swing, bool critical = false)` | the same for any swing, with its own delay: Punch = Impact Delay, Attack = Swing Delay, Mine = Mine Delay; every hit bursts wind (tools: Tool Burst Size). PlayerCombat uses it for every hit |
 | `static void Play(Vector3 point, Vector3 normal)` | a burst at `point`, flying out of the surface (`normal` = `RaycastHit.normal`), e.g. `PunchEffect.Play(hit.point, hit.normal);`. Does nothing if the Player has no PunchEffect or it's switched off |
 | `static PunchEffect Current` | the one on the Player (null if none) |
+| Knockback, Heavy Knockback, Knockback Seconds, Critical Color | a punch that lands on a monster pushes it away (the Brawler perk farther); a critical hit (`critical = true`) bursts in Critical Color (red) |
 
 Built by **Tools > Effects > Build Punch Wind Burst** (prefab `Assets/Prefabs/Effects/PunchWindBurst.prefab`). Guide:
 `Docs/Punch Effect Setup.md`.
@@ -437,14 +449,16 @@ script has a "start" value (like `StartMaxHealth`).
 
 ### ChestPrompt (in the HUD, under the crosshair)
 
-While the crosshair is on a perk chest within its reach, it shows `E  Open chest  (coin) 2`: the chest's key, what it
-does and its price (red while the player can't pay). Nothing to call: it reads `PerkChest.OpeningCost`,
-`InteractionRange` and `InteractKey` by itself. Made by **Tools > UI > Build HUD**.
+While the crosshair is on a perk chest within its reach, it shows `E  Open common box  (coin) 2`: the chest's key,
+what it does (a loot box says its name: ChestTier's Box Name) and its price (red while the player can't pay). Nothing to
+call: it reads `PerkChest.OpeningCost`, `Tier`, `InteractionRange` and `InteractKey` by itself. Made by **Tools > UI > Build HUD**.
 
 ### PerkPanelInfo (on the perk panel, next to Marko's PerkSelectionUI)
 
-Writes the open chest's price (`PerkChest.Showing.OpeningCost`) and the player's coins on the panel, fades out the
-CHOOSE buttons ("NEED 2 COINS") while the player can't pay, and pops the window in. Nothing to call. Made by
+Writes the open chest's price (`PerkChest.Showing.OpeningCost`) and the player's coins on the panel, the box's name
+as the title in its color (RARE BOX), fades out the CHOOSE buttons ("NEED 2 COINS") while the player can't pay, shows
+and prices the REROLL button at a box that can reroll (the epic box: `PerkChest.TryReroll`), and pops the window in.
+Nothing to call. Made by
 **Tools > UI > Build Perk Panel** (guide `Docs/Perk Panel Setup.md`).
 
 ### HeldItemView (on the Player): the selected item in the hand
@@ -523,13 +537,14 @@ Get it: `PlayerArmor.Current` (it adds itself to the Player if the Player has no
 | `ItemData WornIn(ArmorSlot slot)` | what's worn in a slot (null = nothing) |
 | `float ProtectionPercent`, `float Protection` | every worn piece's Protection added up, in percent (the full copper set: 10, iron: 16); how much of a hit it takes off (0.1 = 10 %, at most 0.8) |
 | `string MostWornSet(out int count)`, `string FullSet`, `int SetSize` | the set most worn pieces count toward and how many ("Copper", 4: Iron pieces count as Copper); the set every slot counts toward or null (all six Iron = "Iron"); 6 |
-| `SetBonus ActiveBonus`, `SetBonus BonusFor(string set)` | the set bonus given now (null = none) / a set's bonus: `.set`, `.staminaRegen` (1.5 = stamina 50 % faster, Iron 2), `.countsAs` (Iron: "Copper"), `.color` (its box in the crafting list), `.Describe()` ("stamina recharges 50% faster"), `.Short()` ("+50% stamina recharge") |
+| `SetBonus ActiveBonus`, `SetBonus BonusFor(string set)` | the set bonus given now (null = none) / a set's bonus: `.set`, `.coinsPerKill` (copper 1, iron 2; was a stamina bonus until 21/11/2026), `.countsAs` (Iron: "Copper"), `.color` (its box in the crafting list), `.Describe()` ("+1 coin for every monster killed"), `.Short()` ("+1 coin per kill") |
+| `int CoinsPerKill` | extra coins for every monster killed right now (the active set bonus; Tony's MonsterBounty gives them) |
 | `int PiecesFor(string set)`, `int WornOf(string set)`, `bool CountsToward(string own, string target)` | worn pieces counting toward a set (with the sets that count as it) / of exactly that set / does a piece of set "own" count toward "target" |
 | `string BetterSetInProgress(out int count)` | a better set than the full one, partly worn ("Iron", 3), or null |
 | `bool IsWorn(string id)` | is a piece with this Item Id worn |
 | `bool LendForUpgrade(ItemData upgrade)`, `void FinishUpgrade(ItemData made, bool crafted)` | crafting an upgrade of a worn piece: take it off for the recipe (Turki's CraftingMenu calls it), then wear the new piece (or the old one again) |
 | `static List<SetBonus> DefaultBonuses()`, `CopperColor`, `IronColor`, `GoldColor` | the sets the armor tool makes, weakest first: Copper, then Iron (a list saved without one gets it added when the game starts; `ReinforcedColor` is now `CopperColor`) |
-| `bool UpdateOldBonuses()` | puts a Set Bonuses list from before the swap (Iron first, Reinforced Iron) right; Awake and the armor tool call it |
+| `bool UpdateOldBonuses()` | replaces a Set Bonuses list saved before 21/11/2026 (stamina bonuses, Iron first) with today's; Awake and the armor / loot chest tools call it |
 | `float Reduce(float damage)` | a hit after the armor's share (PlayerHealth.TakeDamage uses it) |
 | `bool Equip(ItemData item)`, `bool TakeOff(ArmorSlot slot)` | put a piece on from the inventory / back into it (false = can't, e.g. no room) |
 | `bool EquipFromCursor(ArmorSlot slot)` | put on the piece held on the cursor; the old piece goes onto the cursor |
@@ -657,12 +672,27 @@ Remembers which perks the player has, for the HUD's perk row (PerkBar: name + st
 
 | Member | What it is |
 |---|---|
-| `static void Record(PerkType type)` | call it after giving a perk (Marko's PerkChest already does, `[Tony]` lines). Same perk twice = "x2" |
-| `enum PerkType` | MaxHealth, MaxStamina, MoveSpeed, Fireball. **New perk:** add a line here + a case in `NameOf` and `PerkStats`, and its picture in the Player's PlayerPerks **Icons** |
-| `Sprite IconOf(PerkType type)`, `static string NameOf(PerkType type)` | the perk's picture (from **Icons**, filled by Tools > UI > Build HUD; null if none) and its name ("Max Health"). The HUD's perk icons and the inventory's Info tab use them |
+| `static void Record(PerkData perk)` | call it after giving a perk (Marko's PerkManager already does, a `[Tony]` line): remembers its kind for the HUD (same kind twice = "x2") and the Perk Data itself. `Record(ChestPerkType type)` for a kind only |
+| `static int TimesPicked(PerkData perk)` | how often this Perk Data was picked in this life (the chests' Requires / Max Picks: Tony's PerkRules) |
+| kinds = Marko's `ChestPerkType` | since 21/11/2026 (Tony's own `PerkType` is gone): MaxHealth, MaxStamina, MoveSpeed, Fireball and the loot boxes' 11 (SecondWind ... Glide). **New kind:** see "A new perk" in `Docs/Loot Chests Setup.md` |
+| `Sprite IconOf(ChestPerkType type)`, `static string NameOf(ChestPerkType type)` | the kind's picture (from **Icons**, filled by Tools > UI > Build HUD, else the Perk Data's icon) and its name ("Max Health"). The HUD's perk icons and the inventory's Info tab use them |
 | `IReadOnlyList<OwnedPerk> Owned`, `event Action Changed` | the perks in the order gained; fired when one is added |
 | `static PlayerPerks Current` | the one in the scene (null if the player has none) |
-| `void ResetPerks()` | loses every perk and undoes the boosts (`ResetMaxHealth`, `ResetMaxStamina`, `ResetMoveSpeed`, `PlayerFireball.ResetFireballPerk`). Runs by itself when the player dies (**Reset On Death**, on). **New perk:** also add its undo here |
+| `void ResetPerks()` | loses every perk and undoes the boosts (`ResetMaxHealth`, `ResetMaxStamina`, `ResetMoveSpeed`, `PlayerFireball.ResetFireballPerk`, `PerkEffects.ResetEffects`) and starts the loot boxes' prices again (`ChestTier.ResetPrices`). Runs by itself when the player dies (**Reset On Death**, on) |
+
+### Loot boxes: ChestTier, PerkRules, PerkEffects (Tony's, 21/11/2026)
+
+Guide `Docs/Loot Chests Setup.md` (built by **Tools > World > Build Loot Chests**).
+
+| Member | What it is |
+|---|---|
+| `ChestTier` (on a box prefab) | `Tier` (Common / Rare / Epic), `BoxName`, `Color`, `Price` (now), `CanReroll`, `RerollPrice`; `static int BoughtOf(LootTier)`, `static void ResetPrices()` |
+| `PerkChest` (Marko's, `[Tony]` getters) | `OpeningCost` (ChestTier's price when it has one), `Tier`, `RerollAllowed`, `RerollCost`, `RerollWouldChange`, `bool TryReroll()` |
+| `PerkRules` (static) | `bool CanOffer(PerkData)` (Requires picked, under Max Picks), `List<PerkData> Pick(pool, count, shown)` |
+| `PerkEffects` (on the Player; `PerkEffects.Current` adds itself) | `static void Apply(PerkData)` (Marko's PerkManager calls it for the new kinds), and the questions: `RollCritical()`, `CriticalChance`, `CriticalMultiplier`, `FoodMultiplier`, `KnockbackMultiplier`, `BountyCoins`, `StaminaRegenBonus`, `ExtraDrop(type, pickedByKey)`, `TryLastStand(out seconds)`; `Describe(kind)`; ⋮ > Test: Every New Perk Once |
+| `MonsterBounty` (static) | `int Killed()`: the extra coins for a kill (armor set + Bounty Hunter); Marko's EnemyCombat calls it |
+| `Knockback` (static + a small component) | `Push(target, velocity, seconds)`, `bool IsPushed(Rigidbody)` |
+| `PlayerHealth.IsShielded` | true for a moment after Last Stand saved the player (hits do nothing then) |
 
 See `Docs/TonyEditMate/21-10-2026Edit.md`.
 

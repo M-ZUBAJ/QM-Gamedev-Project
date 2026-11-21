@@ -1481,7 +1481,21 @@ MonoBehaviour:
     minStrength: 0.6
     maxSlope: 10
     minSpacing: 20
-    spacingGroup: 
+    spacingGroup: Chests
+    clearance: 3
+    patchSize: 0
+    openGround: 0.35
+    minSize: 1
+    maxSize: 1
+  - name: Rare Chests Grass
+    prefab: {fileID: 5508622133717038746, guid: 046bd5d07fbdfdb488db4fca94657675, type: 3}
+    count: 3
+    yOffset: 0.6
+    terrainLayer: 0
+    minStrength: 0.6
+    maxSlope: 10
+    minSpacing: 20
+    spacingGroup: Chests
     clearance: 3
     patchSize: 0
     openGround: 0.35
@@ -1489,13 +1503,41 @@ MonoBehaviour:
     maxSize: 1
   - name: ChestsDesert
     prefab: {fileID: 8644458751390724045, guid: caebce93f6b77cd43aed49b2216edb87, type: 3}
-    count: 10
+    count: 15
     yOffset: 0.6
-    terrainLayer: 0
+    terrainLayer: 1
     minStrength: 0.6
     maxSlope: 15
     minSpacing: 20
-    spacingGroup: 
+    spacingGroup: Chests
+    clearance: 3
+    patchSize: 0
+    openGround: 0.35
+    minSize: 1
+    maxSize: 1
+  - name: Rare Chests Desert
+    prefab: {fileID: 5508622133717038746, guid: 046bd5d07fbdfdb488db4fca94657675, type: 3}
+    count: 6
+    yOffset: 0.6
+    terrainLayer: 1
+    minStrength: 0.6
+    maxSlope: 15
+    minSpacing: 20
+    spacingGroup: Chests
+    clearance: 3
+    patchSize: 0
+    openGround: 0.35
+    minSize: 1
+    maxSize: 1
+  - name: Epic Chests Desert
+    prefab: {fileID: 778164086490228726, guid: 5f095398cd0813e4fab04a6c5015b22c, type: 3}
+    count: 2
+    yOffset: 0.6
+    terrainLayer: 1
+    minStrength: 0.6
+    maxSlope: 15
+    minSpacing: 20
+    spacingGroup: Chests
     clearance: 3
     patchSize: 0
     openGround: 0.35
@@ -3990,6 +4032,8 @@ GameObject:
   - component: {fileID: 1576947617}
   - component: {fileID: 1576947618}
   - component: {fileID: 1576947620}
+  - component: {fileID: 1576947622}
+  - component: {fileID: 1576947621}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -4521,6 +4565,11 @@ MonoBehaviour:
   toolBurstSize: 1
   swingDelay: 0.45833322
   mineDelay: 0.45833322
+  knockback: 3
+  heavyKnockback: 6
+  knockbackSeconds: 0.25
+  knockbackLift: 0.15
+  criticalColor: {r: 1, g: 0.15, b: 0.1, a: 1}
 --- !u!114 &1576947615
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4637,10 +4686,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxProtection: 80
   setBonuses:
-  - set: Iron
-    staminaRegen: 1.5
+  - set: Copper
+    coinsPerKill: 1
     countsAs: 
+    color: {r: 0.85, g: 0.5, b: 0.27, a: 1}
+  - set: Iron
+    coinsPerKill: 2
+    countsAs: Copper
     color: {r: 0.56, g: 0.6, b: 0.67, a: 1}
+  bonusVersion: 2
   worn:
   - {fileID: 0}
   - {fileID: 0}
@@ -4648,6 +4702,39 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+--- !u!114 &1576947621
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1576947584}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22f0e2be42ac4ce408a374434d84a91a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  glideFallSpeed: 2
+  diveSpeed: 22
+  doubleTapSeconds: 0.3
+  ignoreAfterTakeOff: 0.1
+--- !u!114 &1576947622
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1576947584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e341a07966ac2be4e9cd73eceee03caa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  criticalMultiplier: 2
+  sprintStaminaSaving: 0.25
+  defaultShieldSeconds: 2
+  flashColor: {r: 1, g: 0.8, b: 0.25, a: 0.55}
+  flashSeconds: 0.9
 --- !u!4 &1609570296 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1601464460967339328, guid: 62da010430b404922bc87adb93c05aa4, type: 3}

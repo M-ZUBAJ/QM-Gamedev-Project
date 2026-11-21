@@ -1,10 +1,15 @@
 # Perk Panel Setup (the chest's "CHOOSE YOUR REWARD" panel)
 
 **What the player sees:**
-- **Looking at a chest** from close by (where E works): a yellow outline, and under the crosshair
-  **[E] Open chest (coin) 2**. The price is red while you have fewer coins than that.
-- **E:** the panel opens. Three perk cards (icon, name, what it does), each with a **CHOOSE** button; at the top the
-  chest's price and your coins. Looking is free.
+- **Looking at a chest** from close by (where E works): an outline (yellow common box, blue rare box, purple epic
+  box), and under the crosshair **[E] Open common box (coin) 2**. The price is red while you have fewer coins than that.
+- **E:** the panel opens. The box's name as the title, in its color (COMMON BOX, RARE BOX, EPIC BOX); up to three perk
+  cards (icon, name, what it does), each with a **CHOOSE** button; at the top the price and your coins. Looking is free.
+  A box with fewer perks left for you (some can be picked only once, or only after another one) shows 1 or 2 cards.
+- **REROLL** (bottom right, only at an epic box): new perks for coins, a tenth of the box's price, then twice as much
+  each time at that same box. It says NOTHING NEW TO ROLL when the box has no other perk for you.
+- **Prices** (loot boxes: `Docs/Loot Chests Setup.md`): every box of a kind costs the same, and each perk bought from
+  that kind makes the next one dearer (common 2, 3, 4...; rare 10, 15, 23...; epic 100, 200, 400...).
 - **CHOOSE:** now the coins are paid, the perk is given and shows in the HUD's perk row (top middle), and the chest
   disappears.
 - **Not enough coins:** the CHOOSE buttons are faded, say **NEED 2 COINS** and can't be clicked. A red line says how
@@ -29,26 +34,35 @@
 3. Menu **Tools > UI > Build HUD**, for the prompt under the crosshair and the new coin counter (`Docs/HUD Setup.md`).
 4. Save the scene (**Ctrl + S**).
 
+A panel built before the loot boxes (21/11/2026) gets the REROLL button, the box's name as the title and the
+fixed-width cards from **Tools > World > Build Loot Chests** (`PerkPanelBuilder.UpdatePrefab`, in the prefab itself,
+so every scene's copy follows); a new build has them already.
+
 ```
 PerkSelectCanvas              Marko's PerkSelectionUI + Tony's PerkPanelInfo (Sort Order 20)
   PerkSelectionPanel          the dark backdrop (Marko's script switches it on and off)
     Window
-      Title                   CHOOSE YOUR REWARD
-      Line
+      Title                   CHOOSE YOUR REWARD (a loot box: its name, in its color)
+      Line                    (the box's color)
       PriceRow                Price (coin) 2 coins      You have (coin) 20
-      Cards > PerkOption1..3  Glow, Icon, PerkName, PerkDescription, ChooseButton > Label (ButtonFX)
+      Cards > PerkOption1..3  Glow, Icon, PerkName, PerkDescription, ChooseButton > Label (ButtonFX); 370 wide each,
+                              centered, so 1 or 2 cards keep their size
       NeedText                red, only while you can't pay
       Hint                    E: close, or walk away
+      RerollButton > Label    bottom right, only at a box that can reroll (ButtonFX)
 ```
 
 ## How it works
 
-- Marko's **PerkChest** (on each chest): E opens and closes the panel, walking away closes it, the 3 perks are rolled
-  the first time and kept, and the coins are taken when a perk is picked (Tony's `[Tony]` lines; log
-  `Docs/TonyEditMate/Marko/19-11-2026 Perk Panel, E Toggle And Pay On Pick.md`).
-- Marko's **PerkSelectionUI** (unchanged) fills the cards and calls the chest back when a CHOOSE button is clicked.
-- Tony's **PerkPanelInfo** writes the price and your coins, fades out the CHOOSE buttons while you can't pay, and
-  makes the window pop in.
+- Marko's **PerkChest** (on each chest): E opens and closes the panel, walking away closes it, the perks are rolled
+  the first time and kept (rolled again if one can't be offered any more), only perks Tony's **PerkRules** allows, the
+  coins are taken when a perk is picked, the price comes from Tony's **ChestTier** when the chest has one, and
+  `TryReroll` (Tony's `[Tony]` lines; logs `Docs/TonyEditMate/Marko/19-11-2026 Perk Panel, E Toggle And Pay On Pick.md`
+  and `.../21-11-2026 Loot Boxes And New Perks.md`).
+- Marko's **PerkSelectionUI** fills the cards (1 to 3: the others hide) and calls the chest back when a CHOOSE button
+  is clicked; `Refresh` fills them again for a reroll ([Tony] lines).
+- Tony's **PerkPanelInfo** writes the box's name, the price and your coins, fades out the CHOOSE buttons while you
+  can't pay, shows and prices the REROLL button, and makes the window pop in.
 - Marko's **PerkManager** gives the perk; a `[Tony]` line also puts it in the HUD's perk row (**PlayerPerks**).
 - Tony's **ChestPrompt** (in the HUD) shows the key and the price while you look at a chest.
 
@@ -66,8 +80,14 @@ PerkSelectCanvas              Marko's PerkSelectionUI + Tony's PerkPanelInfo (So
    - **NeedText** (red, switched off) and **Hint**.
 4. On PerkSelectCanvas, Add Component > **PerkSelectionUI** (Marko's): Selection Panel = PerkSelectionPanel; Perk
    Buttons = the three ChooseButtons; Perk Icons, Perk Names, Perk Descriptions = the three of each.
-5. Add Component > **PerkPanelInfo**: Price Text, Coins Text, Need Text, Hint Text, Choose Buttons (the three
-   ChooseButtons), Choose Labels (their Labels), Window.
+5. Add Component > **PerkPanelInfo**: Price Text, Coins Text, Need Text, Hint Text, Title Text (Title), Title Line
+   (Line), Reroll Button and Reroll Label (see below), Choose Buttons (the three ChooseButtons), Choose Labels (their
+   Labels), Window.
+   - **RerollButton**: in the Window, an Image + Button + ButtonFX, 290 x 56 at the bottom right (anchor bottom right,
+     position -175, 62), with a TextMeshPro child **Label**; switch it off (PerkPanelInfo shows it at an epic box).
+   - **Cards**: Horizontal Layout Group with Child Alignment **Middle Center**, Control Child Size on, **Child Force
+     Expand Width off** (Height on), Spacing 30; on each PerkOption a **Layout Element** with Preferred Width **370**,
+     so 1 or 2 cards keep their width.
 6. Delete the old PerkSelectCanvas (only one may exist). For icons, drag a picture into each Perk Data's **Icon**
    (`Assets/Config/Perks`).
 
@@ -75,10 +95,11 @@ PerkSelectCanvas              Marko's PerkSelectionUI + Tony's PerkPanelInfo (So
 
 | On | Setting | What it does |
 |---|---|---|
-| PerkChest (each chest) | **Min / Max Cost** | its price, random between the two (rolled when the game starts) |
+| PerkChest (each chest) | **Min / Max Cost** | its price, random between the two, only for a chest without ChestTier |
 | | **Interaction Range** (3) | how close E works; the panel closes 0.5 m farther away |
 | | **Interact Key** (E) | opens and closes the panel (the prompt and the hint show this key) |
-| | **Available Perks** | the perks it can roll (at least 3) |
+| | **Available Perks** | the perks it can roll (at least 1; it shows up to 3) |
+| ChestTier (a loot box) | **Tier**, **Box Name**, **Color**, **Start Price**, **Growth** / **Grows By**, **Can Reroll** | see `Docs/Loot Chests Setup.md` |
 | PerkPanelInfo | **Choose Text** | the CHOOSE buttons' text |
 | | **Can Pay / Can't Pay Color** | the price's color |
 | | **Pop Seconds** | how long the window's pop-in takes (0 = no pop) |
@@ -94,6 +115,8 @@ PerkSelectCanvas              Marko's PerkSelectionUI + Tony's PerkPanelInfo (So
 5. Click **CHOOSE**: the coins go down (the coin counter pops), the perk shows in the HUD's perk row, the chest is gone.
 6. With fewer coins than the price: the CHOOSE buttons are faded and say what's needed.
 7. With the panel open, select GameEndCanvas > VictoryScreen > **⋮** > **Test: Win**: the panel closes.
+8. At an epic box (the desert): the title is purple EPIC BOX and **REROLL 10 COINS** shows at the bottom right. With only
+   the 3 epic perks there's nothing else to roll yet: it says NOTHING NEW TO ROLL (add more epic perks to use it).
 
 ## Problems
 
@@ -104,3 +127,5 @@ PerkSelectCanvas              Marko's PerkSelectionUI + Tony's PerkPanelInfo (So
 | E does nothing at a chest | Look straight at it from closer than Interaction Range. In third person the camera is too far back. An open menu (inventory, building) blocks it too. |
 | A picked perk doesn't show in the HUD's perk row | The Player needs **PlayerPerks** (Tools > UI > Build HUD adds it). |
 | No prompt under the crosshair | Run **Tools > UI > Build HUD** (it adds HUDCanvas > ChestPrompt). |
+| No REROLL button, or the title stays CHOOSE YOUR REWARD at a loot box | The panel was built before the loot boxes: run **Tools > World > Build Loot Chests** (it updates the prefab). |
+| "Nothing left in this box for you." | Every perk that box can give was picked already (once-a-life perks), or needs another perk first. |

@@ -1,6 +1,6 @@
 /*
 First Date: 20/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Open GameScene, then menu Tools > Items > Build Plate Armor (it asks first), and save the scene afterwards.
@@ -11,10 +11,10 @@ Purpose: Blink's plate armor (the PlateSet1 parts already inside the player's ch
          (iron is the higher tier):
            - Copper: Assets/Config/Items/Armor/Copper<Slot>.asset: Copper Helmet, Copper Shoulders, Copper Chestplate,
              Copper Gloves, Copper Leggings, Copper Boots. Protection 1.5 % each and 2.5 % for the chestplate (10 % off
-             every hit for all six); all six: stamina recharges 50 % faster; a recipe of Copper (5 / 4 / 8 / 3 / 7 / 4);
+             every hit for all six); all six: +1 coin for every monster killed; a recipe of Copper (5 / 4 / 8 / 3 / 7 / 4);
              copper colored;
-           - Iron: Iron<Slot>.asset ("Iron Helmet"...): 2.5 / 2.5 / 4 / 2 / 3 / 2 % (16 % for all six); all six: stamina
-             recharges 100 % faster, and its pieces count as Copper (a mix of both still gives the Copper bonus); each
+           - Iron: Iron<Slot>.asset ("Iron Helmet"...): 2.5 / 2.5 / 4 / 2 / 3 / 2 % (16 % for all six); all six: +2 coins
+             for every monster killed, and its pieces count as Copper (a mix of both still gives the Copper bonus); each
              crafted from its Copper piece + Iron (4 / 3 / 6 / 2 / 5 / 3); steel grey;
            - files from before the tiers were swapped (20/11/2026: Iron came first, and Reinforced Iron = an Iron piece
              + Copper) are renamed by tier: Iron... -> Copper..., ReinforcedIron... -> Iron..., with Iron and Copper
@@ -199,8 +199,8 @@ public static class ArmorBuilder
                 "This makes Blink's plate armor wearable, as two sets of 6 pieces (helmet, shoulders, chestplate, gloves, " +
                 "leggings, boots) in " + ItemFolder + ":\n\n" +
                 "- Copper (copper colored): 1.5 % protection each, 2.5 % for the chestplate (10 % for all six); all six = " +
-                "stamina recharges 50 % faster; recipes of Copper\n" +
-                "- Iron (steel grey): 16 % for all six; all six = stamina recharges 100 % faster, and it counts as " +
+                "+1 coin for every monster killed; recipes of Copper\n" +
+                "- Iron (steel grey): 16 % for all six; all six = +2 coins for every monster killed, and it counts as " +
                 "Copper; each piece = its Copper piece + Iron (a worn Copper piece can be upgraded where it's worn)\n" +
                 "- armor files from when Iron came first (and Reinforced Iron) renamed by tier: Iron to Copper, " +
                 "Reinforced Iron to Iron\n" +
@@ -980,10 +980,10 @@ public static class ArmorBuilder
         return " PlayerArmor on the Player." + bonusReport + kitReport;
     }
 
-    // The set bonuses PlayerArmor's list is missing, added at its end. A list saved before the tiers were swapped (its
-    // Iron was the first tier's 50 %, and there may be a Reinforced Iron) loses those first, so it gets today's Copper
-    // (50 %) and Iron (100 %, counts as Copper). Other bonuses already there are left as they are, except a color that
-    // was never set (a list saved before sets had colors) gets the set's own.
+    // The set bonuses PlayerArmor's list is missing, added at its end. A list saved before 21/11/2026 (stamina bonuses,
+    // Iron first then Reinforced Iron) is replaced first by today's: Copper +1 and Iron +2 coins per kill (counts as
+    // Copper). Other bonuses already there are left as they are, except a color that was never set (a list saved
+    // before sets had colors) gets the set's own.
     static string AddSetBonuses(PlayerArmor armor)
     {
         if (armor == null) return "";
@@ -1006,13 +1006,13 @@ public static class ArmorBuilder
             list.InsertArrayElementAtIndex(list.arraySize);
             SerializedProperty fresh = list.GetArrayElementAtIndex(list.arraySize - 1);
             fresh.FindPropertyRelative("set").stringValue = bonus.set;
-            fresh.FindPropertyRelative("staminaRegen").floatValue = bonus.staminaRegen;
+            fresh.FindPropertyRelative("coinsPerKill").intValue = bonus.coinsPerKill;
             fresh.FindPropertyRelative("countsAs").stringValue = bonus.countsAs;
             fresh.FindPropertyRelative("color").colorValue = bonus.color;
             added.Add(bonus.set);
         }
         so.ApplyModifiedProperties();   // with Undo
-        return (replaced ? " The old set bonuses (Iron first, Reinforced Iron) were taken out." : "") +
+        return (replaced ? " The old set bonuses (stamina, or Iron first) were replaced by the coin bonuses." : "") +
                (added.Count > 0 ? " Set bonuses added: " + string.Join(", ", added) + "." : "");
     }
 }

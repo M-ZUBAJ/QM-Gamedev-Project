@@ -1,6 +1,6 @@
 /*
 First Date: 19/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: The inventory's Info page (InventoryCanvas > InventoryWindow > Pages > InfoPage). Tools > UI > Build Inventory UI
         (or Tools > UI > Add Inventory Scripts for an inventory built before) makes the page and puts this on it.
@@ -11,19 +11,20 @@ Unity Editor: Nothing to connect: it finds the player's scripts by itself, and i
                 PerkList: the perk rows go in here, copied from its switched-off "PerkTemplate" (Icon, Name, Stats)
                 NoPerks: the text shown while the player has no perk
               Testing: Play, press Tab and click Info. Open a chest and take a perk: its stat shows the bonus in green
-              and the perk joins the list. Wear all six iron armor pieces: the Stamina and Armor rows turn gold.
+              and the perk joins the list. Wear all six copper armor pieces: the Armor and Coins rows turn gold.
 Purpose: The player's status, updated 4 times a second while the Info tab is open:
            Health, Hunger, Stamina    now / max, with a bar
            Armor                      how much the worn armor takes off every hit, and its set ("Iron set 4/6")
            Walk / Sprint speed        meters per second
            Jump height, Fireball (locked, or its cooldown), Coins
-         What perks added shows in green next to the stat, e.g. "+44 from perks" (max health above its start) or
-         "+15% from perks" (walk speed), and on the right the perks the player has, with their icons, names and
-         stats (PlayerPerks).
+         What perks added shows in green next to the stat, e.g. "+44 from perks" (max health above its start),
+         "+15% from perks" (walk speed, sprint, jump), "+30% recharge from perks" (Second Wind), "+1 per kill from
+         perks" (Bounty Hunter), and on the right the perks the player has, with their icons, names and stats
+         (PlayerPerks).
          An armor set bonus shows in gold, on a gold-tinted row, so it stands out from the perks' green: with the whole
-         copper set on, Stamina says "+50% recharge (Copper Set)" and Armor says "Copper Set bonus" (PlayerArmor).
+         copper set on, Coins says "+1 per kill (Copper Set)" and Armor says "Copper Set bonus" (PlayerArmor).
 Requirement: PlayerInfoPage.cs x-> ArmorStats.cs
-             PlayerInfoPage.cs o-> PlayerHealth.cs, PlayerHunger.cs, PlayerStamina.cs, PlayerController.cs, PlayerJump.cs, PlayerFireball.cs, PlayerCoins.cs, PlayerPerks.cs, PlayerArmor.cs
+             PlayerInfoPage.cs o-> PlayerHealth.cs, PlayerHunger.cs, PlayerStamina.cs, PlayerController.cs, PlayerJump.cs, PlayerFireball.cs, PlayerCoins.cs, PlayerPerks.cs, PlayerArmor.cs, PerkEffects.cs
              PlayerInfoPage.cs <-x InventoryUIBuilder.cs
 */
 
@@ -52,7 +53,7 @@ public class PlayerInfoPage : MonoBehaviour
     [Tooltip("The color of a hint that isn't a bonus, e.g. how to unlock the fireball.")]
     [SerializeField] Color hintColor = new Color(0.42f, 0.43f, 0.48f);
 
-    [Tooltip("The color of an armor set bonus, e.g. \"+50% recharge (Iron Set)\" while the whole iron set is worn: a " +
+    [Tooltip("The color of an armor set bonus, e.g. \"+1 per kill (Copper Set)\" while the whole copper set is worn: a " +
              "strong gold, so it stands out from the green perk bonuses.")]
     [SerializeField] Color setBonusColor = new Color(0.8f, 0.5f, 0.02f);
 
@@ -93,6 +94,7 @@ public class PlayerInfoPage : MonoBehaviour
         coins = FindRow("CoinsRow");
         FitBonus(stamina);   // a perk bonus and a set bonus together can be long
         FitBonus(armorRow);
+        FitBonus(coins);     // Bounty Hunter + the armor set bonus
 
         perkList = FindDeep(transform, "PerkList");
         Transform template = FindDeep(transform, "PerkTemplate");
@@ -126,22 +128,21 @@ public class PlayerInfoPage : MonoBehaviour
         else ShowMissing(health);
         if (playerHunger != null) ShowAmount(hunger, playerHunger.Hunger, playerHunger.MaxHunger, playerHunger.MaxHunger);
         else ShowMissing(hunger);
-        // The armor's set bonus (the whole iron set: stamina recharges 50 % faster), in gold on the rows it improves.
+        // The Second Wind perk: stamina recharges faster (green, like the other perks).
+        float regen = PerkEffects.StaminaRegenBonus;
+        string staminaFromPerks = regen > 0.001f ? "+" + Mathf.RoundToInt(regen * 100f) + "% recharge from perks" : "";
+        if (playerStamina != null) ShowAmount(stamina, playerStamina.Stamina, playerStamina.MaxStamina, playerStamina.StartMaxStamina, staminaFromPerks);
+        else ShowMissing(stamina);
+
+        // The armor's set bonus (the whole copper set: +1 coin per monster killed), in gold on the rows it improves.
         PlayerArmor armor = PlayerArmor.Current;
         PlayerArmor.SetBonus setBonus = armor != null ? armor.ActiveBonus : null;
-        bool fasterStamina = setBonus != null && setBonus.staminaRegen > 1.001f;
-        string staminaFromSet = fasterStamina
-            ? SetBonusText("+" + ArmorStats.Percent((setBonus.staminaRegen - 1f) * 100f) + " recharge (" + setBonus.set + " Set)")
-            : "";
-        if (playerStamina != null) ShowAmount(stamina, playerStamina.Stamina, playerStamina.MaxStamina, playerStamina.StartMaxStamina, staminaFromSet);
-        else ShowMissing(stamina);
-        Highlight(stamina, fasterStamina && playerStamina != null);
         ShowArmor(armor, setBonus);
 
         if (controller != null)
         {
             ShowSpeed(walk, controller.Speed, controller.StartSpeed);
-            ShowSpeed(sprint, controller.Speed * controller.SprintMultiplier, controller.StartSpeed * controller.SprintMultiplier);
+            ShowSpeed(sprint, controller.Speed * controller.SprintMultiplier, controller.StartSpeed * controller.BaseSprintMultiplier);
         }
         else
         {
@@ -149,7 +150,11 @@ public class PlayerInfoPage : MonoBehaviour
             ShowMissing(sprint);
         }
 
-        if (playerJump != null) Show(jump, playerJump.JumpHeight.ToString("0.00") + " m", "", false);
+        if (playerJump != null)
+        {
+            float higher = playerJump.BaseJumpHeight > 0f ? (playerJump.JumpHeight / playerJump.BaseJumpHeight - 1f) * 100f : 0f;
+            Show(jump, playerJump.JumpHeight.ToString("0.00") + " m", higher >= 0.5f ? "+" + Mathf.RoundToInt(higher) + "% from perks" : "", true);
+        }
         else ShowMissing(jump);
 
         if (fireballSkill == null) ShowMissing(fireball);
@@ -157,8 +162,14 @@ public class PlayerInfoPage : MonoBehaviour
         else Show(fireball, fireballSkill.CurrentCooldown.ToString("0.0") + " s cooldown",
                   "x" + fireballSkill.PerkStacks + " from perks", true);
 
-        if (PlayerCoins.Instance != null) Show(coins, PlayerCoins.Instance.Coins.ToString(), "", false);
+        // Extra coins per monster killed: the armor set bonus in gold, the Bounty Hunter perk in green.
+        int fromSet = setBonus != null ? setBonus.coinsPerKill : 0;
+        int fromPerks = PerkEffects.BountyCoins;
+        string perKill = fromPerks > 0 ? "+" + fromPerks + " per kill from perks" : "";
+        if (fromSet > 0) perKill = (perKill.Length > 0 ? perKill + "  " : "") + SetBonusText("+" + fromSet + " per kill (" + setBonus.set + " Set)");
+        if (PlayerCoins.Instance != null) Show(coins, PlayerCoins.Instance.Coins.ToString(), perKill, true);
         else ShowMissing(coins);
+        Highlight(coins, fromSet > 0 && PlayerCoins.Instance != null);
 
         ShowPerks();
     }

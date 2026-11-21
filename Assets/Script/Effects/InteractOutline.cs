@@ -16,7 +16,7 @@ Purpose: A signal that you can use something: a glowing outline around it (plus 
          All outlines on screen are drawn together, by one command buffer on the main camera (no extra objects).
 Requirement: InteractOutline.cs x-> MenuState.cs
              InteractOutline.cs o-> PerkChest.cs, PlayerHealth.cs, PlayerController.cs, Camera (Unity)
-             InteractOutline.cs <-x ChestPrompt.cs, ChestSetup.cs, PerkChest.cs
+             InteractOutline.cs <-x ChestPrompt.cs, ChestSetup.cs, LootChestBuilder.cs, PerkChest.cs
 */
 
 using System.Collections.Generic;
