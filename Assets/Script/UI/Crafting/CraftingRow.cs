@@ -11,12 +11,14 @@ Unity Editor: Nothing to connect: it finds its parts by NAME: "Icon" (Image), "N
 Purpose: One row of the crafting list, with pictures: the item's icon and name ("x2" when one craft makes two), and each
          ingredient as its icon with "have / need" and its name, e.g. "1/2 Plank", green when the inventory has enough
          and red when not. While something is missing the whole row is faded; when everything is there it says CRAFT.
-         It updates by itself whenever the inventory changes (e.g. right after crafting). Clicking it still crafts
-         (Turki's CraftingMenu does that). With tabs on the list (CraftingTabs), it hides itself when the picked tab
-         isn't its item's kind.
+         It updates by itself whenever the inventory or the worn armor changes (e.g. right after crafting). Clicking it
+         still crafts (Turki's CraftingMenu does that). With tabs on the list (CraftingTabs), it hides itself when the
+         picked tab isn't its item's kind; with set panels (CraftingSetPanels), a new list gets its armor grouped by set.
+         An armor upgrade's recipe counts the piece the player wears, e.g. "1/1 Iron Helmet (worn)": crafting takes it
+         off and puts the new piece on in its place (PlayerArmor).
 Requirement: CraftingRow.cs x-> ItemData.cs, Recipe.cs, PlayerInventory.cs
-             CraftingRow.cs o-> CraftingTabs.cs
-             CraftingRow.cs <-x CraftingMenu.cs, CraftingMenuBuilder.cs, CraftingTabs.cs
+             CraftingRow.cs o-> CraftingTabs.cs, CraftingSetPanels.cs, PlayerArmor.cs
+             CraftingRow.cs <-x CraftingMenu.cs, CraftingMenuBuilder.cs, CraftingSetPanels.cs, CraftingTabs.cs
 */
 
 using System.Collections.Generic;
@@ -59,12 +61,14 @@ public class CraftingRow : MonoBehaviour
     void OnEnable()
     {
         PlayerInventory.Changed += Refresh;   // e.g. right after crafting, or picking something up
+        PlayerArmor.Changed += Refresh;       // a worn piece counts toward an armor upgrade's recipe
         Refresh();
     }
 
     void OnDisable()
     {
         PlayerInventory.Changed -= Refresh;
+        PlayerArmor.Changed -= Refresh;
     }
 
     // ===== My methods =====
@@ -89,6 +93,10 @@ public class CraftingRow : MonoBehaviour
         // The list's tabs (All, Materials, Food, Tools, Armor): hidden if the picked tab isn't this item's kind.
         CraftingTabs tabs = GetComponentInParent<CraftingTabs>(true);   // true: the panel may still be hidden
         if (tabs != null) tabs.Filter(this);
+
+        // The armor set panels: the list was made again, so its armor is grouped again.
+        CraftingSetPanels sets = GetComponentInParent<CraftingSetPanels>(true);
+        if (sets != null) sets.MarkDirty();
     }
 
     // One small picture + text for every ingredient of the recipe, copied from the template.
@@ -129,18 +137,22 @@ public class CraftingRow : MonoBehaviour
     {
         if (item == null) return;
         PlayerInventory inventory = PlayerInventory.Instance;
+        PlayerArmor armor = item.IsArmor ? PlayerArmor.Current : null;   // only armor upgrades use a worn piece
 
         bool everything = shownIngredients.Count > 0;
         for (int i = 0; i < shownIngredients.Count; i++)
         {
             Ingredient ingredient = shownIngredients[i];
             int have = inventory != null ? inventory.Count(ingredient.ItemId) : 0;
+            // The armor piece the player wears counts too: crafting takes it off and puts the new piece on in its place.
+            bool worn = have < ingredient.amount && armor != null && ingredient.item.IsArmor && armor.IsWorn(ingredient.ItemId);
+            if (worn) have++;
             bool enough = have >= ingredient.amount;
             everything &= enough;
 
             TMP_Text amount = amounts[i];
             if (amount == null) continue;
-            amount.text = have + "/" + ingredient.amount + " " + ingredient.DisplayName;
+            amount.text = have + "/" + ingredient.amount + " " + ingredient.DisplayName + (worn ? " (worn)" : "");
             amount.color = enough ? haveColor : missingColor;
         }
 

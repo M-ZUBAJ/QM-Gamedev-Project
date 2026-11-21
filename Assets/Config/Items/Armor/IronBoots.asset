@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: IronBoots
   m_EditorClassIdentifier: 
   displayName: Iron Boots
-  prefab: {fileID: 1257437904211879273, guid: 77002b87eb29a8041836e8fc15fa3dfe, type: 3}
+  prefab: {fileID: 899055853251455616, guid: d5fc576677b57014bb33b2fd7facd826, type: 3}
   pickup: 0
   icon:
     mode: 0
@@ -32,14 +32,17 @@ MonoBehaviour:
     tier: 1
   armor:
     slot: 5
-    protection: 1.5
+    protection: 2
     set: Iron
     piece: PlateSet1_Boots
     hides:
     - Starter_Boots
+    look: {fileID: 2100000, guid: 0fa5ddbc35f7d9e459603a29af14cd05, type: 2}
   minedWith: 0
   recipe:
+  - item: {fileID: 11400000, guid: f20eb7af7a0f2b34286e348f87f55ac7, type: 2}
+    amount: 1
   - item: {fileID: 11400000, guid: 5c6e2eb642dbe4159a36e38d99e65413, type: 2}
-    amount: 4
+    amount: 3
   craftAmount: 1
   craftedAt: 0

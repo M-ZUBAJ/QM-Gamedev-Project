@@ -16,7 +16,7 @@ Purpose: Rocks that break into pieces, in one click:
            - RockBreak on every rock prefab in Assets/Prefabs (a ResourceNode of type Stone), Debris filled in and Dust
              Color = the average color of the rock's material, a bit lighter. Prefabs first, then their Prefab Variants.
 Requirement: RockBreakBuilder.cs x-> RockBreak.cs, ResourceNode.cs, MeshAssetHelper.cs, UIBuildHelper.cs, MenuOrder.cs
-             RockBreakBuilder.cs <-x RockBuilder.cs
+             RockBreakBuilder.cs <-x DesertBuilder.cs, RockBuilder.cs
 */
 
 using System.Collections.Generic;

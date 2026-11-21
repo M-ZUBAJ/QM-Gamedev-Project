@@ -8,7 +8,8 @@ Unity Editor: Turn the rule on: select the GameRules object > Testing > Tool Tes
 Purpose: For testing tools: while the game rule Tool Test is on, the player gets one of each tool (pickaxe, axe and
          sword in wood, stone, iron, gold and diamond: 15) in the inventory, when the game starts or the moment the
          rule is turned on. Tools the player already has aren't given twice, and turning the rule off takes nothing away.
-         Tools > Items > Build Plate Armor adds the 6 plate armor pieces to the list, so they're given too.
+         Armor has its own rule since 20/11/2026: Armor Test (ArmorTestKit); Tools > Items > Build Plate Armor moves
+         the armor it had put in this list over there.
 Requirement: ToolTestKit.cs x-> PlayerInventory.cs, ItemData.cs, GameRules.cs
              ToolTestKit.cs <-x ArmorBuilder.cs, TierToolBuilder.cs
 */
@@ -20,8 +21,8 @@ using UnityEngine;
 public class ToolTestKit : MonoBehaviour
 {
     // ===== Fields =====
-    [Tooltip("The items given while the game rule Tool Test is on: the tools (Tools > Items > Build Tier Tools) and " +
-             "the plate armor (Tools > Items > Build Plate Armor).")]
+    [Tooltip("The items given while the game rule Tool Test is on: the tools (Tools > Items > Build Tier Tools). The " +
+             "armor is given by Armor Test (ArmorTestKit).")]
     [SerializeField] List<ItemData> tools = new List<ItemData>();
 
     bool wasOn;     // the rule's value last time we looked, so turning it on (not just being on) gives the tools

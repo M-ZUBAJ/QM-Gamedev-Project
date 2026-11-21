@@ -4,7 +4,11 @@
 **Low Poly Rock Pack**, each one a different shape:
 - **stone** is grey, and sand-colored in the desert;
 - **copper** is a warm reddish orange;
-- **iron** is a dark blue-grey.
+- **iron** is a dark blue-grey;
+- **gold** (new world, desert caves) is a shiny gold, and **sandstone** (new world, desert) a warm red-tan: both are
+  Prefab Variants made by **Tools > World > Build Desert Content** (`ResourceNodes/Rocks/GoldNode`, `SandstoneNode`),
+  so they share these rocks' shapes and breaking. Sandstone gives Stone but has 75 health (stone: 30); gold needs an
+  Iron Pickaxe. Guide: `Docs/Desert Setup.md`.
 
 When a rock breaks (punched, or hit with a pickaxe), it bursts into **chunks of the same stone** that tumble, bounce
 on the ground and shrink away, with small gravel and a puff of dust.

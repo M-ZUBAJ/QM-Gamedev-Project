@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: IronShoulders
   m_EditorClassIdentifier: 
   displayName: Iron Shoulders
-  prefab: {fileID: 8736133907572322521, guid: 777e5c46c16d6ad49a27c1044fa2c578, type: 3}
+  prefab: {fileID: 5371863236112464154, guid: 59f0048884a476842aca13d6bdcd40bb, type: 3}
   pickup: 0
   icon:
     mode: 0
@@ -32,13 +32,16 @@ MonoBehaviour:
     tier: 1
   armor:
     slot: 1
-    protection: 1.5
+    protection: 2.5
     set: Iron
     piece: PlateSet1_Shoulders
     hides: []
+    look: {fileID: 2100000, guid: 0fa5ddbc35f7d9e459603a29af14cd05, type: 2}
   minedWith: 0
   recipe:
+  - item: {fileID: 11400000, guid: b25ab9c32bea2c1459603002637afbd2, type: 2}
+    amount: 1
   - item: {fileID: 11400000, guid: 5c6e2eb642dbe4159a36e38d99e65413, type: 2}
-    amount: 4
+    amount: 3
   craftAmount: 1
   craftedAt: 0

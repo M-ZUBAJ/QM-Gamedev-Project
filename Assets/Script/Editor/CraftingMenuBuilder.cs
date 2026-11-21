@@ -15,13 +15,18 @@ Purpose: Gives Turki's crafting list pictures and the tier tools, in one click:
              of items fits (the mouse wheel scrolls it);
            - tabs over the list (Panel > Tabs: All, Materials, Food, Tools, Armor; Tony's CraftingTabs on the panel)
              and a "Nothing to craft here yet." text in the list (Scroll > Empty), built again every run;
+           - armor set panels: the look of the box each armor set's rows are grouped in (Scroll > SetPanel, switched
+             off: a rounded box with a Header of Stripe, Title, Info and Progress) and Tony's CraftingSetPanels on the
+             panel, built again every run;
            - sorts the list (Craftables): the items that aren't tools first, in their order (Plank, Stew...), then every
              tool with a recipe made at the Crafting page, Wooden > Stone > Iron, each Pickaxe, Axe, Sword, then every
-             armor piece with a recipe, helmet to boots. Tools without a recipe (Gold, Diamond) are left out.
-         SortList only sorts the list again (Tools > Items > Build Plate Armor uses it to add the armor).
-         Turki's CraftingMenu script only gets one [Tony] line (it calls CraftingRow.Show).
-         Log: Docs/TonyEditMate/Turki/19-11-2026 Crafting Menu Icons And Tier Tools.md
-Requirement: CraftingMenuBuilder.cs x-> CraftingMenu.cs, CraftingRow.cs, CraftingTabs.cs, ItemData.cs, ToolStats.cs, IconArt.cs, UIBuildHelper.cs, MenuOrder.cs
+             armor piece with a recipe, set by set (the weakest set first: Copper, then Iron), each helmet to boots. Tools without a recipe (Gold, Diamond) are left out.
+         SortList sorts the list again and makes the set panels (Tools > Items > Build Plate Armor uses it to add the
+         armor).
+         Turki's CraftingMenu script gets [Tony] lines (it calls CraftingRow.Show; upgraded tools keep their slot; a
+         worn armor piece can be upgraded). Logs: Docs/TonyEditMate/Turki/19-11-2026 Crafting Menu Icons And Tier
+         Tools.md, .../20-11-2026 Reinforced Iron Armor And Set Panels.md
+Requirement: CraftingMenuBuilder.cs x-> CraftingMenu.cs, CraftingRow.cs, CraftingTabs.cs, CraftingSetPanels.cs, ItemData.cs, ToolStats.cs, IconArt.cs, UIBuildHelper.cs, MenuOrder.cs
              CraftingMenuBuilder.cs <-x ArmorBuilder.cs
 */
 
@@ -48,11 +53,14 @@ public static class CraftingMenuBuilder
     const float StatusWidth = 150f;  // the CRAFT text on the right
     const float TabHeight = 40f;     // the tabs over the list
     const float TabWidth = 150f;     // each tab (the five sit in the middle, not stretched across the panel)
+    const string SetPanelName = "SetPanel";   // Scroll > SetPanel: the look of an armor set's box (CraftingSetPanels)
+    const float SetHeaderHeight = 58f;        // its header: the set's name over a line of what it gives
 
     static readonly Color NameColor = new Color(0.12f, 0.12f, 0.14f);
     static readonly Color StatusColor = new Color(0.1f, 0.55f, 0.25f);
     static readonly Color TabIdle = new Color(0.86f, 0.87f, 0.9f);     // CraftingTabs makes the picked one gold
     static readonly Color EmptyColor = new Color(0.45f, 0.46f, 0.5f);
+    static readonly Color InfoColor = new Color(0.25f, 0.26f, 0.3f);
 
     // ===== Menu (Unity calls this) =====
 
@@ -77,6 +85,7 @@ public static class CraftingMenuBuilder
                 "- rows with pictures (the item and its recipe, green / red for enough / missing)\n" +
                 "- a bigger panel with a scroll list\n" +
                 "- tabs over the list: All, Materials, Food, Tools, Armor\n" +
+                "- each armor set's pieces grouped in one panel (Copper, Iron)\n" +
                 "- the list sorted, with every Wooden, Stone and Iron tool that has a recipe\n\n" +
                 "The inventory's Crafting page and the C menu both follow. Continue?", "Build", "Cancel"))
             return;
@@ -193,6 +202,7 @@ public static class CraftingMenuBuilder
             ((RectTransform)panel.transform).sizeDelta = PanelSize;
             bool scroll = MakeScrollList(panel.transform, rows);
             bool tabs = MakeTabs(panel.transform);
+            bool sets = MakeSetPanels(panel.transform);
             so.FindProperty("rowPrefab").objectReferenceValue = rowPrefab.GetComponent<Button>();
             int tools = SortCraftables(so.FindProperty("craftables"));
             so.ApplyModifiedPropertiesWithoutUndo();
@@ -201,6 +211,7 @@ public static class CraftingMenuBuilder
             return path + ": rows with pictures, panel " + PanelSize.x + " x " + PanelSize.y +
                    (scroll ? ", rows in a new scroll list" : ", scroll list already there") +
                    (tabs ? ", tabs All / Materials / Food / Tools / Armor" : ", no tabs (no scroll list)") +
+                   (sets ? ", armor grouped by set" : "") +
                    ", " + tools + " tools in the list (Wooden > Stone > Iron).";
         }
         finally
@@ -318,6 +329,92 @@ public static class CraftingMenuBuilder
         label.raycastTarget = false;
     }
 
+    // The look of an armor set's panel (Scroll > SetPanel, switched off: CraftingSetPanels copies it around each set's
+    // rows while playing) and CraftingSetPanels on the panel. Built again every run. False = no scroll list to put it in.
+    //   SetPanel: a rounded box (tinted in the set's color) stacking its children: Header, then the set's rows
+    //   Header:   Stripe (a bar in the set's color) | Title "IRON SET"                    Progress "Worn 2/6"
+    //                                              | Info "10% protection - all 6: stamina recharges 50% faster"
+    static bool MakeSetPanels(Transform panel)
+    {
+        Transform scroll = panel.Find("Scroll");
+        if (scroll == null) return false;
+        Transform old = scroll.Find(SetPanelName);
+        if (old != null) Object.DestroyImmediate(old.gameObject);
+
+        GameObject box = NewUI(SetPanelName, scroll);
+        ((RectTransform)box.transform).sizeDelta = new Vector2(880f, 200f);   // the list sizes each copy itself
+        Image back = box.AddComponent<Image>();
+        back.sprite = IconArt.RoundedBox();
+        back.type = Image.Type.Sliced;
+        back.color = Color.white;      // CraftingSetPanels tints it in the set's color
+        back.raycastTarget = false;    // never in the way of the rows' clicks or the scroll wheel
+        VerticalLayoutGroup column = box.AddComponent<VerticalLayoutGroup>();
+        column.padding = new RectOffset(12, 12, 8, 12);
+        column.spacing = 8f;
+        column.childAlignment = TextAnchor.UpperCenter;
+        column.childControlWidth = column.childControlHeight = true;
+        column.childForceExpandWidth = true;     // the rows as wide as the box
+        column.childForceExpandHeight = false;   // each row its own height
+
+        GameObject header = NewUI("Header", box.transform);
+        LayoutElement size = header.AddComponent<LayoutElement>();
+        size.preferredHeight = size.minHeight = SetHeaderHeight;
+        size.flexibleHeight = 0f;
+
+        Image stripe = NewUI("Stripe", header.transform).AddComponent<Image>();
+        stripe.sprite = IconArt.RoundedBox();
+        stripe.type = Image.Type.Sliced;
+        stripe.raycastTarget = false;
+        RectTransform st = stripe.rectTransform;
+        st.anchorMin = Vector2.zero;
+        st.anchorMax = new Vector2(0f, 1f);
+        st.pivot = new Vector2(0f, 0.5f);
+        st.offsetMin = new Vector2(2f, 6f);
+        st.offsetMax = new Vector2(10f, -6f);    // an 8 px bar down the left
+
+        TextMeshProUGUI title = AddText(NewUI("Title", header.transform), "IRON SET", 24f, TextAlignmentOptions.MidlineLeft);
+        title.fontStyle = FontStyles.Bold;
+        title.characterSpacing = 3f;
+        title.enableWordWrapping = false;
+        title.raycastTarget = false;
+        HeaderBand(title.gameObject, true, 220f);
+
+        TextMeshProUGUI info = AddText(NewUI("Info", header.transform), "10% protection", 18f, TextAlignmentOptions.MidlineLeft);
+        info.color = InfoColor;
+        info.enableWordWrapping = false;
+        info.enableAutoSizing = true;            // a long bonus gets a little smaller instead of running off the box
+        info.fontSizeMin = 13f;
+        info.fontSizeMax = 18f;
+        info.raycastTarget = false;
+        HeaderBand(info.gameObject, false, 12f);
+
+        TextMeshProUGUI progress = AddText(NewUI("Progress", header.transform), "Worn 0/6", 20f, TextAlignmentOptions.MidlineRight);
+        progress.fontStyle = FontStyles.Bold;
+        progress.enableWordWrapping = false;
+        progress.raycastTarget = false;
+        RectTransform p = progress.rectTransform;
+        p.anchorMin = new Vector2(1f, 0.5f);
+        p.anchorMax = Vector2.one;
+        p.pivot = new Vector2(1f, 0.5f);
+        p.offsetMin = new Vector2(-210f, 0f);
+        p.offsetMax = new Vector2(-10f, 0f);     // the top right, next to the title
+
+        box.SetActive(false);
+        if (panel.GetComponent<CraftingSetPanels>() == null) panel.gameObject.AddComponent<CraftingSetPanels>();
+        return true;
+    }
+
+    // The top or bottom half of the set panel's header, after its stripe, "right" pixels short of the right edge.
+    static void HeaderBand(GameObject go, bool top, float right)
+    {
+        RectTransform rt = (RectTransform)go.transform;
+        rt.anchorMin = new Vector2(0f, top ? 0.5f : 0f);
+        rt.anchorMax = new Vector2(1f, top ? 1f : 0.5f);
+        rt.pivot = new Vector2(0f, 0.5f);
+        rt.offsetMin = new Vector2(22f, 0f);
+        rt.offsetMax = new Vector2(-right, 0f);
+    }
+
     // A slim scroll bar down the right side.
     static Scrollbar MakeScrollbar(Transform parent)
     {
@@ -345,7 +442,8 @@ public static class CraftingMenuBuilder
         return bar;
     }
 
-    // Only sorts Turki's crafting list again (see SortCraftables), e.g. after new armor got recipes. Returns a report.
+    // Sorts Turki's crafting list again (see SortCraftables), e.g. after new armor got recipes, and makes the armor set
+    // panels (MakeSetPanels). Returns a report.
     public static string SortList()
     {
         string path = CraftingPath;
@@ -356,13 +454,16 @@ public static class CraftingMenuBuilder
         {
             CraftingMenu menu = root.GetComponentInChildren<CraftingMenu>(true);
             if (menu == null) return "no CraftingMenu in " + path + ", the list wasn't sorted.";
-            SerializedObject so = new SerializedObject(menu);   // the name in quotes must match Turki's field
+            SerializedObject so = new SerializedObject(menu);   // the names in quotes must match Turki's fields
             SerializedProperty list = so.FindProperty("craftables");
             int tools = SortCraftables(list);
             int total = list.arraySize;
+            GameObject panel = so.FindProperty("panel").objectReferenceValue as GameObject;
+            bool sets = panel != null && MakeSetPanels(panel.transform);
             so.ApplyModifiedPropertiesWithoutUndo();
             PrefabUtility.SaveAsPrefabAsset(root, path);
-            return path + " sorted: " + total + " items (" + tools + " tools, then the armor).";
+            return path + " sorted: " + total + " items (" + tools + " tools, then the armor set by set)" +
+                   (sets ? ", armor grouped by set" : ", no set panels (run Tools > UI > Build Crafting Menu)") + ".";
         }
         finally
         {
@@ -372,7 +473,8 @@ public static class CraftingMenuBuilder
 
     // Sorts Craftables: everything that isn't a tool or armor first (in its order), then every tool with a recipe made
     // at the Crafting page, weakest tier first (Wooden > Stone > Iron), each Pickaxe, Axe, Sword, then every armor piece
-    // with a recipe made there, helmet to boots. Returns how many tools.
+    // with a recipe made there, set by set (the weakest set first: all its pieces' Protection added up, Copper 10 %
+    // before Iron 16 %), each helmet to boots, so each set's rows are together for its panel. Returns how many tools.
     static int SortCraftables(SerializedProperty list)
     {
         List<ItemData> others = new List<ItemData>();
@@ -396,8 +498,18 @@ public static class CraftingMenuBuilder
             int byTier = ((int)a.Tool.tier).CompareTo((int)b.Tool.tier);
             return byTier != 0 ? byTier : ((int)a.Tool.kind).CompareTo((int)b.Tool.kind);
         });
+        Dictionary<string, float> setTotal = new Dictionary<string, float>();   // each set's pieces' Protection added up
+        foreach (ItemData piece in armor)
+        {
+            string set = piece.Armor.set ?? "";
+            setTotal[set] = (setTotal.TryGetValue(set, out float sum) ? sum : 0f) + piece.Armor.protection;
+        }
         armor.Sort((a, b) =>
         {
+            string setA = a.Armor.set ?? "", setB = b.Armor.set ?? "";
+            int bySet = setTotal[setA].CompareTo(setTotal[setB]);
+            if (bySet == 0) bySet = string.CompareOrdinal(setA, setB);
+            if (bySet != 0) return bySet;
             int bySlot = ((int)a.Armor.slot).CompareTo((int)b.Armor.slot);
             return bySlot != 0 ? bySlot : string.CompareOrdinal(a.Id, b.Id);
         });

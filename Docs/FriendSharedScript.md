@@ -194,7 +194,9 @@ In these tables, `health`, `stamina`, `daylight`, `player`… are the variables 
 | Crafting inside the inventory | A CraftingCanvas under `InventoryWindow > Pages > CraftingPage` now shows itself whenever the Crafting tab is open (Tony's `[Tony]` lines in `CraftingMenu`, see `Docs/TonyEditMate/20-10-2026Edit.md`). The scene-root CraftingCanvas still opens with C |
 | Animate the player mining / picking up | `PlayerAnimator.Play(PlayerAction.Mine);` / `PlayerAnimator.Play(PlayerAction.Gather);` (upper body only; does nothing if the player has no character) |
 | Tabs on your crafting list | Tony's **Tools > UI > Build Crafting Menu** (20/11/2026, log `Docs/TonyEditMate/Turki/20-11-2026 Crafting Tabs.md`) added tabs over the list in your CraftingCanvas prefab: **All** (default), **Materials**, **Food**, **Tools**, **Armor**, sorted by each item's **Item Type**. Your CraftingMenu script is unchanged (Tony's CraftingRow rows ask Tony's CraftingTabs whether to show). A new item lands in its tab by itself |
-| Armor in your crafting list | Tony's **Tools > Items > Build Plate Armor** (20/11/2026, log `Docs/TonyEditMate/Turki/20-11-2026 Plate Armor In The Crafting List.md`) added the 6 iron armor items (Iron Helmet ... Iron Boots, Iron recipes; first called Plate ..., renamed the same day, same files) to CraftingCanvas's Craftables, after the tools. Your script is unchanged. An armor's Item Data has Item Type **Armor** (`item.IsArmor`, `item.Armor.slot / protection / set`). Guide: `Docs/Armor Setup.md` |
+| Armor in your crafting list | Tony's **Tools > Items > Build Plate Armor** (20/11/2026, log `Docs/TonyEditMate/Turki/20-11-2026 Plate Armor In The Crafting List.md`) added the 6 iron armor items (Iron Helmet ... Iron Boots, Iron recipes; first called Plate ..., renamed the same day, same files) to CraftingCanvas's Craftables, after the tools. An armor's Item Data has Item Type **Armor** (`item.IsArmor`, `item.Armor.slot / protection / set / look`). Guide: `Docs/Armor Setup.md` |
+| Gold and desert rocks (new) | Tony's **Tools > World > Build Desert Content** (20/11/2026, guide `Docs/Desert Setup.md`) made a **Gold** item (`Assets/Config/Items/Gold`, a copy of your Iron item: Item Type Material, Mined With = Iron) with a gold cube prefab (copy of your Iron prefab), and two **Prefab Variants** of your rocks in `ResourceNodes/Rocks`: **GoldNode** (of IronNode: drops 2 - 4 Gold, 40 health, gold colored) and **SandstoneNode** (of StoneNode: drops 4 - 6 Stone, 75 health = harder to break, sandstone colored). Your IronNode / StoneNode and ResourceNode script aren't changed. Gold spawns in the new world's desert caves; a recipe can use it like any item |
+| Copper and Iron armor and set boxes (changed) | Tony's two armor sets (20/11/2026, log `Docs/TonyEditMate/Turki/20-11-2026 Reinforced Iron Armor And Set Panels.md`, see its Copper-first update): **Copper** Helmet ... Boots (`Assets/Config/Items/Armor/Copper...`) crafted from Copper (5 / 4 / 8 / 3 / 7 / 4), copper colored, 10 % for all six, stamina 50 % faster; **Iron** Helmet ... Boots (`.../Iron...`), each = its Copper piece + Iron (4 / 3 / 6 / 2 / 5 / 3), steel grey, 16 % for all six, stamina 100 % faster (iron is the higher tier; until later on 20/11/2026 Iron came first and "Reinforced Iron" was the upgrade). Your `Craft()` got 5 `[Tony] added` lines so a WORN Copper piece can be upgraded (Tony's `PlayerArmor.LendForUpgrade / FinishUpgrade`). Each armor set's rows now sit in one box in the set's color with its name, protection and bonus (Tony's `CraftingSetPanels` on your Panel + a switched-off `Scroll > SetPanel` in your prefab). Your `CopperArmor` item (a Material placeholder, not in the list) is untouched |
 | Your rocks are low-poly rocks now | Tony's **Tools > World > Use Low Poly Rocks** (20/11/2026, log `Docs/TonyEditMate/Turki/20-11-2026 Low Poly Rocks That Break.md`) rebuilt your StoneNode, CopperNode and IronNode prefabs: a random rock shape from Broken Vector's free Low Poly Rock Pack (Tony's RockLook), a Mesh Collider in that shape instead of the box, grey / copper / blue-grey stone, standing on the ground (StandOnGround). When your ResourceNode breaks one, Tony's RockBreak bursts it into chunks of the same stone, gravel and dust. Your script and its values (health, drops) are unchanged. Guide: `Docs/Rock Setup.md` |
 | Your trees fall now | Tony's **Tools > Effects > Build Tree Fall** (19/11/2026, log `Docs/TonyEditMate/Turki/19-11-2026 Trees Fall Into Wood Chips.md`) put Tony's **TreeFall** on your TreeNode prefab: when your `ResourceNode` breaks a tree (`currentHealth` 0, `Destroy`), a look-only copy falls over away from the player and breaks into brown wood chips (the copy's open trunk bottom is closed with cut wood, so nobody sees through it). Your script and the drops are unchanged; berry bushes are skipped. Guide: `Docs/Tree Fall Setup.md` |
 | An upgraded tool keeps its slot | Your `CraftingMenu.Craft` has two `[Tony]` lines (19/11/2026, log `Docs/TonyEditMate/Turki/19-11-2026 Upgraded Tool Keeps Its Slot.md`): an upgrade (Wooden Axe -> Stone Axe) goes into the slot the old tool was in (`PlayerInventory.SlotOf` + `AddInto`), not the first free slot. Anything that isn't an upgrade is added exactly as before |
@@ -247,7 +249,12 @@ The inventory's **Crafting** tab (`InventoryCanvas > InventoryWindow > Pages > C
 | Read keys | `Input.GetKeyDown(KeyBindings.Swing)` (Swing = left mouse, free for attacking) |
 | Your enemy is now an animated slime | `Assets/Prefabs/Enemy/SlimeEnemy.prefab` (made by **Tools > Enemies > Build Monster Enemy**, guide `Docs/Enemy Setup.md`) uses your EnemyCombat / EnemyMovement / EnemyAttack plus Tony's `EnemyAnimator`, and the EnemySpawner now spawns it. Tony's `[Tony]` lines in your 4 enemy scripts: physics movement (walls stop it), spawning on the ground, attack animation, death animation before removal. Every change and how to undo it: `Docs/TonyEditMate/Marko/10-11-2026 Slime Enemy With Animations.md`. Your old `Enemy.prefab` still works |
 | Enemies and animals dying into particles | Already done for the slime and the deer: Tony's `DeathEffect` (on the prefab, **Tools > Effects > Build Death Particles**, guide `Docs/Death Effect Setup.md`). Harmful = has your `EnemyAttack` = red, else green. Your `EnemyCombat.Die()` is unchanged: Tony's `EnemyAnimator.PlayDeath()` (already called from your `[Tony]` lines) asks DeathEffect to turn the body into red particles during the death animation and returns how long that takes. A new enemy prefab: add `DeathEffect` and drag `Prefabs/Effects/DeathParticles` into it, or run the tool. Burst one yourself: `GetComponent<DeathEffect>().Burst();` |
-| Play an enemy animation from your code | `GetComponent<EnemyAnimator>().PlayAttack();` (`PlayDeath()` is already called by `EnemyCombat.Die()`; `IsDead` = it's dying) |
+| Play an enemy animation from your code | `GetComponent<EnemyAnimator>().PlayAttack();` (`PlayDeath()` is already called by `EnemyCombat.Die()`; `IsDead` = it's dying or burning away) |
+| Your night enemies at dawn (changed) | Your `EnemySpawner.DespawnEnemies()` (called at dawn from `OnDayStarted`) now burns them away into **orange embers** instead of blinking out: one `[Tony] replaced` line calls Tony's `EnemyAnimator.Vanish(enemy)` (stops it at a random moment within 1.5 s, orange dissolve from its `DeathEffect`, removed ~1.7 s later; no coins, no kill counted). Your **Test Despawn Enemies** shows it. Also one `[Tony] added` line in `SpawnEnemy()`: a spot past the world's barrier goes to the player's other side. Log: `Docs/TonyEditMate/Marko/20-11-2026 Night Enemies Burn Away At Day.md`, guide `Docs/Death Effect Setup.md` |
+| Remove an enemy without killing it | `EnemyAnimator.Vanish(enemyGameObject);` (orange burn, no coins; an enemy without EnemyAnimator is destroyed at once) |
+| A day monster in the desert (new) | Tony's **TurtleShellEnemy** (20/11/2026, **Tools > World > Build Desert Content**, guide `Docs/Desert Setup.md`): RPG Monster DUO's TurtleShell made into an enemy with YOUR EnemyCombat / EnemyMovement / EnemyAttack (unchanged) + Tony's EnemyAnimator, DeathEffect and **EnemyAggro**. Tony's **DesertMonsterSpawner** (not your EnemySpawner) keeps up to 5 on the sand around the player in the day (90 health + 10 a day, 12 damage + 2 a day), out of the player's sight; at night they dissolve into sand. EnemyAggro gives your scripts the player as `target` only while the player is within 14 m (or after the turtle is hurt) and sets it back to null beyond 32 m (it also zeroes the Rigidbody's speed then, because your FixedUpdate keeps the last velocity when the target is null). Your night slimes are unchanged |
+| An enemy that waits until the player is near | Add Tony's `EnemyAggro` to its prefab: Notice Range / Give Up Range in meters, `IsChasing` |
+| Don't spawn outside the world | `if (!WorldBarrier.Inside(spot, 2f)) { /* pick another spot */ }` (true when the scene has no barrier). See `WorldBarrier` in section 3 |
 | Animate the player's attack / fireball | Already done: Tony's `[Tony]` lines in your `PlayerCombat.Attack()` play what's in the hand: nothing / a non-tool = `Punch`, sword or axe = `Attack`, pickaxe = `Mine` (Attack and Mine both show Mixamo's downward axe chop). Fireball: `PlayerAnimator.Play(PlayerAction.Cast);` right after its `Instantiate(...)`. Upper body only, so the legs keep running. The flinch when the player is hurt already plays by itself |
 | Your tools | Replaced by 15 tier tools (pickaxe / axe / sword in Wood, Stone, Iron, Gold, Diamond, Abduo Bricks' Low Poly Tool Pack): Item Data with **Item Type = Tool** (Kind + Tier), held in the character's hand (Tony's `ToolInHand`). Your damage numbers stay (a wooden tool does them); `[Tony]` lines map the tool to your `"Sword"` / `"Axe"` / `"PickAxe"` checks (`ToolRules.WeaponName`) and add +25 % per tier at the tool's job (`ToolRules.Boost`). Copper / iron need a Stone pickaxe (`ToolRules.CanMine`). Your fireball works with any sword (`ToolRules.IsSword`). Your GiveSwordForTesting / EquippedWeaponDisplay left the scene (GameRules > **Tool Test** gives all tools now). Log: `Docs/TonyEditMate/Marko/12-11-2026 Tier Tools.md`, guide `Docs/Tool Setup.md` |
 | What's in the player's hand | `ToolStats tool = ToolRules.ToolIn(PlayerInventory.Instance.ActiveItem);` (null = a bare hand), then `tool.kind` (Pickaxe / Axe / Sword) and `tool.tier` (Wood ... Diamond) |
@@ -256,7 +263,7 @@ The inventory's **Crafting** tab (`InventoryCanvas > InventoryWindow > Pages > C
 | Coins when the player dies | They go back to the starting amount: Tony's `[Tony]` lines in your `PlayerCoins` (Reset On Death tick box, `ResetCoins()`). Log: `Docs/TonyEditMate/Marko/10-11-2026 Coins Reset On Death, Perk Menu Closes, Punch.md` |
 | Your perk chest and panel (changed again) | Tony's `[Tony]` lines (19/11/2026, log `Docs/TonyEditMate/Marko/19-11-2026 Perk Panel, E Toggle And Pay On Pick.md`): E opens the panel while looking at a chest and closes it wherever you look; walking away (past Interaction Range + 0.5 m) closes it; the coins are paid when a perk is **picked** (not when the panel opens), so closing costs nothing; each chest rolls its 3 perks once and keeps them. Read only: `chest.OpeningCost`, `InteractionRange`, `InteractKey`, and `PerkChest.Showing` (the chest whose perks are on screen). Your PerkManager now also tells the HUD's perk row (one `[Tony]` line). Your PerkSelectionUI is unchanged; it sits on Tony's built panel (**Tools > UI > Build Perk Panel**, which also gave your Perk Data icons). Guide: `Docs/Perk Panel Setup.md` |
 | Animals that run away | Already done: the sheep are deer now (ithappy's **Animals FREE** pack, `Assets/Prefabs/ResourceNodes/DeerNode`). Tony's `WildAnimal` makes them graze, wander, and run from the player when the player comes within 12 m or hits them. Your `PlayerCombat` damages them as `ResourceType.Animal`, like the sheep. More animals: select e.g. `Imported3D/ithappy/Animals_FREE/Prefabs/Horse_001`, then **Tools > World > Build Wild Animal**. Guide: `Docs/Animal Setup.md` |
-| A sight perk or buff | `PlayerSight.Current.AddRange(20f);` (a perk: until the player dies) or `PlayerSight.Current.AddRange(40f, 30f);` (a buff: 30 seconds). Deer then spawn farther out by themselves (Tony's `AnimalSpawner` reads the range live). `PlayerSight.Current.Range` = the range now |
+| A sight perk or buff | `PlayerSight.Current.AddRange(20f);` (a perk: until the player dies) or `PlayerSight.Current.AddRange(40f, 30f);` (a buff: 30 seconds). Deer then spawn farther out by themselves (Tony's `AnimalSpawner` reads the range live). `PlayerSight.Current.Range` = the range now. In a scene with a `ViewDistance` on the camera (the new world: 100 m, then mist), its Distance replaces the Sight Range (the player sees exactly that far); the perk still adds on top |
 | Your chest (changed) | Tony's **Tools > World > Set Up Chests** (19/11/2026, log `Docs/TonyEditMate/Marko/19-11-2026 Chest On The Floor And Yellow Outline.md`): the Chest prefab got Tony's **StandOnGround** (it now sits on the floor; it floated because the new model sits lower than the old box) and **InteractOutline** (a yellow outline while you can open it with E). Your PerkChest got `[Tony]` lines: `IsOpened` (read only) and the E ray now uses `InteractOutline.LooksAt(ray, interactionRange, transform)`, which skips the player's own ball (in first person the camera sits on its edge, so the old ray often hit the player and E did nothing). Guide: `Docs/Interact Outline Setup.md` |
 
 **Example: drop meat when an animal dies**
@@ -291,7 +298,8 @@ void DropMeat(int amount)
 | Day / night | `DaylightCycle` on the Directional Light: `TimeOfDay`, `IsNight`; GameRules > **Do Daylight Cycle** stops time |
 | World rules | `GameRules` object in the scene (see section 3) |
 | Scenes / build order | The game starts at **MainTitleScene** (scene 0 in File > Build Settings), START GAME loads **GameScene** (NEW GAME > Map: Old world) or **ProceduralGenerateScene** (Map: New world). Rebuild the title with **Tools > UI > Build Main Title Scene** (`Docs/Main Title Setup.md`) |
-| The new world (random every game) | Tony's **WorldGenerator** (20/11/2026) makes a new 1000 x 1000 m world in `ProceduralGenerateScene` every game: grassland start with rock caves (stone, copper, iron), desert, rocky hills. Your **ObjectScatter** fills it in unchanged (the World Generator gives it the new terrain before its Start; your rules are copied from GameScene, plus a `Hill Rocks` rule in that scene only). **Tools > World > Build New World Scene** makes the scene from GameScene again, so change things in GameScene. Ask `WorldGenerator.Current` (null in the old world) for `BiomeAt(position)` (Grassland / Desert / Hills), `SpawnPoint`, `Seed`, `Terrain`. Guide: `Docs/New World Setup.md` |
+| The new world (random every game) | Tony's **WorldGenerator** (20/11/2026) makes a new 1000 x 1000 m world in `ProceduralGenerateScene` every game: grassland start with rock caves (stone, copper, iron), desert, rocky hills, a glowing barrier at the edge (no edge mountains; bare land past it), and a 100 m view distance (`ViewDistance` on the Main Camera: mist, nothing further drawn, for the web build's frame rate). Your **ObjectScatter** fills it in (the World Generator gives it the new terrain before its Start; your rules are copied from GameScene, minus Desert Rocks, plus `Hill Rocks` and `Sandstone Rocks` (the desert's hard rock) rules in that scene only). The desert also gets sandstone caves with gold and turtle day monsters (`Docs/Desert Setup.md`). **Tools > World > Build New World Scene** makes the scene from GameScene again, so change things in GameScene. Ask `WorldGenerator.Current` (null in the old world) for `BiomeAt(position)` (Grassland / Desert / Hills), `SpawnPoint`, `Seed`, `Terrain`. Guide: `Docs/New World Setup.md` |
+| The edge of the world (barrier) | Tony's `WorldBarrier` (20/11/2026): a see-through, glowing force field at the edge that players see and can't pass (guide `Docs/World Barrier Setup.md`). The new world makes its own; your GameScene gets one from **Tools > World > Add World Barrier** (on the inner faces of your `Boundaries` walls, which are left as they are; three of them are triggers and stopped nothing). Your **ObjectScatter** got one `[Tony] added` line: it skips spots outside the barrier, so no chest lands where nobody can reach it (log `Docs/TonyEditMate/Sanyam/20-11-2026 Nothing Spawns Outside The Barrier.md`). In your own spawning: `if (!WorldBarrier.Inside(spot, 2f)) continue;` |
 | Change scene with a fade | `ScreenFader.LoadScene("GameScene", "DAY 1", "Survive 5 nights");` (fades to black, title card, loads, fades in) |
 
 Guides: `Docs/Build Menu Setup.md`, `Docs/Item Setup.md`, `Docs/Inventory Setup.md`.
@@ -382,7 +390,9 @@ Plays the monster's animations next to Marko's enemy scripts: idle / walk / run 
 |---|---|
 | `void PlayAttack()` | the attack animation (EnemyAttack calls it) |
 | `float PlayDeath()` | the death animation; stops the enemy (no moving, attacking or being hit) and returns the seconds to wait before removing it (EnemyCombat.Die calls it) |
-| `bool IsDead` | it's dying |
+| `static void Vanish(GameObject enemy)` | removes an enemy that wasn't killed: it stops (at a random moment within **Vanish Spread**) and burns away into orange embers (its DeathEffect), then it's destroyed. No coins. Marko's EnemySpawner calls it for the night's enemies at dawn. Without an EnemyAnimator the enemy is destroyed at once |
+| `bool IsDead` | it's dying or burning away (stopped for good) |
+| `bool IsVanishing` | it's burning away (or about to), because day came |
 
 Built by **Tools > Enemies > Build Monster Enemy**. Guide: `Docs/Enemy Setup.md`.
 
@@ -461,6 +471,34 @@ animations. Its settings (Flee Distance, Run Speed, Wander Radius...) are in the
 | `const string SpeedName`, `AnimSpeedName` | its Animator's floats: `Speed` (0 = standing, 1 = walking, 2 = running) and `AnimSpeed` |
 
 Built by **Tools > World > Build Wild Animal** (any ithappy animal; the deer by default). Guide: `Docs/Animal Setup.md`.
+It never walks out through a `WorldBarrier`.
+
+### WorldBarrier (on the "World Barrier" object): the edge of the world
+
+A see-through, glowing force field around the map: faint from afar, bright and rippling where the player comes near,
+solid for bodies (its walls are on the Ignore Raycast layer, so rays pass through). The new world's World Generator
+makes one every game; **Tools > World > Add World Barrier** adds one to the open scene (GameScene). Guide:
+`Docs/World Barrier Setup.md`.
+
+| Member | What it is |
+|---|---|
+| `static bool Inside(Vector3 spot, float margin = 0f)` | true if the spot is inside the barrier, at least `margin` meters from it (always true when the scene has no barrier). Ask it before spawning something |
+| `bool Contains(Vector3 spot, float margin = 0f)` | the same for this one barrier |
+| `void SetArea(Vector2 size, float height)` | moves its sides (x width, z length around the object) and height; remade at once while playing |
+| `Vector2 Size`, `float Height` | where it stands now |
+
+### ViewDistance (on the Main Camera): how far the player can see
+
+The new world's "line of sight" (100 m): nothing further is drawn (the camera's Far Clip Plane), a mist hides the edge
+(fog plus a band of mist low on the sky, colored by the time of day), terrain grass is drawn only that far, and
+PlayerSight's range becomes that distance. Fewer things to draw = a higher frame rate, most of all in the web build.
+Change it: **Main Camera > View Distance > Distance**. Guide: `Docs/View Distance Setup.md`.
+
+| Member | What it is |
+|---|---|
+| `static float Limit` | how far the player can see now, in meters (no limit when the scene has none) |
+| `static ViewDistance Current` | the one in the scene (null if none or switched off) |
+| `float Distance` / `void SetDistance(float meters)` | read / change it (10 - 500 m), e.g. from a settings slider |
 
 ### ToolRules (nothing to find: static): how tools work
 
@@ -483,9 +521,15 @@ Get it: `PlayerArmor.Current` (it adds itself to the Player if the Player has no
 | Member | What it is |
 |---|---|
 | `ItemData WornIn(ArmorSlot slot)` | what's worn in a slot (null = nothing) |
-| `float ProtectionPercent`, `float Protection` | every worn piece's Protection added up, in percent (the full iron set: 10); how much of a hit it takes off (0.1 = 10 %, at most 0.8) |
-| `string MostWornSet(out int count)`, `string FullSet`, `int SetSize` | the set most worn pieces belong to and how many ("Iron", 4); the set worn in every slot or null; 6 |
-| `SetBonus ActiveBonus`, `SetBonus BonusFor(string set)` | the set bonus given now (null = none) / a set's bonus: `.set`, `.staminaRegen` (1.5 = stamina 50 % faster), `.Describe()` ("stamina recharges 50% faster") |
+| `float ProtectionPercent`, `float Protection` | every worn piece's Protection added up, in percent (the full copper set: 10, iron: 16); how much of a hit it takes off (0.1 = 10 %, at most 0.8) |
+| `string MostWornSet(out int count)`, `string FullSet`, `int SetSize` | the set most worn pieces count toward and how many ("Copper", 4: Iron pieces count as Copper); the set every slot counts toward or null (all six Iron = "Iron"); 6 |
+| `SetBonus ActiveBonus`, `SetBonus BonusFor(string set)` | the set bonus given now (null = none) / a set's bonus: `.set`, `.staminaRegen` (1.5 = stamina 50 % faster, Iron 2), `.countsAs` (Iron: "Copper"), `.color` (its box in the crafting list), `.Describe()` ("stamina recharges 50% faster"), `.Short()` ("+50% stamina recharge") |
+| `int PiecesFor(string set)`, `int WornOf(string set)`, `bool CountsToward(string own, string target)` | worn pieces counting toward a set (with the sets that count as it) / of exactly that set / does a piece of set "own" count toward "target" |
+| `string BetterSetInProgress(out int count)` | a better set than the full one, partly worn ("Iron", 3), or null |
+| `bool IsWorn(string id)` | is a piece with this Item Id worn |
+| `bool LendForUpgrade(ItemData upgrade)`, `void FinishUpgrade(ItemData made, bool crafted)` | crafting an upgrade of a worn piece: take it off for the recipe (Turki's CraftingMenu calls it), then wear the new piece (or the old one again) |
+| `static List<SetBonus> DefaultBonuses()`, `CopperColor`, `IronColor`, `GoldColor` | the sets the armor tool makes, weakest first: Copper, then Iron (a list saved without one gets it added when the game starts; `ReinforcedColor` is now `CopperColor`) |
+| `bool UpdateOldBonuses()` | puts a Set Bonuses list from before the swap (Iron first, Reinforced Iron) right; Awake and the armor tool call it |
 | `float Reduce(float damage)` | a hit after the armor's share (PlayerHealth.TakeDamage uses it) |
 | `bool Equip(ItemData item)`, `bool TakeOff(ArmorSlot slot)` | put a piece on from the inventory / back into it (false = can't, e.g. no room) |
 | `bool EquipFromCursor(ArmorSlot slot)` | put on the piece held on the cursor; the old piece goes onto the cursor |
@@ -571,6 +615,8 @@ Get it: nothing to find, write `GameRules.KeepInventory` etc. directly
 | `GameRules.OverwriteItemIcon` + `GameRules.ItemIconStyle` | off / Auto Icon | on = every item in the inventory, hotbar, cursor and build menu is shown the same way: **Auto Icon** (photo of the prefab), **Label** (the prefab name in capitals, e.g. "SWORD", like Marko's tool slots), **Static Image** or **Aseprite Animation** (the item's own; falls back to Auto Icon). Code: `ItemIconRules.Resolve(...)`, `ItemIconRules.Label(slot)` |
 | `GameRules.WorldInteraction` | off | old rule for grabbing / levitating anywhere |
 | `GameRules.PerkIcons` | on | on = the HUD shows the perks as icons (x2 for stacks); off = boxes with each perk's name and stats (PerkBar) |
+| `GameRules.ToolTest` | off | on = the player gets one of every tool (ToolTestKit, for testing) |
+| `GameRules.ArmorTest` | off | on = the player gets one of every armor piece: the Copper and Iron sets (ArmorTestKit, for testing; its own rule since 20/11/2026, Tool Test no longer gives armor) |
 | `GameRules.ShowNotifications` + `GameRules.NotificationSide` | on / Left | on = "+3 Wood" / "+2 Coins" messages show on the **Left** or **Right** side of the screen (NotificationFeed); off = no messages. Change the side from code: `GameRules.SetNotificationSide(NotificationSide.Right)` |
 
 Read: `if (GameRules.KeepInventory) …`. Change: `GameRules.Set(GameRule.KeepInventory, true);`.
@@ -587,10 +633,12 @@ Get it: `DaylightCycle.Current` (no searching; null if there's no sun in the sce
 | `bool IsNight` | `Phase == Night`: from **0.77** (18:28) to **0.23** (05:31); set in the sun's Inspector ("Parts Of The Day") |
 | `string ClockText` / `int Hour`, `Minute` | the clock, e.g. "14:30" |
 | `float SecondsUntilNight` / `SecondsUntilMorning` | real seconds left (0 if it's already night / day) |
+| `float SunHeight` | how high the sun is: 1 = noon, 0 = on the horizon (sunrise / sunset), -1 = midnight |
+| `float SkyDip` | 1 normally, dips to 0 for a moment while the light turns from sun into moon (the sky fades out then) |
 | `static event Action<int> NightStarted` | night starts (the day number). **Use this to spawn enemies** |
 | `static event Action<int> DayStarted` | night ends, a new day starts (the new day number) |
 | `static event Action<DayPhase> PhaseChanged` | any part of the day starts |
-| `void ResetToStart()` | back to the starting day, time and light. Happens by itself when the player dies (Reset On Player Death, on by default); dying at night fires DayStarted, so night enemies are removed |
+| `void ResetToStart()` | back to the starting day, time and light. Happens by itself when the player dies (Reset On Player Death, on by default); dying at night fires DayStarted, so night enemies burn away |
 
 The events are **static**: subscribe from anywhere, any time, no need to find the sun first.
 They also fire once when the game starts (NightStarted if it starts at night, DayStarted if in the day).
@@ -664,6 +712,7 @@ The choices are put into the game by themselves when GameScene loads (before any
 | `DeathRule? WhenDying`, `bool? AutoPickupDrops`, `bool? ShowNotifications` | the rules (already given to GameRules) |
 | `bool IsChosen` | START GAME was pressed this session (false when you press Play straight in GameScene) |
 | `bool? NewWorld` | true = Map: New world (ProceduralGenerateScene, a new random world every game); null = the old world |
+| `bool? StartWithAllTools`, `bool? StartWithAllArmor` | the TESTING ticks "Start with all tools" / "Start with all armor" (already given to GameRules Tool Test / Armor Test) |
 
 ### Menu effects you can reuse (title screen)
 

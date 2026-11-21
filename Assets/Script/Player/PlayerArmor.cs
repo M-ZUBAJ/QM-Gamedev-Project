@@ -6,26 +6,34 @@ Use by: The Player (next to PlayerInventory and PlayerHealth). Tools > Items > B
         Player has none (e.g. GameScene wasn't saved after that tool), one is added to it the first time it's needed.
 Unity Editor: Worn = what the player wears now (one per slot), for checking while playing; dragging an armor's Item Data
               in there while playing puts it on at once (without taking it from the inventory).
-              Set Bonuses = what wearing a whole set gives (Iron: stamina comes back 50 % faster).
-              Testing: Play, get a piece of armor (craft it, or tick GameRules > Testing > Tool Test), Tab > Gear, click a
-              slot and pick it. Then PlayerHealth's ⋮ > Test: Take Damage takes less off. With all six iron pieces on,
-              sprint until tired: the stamina bar refills faster, and the Info tab shows the bonus in gold.
+              Set Bonuses = what wearing a whole set gives (Copper: stamina comes back 50 % faster; Iron: 100 %, and it
+              counts as Copper), and each set's color in menus. Better sets go lower in the list.
+              Testing: Play, get a piece of armor (craft it, or tick GameRules > Testing > Armor Test), Tab > Gear, click
+              a slot and pick it. Then PlayerHealth's ⋮ > Test: Take Damage takes less off. With all six copper pieces
+              on, sprint until tired: the stamina bar refills faster, and the Info tab shows the bonus in gold.
 Purpose: The armor the player wears: one piece per slot (Helmet, Shoulders, Chest, Gloves, Legs, Boots).
          Putting a piece on takes it out of the inventory, and the piece worn there before goes back in; taking a piece
          off puts it back in the inventory (only if there's room). A piece held on the cursor (picked up on the Inventory
          page) can be put straight on by clicking its slot: the old piece then goes onto the cursor, like Minecraft.
-         It protects: every worn piece's Protection is added up, in percent (the iron set: 1.5 % a piece, 2.5 % for the
-         chestplate, so 10 % for all six), up to Max Protection. PlayerHealth asks it about every hit (TakeDamage), but
-         not about starving or bad food (LoseHealth).
-         Set bonus: a piece of the same set in every slot (Armor > Set, e.g. Iron) gives that set's bonus from Set
-         Bonuses. The iron set makes stamina come back 50 % faster (it tells PlayerStamina).
+         It protects: every worn piece's Protection is added up, in percent (the copper set: 1.5 % a piece, 2.5 % for
+         the chestplate, so 10 % for all six; the iron set 16 %), up to Max Protection. PlayerHealth asks it about every
+         hit (TakeDamage), but not about starving or bad food (LoseHealth).
+         Set bonus: a piece of the same set in every slot (Armor > Set, e.g. Copper) gives that set's bonus from Set
+         Bonuses. The copper set makes stamina come back 50 % faster, the iron set 100 % (it tells PlayerStamina). A
+         set can count as a lower one (Counts As): Iron pieces fill Copper's slots too, so upgrading one piece at a
+         time never loses the Copper bonus; all six Iron give the better bonus.
+         Upgrading a worn piece: crafting an Iron piece can use the Copper piece the player wears (Turki's
+         CraftingMenu calls LendForUpgrade, then FinishUpgrade): it comes off for the recipe, and the new piece is
+         worn in its place.
+         A Set Bonuses list saved before the tiers were swapped (20/11/2026: Iron came first, then Reinforced Iron) is
+         put right when the game starts (UpdateOldBonuses).
          Changed tells everyone when the armor changes: ArmorLook shows the pieces on the character (the body, the
          first-person hands and the Gear page's preview) and the Gear page updates its slots.
          When the player dies, ItemDropper takes the armor off with the items (GameRules Keep Inventory off).
 Requirement: PlayerArmor.cs x-> PlayerInventory.cs, ItemData.cs, ArmorStats.cs
              PlayerArmor.cs o-> PlayerStamina.cs
-             PlayerArmor.cs <-x ArmorBuilder.cs, ArmorLook.cs, ArmorPicker.cs, ArmorSlotUI.cs, GearPage.cs
-             PlayerArmor.cs <-o ItemDropper.cs, PlayerHealth.cs, PlayerInfoPage.cs
+             PlayerArmor.cs <-x ArmorBuilder.cs, ArmorLook.cs, ArmorPicker.cs, ArmorSlotUI.cs, CraftingMenu.cs, CraftingSetPanels.cs, GearPage.cs
+             PlayerArmor.cs <-o ArmorTestKit.cs, CraftingRow.cs, ItemDropper.cs, PlayerHealth.cs, PlayerInfoPage.cs
 */
 
 using System.Collections.Generic;
@@ -34,7 +42,7 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class PlayerArmor : MonoBehaviour
 {
-    // What wearing every piece of one armor set gives.
+    // What wearing every piece of one armor set gives, and how the set shows in menus.
     [System.Serializable]
     public class SetBonus
     {
@@ -45,12 +53,50 @@ public class PlayerArmor : MonoBehaviour
         [Min(1f)]
         public float staminaRegen = 1.5f;
 
+        [Tooltip("A lower set this one also counts as (Iron counts as Copper): its pieces fill that set's slots too, so " +
+                 "a mix of Copper and Iron pieces still gives the Copper bonus. Empty = none.")]
+        public string countsAs = "";
+
+        [Tooltip("The set's color in menus (its panel in the crafting list).")]
+        public Color color = IronColor;
+
+        public SetBonus() { }
+
+        public SetBonus(string set, float staminaRegen, string countsAs, Color color)
+        {
+            this.set = set;
+            this.staminaRegen = staminaRegen;
+            this.countsAs = countsAs;
+            this.color = color;
+        }
+
         // What it does, the way the Gear and Info pages say it (e.g. "stamina recharges 50% faster").
         public string Describe()
         {
             return staminaRegen > 1.001f ? "stamina recharges " + ArmorStats.Percent((staminaRegen - 1f) * 100f) + " faster" : "no bonus";
         }
+
+        // The same, short (e.g. "+50% stamina recharge"), for a line with little room.
+        public string Short()
+        {
+            return staminaRegen > 1.001f ? "+" + ArmorStats.Percent((staminaRegen - 1f) * 100f) + " stamina recharge" : "no bonus";
+        }
     }
+
+    // The sets' colors in menus.
+    public static readonly Color CopperColor = new Color(0.85f, 0.5f, 0.27f);        // copper
+    public static readonly Color IronColor = new Color(0.56f, 0.6f, 0.67f);          // steel grey
+    public static readonly Color GoldColor = new Color(0.95f, 0.75f, 0.2f);          // gold: ready for a Gold set (not made yet)
+
+    // The sets Tools > Items > Build Plate Armor makes, weakest first: Copper (stamina 50 % faster) and Iron (each piece
+    // a Copper piece + iron: stamina 100 % faster, and it counts as Copper). A list saved before a set existed gets the
+    // missing ones added when the game starts, so a new set always has its bonus.
+    // A Gold set later: add new SetBonus("Gold", 2.5f, "Iron", GoldColor) at the end (see ArmorBuilder's Sets).
+    public static List<SetBonus> DefaultBonuses() => new List<SetBonus>
+    {
+        new SetBonus("Copper", 1.5f, "", CopperColor),
+        new SetBonus("Iron", 2f, "Copper", IronColor),
+    };
 
     // ===== Fields =====
     [Header("Protection")]
@@ -59,9 +105,9 @@ public class PlayerArmor : MonoBehaviour
     [SerializeField] float maxProtection = 80f;
 
     [Header("Set bonus")]
-    [Tooltip("What wearing a whole set gives: a piece of that set (Armor > Set) in every slot. Iron: stamina comes back " +
-             "50 % faster.")]
-    [SerializeField] List<SetBonus> setBonuses = new List<SetBonus> { new SetBonus() };
+    [Tooltip("What wearing a whole set gives: a piece of that set (Armor > Set) in every slot. Copper: stamina comes back " +
+             "50 % faster; Iron: 100 % (and its pieces count as Copper). Better sets go lower in the list.")]
+    [SerializeField] List<SetBonus> setBonuses = DefaultBonuses();
 
     [Header("Worn now")]
     [Tooltip("What the player wears, one per slot in this order: Helmet, Shoulders, Chest, Gloves, Legs, Boots. " +
@@ -73,6 +119,8 @@ public class PlayerArmor : MonoBehaviour
 
     static PlayerArmor current;
     PlayerStamina stamina;   // gets the set bonus (optional: no stamina = no bonus to give)
+    ItemData lent;           // a worn piece taken off for an upgrade's recipe (LendForUpgrade), until FinishUpgrade
+    const int MostSteps = 8; // how far a Counts As chain is followed (so a typo'd circle can't loop forever)
 
     // The player's armor. If the Player has none yet (e.g. the scene wasn't saved after Tools > Items > Build Plate Armor,
     // or the title screen opened the saved scene), one is added to the Player (the object with PlayerInventory) the
@@ -91,7 +139,7 @@ public class PlayerArmor : MonoBehaviour
 
     public static event System.Action Changed;   // a piece was put on or taken off
 
-    // Every worn piece's Protection added up, in percent (the full iron set: 10).
+    // Every worn piece's Protection added up, in percent (the full copper set: 10, the full iron set: 16).
     public float ProtectionPercent
     {
         get
@@ -105,13 +153,14 @@ public class PlayerArmor : MonoBehaviour
         }
     }
 
-    // How much of a hit the armor takes off: 0 = nothing, 0.1 = 10 % (the full iron set), never more than Max Protection.
+    // How much of a hit the armor takes off: 0 = nothing, 0.1 = 10 % (the full copper set), never more than Max Protection.
     public float Protection => Mathf.Min(maxProtection, ProtectionPercent) / 100f;
 
     // A full set = one piece in every slot.
     public int SetSize => Slots.Length;
 
-    // The set every slot is worn from (e.g. "Iron"), or null.
+    // The set every slot counts toward (e.g. "Copper", also for a mix of Copper and Iron pieces), or null. With all six
+    // Iron it's Iron (both sets are full then: the one with more pieces of its own wins).
     public string FullSet
     {
         get
@@ -130,6 +179,8 @@ public class PlayerArmor : MonoBehaviour
     {
         current = this;
         FitSlots();
+        UpdateOldBonuses();     // a list from before Copper came first
+        AddMissingBonuses();
         stamina = GetComponent<PlayerStamina>();
         if (stamina == null) stamina = FindFirstObjectByType<PlayerStamina>();
     }
@@ -173,24 +224,121 @@ public class PlayerArmor : MonoBehaviour
         return damage * (1f - Protection);
     }
 
-    // The set most of the worn pieces belong to (e.g. "Iron"), and how many of them; null and 0 if no worn piece has a
-    // set. The Gear and Info pages show it as "Iron set 4/6".
+    // The set most of the worn pieces count toward, and how many: 2 Copper + 2 Iron pieces = "Copper", 4 (an Iron
+    // piece counts as Copper). A tie goes to the set with more pieces of its own (3 Iron pieces alone = "Iron", 3).
+    // Null and 0 if no worn piece has a set. The Gear and Info pages show it as "Copper set 4/6".
     public string MostWornSet(out int count)
     {
         string best = null;
+        int bestOwn = 0;
         count = 0;
-        foreach (ItemData piece in worn)
+        foreach (string set in WornSets())
         {
-            string set = SetOf(piece);
-            if (set == null || set == best) continue;
-            int pieces = PiecesOf(set);
-            if (pieces > count)
+            int pieces = PiecesFor(set), own = WornOf(set);
+            if (pieces > count || (pieces == count && own > bestOwn))
+            {
+                best = set;
+                count = pieces;
+                bestOwn = own;
+            }
+        }
+        return best;
+    }
+
+    // A better set than the one whose bonus is on, partly worn (e.g. 3 Iron pieces in a mix that gives the Copper
+    // bonus), and how many of its pieces are worn; null and 0 if there's none. The Gear page shows it as the next goal.
+    public string BetterSetInProgress(out int count)
+    {
+        count = 0;
+        string full = FullSet;
+        if (full == null) return null;
+        string best = null;
+        foreach (string set in WornSets())
+        {
+            if (Same(set, full) || !CountsToward(set, full)) continue;   // only sets that count as the full one: better ones
+            int pieces = PiecesFor(set);
+            if (pieces < SetSize && pieces > count)
             {
                 best = set;
                 count = pieces;
             }
         }
         return best;
+    }
+
+    // How many worn pieces count toward this set: its own pieces and pieces of sets that count as it (an Iron piece
+    // counts toward Copper too).
+    public int PiecesFor(string set)
+    {
+        int count = 0;
+        foreach (ItemData piece in worn)
+        {
+            if (CountsToward(SetOf(piece), set)) count++;
+        }
+        return count;
+    }
+
+    // How many worn pieces are of exactly this set.
+    public int WornOf(string set)
+    {
+        int count = 0;
+        foreach (ItemData piece in worn)
+        {
+            if (Same(SetOf(piece), set)) count++;
+        }
+        return count;
+    }
+
+    // Does a piece of set "own" count toward set "target"? Its own set does, and so do the sets it counts as
+    // (Iron -> Copper), and theirs.
+    public bool CountsToward(string own, string target)
+    {
+        for (int step = 0; step < MostSteps && !string.IsNullOrEmpty(own); step++)
+        {
+            if (Same(own, target)) return true;
+            SetBonus bonus = BonusFor(own);
+            own = bonus != null ? bonus.countsAs : null;
+        }
+        return false;
+    }
+
+    // Is a piece with this Item Id worn now? (The crafting list counts a worn piece toward an armor upgrade's recipe.)
+    public bool IsWorn(string id)
+    {
+        foreach (ItemData piece in worn)
+        {
+            if (piece != null && piece.Id == id) return true;
+        }
+        return false;
+    }
+
+    // Crafting an upgrade of a worn piece (e.g. Copper Helmet + 4 Iron = Iron Helmet while the Copper Helmet is worn):
+    // takes the worn piece off into the inventory, so the recipe can use it. Only when the inventory has none of
+    // it (a spare one there is used instead). Turki's CraftingMenu calls this before it checks the recipe, and
+    // FinishUpgrade after. True = taken off.
+    public bool LendForUpgrade(ItemData upgrade)
+    {
+        lent = null;
+        ItemData old = upgrade != null && upgrade.IsArmor ? upgrade.UpgradedFrom : null;
+        PlayerInventory inventory = PlayerInventory.Instance;
+        if (old == null || !old.IsArmor || inventory == null || inventory.Count(old.Id) > 0) return false;
+
+        ItemData wornThere = WornIn(old.Armor.slot);
+        if (wornThere == null || wornThere.Id != old.Id) return false;   // not wearing it
+        if (!TakeOff(old.Armor.slot)) return false;                      // no room in the inventory for it
+        lent = old;
+        return true;
+    }
+
+    // After crafting (only if LendForUpgrade took a piece off): crafted = the new piece is worn where the old one was;
+    // not crafted (something was missing, or the inventory was full) = the old piece goes back on.
+    public void FinishUpgrade(ItemData made, bool crafted)
+    {
+        if (lent == null) return;
+        ItemData old = lent;
+        lent = null;
+        if (crafted && made != null && made.IsArmor && Equip(made)) return;
+        Equip(old);
     }
 
     // The bonus for wearing the whole of this set (null = none in Set Bonuses, or no set).
@@ -322,16 +470,45 @@ public class PlayerArmor : MonoBehaviour
         stamina.SetRegenBoost(this, bonus != null ? bonus.staminaRegen : 1f);
     }
 
-    // How many worn pieces belong to this set.
-    int PiecesOf(string set)
+    // Every set the worn pieces count toward: their own sets and the sets those count as.
+    List<string> WornSets()
     {
-        int count = 0;
+        List<string> sets = new List<string>();
         foreach (ItemData piece in worn)
         {
-            if (string.Equals(SetOf(piece), set, System.StringComparison.OrdinalIgnoreCase)) count++;
+            string set = SetOf(piece);
+            for (int step = 0; step < MostSteps && !string.IsNullOrEmpty(set); step++)
+            {
+                string name = set;
+                if (!sets.Exists(known => Same(known, name))) sets.Add(name);
+                SetBonus bonus = BonusFor(set);
+                set = bonus != null ? bonus.countsAs : null;
+            }
         }
-        return count;
+        return sets;
     }
+
+    // A list saved before the tiers were swapped (20/11/2026: Iron came first with 50 %, then Reinforced Iron) has no
+    // Copper. Its Iron would give today's Iron pieces the old first tier's bonus (and not count Copper pieces), so Iron
+    // and Reinforced Iron are taken out; AddMissingBonuses then puts in today's Copper and Iron. Other sets stay. The
+    // build tool (Tools > Items > Build Plate Armor) calls it on the scene's Player too. True = the list changed.
+    public bool UpdateOldBonuses()
+    {
+        if (setBonuses == null || BonusFor("Copper") != null) return false;   // nothing saved, or saved after the swap
+        return setBonuses.RemoveAll(bonus => bonus == null || Same(bonus.set, "Iron") || Same(bonus.set, "Reinforced Iron")) > 0;
+    }
+
+    // Sets from DefaultBonuses the list hasn't got (it was saved before they existed) are added at its end.
+    void AddMissingBonuses()
+    {
+        if (setBonuses == null) setBonuses = new List<SetBonus>();
+        foreach (SetBonus bonus in DefaultBonuses())
+        {
+            if (BonusFor(bonus.set) == null) setBonuses.Add(bonus);
+        }
+    }
+
+    static bool Same(string a, string b) => string.Equals(a, b, System.StringComparison.OrdinalIgnoreCase);
 
     // The set a piece belongs to, or null (no piece, not armor, or no set).
     static string SetOf(ItemData piece)

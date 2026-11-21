@@ -6,27 +6,42 @@ Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so i
 Unity Editor: Open GameScene, then menu Tools > Items > Build Plate Armor (it asks first), and save the scene afterwards.
               Run it again any time: the items, their prefabs and the Gear page are refilled in place, and recipes you
               changed stay. Guide: Docs/Armor Setup.md
-Purpose: Blink's plate armor (the PlateSet1 parts already inside the player's character, switched off) as the iron
-         set: 6 items the player can craft, wear and see, in one click:
-           - Assets/Config/Items/Armor/<Id>.asset: Iron Helmet, Iron Shoulders, Iron Chestplate, Iron Gloves, Iron
-             Leggings, Iron Boots. Item Type Armor: the slot, Protection 1.5 % each and 2.5 % for the chestplate (10 %
-             off every hit for all six), Set = Iron (all six: stamina recharges 50 % faster, PlayerArmor's Set
-             Bonuses), the character's part to show and what it hides; a photo icon; a recipe of Iron (5 / 4 / 8 / 3 /
-             7 / 4, only for a new item or one without a recipe); made at the Crafting page. They were called Plate...
-             before: their old files are renamed (so everything linked to them stays linked);
-           - Assets/Prefabs/Item/Armor/<Id>.prefab (+ Meshes/<Id>.asset): the piece frozen in the character's pose, for
-             its icon and for when it's dropped;
+Purpose: Blink's plate armor (the PlateSet1 parts already inside the player's character, switched off) as two armor
+         sets, 12 items the player can craft, wear and see, in one click. Copper comes first and Iron is its upgrade
+         (iron is the higher tier):
+           - Copper: Assets/Config/Items/Armor/Copper<Slot>.asset: Copper Helmet, Copper Shoulders, Copper Chestplate,
+             Copper Gloves, Copper Leggings, Copper Boots. Protection 1.5 % each and 2.5 % for the chestplate (10 % off
+             every hit for all six); all six: stamina recharges 50 % faster; a recipe of Copper (5 / 4 / 8 / 3 / 7 / 4);
+             copper colored;
+           - Iron: Iron<Slot>.asset ("Iron Helmet"...): 2.5 / 2.5 / 4 / 2 / 3 / 2 % (16 % for all six); all six: stamina
+             recharges 100 % faster, and its pieces count as Copper (a mix of both still gives the Copper bonus); each
+             crafted from its Copper piece + Iron (4 / 3 / 6 / 2 / 5 / 3); steel grey;
+           - files from before the tiers were swapped (20/11/2026: Iron came first, and Reinforced Iron = an Iron piece
+             + Copper) are renamed by tier: Iron... -> Copper..., ReinforcedIron... -> Iron..., with Iron and Copper
+             swapped in their recipes, so everything linked to them stays linked;
+           - every item: Item Type Armor (the slot, Protection, Set, the character's part to show and what it hides,
+             Look = its set's material), a photo icon, made at the Crafting page; a recipe only for a new item or one
+             without a recipe (so a recipe you changed stays);
+           - each set's look: Assets/Materials/Armor/<Set> Armor.mat with <Set> Armor Palette.png = Blink's palette
+             picture with the four strips the plate parts use repainted in the set's colors (plates, trims, leather
+             straps, cloth; their light-to-dark shading kept) and a little metal shine. Made only if missing: change the
+             colors by hand, or delete the two files to get the tool's colors again. Gold is ready too (Gold Armor.mat:
+             bright gold, red leather, crimson cloth) but its items aren't made yet (its Build is off in Sets below);
+           - Assets/Prefabs/Item/Armor/<Id>.prefab (+ Meshes/Iron<Slot>.asset, shared by both sets): the piece frozen
+             in the character's pose, in its set's colors, for its icon and for when it's dropped;
            - ArmorLook on Assets/Prefabs/Player/PlayerCharacter, so the body, the first-person hands and the Gear page's
              preview show the worn pieces, with the skin under the clothes (so nothing flickers): Blink's rows (the
              skin each piece covers from every side, switched off) and trimmed copies of the skin a piece covers only
              partly (Assets/Prefabs/Player/SkinUnderClothes: the arms under the chestplate and the hands in the gloves,
              without the faces under them; for the body and for the first-person hands);
-           - PlayerArmor on the Player (the worn armor: it takes its share off every hit), and the armor in the
-             Player's ToolTestKit (GameRules Tool Test gives it too);
-           - the armor in Turki's crafting list, after the tools (Tools > UI > Build Crafting Menu's sorting);
+           - PlayerArmor on the Player (the worn armor: it takes its share off every hit) with both sets' bonuses, and
+             the armor in the Player's ArmorTestKit (GameRules > Armor Test gives it; it's taken out of the Tool
+             Test kit, which had it before);
+           - the armor in Turki's crafting list, after the tools, set by set, each set in one panel (Tools > UI > Build
+             Crafting Menu's sorting and set panels);
            - Tools > UI > Build Gear Page: the inventory's Gear page (the character on the left, the slots on the right);
            - the Armor row on the inventory's Info tab (how much the armor protects, the set bonus in gold).
-Requirement: ArmorBuilder.cs x-> ItemData.cs, ArmorStats.cs, IconSource.cs, ItemPickup.cs, ArmorLook.cs, FirstPersonHands.cs, PlayerArmor.cs, PlayerInventory.cs, ToolTestKit.cs, MeshAssetHelper.cs, CraftingMenuBuilder.cs, GearPageBuilder.cs, InventoryUIBuilder.cs, UIBuildHelper.cs, MenuOrder.cs
+Requirement: ArmorBuilder.cs x-> ItemData.cs, ArmorStats.cs, IconSource.cs, ItemPickup.cs, ArmorLook.cs, FirstPersonHands.cs, PlayerArmor.cs, PlayerInventory.cs, ArmorTestKit.cs, ToolTestKit.cs, MeshAssetHelper.cs, CraftingMenuBuilder.cs, GearPageBuilder.cs, InventoryUIBuilder.cs, UIBuildHelper.cs, MenuOrder.cs
 */
 
 using System.Collections.Generic;
@@ -57,29 +72,110 @@ public static class ArmorBuilder
     const float CutSkin = 0.0017f;
     const float MinOnShare = 0.01f;
 
-    // One piece: its Item Id (and the one it had before), its name, the character's part, where it's worn, how much of
-    // a hit it takes off (percent), how much Iron it costs and what it hides on the character while worn.
-    struct Piece
+    // One slot's piece of Blink's plate armor (both sets use the same parts): where it's worn, the character's part it
+    // shows and what it hides on the character while worn.
+    struct Slot
     {
-        public string id, oldId, name, part;
         public ArmorSlot slot;
-        public float protection;
-        public int iron;
+        public string part;
         public string[] hides;
     }
 
-    const string SetName = "Iron";   // the set the six pieces make (PlayerArmor's Set Bonuses: Iron = stamina 50 % faster)
-
-    // 1.5 % a piece and 2.5 % for the chestplate: 10 % off every hit for the whole set.
-    static readonly Piece[] Pieces =
+    static readonly Slot[] Slots =
     {
-        new Piece { id = "IronHelmet",     oldId = "PlateHelmet",     name = "Iron Helmet",     part = "PlateSet1_Helmet",    slot = ArmorSlot.Helmet,    protection = 1.5f, iron = 5, hides = new[] { "Hair" } },
-        new Piece { id = "IronShoulders",  oldId = "PlateShoulders",  name = "Iron Shoulders",  part = "PlateSet1_Shoulders", slot = ArmorSlot.Shoulders, protection = 1.5f, iron = 4, hides = new string[0] },
-        new Piece { id = "IronChestplate", oldId = "PlateChestplate", name = "Iron Chestplate", part = "PlateSet1_Chest",     slot = ArmorSlot.Chest,     protection = 2.5f, iron = 8, hides = new[] { "Starter_Chest" } },
-        new Piece { id = "IronGloves",     oldId = "PlateGloves",     name = "Iron Gloves",     part = "PlateSet1_Gloves",    slot = ArmorSlot.Gloves,    protection = 1.5f, iron = 3, hides = new string[0] },
-        new Piece { id = "IronLeggings",   oldId = "PlateLeggings",   name = "Iron Leggings",   part = "PlateSet1_Pants",     slot = ArmorSlot.Legs,      protection = 1.5f, iron = 7, hides = new[] { "Starter_Pants" } },
-        new Piece { id = "IronBoots",      oldId = "PlateBoots",      name = "Iron Boots",      part = "PlateSet1_Boots",     slot = ArmorSlot.Boots,     protection = 1.5f, iron = 4, hides = new[] { "Starter_Boots" } },
+        new Slot { slot = ArmorSlot.Helmet,    part = "PlateSet1_Helmet",    hides = new[] { "Hair" } },
+        new Slot { slot = ArmorSlot.Shoulders, part = "PlateSet1_Shoulders", hides = new string[0] },
+        new Slot { slot = ArmorSlot.Chest,     part = "PlateSet1_Chest",     hides = new[] { "Starter_Chest" } },
+        new Slot { slot = ArmorSlot.Gloves,    part = "PlateSet1_Gloves",    hides = new string[0] },
+        new Slot { slot = ArmorSlot.Legs,      part = "PlateSet1_Pants",     hides = new[] { "Starter_Pants" } },
+        new Slot { slot = ArmorSlot.Boots,     part = "PlateSet1_Boots",     hides = new[] { "Starter_Boots" } },
     };
+
+    // A strip of Blink's palette picture (8 pixels wide, half the picture high; each part of a model takes its colors
+    // from one) and the colors it gets: its darkest row becomes Dark, its lightest Light, the rows between in between.
+    struct Strip
+    {
+        public int x;          // its left edge, in pixels of the 256 x 256 picture
+        public bool top;       // in the picture's top half (else the bottom half)
+        public Color dark, light;
+    }
+
+    // The four strips the plate parts take their colors from (measured from their corners' texture spots, 20/11/2026):
+    // the plates (bottom half), the darker trims (bottom), the leather straps (top) and the cloth under the chestplate
+    // (bottom). They mostly use the middle of each strip.
+    const int PlatesX = 64, TrimsX = 104, StrapsX = 96, ClothX = 120;
+
+    // Ready-made colors for a set: the plates, trims, leather straps and cloth (each strip's darkest and lightest color).
+    // Declared before Sets, which uses them (Unity fills these in from top to bottom).
+    static readonly Strip[] SteelColors =
+    {
+        new Strip { x = PlatesX, dark = new Color(0.25f, 0.27f, 0.3f), light = new Color(0.92f, 0.94f, 0.97f) },             // steel grey
+        new Strip { x = TrimsX, dark = new Color(0.1f, 0.1f, 0.11f), light = new Color(0.55f, 0.56f, 0.58f) },              // dark iron
+        new Strip { x = StrapsX, top = true, dark = new Color(0.12f, 0.07f, 0.04f), light = new Color(0.75f, 0.55f, 0.38f) }, // brown leather
+        new Strip { x = ClothX, dark = new Color(0.03f, 0.04f, 0.1f), light = new Color(0.35f, 0.45f, 0.85f) },             // navy cloth
+    };
+
+    static readonly Strip[] CopperColors =
+    {
+        new Strip { x = PlatesX, dark = new Color(0.3f, 0.12f, 0.05f), light = new Color(1f, 0.72f, 0.45f) },               // copper
+        new Strip { x = TrimsX, dark = new Color(0.12f, 0.07f, 0.04f), light = new Color(0.7f, 0.45f, 0.25f) },             // dark bronze
+        new Strip { x = StrapsX, top = true, dark = new Color(0.08f, 0.05f, 0.03f), light = new Color(0.55f, 0.38f, 0.25f) }, // dark leather
+        new Strip { x = ClothX, dark = new Color(0.02f, 0.08f, 0.07f), light = new Color(0.25f, 0.85f, 0.72f) },            // teal (copper's patina)
+    };
+
+    static readonly Strip[] GoldColors =
+    {
+        new Strip { x = PlatesX, dark = new Color(0.38f, 0.24f, 0.03f), light = new Color(1f, 0.93f, 0.55f) },              // bright gold
+        new Strip { x = TrimsX, dark = new Color(0.16f, 0.1f, 0.02f), light = new Color(0.72f, 0.52f, 0.15f) },             // dark gold
+        new Strip { x = StrapsX, top = true, dark = new Color(0.12f, 0.03f, 0.02f), light = new Color(0.7f, 0.25f, 0.18f) },  // red leather
+        new Strip { x = ClothX, dark = new Color(0.12f, 0.01f, 0.03f), light = new Color(0.85f, 0.12f, 0.2f) },             // crimson cloth
+    };
+
+    // One armor set: its name (Armor > Set and PlayerArmor's Set Bonuses), the start of its pieces' Item Ids, each
+    // slot's Protection (percent) and cost, what the cost is (an item's Id), the set whose piece for the same slot each
+    // recipe also uses up (an upgrade), its colors and shine. Build = false: only its look (material and palette
+    // picture) is made, no items yet, so its colors can be seen and changed before the set is added.
+    class ArmorSet
+    {
+        public string name, idStart, costItem, upgradeOf;
+        public bool build = true;
+        public float[] protection;                      // Helmet, Shoulders, Chest, Gloves, Legs, Boots
+        public int[] cost;                              // the same order
+        public Strip[] palette;
+        public float metallic, smoothness;
+    }
+
+    // Weakest first: an upgrade's recipe needs the set it upgrades to be made before it.
+    static readonly ArmorSet[] Sets =
+    {
+        new ArmorSet
+        {
+            name = "Copper", idStart = "Copper", costItem = "Copper",
+            protection = new[] { 1.5f, 1.5f, 2.5f, 1.5f, 1.5f, 1.5f },   // 10 % off every hit for all six
+            cost = new[] { 5, 4, 8, 3, 7, 4 },
+            palette = CopperColors, metallic = 0.6f, smoothness = 0.55f,
+        },
+        new ArmorSet
+        {
+            name = "Iron", idStart = "Iron", costItem = "Iron", upgradeOf = "Copper",
+            protection = new[] { 2.5f, 2.5f, 4f, 2f, 3f, 2f },            // 16 % off every hit for all six
+            cost = new[] { 4, 3, 6, 2, 5, 3 },                            // Iron, on top of the Copper piece
+            palette = SteelColors, metallic = 0.5f, smoothness = 0.5f,
+        },
+        // Gold, ready but not made yet (Build = false): only Gold Armor.mat and its palette picture are made, so the gold
+        // look can be checked and changed first. To add the set: Build = true here, add its bonus to PlayerArmor's
+        // DefaultBonuses (e.g. new SetBonus("Gold", 2.5f, "Iron", GoldColor)), then run this tool again (the Gold
+        // item comes from Tools > World > Build Desert Content). Numbers below are a first guess.
+        new ArmorSet
+        {
+            name = "Gold", idStart = "Gold", costItem = "Gold", upgradeOf = "Iron", build = false,
+            protection = new[] { 3f, 3f, 5f, 3f, 4f, 3f },                // 21 % off every hit for all six
+            cost = new[] { 4, 3, 6, 2, 5, 3 },                            // Gold, on top of the Iron piece
+            palette = GoldColors, metallic = 0.75f, smoothness = 0.7f,
+        },
+    };
+
+    const string LookFolder = "Assets/Materials/Armor";   // each set's material and palette picture
 
     // ===== Menu (Unity calls this) =====
 
@@ -100,39 +196,63 @@ public static class ArmorBuilder
             return;
         }
         if (!EditorUtility.DisplayDialog(ToolName,
-                "This makes Blink's plate armor wearable, as the iron set:\n\n" +
-                "- 6 armor items (helmet, shoulders, chestplate, gloves, leggings, boots) in " + ItemFolder + ":\n" +
-                "  1.5 % protection each, 2.5 % for the chestplate (10 % for all six); all six = stamina recharges 50 % faster\n" +
+                "This makes Blink's plate armor wearable, as two sets of 6 pieces (helmet, shoulders, chestplate, gloves, " +
+                "leggings, boots) in " + ItemFolder + ":\n\n" +
+                "- Copper (copper colored): 1.5 % protection each, 2.5 % for the chestplate (10 % for all six); all six = " +
+                "stamina recharges 50 % faster; recipes of Copper\n" +
+                "- Iron (steel grey): 16 % for all six; all six = stamina recharges 100 % faster, and it counts as " +
+                "Copper; each piece = its Copper piece + Iron (a worn Copper piece can be upgraded where it's worn)\n" +
+                "- armor files from when Iron came first (and Reinforced Iron) renamed by tier: Iron to Copper, " +
+                "Reinforced Iron to Iron\n" +
+                "- each set's colors in " + LookFolder + " (only if missing)\n" +
                 "- ArmorLook on the PlayerCharacter prefab, PlayerArmor on the Player\n" +
                 "- the skin under the clothes hidden or trimmed, so the shoulders, gloves and boots don't flicker\n" +
-                "- the armor in Turki's crafting list (recipes of Iron) and in the Tool Test kit\n" +
+                "- the armor in Turki's crafting list (each set in one panel) and in the Armor Test kit (GameRules > Armor Test)\n" +
                 "- the inventory's Gear page, built again: the character on the left, the armor slots on the right\n" +
                 "- the Armor row on the inventory's Info tab (the set bonus in gold)\n\n" +
                 "Open GameScene first, and save it afterwards. Continue?", "Build", "Cancel"))
             return;
 
-        int renamed = RenameOldFiles();   // Plate... -> Iron...
-        ItemData iron = FindItem("Iron");
+        int renamed = RenameOldFiles();   // the old Iron... -> Copper..., ReinforcedIron... -> Iron...
         List<ItemData> items = new List<ItemData>();
         List<string> missing = new List<string>();
+        List<string> noCost = new List<string>();
+        List<string> looksMade = new List<string>();
         List<ArmorLook.SkinUnder> skin;
         List<string> trimmed = new List<string>();
         float height;
         GameObject source = PrefabUtility.LoadPrefabContents(characterPath);   // to freeze each piece from (never saved)
         try
         {
-            foreach (Piece piece in Pieces)
+            Dictionary<string, Material> looks = MakeLooks(source, looksMade);
+            Dictionary<ArmorSlot, Mesh> frozen = new Dictionary<ArmorSlot, Mesh>();   // each slot's piece, frozen once for both sets
+            Dictionary<string, ItemData> made = new Dictionary<string, ItemData>();   // by Item Id, for the upgrade recipes
+            foreach (ArmorSet set in Sets)
             {
-                SkinnedMeshRenderer part = FindPart(source, piece.part);
-                if (part == null)
+                if (!set.build) continue;   // only its look for now (MakeLooks), e.g. Gold
+                ItemData cost = FindItem(set.costItem);
+                if (cost == null) noCost.Add(set.name + " (no " + set.costItem + " item)");
+                looks.TryGetValue(set.name, out Material setLook);
+                for (int s = 0; s < Slots.Length; s++)
                 {
-                    missing.Add(piece.part);
-                    continue;
+                    Slot slot = Slots[s];
+                    SkinnedMeshRenderer part = FindPart(source, slot.part);
+                    if (part == null)
+                    {
+                        if (!missing.Contains(slot.part)) missing.Add(slot.part);
+                        continue;
+                    }
+                    if (!frozen.TryGetValue(slot.slot, out Mesh mesh)) frozen[slot.slot] = mesh = FreezeMesh(MeshName(slot), part);
+
+                    string id = IdOf(set, slot);
+                    ItemData item = FindOrMakeItem(id);
+                    GameObject prefab = BuildPrefab(id, mesh, setLook != null ? new[] { setLook } : part.sharedMaterials, item);
+                    ItemData lower = null;
+                    if (set.upgradeOf != null) made.TryGetValue(IdOf(SetNamed(set.upgradeOf), slot), out lower);
+                    FillItem(item, set, s, prefab, setLook, cost, lower);
+                    made[id] = item;
+                    items.Add(item);
                 }
-                ItemData item = FindOrMakeItem(piece.id);
-                GameObject prefab = BuildPrefab(piece, part, item);
-                FillItem(item, piece, prefab, iron);
-                items.Add(item);
             }
             skin = SkinRows(source);
             height = AddTrims(source, skin, 0f, trimmed);   // the body's skin
@@ -152,36 +272,92 @@ public static class ArmorBuilder
         string info = InventoryUIBuilder.AddArmorRowToCanvas();
         AssetDatabase.SaveAssets();
 
-        Debug.Log(ToolName + ": " + items.Count + " iron armor items in " + ItemFolder +
-                  (renamed > 0 ? " (" + renamed + " old Plate files renamed to Iron)" : "") +
+        Debug.Log(ToolName + ": " + items.Count + " armor items (Copper, then Iron) in " + ItemFolder +
+                  (renamed > 0 ? " (" + renamed + " old pieces renamed by tier: Iron to Copper, Reinforced Iron to Iron, " +
+                                 "with Iron and Copper swapped in their recipes)" : "") +
                   (missing.Count > 0 ? " (not found on the character: " + string.Join(", ", missing) + ")" : "") +
-                  (iron == null ? " (no Iron item: no recipes)" : "") +
+                  (noCost.Count > 0 ? " (no recipes for " + string.Join(", ", noCost) + ")" : "") +
+                  "; set colors: " + (looksMade.Count > 0 ? string.Join(", ", looksMade) : "kept as they were") +
                   "; " + look + " (skin under the clothes: " +
                   (trimmed.Count > 0 ? "trimmed copies " + string.Join(", ", trimmed) : "no trimmed copies needed") + ");" +
                   player + " Crafting: " + crafting + " Gear page: " + gear + " Info tab: " + info + "." +
-                  " Save the scene, then Play: craft or get the armor (Tool Test), Tab > Gear.");
+                  " Save the scene, then Play: craft or get the armor (GameRules > Armor Test), Tab > Gear.");
         string clashes = Clashes(skin);
         if (clashes != null) Debug.LogWarning(ToolName + ": " + clashes);
     }
 
     // ===== My methods =====
 
-    // The pieces were called Plate... at first (20/11/2026). Their files (Item Data, prefab, frozen mesh) get the Iron
-    // names, and a rename keeps everything that links to them: Turki's crafting list, the Tool Test kit, the prefab's
-    // mesh. Nothing happens once they're renamed, or if an Iron file is there already. Returns how many were renamed.
+    // The tiers were swapped (20/11/2026, Tony: iron is the higher tier). Before, Iron came first and Reinforced Iron
+    // was its upgrade (an Iron piece + Copper); now Copper comes first and Iron is its upgrade (a Copper piece + Iron).
+    // Each old file keeps its tier and gets the new name, and a rename keeps everything that links to it (Turki's
+    // crafting list, the upgrade recipes, the prefabs):
+    //   - an old first-tier piece Iron<Slot> (its recipe uses up no armor piece) becomes Copper<Slot>, prefab too;
+    //   - an old upgrade ReinforcedIron<Slot> becomes Iron<Slot>, prefab too (its recipe's piece is the Copper one now);
+    //   - each renamed piece's recipe gets Iron and Copper swapped (amounts and anything you changed stay);
+    //   - Reinforced Iron Armor.mat and its palette picture (copper colors) become Copper Armor.
+    // Nothing happens once they're renamed, or where a file with the new name is there already. Returns how many
+    // pieces were renamed.
     static int RenameOldFiles()
     {
+        ItemData iron = FindItem("Iron"), copper = FindItem("Copper");   // the materials the recipes swap
         int renamed = 0;
-        foreach (Piece piece in Pieces)
+        foreach (Slot slot in Slots)
         {
-            ItemData old = FindItem(piece.oldId);
-            if (old != null && FindItem(piece.id) == null) renamed += Rename(AssetDatabase.GetAssetPath(old), piece.id);
-            renamed += Rename(FindPrefabPath(PrefabFolder + "/" + piece.oldId + ".prefab"), piece.id);
-            renamed += Rename(MeshFolder + "/" + piece.oldId + ".asset", piece.id);
+            string name = ArmorStats.SlotName(slot.slot);
+            ItemData oldFirst = FindItem("Iron" + name);
+            if (oldFirst != null && oldFirst.UpgradedFrom == null && RenamePiece(oldFirst, "Iron" + name, "Copper" + name))
+            {
+                SwapInRecipe(oldFirst, iron, copper);
+                renamed++;
+            }
+            ItemData oldUpgrade = FindItem("ReinforcedIron" + name);
+            if (oldUpgrade != null && RenamePiece(oldUpgrade, "ReinforcedIron" + name, "Iron" + name))
+            {
+                SwapInRecipe(oldUpgrade, iron, copper);
+                renamed++;
+            }
         }
+        Rename(LookFolder + "/Reinforced Iron Armor.mat", "Copper Armor");
+        Rename(LookFolder + "/Reinforced Iron Armor Palette.png", "Copper Armor Palette");
         if (renamed > 0) AssetDatabase.SaveAssets();
         return renamed;
     }
+
+    // Renames a piece's Item Data and its prefab (Assets/Prefabs/Item/Armor/<oldId>) to newId, only while no Item Data
+    // has that name. True = renamed.
+    static bool RenamePiece(ItemData item, string oldId, string newId)
+    {
+        if (FindItem(newId) != null) return false;   // the new one is there already: both stay
+        if (Rename(AssetDatabase.GetAssetPath(item), newId) == 0) return false;
+        Rename(FindPrefabPath(PrefabFolder + "/" + oldId + ".prefab"), newId);
+        return true;
+    }
+
+    // Iron <-> Copper in a piece's recipe (the materials swap with the tiers); amounts and other lines stay.
+    static void SwapInRecipe(ItemData item, ItemData iron, ItemData copper)
+    {
+        if (iron == null || copper == null) return;
+        SerializedObject so = new SerializedObject(item);
+        SerializedProperty recipe = so.FindProperty("recipe");   // must match ItemData's field
+        for (int i = 0; i < recipe.arraySize; i++)
+        {
+            SerializedProperty what = recipe.GetArrayElementAtIndex(i).FindPropertyRelative("item");
+            if (what.objectReferenceValue == iron) what.objectReferenceValue = copper;
+            else if (what.objectReferenceValue == copper) what.objectReferenceValue = iron;
+        }
+        so.ApplyModifiedPropertiesWithoutUndo();
+        EditorUtility.SetDirty(item);
+    }
+
+    // A piece's Item Id: the set's start + the slot's name (CopperHelmet, IronChestplate, CopperLeggings).
+    static string IdOf(ArmorSet set, Slot slot) => set.idStart + ArmorStats.SlotName(slot.slot);
+
+    // The frozen piece's file name, shared by every set (they use the same part). It keeps the name it got when Iron
+    // was the first set (IronHelmet), so changing the order of Sets makes no new files.
+    static string MeshName(Slot slot) => "Iron" + ArmorStats.SlotName(slot.slot);
+
+    static ArmorSet SetNamed(string name) => System.Array.Find(Sets, set => set.name == name);
 
     // Renames the file at "path" to "newName" (same folder and extension) if it's there and that name is free. 1 = done.
     static int Rename(string path, string newName)
@@ -228,16 +404,15 @@ public static class ArmorBuilder
     }
 
     // The piece's item prefab, emptied and refilled IN PLACE if it exists: a box to aim at (F picks it up), ItemPickup,
-    // and Model = the frozen piece with the character's armor material.
-    static GameObject BuildPrefab(Piece piece, SkinnedMeshRenderer part, ItemData item)
+    // and Model = the frozen piece in its set's material (so its icon and the dropped piece have the set's colors).
+    static GameObject BuildPrefab(string id, Mesh mesh, Material[] materials, ItemData item)
     {
-        Mesh mesh = FreezeMesh(piece, part);
         if (mesh == null) return null;
 
-        string path = FindPrefabPath(PrefabFolder + "/" + piece.id + ".prefab");
+        string path = FindPrefabPath(PrefabFolder + "/" + id + ".prefab");
         MakeFolders(FolderOf(path));
         bool existed = AssetDatabase.LoadAssetAtPath<GameObject>(path) != null;
-        GameObject root = existed ? PrefabUtility.LoadPrefabContents(path) : new GameObject(piece.id);
+        GameObject root = existed ? PrefabUtility.LoadPrefabContents(path) : new GameObject(id);
         try
         {
             if (existed) Empty(root);
@@ -247,7 +422,7 @@ public static class ArmorBuilder
             GameObject model = new GameObject(ModelName);
             model.transform.SetParent(root.transform, false);
             model.AddComponent<MeshFilter>().sharedMesh = mesh;
-            model.AddComponent<MeshRenderer>().sharedMaterials = part.sharedMaterials;
+            model.AddComponent<MeshRenderer>().sharedMaterials = materials;
 
             BoxCollider box = root.AddComponent<BoxCollider>();
             box.center = mesh.bounds.center;
@@ -267,12 +442,12 @@ public static class ArmorBuilder
     }
 
     // The piece frozen in the character's saved pose, turned and sized as it is on the character, with its middle at
-    // (0, 0, 0). Saved (refilled) as Meshes/<Id>.asset.
-    static Mesh FreezeMesh(Piece piece, SkinnedMeshRenderer part)
+    // (0, 0, 0). Saved (refilled) as Meshes/<name>.asset.
+    static Mesh FreezeMesh(string name, SkinnedMeshRenderer part)
     {
         Mesh posed = PosedMesh(part);
         MakeFolders(MeshFolder);
-        Mesh saved = MeshAssetHelper.SaveCopy(posed, posed.bounds.center, 1f, MeshFolder + "/" + piece.id + ".asset");
+        Mesh saved = MeshAssetHelper.SaveCopy(posed, posed.bounds.center, 1f, MeshFolder + "/" + name + ".asset");
         Object.DestroyImmediate(posed);
         return saved;
     }
@@ -314,23 +489,27 @@ public static class ArmorBuilder
         }
     }
 
-    // The Item Data's settings: name, prefab, Pickup, a photo icon, Item Type Armor with its Armor section (slot,
-    // Protection, Set, Piece, Hides), and a recipe of Iron only when it has none (so a recipe you changed stays).
-    static void FillItem(ItemData item, Piece piece, GameObject prefab, ItemData iron)
+    // The Item Data's settings: name ("Iron Helmet"), prefab, Pickup, a photo icon, Item Type Armor with its Armor
+    // section (slot, Protection, Set, Piece, Hides, Look), and a recipe only when it has none (so a recipe you changed
+    // stays): the set's cost (Copper), or for an upgrade the lower set's piece + the cost (Copper Helmet + 4 Iron).
+    // No cost item (e.g. no Copper in the project) = no recipe.
+    static void FillItem(ItemData item, ArmorSet set, int slotIndex, GameObject prefab, Material look, ItemData cost, ItemData lower)
     {
+        Slot slot = Slots[slotIndex];
         SerializedObject so = new SerializedObject(item);   // the names in quotes must match ItemData's fields
-        so.FindProperty("displayName").stringValue = piece.name;
+        so.FindProperty("displayName").stringValue = set.name + " " + ArmorStats.SlotName(slot.slot);
         if (prefab != null) so.FindProperty("prefab").objectReferenceValue = prefab;
         so.FindProperty("pickup").enumValueIndex = (int)PickupType.Pickup;
         so.FindProperty("icon.mode").enumValueIndex = (int)IconMode.Capture;
         so.FindProperty("itemType").enumValueIndex = (int)ItemType.Armor;
-        so.FindProperty("armor.slot").enumValueIndex = (int)piece.slot;
-        so.FindProperty("armor.protection").floatValue = piece.protection;
-        so.FindProperty("armor.set").stringValue = SetName;
-        so.FindProperty("armor.piece").stringValue = piece.part;
+        so.FindProperty("armor.slot").enumValueIndex = (int)slot.slot;
+        so.FindProperty("armor.protection").floatValue = set.protection[slotIndex];
+        so.FindProperty("armor.set").stringValue = set.name;
+        so.FindProperty("armor.piece").stringValue = slot.part;
+        so.FindProperty("armor.look").objectReferenceValue = look;
         SerializedProperty hides = so.FindProperty("armor.hides");
         hides.ClearArray();
-        foreach (string covered in piece.hides)
+        foreach (string covered in slot.hides)
         {
             hides.InsertArrayElementAtIndex(hides.arraySize);
             hides.GetArrayElementAtIndex(hides.arraySize - 1).stringValue = covered;
@@ -339,16 +518,120 @@ public static class ArmorBuilder
         so.FindProperty("craftedAt").enumValueIndex = (int)CraftStation.Crafting;
 
         SerializedProperty recipe = so.FindProperty("recipe");
-        if (recipe.arraySize == 0 && iron != null)
+        bool upgrade = set.upgradeOf != null;
+        if (recipe.arraySize == 0 && cost != null && (!upgrade || lower != null))
         {
-            recipe.InsertArrayElementAtIndex(0);
-            SerializedProperty line = recipe.GetArrayElementAtIndex(0);
-            line.FindPropertyRelative("item").objectReferenceValue = iron;
-            line.FindPropertyRelative("amount").intValue = piece.iron;
+            if (upgrade) AddLine(recipe, lower, 1);   // the piece it's made from, used up
+            AddLine(recipe, cost, set.cost[slotIndex]);
         }
         so.ApplyModifiedPropertiesWithoutUndo();
         EditorUtility.SetDirty(item);
     }
+
+    static void AddLine(SerializedProperty recipe, ItemData item, int amount)
+    {
+        recipe.InsertArrayElementAtIndex(recipe.arraySize);
+        SerializedProperty line = recipe.GetArrayElementAtIndex(recipe.arraySize - 1);
+        line.FindPropertyRelative("item").objectReferenceValue = item;
+        line.FindPropertyRelative("amount").intValue = amount;
+    }
+
+    // Each set's look: a copy of the plate parts' own material (Blink's Armor) with a palette picture of its own and a
+    // little metal shine. Made only if missing, so colors changed by hand stay (delete the two files to get the tool's
+    // colors again). "made" gets the new files. Returns each set's material by its name (empty if the character's armor
+    // material or its picture can't be found: the sets then keep Blink's colors).
+    static Dictionary<string, Material> MakeLooks(GameObject character, List<string> made)
+    {
+        Dictionary<string, Material> looks = new Dictionary<string, Material>();
+        SkinnedMeshRenderer anyPart = FindPart(character, Slots[(int)ArmorSlot.Chest].part);
+        Material original = anyPart != null ? anyPart.sharedMaterial : null;
+        Texture2D palette = original != null ? original.mainTexture as Texture2D : null;
+        string palettePath = palette != null ? AssetDatabase.GetAssetPath(palette) : null;
+        if (string.IsNullOrEmpty(palettePath)) return looks;
+
+        MakeFolders(LookFolder);
+        foreach (ArmorSet set in Sets)
+        {
+            string materialPath = LookFolder + "/" + set.name + " Armor.mat";
+            Material look = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
+            if (look == null)
+            {
+                Texture2D picture = MakePalette(palettePath, set, LookFolder + "/" + set.name + " Armor Palette.png");
+                if (picture == null) continue;
+                look = new Material(original) { name = set.name + " Armor" };
+                look.mainTexture = picture;
+                look.color = Color.white;
+                look.SetFloat("_Metallic", set.metallic);
+                look.SetFloat("_Glossiness", set.smoothness);
+                AssetDatabase.CreateAsset(look, materialPath);
+                made.Add(materialPath);
+            }
+            looks[set.name] = look;
+        }
+        return looks;
+    }
+
+    // A copy of Blink's palette picture (read from its file: the picture itself may not be readable) with the set's
+    // strips repainted, saved as a PNG. An existing one is kept.
+    static Texture2D MakePalette(string sourcePath, ArmorSet set, string path)
+    {
+        Texture2D existing = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        if (existing != null) return existing;
+
+        Texture2D picture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+        if (!picture.LoadImage(File.ReadAllBytes(sourcePath)))
+        {
+            Object.DestroyImmediate(picture);
+            return null;
+        }
+        int width = picture.width, half = picture.height / 2;
+        int stripWidth = Mathf.Max(1, width / 32);   // 8 pixels on Blink's 256 x 256 picture
+        Color32[] pixels = picture.GetPixels32();    // row 0 = the picture's BOTTOM row
+        foreach (Strip strip in set.palette)
+        {
+            Repaint(pixels, width, strip.x * width / 256, stripWidth, strip.top ? half : 0, half, strip);
+        }
+        picture.SetPixels32(pixels);
+        File.WriteAllBytes(path, picture.EncodeToPNG());
+        Object.DestroyImmediate(picture);
+
+        AssetDatabase.ImportAsset(path);
+        if (AssetImporter.GetAtPath(path) is TextureImporter importer)
+        {
+            importer.textureCompression = TextureImporterCompression.Uncompressed;   // the exact colors
+            importer.sRGBTexture = true;
+            importer.mipmapEnabled = true;                                            // like Blink's own picture
+            importer.SaveAndReimport();
+        }
+        return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+    }
+
+    // One strip in new colors: each pixel by how light it is within the strip (its darkest = Dark, its lightest = Light),
+    // so the strip keeps its light-to-dark shading in the new color.
+    static void Repaint(Color32[] pixels, int width, int x0, int stripWidth, int y0, int rows, Strip strip)
+    {
+        float low = float.MaxValue, high = float.MinValue;
+        for (int y = y0; y < y0 + rows; y++)
+        {
+            float light = Light(pixels[y * width + x0 + stripWidth / 2]);
+            low = Mathf.Min(low, light);
+            high = Mathf.Max(high, light);
+        }
+        for (int y = y0; y < y0 + rows; y++)
+        {
+            for (int x = x0; x < x0 + stripWidth; x++)
+            {
+                Color32 old = pixels[y * width + x];
+                float t = high > low ? Mathf.InverseLerp(low, high, Light(old)) : 0.5f;
+                Color32 paint = Color.Lerp(strip.dark, strip.light, t);
+                paint.a = old.a;
+                pixels[y * width + x] = paint;
+            }
+        }
+    }
+
+    // How light a color looks (0 - 255).
+    static float Light(Color32 c) => 0.299f * c.r + 0.587f * c.g + 0.114f * c.b;
 
     // ArmorLook on the PlayerCharacter prefab's top object (the Animator's), so every copy of the character has it, with
     // its Skin Under Clothes rows. Returns a few words for the Console.
@@ -389,9 +672,9 @@ public static class ArmorBuilder
         {
             if (!HasRow(rows, row.clothing)) rows.Add(row);
         }
-        foreach (Piece piece in Pieces)
+        foreach (Slot slot in Slots)
         {
-            if (!HasRow(rows, piece.part)) rows.Add(new ArmorLook.SkinUnder(piece.part));
+            if (!HasRow(rows, slot.part)) rows.Add(new ArmorLook.SkinUnder(slot.part));
         }
         return rows;
     }
@@ -644,21 +927,27 @@ public static class ArmorBuilder
                "only the later one's trimmed copy is used, so a little flicker may stay there.";
     }
 
-    // PlayerArmor on the Player in the open scene, and the armor in its ToolTestKit (Ctrl + Z undoes it).
-    // Returns a sentence for the Console.
+    // PlayerArmor on the Player in the open scene with every set's bonus, and the armor in its ArmorTestKit (Ctrl + Z
+    // undoes it). Returns a sentence for the Console.
     static string SetUpPlayer(List<ItemData> items)
     {
         PlayerInventory inventory = Object.FindFirstObjectByType<PlayerInventory>();
-        if (inventory == null) return " No Player in the open scene: open GameScene and run it again (for PlayerArmor).";
+        if (inventory == null) return " No Player in the open scene, so PlayerArmor and the Armor Test kit weren't saved on it. " +
+                                      "Both add themselves when a game starts, so the armor and GameRules > Armor Test still " +
+                                      "work; open GameScene and run it again to keep them in the scene.";
 
         AddToPlayer<PlayerArmor>();
-        string kitReport = "";
-        ToolTestKit kit = inventory.GetComponent<ToolTestKit>();
-        if (kit != null)
+        string bonusReport = AddSetBonuses(inventory.GetComponent<PlayerArmor>());
+
+        // The armor's own test rule (GameRules > Armor Test): every piece in ArmorTestKit's list. The Tool Test kit had
+        // the armor before (20/11/2026): it goes out of that list, so Tool Test gives only tools.
+        AddToPlayer<ArmorTestKit>();
+        int added = 0, movedOut = 0;
+        ArmorTestKit armorKit = inventory.GetComponent<ArmorTestKit>();
+        if (armorKit != null)
         {
-            SerializedObject so = new SerializedObject(kit);
-            SerializedProperty list = so.FindProperty("tools");   // must match ToolTestKit's field
-            int added = 0;
+            SerializedObject so = new SerializedObject(armorKit);
+            SerializedProperty list = so.FindProperty("armor");   // must match ArmorTestKit's field
             foreach (ItemData item in items)
             {
                 bool there = false;
@@ -669,9 +958,61 @@ public static class ArmorBuilder
                 added++;
             }
             so.ApplyModifiedProperties();   // with Undo
-            kitReport = added > 0 ? " " + added + " armor items added to the Tool Test kit." : "";
+        }
+        ToolTestKit toolKit = inventory.GetComponent<ToolTestKit>();
+        if (toolKit != null)
+        {
+            SerializedObject so = new SerializedObject(toolKit);
+            SerializedProperty list = so.FindProperty("tools");   // must match ToolTestKit's field
+            for (int i = list.arraySize - 1; i >= 0; i--)
+            {
+                ItemData item = list.GetArrayElementAtIndex(i).objectReferenceValue as ItemData;
+                if (item == null || !item.IsArmor) continue;
+                list.GetArrayElementAtIndex(i).objectReferenceValue = null;   // a reference is emptied before it's removed
+                list.DeleteArrayElementAtIndex(i);
+                movedOut++;
+            }
+            so.ApplyModifiedProperties();   // with Undo
         }
         EditorSceneManager.MarkSceneDirty(inventory.gameObject.scene);
-        return " PlayerArmor on the Player." + kitReport;
+        string kitReport = (added > 0 ? " " + added + " armor items in the Armor Test kit." : "") +
+                           (movedOut > 0 ? " " + movedOut + " armor items moved out of the Tool Test kit." : "");
+        return " PlayerArmor on the Player." + bonusReport + kitReport;
+    }
+
+    // The set bonuses PlayerArmor's list is missing, added at its end. A list saved before the tiers were swapped (its
+    // Iron was the first tier's 50 %, and there may be a Reinforced Iron) loses those first, so it gets today's Copper
+    // (50 %) and Iron (100 %, counts as Copper). Other bonuses already there are left as they are, except a color that
+    // was never set (a list saved before sets had colors) gets the set's own.
+    static string AddSetBonuses(PlayerArmor armor)
+    {
+        if (armor == null) return "";
+        Undo.RecordObject(armor, ToolName);
+        bool replaced = armor.UpdateOldBonuses();
+        SerializedObject so = new SerializedObject(armor);   // made after the change above, so it reads the new list
+        SerializedProperty list = so.FindProperty("setBonuses");   // the names in quotes must match PlayerArmor's fields
+        List<string> added = new List<string>();
+        foreach (PlayerArmor.SetBonus bonus in PlayerArmor.DefaultBonuses())
+        {
+            bool there = false;
+            for (int i = 0; i < list.arraySize && !there; i++)
+            {
+                SerializedProperty entry = list.GetArrayElementAtIndex(i);
+                there = string.Equals(entry.FindPropertyRelative("set").stringValue, bonus.set, System.StringComparison.OrdinalIgnoreCase);
+                SerializedProperty color = entry.FindPropertyRelative("color");
+                if (there && color.colorValue.a <= 0f) color.colorValue = bonus.color;
+            }
+            if (there) continue;
+            list.InsertArrayElementAtIndex(list.arraySize);
+            SerializedProperty fresh = list.GetArrayElementAtIndex(list.arraySize - 1);
+            fresh.FindPropertyRelative("set").stringValue = bonus.set;
+            fresh.FindPropertyRelative("staminaRegen").floatValue = bonus.staminaRegen;
+            fresh.FindPropertyRelative("countsAs").stringValue = bonus.countsAs;
+            fresh.FindPropertyRelative("color").colorValue = bonus.color;
+            added.Add(bonus.set);
+        }
+        so.ApplyModifiedProperties();   // with Undo
+        return (replaced ? " The old set bonuses (Iron first, Reinforced Iron) were taken out." : "") +
+               (added.Count > 0 ? " Set bonuses added: " + string.Join(", ", added) + "." : "");
     }
 }

@@ -7,6 +7,8 @@
 // Also added: Patch Size / Open Ground (forests with meadows between), Min / Max Size (random sizes), and the used spots
 // kept in 10 m squares so the checks stay fast. Every change is marked [Tony]; replaced code is kept in comments.
 // Log: Docs/TonyEditMate/Sanyam/13-11-2026 Scatter Spacing Groups And Forest Patches.md
+// [Tony] edited 20/11/2026: one more check (2c): nothing spawns outside the world's barrier (Tony's WorldBarrier).
+// Log: Docs/TonyEditMate/Sanyam/20-11-2026 Nothing Spawns Outside The Barrier.md
 
 
 using UnityEngine;
@@ -101,6 +103,11 @@ public class ObjectScatter : MonoBehaviour
 
             // [Tony] added: 2b. Patch check: skip the open ground (meadows) between the patches
             if (!InPatch(pos, rule)) continue;
+
+            // [Tony] added (20/11/2026): 2c. Barrier check: nothing outside the world's barrier (Tony's WorldBarrier),
+            // where nobody can reach it (e.g. a chest between the barrier and the terrain's edge). No barrier = no change.
+            // Log: Docs/TonyEditMate/Sanyam/20-11-2026 Nothing Spawns Outside The Barrier.md
+            if (!WorldBarrier.Inside(pos, 2f)) continue;   // [Tony] added
 
             // 3. Slope check: skip if the ground is too steep
             if (data.GetSteepness(nx, nz) > rule.maxSlope) continue;

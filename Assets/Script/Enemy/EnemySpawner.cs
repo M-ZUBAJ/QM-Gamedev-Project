@@ -171,6 +171,10 @@ public class EnemySpawner : MonoBehaviour
             randomDirection.Normalize();
 
             spawnPosition = player.position + randomDirection * spawnDistance;
+            // [Tony] added (20/11/2026): near the edge of the world, a spot past Tony's barrier (WorldBarrier) is moved to
+            // the player's other side, so no enemy appears outside the world (stuck behind the barrier, or falling where
+            // there's no ground). Log: Docs/TonyEditMate/Marko/20-11-2026 Night Enemies Burn Away At Day.md
+            if (!WorldBarrier.Inside(spawnPosition, 2f)) spawnPosition = player.position - randomDirection * spawnDistance;   // [Tony] added
             //spawnPosition.y = transform.position.y;
             // [Tony] replaced (10/11/2026): spawnPosition.y = 0.5f;
             // A fixed 0.5 put enemies inside hills or in the air over dips. Now they appear on the ground that's there.
@@ -248,7 +252,11 @@ public class EnemySpawner : MonoBehaviour
         {
             if (enemy != null)
             {
-                Destroy(enemy);
+                // [Tony] replaced (20/11/2026): Destroy(enemy);
+                // The night's enemies now burn away into orange embers when day comes (Tony's EnemyAnimator.Vanish),
+                // instead of blinking out. An enemy without Tony's EnemyAnimator is still removed at once.
+                // Log: Docs/TonyEditMate/Marko/20-11-2026 Night Enemies Burn Away At Day.md
+                EnemyAnimator.Vanish(enemy);                                                  // [Tony] replaced
             }
         }
 

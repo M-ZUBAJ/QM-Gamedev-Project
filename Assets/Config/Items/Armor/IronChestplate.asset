@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: IronChestplate
   m_EditorClassIdentifier: 
   displayName: Iron Chestplate
-  prefab: {fileID: 6566197665157345552, guid: 8efe601ec71cc494ba78ec91ddff57d0, type: 3}
+  prefab: {fileID: 6161087581735545222, guid: f338b71fea5f2ce49933e22e9ba31173, type: 3}
   pickup: 0
   icon:
     mode: 0
@@ -32,14 +32,17 @@ MonoBehaviour:
     tier: 1
   armor:
     slot: 2
-    protection: 2.5
+    protection: 4
     set: Iron
     piece: PlateSet1_Chest
     hides:
     - Starter_Chest
+    look: {fileID: 2100000, guid: 0fa5ddbc35f7d9e459603a29af14cd05, type: 2}
   minedWith: 0
   recipe:
+  - item: {fileID: 11400000, guid: f40843c5380aed146863a1f45694db01, type: 2}
+    amount: 1
   - item: {fileID: 11400000, guid: 5c6e2eb642dbe4159a36e38d99e65413, type: 2}
-    amount: 8
+    amount: 6
   craftAmount: 1
   craftedAt: 0

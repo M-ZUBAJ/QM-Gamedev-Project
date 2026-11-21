@@ -64,7 +64,8 @@ today's game. These values are read from GameScene and kept in `NewGameDefaults.
 | **When I die** | Keep items / Drop items / Lose items (GameRules Keep Inventory / Clear Item On Dead) | from GameScene |
 | **Pick up dropped items by walking over them** | GameRules Auto Pickup Drops | from GameScene |
 | **Show "+3 Wood" messages** | GameRules Show Notifications | from GameScene |
-| **Start with all tools** (TESTING) | GameRules Tool Test: one of every tier tool (pickaxe, axe, sword x Wood ... Diamond) in the inventory from the start (ToolTestKit) | off (from GameScene) |
+| **Start with all tools** (TESTING, left) | GameRules Tool Test: one of every tier tool (pickaxe, axe, sword x Wood ... Diamond) in the inventory from the start (ToolTestKit) | off (from GameScene) |
+| **Start with all armor** (TESTING, right) | GameRules Armor Test: every armor piece, the Copper and Iron sets (12), in the inventory from the start (ArmorTestKit) | off (from GameScene) |
 
 The difficulty numbers can be changed on **NewGamePage > NewGamePanel**: Easy / Hard enemies and hunger
 (compared to Normal), and Short / Long day.
@@ -72,7 +73,9 @@ The difficulty numbers can be changed on **NewGamePage > NewGamePanel**: Easy / 
 Pressing **Play straight in GameScene** (testing) still uses GameScene's own settings: the choices are only used
 after START GAME. **Play Again** on the victory screen keeps them.
 
-The **TESTING** section is new (19/11/2026): run the tool again to get it. An older title scene without it still works.
+The **TESTING** section is new (19/11/2026; the armor tick box 20/11/2026): run the tool again to get it. An older
+title scene without it still works. Its two tick boxes share one row (`TestingRow`), because the panel has no room for
+another row.
 
 ## The Settings page: Key Bindings
 
@@ -124,8 +127,9 @@ keep these **names**: the scripts find their parts by name.
   page, `StartButton` (with a `Flash` child), `Shockwave`, `IntroBlack`.
 - **NewGamePanel** (on NewGamePage) looks for: `DaysRow` (StepperRow with `Minus`, `Plus`, `Value`), `WinAtRow` and
   `StartTimeRow` (each with a TextMeshPro `Dropdown`), `DayLengthRow`, `DifficultyRow`, `DeathRow` (ChoiceRows with an
-  `Options` holder and a `Highlight`), `PickupRow`, `MessagesRow` and `AllToolsRow` (each with a `Toggle`;
-  `AllToolsRow` is optional), the optional `WorldRow` (a ChoiceRow: Old world / New world, with an `Info` text),
+  `Options` holder and a `Highlight`), `PickupRow`, `MessagesRow`, `AllToolsRow` and `ArmorTestRow` (each with a
+  `Toggle`; the last two are optional and sit side by side in `TestingRow`, a Horizontal Layout Group with Control
+  Child Size and Child Force Expand ticked), the optional `WorldRow` (a ChoiceRow: Old world / New world, with an `Info` text),
   `DayLengthRow/Info`,
   `DifficultyInfo`, `Summary`, `DefaultsButton`, and a `Dot` in each row.
 - **KeyBindingMenu** (on KeyBindingsPage) looks for: `Content`, the switched-off `HeaderTemplate`, `RowTemplate`
@@ -143,6 +147,8 @@ keep these **names**: the scripts find their parts by name.
    Days to win.
 5. **SETTINGS**: click a tab (the underline glides), change Jump to another key, **RESET ALL**.
 6. **PLAY**, tick **Start with all tools**, START GAME: the 15 tier tools are in the inventory.
+7. **PLAY**, tick **Start with all armor** (a gold dot appears next to it), START GAME: the 12 armor pieces (Copper and
+   Iron) are in the inventory; Tab > Gear to put them on.
 
 | Problem | Fix |
 |---|---|

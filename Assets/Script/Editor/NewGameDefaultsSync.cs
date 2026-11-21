@@ -1,6 +1,6 @@
 /*
 First Date: 7/11/2026
-Date: 19/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Nothing to click. Every time GameScene is saved, the New Game page's defaults
@@ -97,7 +97,8 @@ public static class NewGameDefaultsSync
         CopyAs(sun, "timeOfDay", d, "startTime");
         Copy(Find<EnemySpawner>(scene), d, "spawnAtNight", "enemiesPerNight");
         CopyAs(Find<PlayerHunger>(scene), "drainPerSecond", d, "hungerDrainPerSecond");
-        Copy(Find<GameRules>(scene), d, "keepInventory", "clearItemOnDead", "autoPickupDrops", "showNotifications", "toolTest");
+        Copy(Find<GameRules>(scene), d, "keepInventory", "clearItemOnDead", "autoPickupDrops", "showNotifications", "toolTest",
+             "armorTest");
 
         if (!d.ApplyModifiedPropertiesWithoutUndo()) return false;
 

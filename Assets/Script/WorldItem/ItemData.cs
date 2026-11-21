@@ -20,11 +20,12 @@ Purpose: One kind of item (a material like Wood or Stone, or food like an Apple)
          for the crafting system later; empty recipe = can't be crafted, a raw material).
          The FILE is the item: its file name is the Item Id the inventory stacks by, recipes point to this file,
          and every object in the world with ItemPickup pointing here is this item. No tags, no typed ids.
-         A tool whose recipe uses up another tool is an upgrade of it (UpgradedFrom: a Stone Axe of a Wooden Axe).
+         A tool whose recipe uses up another tool is an upgrade of it (UpgradedFrom: a Stone Axe of a Wooden Axe), and
+         so is armor whose recipe uses up a piece for the same slot (an Iron Helmet of a Copper Helmet).
          Armor is worn, one piece per slot (PlayerArmor), from the inventory's Gear tab.
 Requirement: ItemData.cs <-> Recipe.cs
              ItemData.cs x-> Consumable.cs, ToolStats.cs, ArmorStats.cs, IconCapture.cs, IconSource.cs, PlayerInventory.cs
-             ItemData.cs <-x ArmorBuilder.cs, ArmorLook.cs, ArmorPicker.cs, ArmorSlotUI.cs, AutoCollector.cs, CraftingMenu.cs, CraftingMenuBuilder.cs, CraftingRow.cs, CraftingTabs.cs, Crosshair.cs, HeldItemView.cs, ItemConsumer.cs, ItemDataEditor.cs, ItemIconRules.cs, ItemPickup.cs, ItemTools.cs, PlayerArmor.cs, PlayerInventory.cs, PlayerStats.cs, ResourceNode.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs
+             ItemData.cs <-x ArmorBuilder.cs, ArmorLook.cs, ArmorPicker.cs, ArmorSlotUI.cs, ArmorTestKit.cs, AutoCollector.cs, CraftingMenu.cs, CraftingMenuBuilder.cs, CraftingRow.cs, CraftingSetPanels.cs, CraftingTabs.cs, Crosshair.cs, DesertBuilder.cs, HeldItemView.cs, ItemConsumer.cs, ItemDataEditor.cs, ItemIconRules.cs, ItemPickup.cs, ItemTools.cs, PlayerArmor.cs, PlayerInventory.cs, PlayerStats.cs, ResourceNode.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs
 */
 
 using System.Collections.Generic;
@@ -128,9 +129,19 @@ public class ItemData : ScriptableObject
     public int CraftAmount => craftAmount;
     public CraftStation CraftedAt => craftedAt;
     public bool IsCraftable => recipe.Exists(ing => ing != null && ing.item != null);
-    // The tool this tool is an upgrade of: the tool in its recipe, which crafting uses up (a Stone Axe's Wooden Axe).
-    // null = not an upgrade. Crafting puts the new tool in the slot the old one was in (PlayerInventory.AddInto).
-    public ItemData UpgradedFrom => IsTool ? recipe.Find(ing => ing != null && ing.item != null && ing.item.IsTool)?.item : null;
+    // The tool or armor piece this one is an upgrade of: the one in its recipe, which crafting uses up (a Stone Axe's
+    // Wooden Axe, an Iron Helmet's Copper Helmet: armor for the same slot). null = not an upgrade. Crafting puts
+    // the new item in the slot the old one was in (PlayerInventory.AddInto), and a worn piece is upgraded where it's
+    // worn (PlayerArmor.LendForUpgrade).
+    public ItemData UpgradedFrom
+    {
+        get
+        {
+            if (IsTool) return recipe.Find(ing => ing != null && ing.item != null && ing.item.IsTool)?.item;
+            if (IsArmor) return recipe.Find(ing => ing != null && ing.item != null && ing.item.IsArmor && ing.item.Armor.slot == armor.slot)?.item;
+            return null;
+        }
+    }
 
     // ===== Unity messages (Unity calls these) =====
 

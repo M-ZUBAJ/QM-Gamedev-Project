@@ -14,12 +14,12 @@ OcclusionCullingSettings:
 RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 9
-  m_Fog: 0
+  m_Fog: 1
   m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-  m_FogMode: 3
+  m_FogMode: 1
   m_FogDensity: 0.01
-  m_LinearFogStart: 0
-  m_LinearFogEnd: 300
+  m_LinearFogStart: 40
+  m_LinearFogEnd: 100
   m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
@@ -196,6 +196,70 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1104608726260023423, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1104608726260023423, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1104608726260023423, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1104608726260023423, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1104608726260023423, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1104608726260023423, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1104608726260023423, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1104608726260023423, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1488019887502360298, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1488019887502360298, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1488019887502360298, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1488019887502360298, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1488019887502360298, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1488019887502360298, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1488019887502360298, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1488019887502360298, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1653023207947983152, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -312,6 +376,38 @@ PrefabInstance:
       propertyPath: m_AnchorMin.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3547740590235369519, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3547740590235369519, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3547740590235369519, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3547740590235369519, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3547740590235369519, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3547740590235369519, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3547740590235369519, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3547740590235369519, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4265137659246354596, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -357,6 +453,38 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4552072727864004172, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5725202090433936312, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5725202090433936312, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5725202090433936312, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5725202090433936312, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5725202090433936312, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5725202090433936312, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5725202090433936312, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5725202090433936312, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
@@ -372,6 +500,70 @@ PrefabInstance:
       propertyPath: m_SizeDelta.x
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6242562629220316212, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6242562629220316212, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6242562629220316212, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6242562629220316212, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6242562629220316212, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6242562629220316212, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6242562629220316212, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6242562629220316212, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6899280500684253832, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6899280500684253832, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6899280500684253832, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6899280500684253832, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6899280500684253832, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6899280500684253832, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6899280500684253832, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6899280500684253832, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7494012006072683705, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -390,7 +582,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7494012006072683705, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 515.19006
+      value: 465.19003
       objectReference: {fileID: 0}
     - target: {fileID: 8070574319609505244, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
       propertyPath: m_Name
@@ -603,20 +795,6 @@ MonoBehaviour:
     openGround: 0.35
     minSize: 0.7
     maxSize: 1.3
-  - name: Desert Rocks
-    prefab: {fileID: 1867434810978412031, guid: 62da010430b404922bc87adb93c05aa4, type: 3}
-    count: 70
-    yOffset: 0
-    terrainLayer: 1
-    minStrength: 0.5
-    maxSlope: 30
-    minSpacing: 20
-    spacingGroup: 
-    clearance: 3
-    patchSize: 0
-    openGround: 0.35
-    minSize: 0.7
-    maxSize: 1.3
   - name: Hill Rocks
     prefab: {fileID: 1867434810978412031, guid: 62da010430b404922bc87adb93c05aa4, type: 3}
     count: 60
@@ -630,6 +808,20 @@ MonoBehaviour:
     patchSize: 0
     openGround: 0.35
     minSize: 0.8
+    maxSize: 1.6
+  - name: Sandstone Rocks
+    prefab: {fileID: 644092515104945314, guid: e9ed3e00707107f4c872daeff2235d66, type: 3}
+    count: 40
+    yOffset: 0
+    terrainLayer: 1
+    minStrength: 0.6
+    maxSlope: 30
+    minSpacing: 16
+    spacingGroup: 
+    clearance: 3
+    patchSize: 0
+    openGround: 0.35
+    minSize: 1
     maxSize: 1.6
 --- !u!4 &408319592
 Transform:
@@ -781,6 +973,103 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5a9635006fad84d4ea4caabe92368ab8, type: 3}
+--- !u!1 &679922114
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 679922116}
+  - component: {fileID: 679922115}
+  m_Layer: 0
+  m_Name: World Generator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &679922115
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 679922114}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 815f53014f3e5c94ab410734934c3ead, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  seed: 0
+  worldSize: 1000
+  maxHeight: 140
+  landBeyondBarrier: 60
+  heightResolution: 513
+  textureResolution: 512
+  grasslandRadius: 280
+  desertWidth: 140
+  snowLine: 92
+  layers:
+  - {fileID: 8574412962073106934, guid: a84712c9f49f8e245a33c6b6912a8a16, type: 2}
+  - {fileID: 8574412962073106934, guid: 26ba7f262ee2d8846a2f547249875130, type: 2}
+  - {fileID: 8574412962073106934, guid: 040e1301c150ccc488fca928bc242ca8, type: 2}
+  - {fileID: 8574412962073106934, guid: 6e3544ab4f145144cbc6fc99b92c5b7e, type: 2}
+  - {fileID: 8574412962073106934, guid: 47ec3f903031d6941a0a4e18d309f536, type: 2}
+  grassLayer: 0
+  sandLayer: 1
+  rockLayer: 3
+  snowLayer: 2
+  mudLayer: 4
+  terrainMaterial: {fileID: 10652, guid: 0000000000000000f000000000000000, type: 0}
+  grassTexture: {fileID: 2800000, guid: f4c847e455e272e45bb92499a9837e9a, type: 3}
+  grassDensity: 6
+  grassWidth: {x: 0.45, y: 0.7}
+  grassHeight: {x: 0.55, y: 0.9}
+  grassBending: 0.2
+  grassWindSpeed: 0.4
+  grassHealthy: {r: 0.82, g: 1, b: 0.7, a: 1}
+  grassDry: {r: 0.86, g: 0.88, b: 0.55, a: 1}
+  grassDistance: 80
+  cavePrefabs:
+  - {fileID: 7537836816699140433, guid: b2d1ef6b0195ad64b814ec602b044e46, type: 3}
+  - {fileID: 3482727551194880824, guid: 0a29d22101066e44f92bb3d91e79576e, type: 3}
+  - {fileID: 3602163153455789024, guid: 8f677c0825162cf48b01a676b8cc4b8a, type: 3}
+  caveCount: 6
+  caveMinDistance: 60
+  caveMaxDistance: 230
+  caveSpacing: 70
+  caveRadius: 13
+  stoneOre: {fileID: 1867434810978412031, guid: 62da010430b404922bc87adb93c05aa4, type: 3}
+  copperOre: {fileID: 3402797924704981900, guid: 93d4be1e9823f4dfb99c3b95e44b1df5, type: 3}
+  ironOre: {fileID: 3091310371889792107, guid: 25e53ca1353ad4a068b08b4bf85c21f1, type: 3}
+  ironPerCave: {x: 2, y: 3}
+  copperPerCave: {x: 2, y: 3}
+  desertCavePrefabs:
+  - {fileID: 2932826037742657095, guid: d14de47b393e39c44901b167defb04db, type: 3}
+  - {fileID: 5761925387350302027, guid: a51638e77c4cc6c47b73ce37256b7e99, type: 3}
+  desertCaveCount: 3
+  goldOre: {fileID: 905641813461942899, guid: 7a8d2359a42d29145af7a809d9220c7a, type: 3}
+  sandstoneOre: {fileID: 644092515104945314, guid: e9ed3e00707107f4c872daeff2235d66, type: 3}
+  goldPerCave: {x: 2, y: 3}
+  scatter: {fileID: 408319591}
+  player: {fileID: 1576947588}
+--- !u!4 &679922116
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 679922114}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &751114478
 GameObject:
   m_ObjectHideFlags: 0
@@ -824,6 +1113,7 @@ GameObject:
   - component: {fileID: 766544976}
   - component: {fileID: 766544975}
   - component: {fileID: 766544978}
+  - component: {fileID: 766544979}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -928,6 +1218,24 @@ MonoBehaviour:
   eyeHeight: 0.5
   fpsMinPitch: -80
   fpsMaxPitch: 80
+--- !u!114 &766544979
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 766544974}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74f8c1b667fbac448b730a2ebab60e6c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  distance: 100
+  clearShare: 0.4
+  mistOnSky: 0.35
+  dayColor: {r: 0.7, g: 0.8, b: 0.9, a: 1}
+  sunsetColor: {r: 0.9, g: 0.62, b: 0.45, a: 1}
+  nightColor: {r: 0.05, g: 0.07, b: 0.13, a: 1}
 --- !u!1 &898840729
 GameObject:
   m_ObjectHideFlags: 0
@@ -979,93 +1287,6 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 898840729}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &929419916
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 929419918}
-  - component: {fileID: 929419917}
-  m_Layer: 0
-  m_Name: World Generator
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &929419917
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 929419916}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 815f53014f3e5c94ab410734934c3ead, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  seed: 0
-  worldSize: 1000
-  maxHeight: 140
-  heightResolution: 513
-  textureResolution: 512
-  grasslandRadius: 280
-  desertWidth: 140
-  snowLine: 92
-  layers:
-  - {fileID: 8574412962073106934, guid: a84712c9f49f8e245a33c6b6912a8a16, type: 2}
-  - {fileID: 8574412962073106934, guid: 26ba7f262ee2d8846a2f547249875130, type: 2}
-  - {fileID: 8574412962073106934, guid: 040e1301c150ccc488fca928bc242ca8, type: 2}
-  - {fileID: 8574412962073106934, guid: 6e3544ab4f145144cbc6fc99b92c5b7e, type: 2}
-  - {fileID: 8574412962073106934, guid: 47ec3f903031d6941a0a4e18d309f536, type: 2}
-  grassLayer: 0
-  sandLayer: 1
-  rockLayer: 3
-  snowLayer: 2
-  mudLayer: 4
-  terrainMaterial: {fileID: 10652, guid: 0000000000000000f000000000000000, type: 0}
-  grassTexture: {fileID: 2800000, guid: f4c847e455e272e45bb92499a9837e9a, type: 3}
-  grassDensity: 6
-  grassWidth: {x: 0.6, y: 1.1}
-  grassHeight: {x: 0.45, y: 0.85}
-  grassHealthy: {r: 0.82, g: 1, b: 0.7, a: 1}
-  grassDry: {r: 0.86, g: 0.88, b: 0.55, a: 1}
-  grassDistance: 80
-  cavePrefabs:
-  - {fileID: 7537836816699140433, guid: b2d1ef6b0195ad64b814ec602b044e46, type: 3}
-  - {fileID: 3482727551194880824, guid: 0a29d22101066e44f92bb3d91e79576e, type: 3}
-  - {fileID: 3602163153455789024, guid: 8f677c0825162cf48b01a676b8cc4b8a, type: 3}
-  caveCount: 6
-  caveMinDistance: 60
-  caveMaxDistance: 230
-  caveSpacing: 70
-  caveRadius: 13
-  stoneOre: {fileID: 1867434810978412031, guid: 62da010430b404922bc87adb93c05aa4, type: 3}
-  copperOre: {fileID: 3402797924704981900, guid: 93d4be1e9823f4dfb99c3b95e44b1df5, type: 3}
-  ironOre: {fileID: 3091310371889792107, guid: 25e53ca1353ad4a068b08b4bf85c21f1, type: 3}
-  ironPerCave: {x: 2, y: 3}
-  copperPerCave: {x: 2, y: 3}
-  scatter: {fileID: 408319591}
-  player: {fileID: 1576947588}
---- !u!4 &929419918
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 929419916}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -2029,6 +2250,8 @@ MonoBehaviour:
   setBonuses:
   - set: Iron
     staminaRegen: 1.5
+    countsAs: 
+    color: {r: 0.56, g: 0.6, b: 0.67, a: 1}
   worn:
   - {fileID: 0}
   - {fileID: 0}
@@ -2077,6 +2300,7 @@ MonoBehaviour:
   notificationSide: 0
   perkIcons: 1
   toolTest: 0
+  armorTest: 0
 --- !u!4 &1690935958
 Transform:
   m_ObjectHideFlags: 0
@@ -2118,6 +2342,68 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 1280, y: 720, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1751678629
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1751678631}
+  - component: {fileID: 1751678630}
+  m_Layer: 0
+  m_Name: Desert Monster Spawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1751678630
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1751678629}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29a878bb754cb954587e2e66f3016902, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  monsterPrefab: {fileID: 7723231593998870668, guid: 4443805867830ba4494d497dacc01164, type: 3}
+  terrain: {fileID: 0}
+  population: 5
+  spawnEverySeconds: 6
+  terrainLayer: 1
+  minStrength: 0.6
+  maxSlope: 30
+  minDistance: 25
+  maxDistance: 90
+  beyondSight: 25
+  despawnDistance: 170
+  clearance: 1.5
+  onlyInDay: 1
+  leaveAtNight: 1
+  health: 90
+  healthPerDay: 10
+  damage: 12
+  damagePerDay: 2
+--- !u!4 &1751678631
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1751678629}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4416,7 +4702,7 @@ PrefabInstance:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 929419918}
+  - {fileID: 679922116}
   - {fileID: 1777018448}
   - {fileID: 1690935958}
   - {fileID: 1218533314}
@@ -4442,3 +4728,4 @@ SceneRoots:
   - {fileID: 2396411}
   - {fileID: 538607312}
   - {fileID: 898840731}
+  - {fileID: 1751678631}

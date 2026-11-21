@@ -1,21 +1,22 @@
 /*
 First Date: 13/11/2026
-Date: 13/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: The Player (drag it on). Tools > World > Set Up World Spawning also puts it there.
 Unity Editor: Select the Player to see its sight in the Scene view: white = Sight Range (around the camera), yellow =
               Notice Radius. Testing: Play, then ⋮ (top right of this component) > Test: Sight +40 m For 20 s. The
               Console shows the new range, and new deer appear farther away until it ends.
 Purpose: What the player can see (line of sight). Something counts as seen when it is:
-         - closer than Sight Range (perks and buffs add to it),
+         - closer than Sight Range (perks and buffs add to it; with a ViewDistance on the camera, e.g. 100 m in the new
+           world, its Distance takes Sight Range's place: nothing past its mist is drawn, everything nearer is),
          - on the screen (a little past the edges counts too, so nothing pops up while you turn),
          - and not hidden behind a hill, rock, tree trunk or wall.
          Anything closer than Notice Radius always counts as seen (you'd hear it right next to you).
          Spawners ask CanSee, so things appear only where the player isn't looking, like Minecraft spawning animals
          out of view (AnimalSpawner does this for the deer). A sight perk or buff calls AddRange: everything that asks
          follows the new range at once.
-Requirement: PlayerSight.cs o-> Camera (Unity), PlayerHealth.cs
-             PlayerSight.cs <-x AnimalSpawner.cs, WorldSpawnSetup.cs
+Requirement: PlayerSight.cs o-> Camera (Unity), PlayerHealth.cs, ViewDistance.cs
+             PlayerSight.cs <-x AnimalSpawner.cs, DesertMonsterSpawner.cs, WorldSpawnSetup.cs
 */
 
 using System.Collections.Generic;
@@ -26,7 +27,8 @@ public class PlayerSight : MonoBehaviour
 {
     // ===== Fields =====
     [Header("How far")]
-    [Tooltip("How far the player can see things, in meters (the map is 1000 m wide). Sight perks and buffs add to it.")]
+    [Tooltip("How far the player can see things, in meters (the map is 1000 m wide). Sight perks and buffs add to it. " +
+             "With a ViewDistance on the camera (the new world: 100 m) its Distance is used instead: the player sees exactly that far.")]
     [Min(0f)]
     [SerializeField] float sightRange = 80f;
 
@@ -64,9 +66,12 @@ public class PlayerSight : MonoBehaviour
     // The one on the Player (null if none), for spawners and perks.
     public static PlayerSight Current { get; private set; }
 
-    // How far the player sees right now, in meters: Sight Range + perks + buffs.
-    public float Range => Mathf.Max(0f, sightRange + perkRange + BuffRange());
-    public float BaseRange => sightRange;
+    // How far the player sees right now, in meters: the base range + perks + buffs.
+    public float Range => Mathf.Max(0f, BaseRange + perkRange + BuffRange());
+
+    // Sight Range, or with a ViewDistance on the camera its Distance: the player sees exactly that far then (nothing
+    // further is drawn, everything nearer is), so animals appear just past the mist, never in view.
+    public float BaseRange => ViewDistance.Current != null ? ViewDistance.Limit : sightRange;
     public float NoticeRadius => noticeRadius;
 
     // Fired with the new Range whenever a perk or buff changes it (e.g. for a HUD).

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: IronHelmet
   m_EditorClassIdentifier: 
   displayName: Iron Helmet
-  prefab: {fileID: 4418858182760340419, guid: 769db911d52f3864b99037663b063815, type: 3}
+  prefab: {fileID: 5625995010144723513, guid: 835b20d8c5442e440958fee60ad29c31, type: 3}
   pickup: 0
   icon:
     mode: 0
@@ -32,14 +32,17 @@ MonoBehaviour:
     tier: 1
   armor:
     slot: 0
-    protection: 1.5
+    protection: 2.5
     set: Iron
     piece: PlateSet1_Helmet
     hides:
     - Hair
+    look: {fileID: 2100000, guid: 0fa5ddbc35f7d9e459603a29af14cd05, type: 2}
   minedWith: 0
   recipe:
+  - item: {fileID: 11400000, guid: 1a17aec4c09f409469fad333b8157706, type: 2}
+    amount: 1
   - item: {fileID: 11400000, guid: 5c6e2eb642dbe4159a36e38d99e65413, type: 2}
-    amount: 5
+    amount: 4
   craftAmount: 1
   craftedAt: 0

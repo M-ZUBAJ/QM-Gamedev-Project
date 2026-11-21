@@ -1,6 +1,6 @@
 /*
 First Date: 4/10/2026
-Date: 19/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: Drag this script onto the Directional Light (the sun) in the scene.
 Unity Editor: For a sky that turns orange at sunset and dark blue with a moon at night, use the default Procedural
@@ -29,6 +29,7 @@ Purpose: Day and night. Turns the sun around the world and changes its brightnes
 Requirement: DaylightCycle.cs x-> GameRules.cs, Light (Unity)
              DaylightCycle.cs o-> PlayerHealth.cs
              DaylightCycle.cs <-x DayCounter.cs, EnemySpawner.cs, GameSetup.cs, NewGameDefaultsSync.cs, TimeCounter.cs, VictoryScreen.cs
+             DaylightCycle.cs <-o DesertMonsterSpawner.cs, ViewDistance.cs
 */
 
 using UnityEngine;
@@ -203,6 +204,14 @@ public class DaylightCycle : MonoBehaviour
     // Real seconds until night / morning starts (0 if it's already that time).
     public float SecondsUntilNight => IsNight ? 0f : RealSecondsUntil(nightStart);
     public float SecondsUntilMorning => IsNight ? RealSecondsUntil(dawnStart) : 0f;
+
+    // How high the sun is right now: 1 = straight up (noon), 0 = on the horizon (sunrise / sunset), -1 = straight down
+    // (midnight). E.g. ViewDistance's mist turns orange while the sun is near the horizon.
+    public float SunHeight => -Mathf.Cos(timeOfDay * Mathf.PI * 2f);
+
+    // How bright the sky is drawn because of the sun-to-moon change: 1 normally, dipping to 0 for a moment while this
+    // light turns from sun into moon (and back at dawn). Always 1 with Moonlight off.
+    public float SkyDip => moonlight ? Mathf.SmoothStep(0f, 1f, Mathf.Abs(SunHeight + SwitchHeight) / SwitchDip) : 1f;
 
     // ===== Unity messages (Unity calls these) =====
 
@@ -409,7 +418,7 @@ public class DaylightCycle : MonoBehaviour
     {
         if (skyCopy == null) return;
         float night = moonlight ? Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.1f, -0.25f, height)) : 0f;   // 1 = night sky
-        float dip = moonlight ? Mathf.SmoothStep(0f, 1f, Mathf.Abs(height + SwitchHeight) / SwitchDip) : 1f;  // 0 = at the change
+        float dip = SkyDip;   // 0 = at the change
         skyCopy.SetFloat(ExposureId, Mathf.Lerp(dayExposure, nightSkyExposure, night) * dip);
         if (hasTint) skyCopy.SetColor(tintId, Color.Lerp(dayTint, nightSkyTint, night));
     }

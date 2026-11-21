@@ -21,7 +21,7 @@ Purpose: The player's status, updated 4 times a second while the Info tab is ope
          "+15% from perks" (walk speed), and on the right the perks the player has, with their icons, names and
          stats (PlayerPerks).
          An armor set bonus shows in gold, on a gold-tinted row, so it stands out from the perks' green: with the whole
-         iron set on, Stamina says "+50% recharge (Iron Set)" and Armor says "Iron Set bonus" (PlayerArmor).
+         copper set on, Stamina says "+50% recharge (Copper Set)" and Armor says "Copper Set bonus" (PlayerArmor).
 Requirement: PlayerInfoPage.cs x-> ArmorStats.cs
              PlayerInfoPage.cs o-> PlayerHealth.cs, PlayerHunger.cs, PlayerStamina.cs, PlayerController.cs, PlayerJump.cs, PlayerFireball.cs, PlayerCoins.cs, PlayerPerks.cs, PlayerArmor.cs
              PlayerInfoPage.cs <-x InventoryUIBuilder.cs

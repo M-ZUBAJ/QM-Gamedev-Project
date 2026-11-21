@@ -152,9 +152,17 @@ public class CraftingMenu : MonoBehaviour
         PlayerInventory inv = PlayerInventory.Instance;
         if (inv == null) { message.text = "No inventory in the scene."; return; }
 
+        // [Tony] added (20/11/2026): an armor upgrade (e.g. Copper Helmet + 4 Iron = Iron Helmet) can use the
+        // piece the player is wearing: Tony's PlayerArmor takes it off into the inventory for the recipe, then puts the
+        // new piece on in its place (or the old one back on if nothing was crafted). Anything else crafts as before.
+        // Log: Docs/TonyEditMate/Turki/20-11-2026 Reinforced Iron Armor And Set Panels.md
+        PlayerArmor armor = item.IsArmor ? PlayerArmor.Current : null;                        // [Tony] added
+        if (armor != null) armor.LendForUpgrade(item);                                        // [Tony] added
+
         if (!item.CanCraft(inv))
         {
             message.text = "Can't craft " + item.DisplayName + ". Missing: " + item.Missing(inv);
+            if (armor != null) armor.FinishUpgrade(item, false);   // [Tony] added: the worn piece goes back on (after the message, so it isn't listed as missing)
             return;
         }
 
@@ -167,6 +175,7 @@ public class CraftingMenu : MonoBehaviour
         item.TakeRecipeFrom(inv);
         if (inv.AddInto(oldToolSlot, item.Id, item.DisplayName, item.GetIcon(), item.CraftAmount, item))   // [Tony] replaced
         {
+            if (armor != null) armor.FinishUpgrade(item, true);                               // [Tony] added: the new piece is worn
             message.text = "Crafted " + item.DisplayName + "!";
         }
         else
@@ -176,6 +185,7 @@ public class CraftingMenu : MonoBehaviour
                 if (ing != null && ing.item != null)
                     inv.Add(ing.ItemId, ing.DisplayName, ing.item.GetIcon(), ing.amount, ing.item);
             }
+            if (armor != null) armor.FinishUpgrade(item, false);                              // [Tony] added: the worn piece goes back on
             message.text = "Inventory is full!";
         }
     }

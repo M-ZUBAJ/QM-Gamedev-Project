@@ -10,19 +10,24 @@ Unity Editor: Seed = 0: a new random world every game (the Console says which se
               Testing: open MainTitleScene, Play, NEW GAME > Map: New world > START GAME. Or press Play in
               ProceduralGenerateScene. Every game is a different world.
 Purpose: Makes the new world while its scene loads, before anything else in it starts:
-         - a 1000 x 1000 m terrain: green grassland with gentle hills in the middle, a sandy desert on one side and
-           rocky hills with snowy tops around the rest, steep mountains along the edge (and invisible walls behind
-           them), painted with the project's ground textures (grass, mud, sand, rock, snow);
-         - grass tufts on the grassy ground (Unity's waving terrain grass, with Polytope's grass blades picture);
+         - a 1000 x 1000 m world: green grassland with gentle hills in the middle, a sandy desert on one side and
+           rocky hills with snowy tops around the rest, painted with the project's ground textures (grass, mud, sand,
+           rock, snow; the desert is all sand, even its steep dunes, so nothing meant for rock spawns there);
+         - all round it a glowing barrier (WorldBarrier) instead of mountains: players see it and can't pass. The
+           land goes on for Land Beyond Barrier meters past it (bare rock and mud, so no trees, chests or deer out
+           there), so through the barrier the world fades into the mist instead of ending;
+         - grass tufts on the grassy ground (Unity's waving terrain grass, with Polytope's grass blades picture),
+           standing upright and swaying gently;
          - the player starts in a small clearing in the middle of the grassland (also where they come back after
            dying);
-         - rock caves in the grassland, each with Stone, Copper and Iron rocks inside;
+         - rock caves in the grassland, each with Stone, Copper and Iron rocks inside, and sandstone caves deep in the
+           desert, each with Gold (an Iron Pickaxe or better) and hard Sandstone rocks (they give Stone);
          - then the usual spawners fill it in, as in the old world: Sanyam's ObjectScatter (trees, berry bushes,
            rocks and chests, on the painted textures) and AnimalSpawner (deer in the grassland).
          The same seed always makes the same world, trees and rocks included.
-Requirement: WorldGenerator.cs x-> Terrain (Unity)
-             WorldGenerator.cs o-> ObjectScatter.cs, PlayerController.cs, PlayerRespawn.cs, Rigidbody (Unity)
-             WorldGenerator.cs <-x NewWorldBuilder.cs
+Requirement: WorldGenerator.cs x-> Terrain (Unity), WorldBarrier.cs
+             WorldGenerator.cs o-> ObjectScatter.cs, PlayerController.cs, PlayerRespawn.cs, ViewDistance.cs, Rigidbody (Unity)
+             WorldGenerator.cs <-x NewWorldBuilder.cs, WorldBarrierBuilder.cs
 */
 
 using System.Collections.Generic;
@@ -40,13 +45,15 @@ public class WorldGenerator : MonoBehaviour
         public float grass, desert, hills;
     }
 
-    // A place chosen for a cave: its middle (x, z), the flattened ground's height, which way it faces and which cave.
+    // A place chosen for a cave: its middle (x, z), the flattened ground's height, which way it faces, which cave, and
+    // whether it's a desert cave (gold and sandstone in it, a sandy floor).
     struct CaveSite
     {
         public Vector2 center;
         public float height;
         public float turn;
         public GameObject prefab;
+        public bool desert;
     }
 
     // ===== Fields =====
@@ -55,20 +62,26 @@ public class WorldGenerator : MonoBehaviour
              "seed of each game, so a world you liked can be made again).")]
     [SerializeField] int seed = 0;
 
-    [Tooltip("How wide and long the world is, in meters (a square, its middle at 0, 0).")]
+    [Tooltip("How wide and long the world is, in meters: the square inside the barrier, its middle at 0, 0.")]
     [Min(200f)]
     [SerializeField] float worldSize = 1000f;
 
-    [Tooltip("The highest the ground can go, in meters (the mountains along the edge reach almost this high).")]
+    [Tooltip("The highest the ground can go, in meters (the rocky hills' tops reach about 100 m).")]
     [Min(30f)]
     [SerializeField] float maxHeight = 140f;
 
-    [Tooltip("Detail of the ground's shape: 513 = a height every 2 m (low-poly look, quick to make). " +
+    [Tooltip("How far the land goes on past the barrier, in meters, on every side (at least the camera's View Distance, " +
+             "up to 250 m). Nobody gets there, but through the barrier the world fades into the mist instead of ending " +
+             "in an edge. It's bare rock and mud, so nothing useful grows there (trees, bushes, chests and deer need grass).")]
+    [Min(0f)]
+    [SerializeField] float landBeyondBarrier = 60f;
+
+    [Tooltip("Detail of the ground's shape: 513 = a height about every 2 m (low-poly look, quick to make). " +
              "Rounded to a power of two + 1.")]
     [Range(129, 1025)]
     [SerializeField] int heightResolution = 513;
 
-    [Tooltip("Detail of the painted ground textures: 512 = a color every 2 m. Rounded to a power of two.")]
+    [Tooltip("Detail of the painted ground textures: 512 = a color about every 2 m. Rounded to a power of two.")]
     [Range(128, 1024)]
     [SerializeField] int textureResolution = 512;
 
@@ -108,17 +121,27 @@ public class WorldGenerator : MonoBehaviour
     [Range(0, 16)]
     [SerializeField] int grassDensity = 6;
 
-    [Tooltip("A tuft's width, in meters (smallest, biggest).")]
-    [SerializeField] Vector2 grassWidth = new Vector2(0.6f, 1.1f);
+    [Tooltip("A tuft's width, in meters (smallest, biggest). Keep it below the height: the grass picture is square, so " +
+             "a tuft wider than it is tall squashes its blades flat, as if bent over.")]
+    [SerializeField] Vector2 grassWidth = new Vector2(0.45f, 0.7f);
 
     [Tooltip("A tuft's height, in meters (smallest, biggest). The player is 1.8 m tall.")]
-    [SerializeField] Vector2 grassHeight = new Vector2(0.45f, 0.85f);
+    [SerializeField] Vector2 grassHeight = new Vector2(0.55f, 0.9f);
+
+    [Tooltip("How far the wind bends the grass (Unity's Bending): 0 = still, 0.5 = Unity's own (a strong wind).")]
+    [Range(0f, 1f)]
+    [SerializeField] float grassBending = 0.2f;
+
+    [Tooltip("How fast the wind's waves move over the grass (Unity's Speed, 0.5 = Unity's own).")]
+    [Range(0f, 1f)]
+    [SerializeField] float grassWindSpeed = 0.4f;
 
     [Tooltip("The grass's colors, mixed across the ground by a noise so it isn't one flat green.")]
     [SerializeField] Color grassHealthy = new Color(0.82f, 1f, 0.7f);
     [SerializeField] Color grassDry = new Color(0.86f, 0.88f, 0.55f);
 
-    [Tooltip("How far from the camera the grass is drawn, in meters (further = more to draw).")]
+    [Tooltip("How far from the camera the grass is drawn, in meters (further = more to draw). The camera's ViewDistance " +
+             "caps it (100 m in the new world).")]
     [Range(20f, 250f)]
     [SerializeField] float grassDistance = 80f;
 
@@ -153,6 +176,24 @@ public class WorldGenerator : MonoBehaviour
     [Tooltip("How many copper rocks a cave has (at least, at most). The cave's other spots get stone.")]
     [SerializeField] Vector2Int copperPerCave = new Vector2Int(2, 3);
 
+    [Header("Desert caves")]
+    [Tooltip("The desert's caves (Tools > World > Build Desert Content makes them, of sandstone). Each has children named " +
+             "OreSpot where the rocks go.")]
+    [SerializeField] GameObject[] desertCavePrefabs = new GameObject[0];
+
+    [Tooltip("How many caves the desert gets (fewer if there's no room). They're anywhere deep in the desert, Cave " +
+             "Spacing apart from every cave.")]
+    [Range(0, 10)]
+    [SerializeField] int desertCaveCount = 3;
+
+    [Tooltip("The rocks in a desert cave: Gold (its rock needs an Iron Pickaxe), the other spots Sandstone (a hard desert " +
+             "rock that gives Stone; empty = Stone Ore).")]
+    [SerializeField] GameObject goldOre;
+    [SerializeField] GameObject sandstoneOre;
+
+    [Tooltip("How many gold rocks a desert cave has (at least, at most). Each gives 2 - 4 gold.")]
+    [SerializeField] Vector2Int goldPerCave = new Vector2Int(2, 3);
+
     [Header("Links (found by themselves if empty)")]
     [Tooltip("Sanyam's spawner of trees, bushes, rocks and chests. It gets the new terrain before it starts.")]
     [SerializeField] ObjectScatter scatter;
@@ -166,6 +207,7 @@ public class WorldGenerator : MonoBehaviour
     static WorldGenerator current;
     float[,] heights;      // the ground's height grid, [z, x], 0 = bottom, 1 = Max Height
     int res;               // heights along each side
+    float terrainSize;     // the terrain's width and length: the world + the land beyond the barrier on both sides
     float cell;            // meters between two heights
     Vector3 corner;        // the terrain's corner (its middle is at 0, 0)
     Vector2 noiseAt;       // where in the noise this world is (moves with the seed)
@@ -190,23 +232,26 @@ public class WorldGenerator : MonoBehaviour
         Seed = seed != 0 ? seed : new System.Random().Next(1, int.MaxValue);   // System.Random: new every game
         Random.InitState(Seed);   // from here on (trees and rocks too), the same seed gives the same world
 
-        corner = new Vector3(-worldSize / 2f, 0f, -worldSize / 2f);
+        terrainSize = worldSize + LandBeyond() * 2f;
+        corner = new Vector3(-terrainSize / 2f, 0f, -terrainSize / 2f);
         res = Mathf.ClosestPowerOfTwo(heightResolution - 1) + 1;
-        cell = worldSize / (res - 1);
+        cell = terrainSize / (res - 1);
         noiseAt = new Vector2(Random.Range(1000f, 9000f), Random.Range(1000f, 9000f));
         desertAngle = Random.Range(0f, 360f);
 
         MakeHeights();
         spawn = PickSpawn();
         PickCaves();
+        PickDesertCaves();
         terrain = MakeTerrain();
         PlaceCaves();
-        MakeEdgeWalls();
+        MakeBarrier();
         MovePlayer();
         LinkSpawners();
 
         Debug.Log("World Generator: seed " + Seed + " (type it into Seed to get this world again), " + worldSize + " x " +
-                  worldSize + " m, the player starts at " + spawn.ToString("F0") + ", " + caves.Count + " caves.");
+                  worldSize + " m inside the barrier, the player starts at " + spawn.ToString("F0") + ", " + caves.Count +
+                  " caves (" + caves.FindAll(site => site.desert).Count + " of them in the desert, with gold).");
     }
 
     void OnDestroy()
@@ -250,8 +295,7 @@ public class WorldGenerator : MonoBehaviour
         float grass = 24f + Fbm(x, z, 0.0045f, 4, 0f) * 16f;                                   // rolling, easy to walk
         float desert = 21f + Fbm(x, z, 0.007f, 3, 300f) * 7f + Ridge(x, z, 0.02f, 600f) * 1.5f;  // low dunes
         float hills = 28f + Mathf.Pow(RidgedFbm(x, z, 0.004f, 3, 900f), 1.8f) * 75f;            // rocky, partly too steep
-        float land = b.grass * grass + b.desert * desert + b.hills * hills;
-        return Mathf.Lerp(land, maxHeight * 0.95f, EdgeAmount(x, z));                           // mountains at the edge
+        return b.grass * grass + b.desert * desert + b.hills * hills;   // no mountains at the edge: the barrier is there
     }
 
     // How much of each biome a spot has: grassland in the middle (its edge wobbles), and around it the desert on one
@@ -273,11 +317,21 @@ public class WorldGenerator : MonoBehaviour
         return new Biomes { grass = grass, desert = (1f - grass) * desert, hills = (1f - grass) * (1f - desert) };
     }
 
-    // 0 inland, 1 within 10 m of the world's edge: the mountains there rise too steeply to climb.
-    float EdgeAmount(float x, float z)
+    // How far the land goes on past the barrier: Land Beyond Barrier, but at least the camera's view distance
+    // (ViewDistance, up to 250 m), so from the barrier the land never visibly ends before the mist hides it.
+    float LandBeyond()
     {
-        float toEdge = worldSize / 2f - Mathf.Max(Mathf.Abs(x), Mathf.Abs(z));
-        return 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(10f, 70f, toEdge));
+        ViewDistance view = FindFirstObjectByType<ViewDistance>();   // found by itself: it wakes up after this
+        float seen = view != null ? Mathf.Min(view.Distance, 250f) : 0f;
+        return Mathf.Max(landBeyondBarrier, seen);
+    }
+
+    // 0 inside the world, 1 from 6 m past the barrier: how much a spot is "outside", where the land is bare (see Paint).
+    // It starts 8 m inside, so the last strip along the barrier has too little grass for trees to grow into it.
+    float Outside(float x, float z)
+    {
+        float past = Mathf.Max(Mathf.Abs(x), Mathf.Abs(z)) - worldSize / 2f;   // meters past the barrier (below 0 = inside)
+        return Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(-8f, 6f, past));
     }
 
     // Smooth noise (0 - 1) at a spot; "salt" moves to another part of the noise, so each use looks different.
@@ -435,6 +489,31 @@ public class WorldGenerator : MonoBehaviour
         }
     }
 
+    // Places for the desert's caves: anywhere deep in the desert (not near the barrier), on gentle ground, Cave Spacing
+    // apart from every cave. The ground under each is flattened too.
+    void PickDesertCaves()
+    {
+        if (desertCavePrefabs == null || desertCavePrefabs.Length == 0) return;
+        float reach = worldSize / 2f - caveRadius - 25f;   // keeps the cave clear of the barrier
+        int placed = 0;
+        for (int tries = 0; tries < 800 && placed < desertCaveCount; tries++)
+        {
+            Vector2 center = new Vector2(Random.Range(-reach, reach), Random.Range(-reach, reach));
+            if (BiomesAt(center.x, center.y).desert < 0.9f) continue;   // only deep in the desert
+            if (SteepestIn(center, caveRadius) > 16f) continue;         // not on a steep dune
+
+            bool roomy = true;
+            foreach (CaveSite other in caves) roomy &= Vector2.Distance(other.center, center) >= caveSpacing;
+            if (!roomy) continue;
+
+            GameObject prefab = desertCavePrefabs[Random.Range(0, desertCavePrefabs.Length)];
+            if (prefab == null) continue;
+            float height = Flatten(center, caveRadius, 10f);
+            caves.Add(new CaveSite { center = center, height = height, turn = Random.Range(0f, 360f), prefab = prefab, desert = true });
+            placed++;
+        }
+    }
+
     void PlaceCaves()
     {
         if (caves.Count == 0) return;
@@ -443,13 +522,14 @@ public class WorldGenerator : MonoBehaviour
         {
             Vector3 at = new Vector3(site.center.x, site.height, site.center.y);
             GameObject cave = Instantiate(site.prefab, at, Quaternion.Euler(0f, site.turn, 0f), holder);
-            FillOres(cave.transform);
+            FillOres(cave.transform, site.desert);
         }
     }
 
     // Puts the rocks on a cave's ore spots (its children named OreSpot), in a random order: a few iron, a few copper,
-    // the rest stone. They settle onto the cave's floor by themselves (StandOnGround).
-    void FillOres(Transform cave)
+    // the rest stone; in a desert cave a few gold, the rest sandstone. They settle onto the floor by themselves
+    // (StandOnGround).
+    void FillOres(Transform cave, bool desert)
     {
         List<Transform> spots = new List<Transform>();
         foreach (Transform part in cave.GetComponentsInChildren<Transform>())
@@ -462,11 +542,14 @@ public class WorldGenerator : MonoBehaviour
             (spots[i], spots[j]) = (spots[j], spots[i]);
         }
 
-        int iron = Random.Range(ironPerCave.x, ironPerCave.y + 1);
-        int copper = Random.Range(copperPerCave.x, copperPerCave.y + 1);
+        // The first "rare" spots get the rare rocks (iron then copper; gold in the desert), the rest the common rock.
+        int iron = desert ? 0 : Random.Range(ironPerCave.x, ironPerCave.y + 1);
+        int copper = desert ? 0 : Random.Range(copperPerCave.x, copperPerCave.y + 1);
+        int gold = desert ? Random.Range(goldPerCave.x, goldPerCave.y + 1) : 0;
+        GameObject common = desert && sandstoneOre != null ? sandstoneOre : stoneOre;
         for (int i = 0; i < spots.Count; i++)
         {
-            GameObject ore = i < iron ? ironOre : i < iron + copper ? copperOre : stoneOre;
+            GameObject ore = i < gold ? goldOre : i < iron ? ironOre : i < iron + copper ? copperOre : common;
             if (ore != null) Instantiate(ore, spots[i].position, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f), cave);
         }
     }
@@ -477,7 +560,7 @@ public class WorldGenerator : MonoBehaviour
     {
         TerrainData data = new TerrainData { name = "Generated World " + Seed };
         data.heightmapResolution = res;                          // first: changing it also changes the size
-        data.size = new Vector3(worldSize, maxHeight, worldSize);
+        data.size = new Vector3(terrainSize, maxHeight, terrainSize);
         data.SetHeights(0, 0, heights);
 
         if (layers != null && layers.Length > 0)
@@ -509,7 +592,7 @@ public class WorldGenerator : MonoBehaviour
         if (grassTexture == null || grassDensity <= 0 || grassLayer < 0 || grassLayer >= paint.GetLength(2)) return;
 
         int size = paint.GetLength(0);
-        data.SetDetailResolution(size, 32);                                  // one count per 2 x 2 m, like the textures
+        data.SetDetailResolution(size, 32);                                  // one count per texture spot (about 2 x 2 m)
         data.SetDetailScatterMode(DetailScatterMode.InstanceCountMode);      // the map says how many tufts, not "how much"
         data.detailPrototypes = new[]
         {
@@ -528,9 +611,12 @@ public class WorldGenerator : MonoBehaviour
             },
         };
         data.wavingGrassTint = Color.white;   // Unity's own tint would turn the green grey
+        data.wavingGrassAmount = grassBending;    // Unity's own 0.5 bent the tufts far over in gusts
+        data.wavingGrassSpeed = grassWindSpeed;
 
         int[,] counts = new int[size, size];
-        float step = worldSize / size;
+        float step = terrainSize / size;
+        float perSpot = grassDensity * step * step / 4f;   // Grass Density is per 2 x 2 m; a spot is step x step meters
         for (int zi = 0; zi < size; zi++)
         {
             for (int xi = 0; xi < size; xi++)
@@ -539,7 +625,7 @@ public class WorldGenerator : MonoBehaviour
                 if (green < 0.5f) continue;   // mostly mud, sand, rock or snow here
                 float x = corner.x + (xi + 0.5f) * step, z = corner.z + (zi + 0.5f) * step;
                 float patches = Noise(x, z, 0.03f, 5000f);
-                counts[zi, xi] = Mathf.RoundToInt(grassDensity * Mathf.InverseLerp(0.5f, 1f, green) * Mathf.Lerp(0.3f, 1.2f, patches));
+                counts[zi, xi] = Mathf.RoundToInt(perSpot * Mathf.InverseLerp(0.5f, 1f, green) * Mathf.Lerp(0.3f, 1.2f, patches));
             }
         }
         data.SetDetailLayer(0, 0, 0, counts);
@@ -547,13 +633,14 @@ public class WorldGenerator : MonoBehaviour
 
     // The textures painted on the ground, one mix per spot: grass with patches of mud in the grassland, sand in the
     // desert, grass low down and rock higher up on the hills, snow above the Snow Line, bare rock on every steep slope,
-    // rock and mud in and around the caves, and a grass-and-mud clearing at the start (too little grass for trees).
+    // rock and mud in and around the caves, a grass-and-mud clearing at the start (too little grass for trees), and
+    // bare rock and mud past the barrier.
     float[,,] Paint(int size)
     {
         int count = layers.Length;
         float[,,] map = new float[size, size, count];
         float[] mix = new float[count];
-        float step = worldSize / size;
+        float step = terrainSize / size;
         Vector2 start = new Vector2(spawn.x, spawn.z);
 
         for (int zi = 0; zi < size; zi++)
@@ -574,13 +661,25 @@ public class WorldGenerator : MonoBehaviour
                 Add(mix, rockLayer, b.hills * (1f - lowGreen) * (1f - snow));
                 Add(mix, snowLayer, b.hills * snow);
 
-                // Steep ground (from 30 degrees, all rock by 42) and the edge mountains: rock, or snow up high.
-                float bare = Mathf.Max(Mathf.InverseLerp(30f, 42f, SlopeAt(x, z)), EdgeAmount(x, z));
-                if (bare > 0f)
+                // Steep ground (from 30 degrees, all rock by 42): rock, or snow up high. Not the desert's steep dunes:
+                // they stay sand, so no rock (and no stones spawned on rock) in the desert.
+                float steep = Mathf.InverseLerp(30f, 42f, SlopeAt(x, z)) * (1f - b.desert);
+                if (steep > 0f)
                 {
-                    for (int i = 0; i < count; i++) mix[i] *= 1f - bare;
-                    Add(mix, rockLayer, bare * (1f - snow));
-                    Add(mix, snowLayer, bare * snow);
+                    for (int i = 0; i < count; i++) mix[i] *= 1f - steep;
+                    Add(mix, rockLayer, steep * (1f - snow));
+                    Add(mix, snowLayer, steep * snow);
+                }
+
+                // Past the barrier: bare ground nobody reaches, so nothing useful spawns there (trees, bushes, chests
+                // and deer need grass; the hills' stone rocks need more rock than this).
+                float outside = Outside(x, z);
+                if (outside > 0f)
+                {
+                    for (int i = 0; i < count; i++) mix[i] *= 1f - outside;
+                    Add(mix, mudLayer, outside * 0.55f * (1f - snow));
+                    Add(mix, rockLayer, outside * 0.45f * (1f - snow));
+                    Add(mix, snowLayer, outside * snow);
                 }
 
                 PaintPlaces(mix, new Vector2(x, z), start);
@@ -598,15 +697,24 @@ public class WorldGenerator : MonoBehaviour
         return map;
     }
 
-    // In and around a cave: rock and mud, no grass (so no tree grows into it); at the start: half grass, half mud.
+    // In and around a cave: rock and mud, no grass (so no tree grows into it); a desert cave: sand and dirt (mud), with
+    // too little of either for the spawners' rocks (Sandstone Rocks need 0.6 sand, Hill Rocks 0.5 rock); at the start:
+    // half grass, half mud.
     void PaintPlaces(float[] mix, Vector2 spot, Vector2 start)
     {
         foreach (CaveSite site in caves)
         {
             float distance = Vector2.Distance(spot, site.center);
             if (distance > caveRadius + 6f) continue;
-            float inside = distance < caveRadius - 3f ? 0.75f : 0.5f;   // mostly mud on the floor, rockier at the walls
+            bool floor = distance < caveRadius - 3f;
             System.Array.Clear(mix, 0, mix.Length);
+            if (site.desert)
+            {
+                Add(mix, sandLayer, floor ? 0.45f : 0.55f);   // a sandy floor, sand blowing in at the walls
+                Add(mix, floor ? mudLayer : rockLayer, floor ? 0.55f : 0.45f);
+                return;
+            }
+            float inside = floor ? 0.75f : 0.5f;   // mostly mud on the floor, rockier at the walls
             Add(mix, mudLayer, inside);
             Add(mix, rockLayer, 1f - inside);
             return;
@@ -625,23 +733,16 @@ public class WorldGenerator : MonoBehaviour
         if (layer >= 0 && layer < mix.Length && amount > 0f) mix[layer] += amount;
     }
 
-    // Invisible walls just outside the edge mountains, so nobody can ever walk off the world. On the Ignore Raycast
-    // layer: rays (enemy spawning, aiming) pass through them, only bodies bump into them.
-    void MakeEdgeWalls()
+    // The glowing barrier all round the world (WorldBarrier): players see it as they come near and can't pass it.
+    // From below the lowest ground to well above the highest hills; its solid walls stand just outside the line, on the
+    // Ignore Raycast layer (rays for aiming and spawning pass through, only bodies bump into them).
+    void MakeBarrier()
     {
-        GameObject walls = new GameObject("World Edge") { layer = 2 };
-        float half = worldSize / 2f, height = maxHeight * 3f, thick = 10f, length = worldSize + thick * 2f;
-        AddWall(walls, new Vector3(-half - thick / 2f, height / 2f, 0f), new Vector3(thick, height, length));
-        AddWall(walls, new Vector3(half + thick / 2f, height / 2f, 0f), new Vector3(thick, height, length));
-        AddWall(walls, new Vector3(0f, height / 2f, -half - thick / 2f), new Vector3(length, height, thick));
-        AddWall(walls, new Vector3(0f, height / 2f, half + thick / 2f), new Vector3(length, height, thick));
-    }
-
-    static void AddWall(GameObject walls, Vector3 center, Vector3 size)
-    {
-        BoxCollider box = walls.AddComponent<BoxCollider>();
-        box.center = center;
-        box.size = size;
+        const float below = 10f;   // starts this far under the ground (the lowest ground is at 0)
+        GameObject go = new GameObject("World Barrier");
+        go.transform.position = new Vector3(0f, -below, 0f);
+        WorldBarrier barrier = go.AddComponent<WorldBarrier>();
+        barrier.SetArea(new Vector2(worldSize, worldSize), maxHeight + 60f + below);
     }
 
     // ----- The player and the spawners -----

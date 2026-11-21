@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a7f3d5fd2bbcd4dab390231f45945a, type: 3}
+  m_Name: CopperShoulders
+  m_EditorClassIdentifier: 
+  displayName: Copper Shoulders
+  prefab: {fileID: 8736133907572322521, guid: 777e5c46c16d6ad49a27c1044fa2c578, type: 3}
+  pickup: 0
+  icon:
+    mode: 0
+    image: {fileID: 0}
+    aseprite: {fileID: 0}
+    asepriteTag: 
+    frames: []
+    durations: []
+  itemType: 3
+  consumable:
+    health: 0
+    hunger: 0
+    stamina: 0
+  tool:
+    kind: 0
+    tier: 1
+  armor:
+    slot: 1
+    protection: 1.5
+    set: Copper
+    piece: PlateSet1_Shoulders
+    hides: []
+    look: {fileID: 2100000, guid: bd62fe00b5165814aa1db6f49b8b23a2, type: 2}
+  minedWith: 0
+  recipe:
+  - item: {fileID: 11400000, guid: c3a44d23a6aec40c297f57505e7b4da0, type: 2}
+    amount: 4
+  craftAmount: 1
+  craftedAt: 0

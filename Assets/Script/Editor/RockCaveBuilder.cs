@@ -19,8 +19,10 @@ Purpose: Three walk-in rock caves for the new world (Assets/Prefabs/World/Caves:
            - Ore Spots: empty markers (OreSpot) on the floor, where WorldGenerator puts Stone, Copper and Iron rocks.
          Every rock has the rock material and a Mesh Collider of its own shape, so the walls and roof are solid.
          The floor is the terrain: WorldGenerator flattens the ground under each cave.
+         BuildDesert makes the desert's two the same way, all of sandstone (Desert Cave Small, Desert Cave: wider and a
+         little lower), for Tools > World > Build Desert Content; WorldGenerator puts gold in them.
 Requirement: RockCaveBuilder.cs x-> UIBuildHelper.cs, MenuOrder.cs
-             RockCaveBuilder.cs <-x NewWorldBuilder.cs
+             RockCaveBuilder.cs <-x DesertBuilder.cs, NewWorldBuilder.cs
 */
 
 using System.Collections.Generic;
@@ -59,6 +61,13 @@ public static class RockCaveBuilder
         new Design { name = "Rock Cave Big",   radius = 8.5f, wallHeight = 6f,   seed = 37 },
     };
 
+    // The desert's caves (BuildDesert, with the sandstone material): wider and a little lower, like a weathered mesa.
+    static readonly Design[] DesertDesigns =
+    {
+        new Design { name = "Desert Cave Small", radius = 7f, wallHeight = 4.6f, seed = 53 },
+        new Design { name = "Desert Cave",       radius = 8f, wallHeight = 5.2f, seed = 71 },
+    };
+
     // ===== Menu (Unity calls this) =====
 
     [MenuItem("Tools/World/Build Rock Caves", false, MenuOrder.BuildRockCaves)]
@@ -79,6 +88,17 @@ public static class RockCaveBuilder
     // Builds (refills) the three caves. Returns them; "report" says what happened, for the Console.
     public static List<GameObject> BuildAll(out string report)
     {
+        return BuildDesigns(Designs, RockMaterial(), out report);
+    }
+
+    // Builds (refills) the desert's two caves, all of the given rock (Tools > World > Build Desert Content: sandstone).
+    public static List<GameObject> BuildDesert(Material sandstone, out string report)
+    {
+        return BuildDesigns(DesertDesigns, sandstone != null ? sandstone : RockMaterial(), out report);
+    }
+
+    static List<GameObject> BuildDesigns(Design[] designs, Material rock, out string report)
+    {
         List<GameObject> built = new List<GameObject>();
         List<Mesh> shapes = Shapes();
         if (shapes.Count == 0)
@@ -86,10 +106,9 @@ public static class RockCaveBuilder
             report = "no rock shapes in " + ShapeFolder + ". Run Tools > World > Use Low Poly Rocks first.";
             return built;
         }
-        Material rock = RockMaterial();
 
         MakeFolders(CaveFolder);
-        foreach (Design design in Designs)
+        foreach (Design design in designs)
         {
             GameObject cave = BuildCave(design, shapes, rock);
             if (cave != null) built.Add(cave);

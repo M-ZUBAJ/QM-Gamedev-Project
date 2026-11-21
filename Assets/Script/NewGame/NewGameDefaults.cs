@@ -1,6 +1,6 @@
 /*
 First Date: 7/11/2026
-Date: 19/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: This is an ASSET (Assets/Config/NewGame/NewGameDefaults.asset), not a script you put on an object.
         Tools > UI > Build Main Title Scene makes it; the New Game page (NewGamePanel) reads it.
@@ -9,7 +9,8 @@ Unity Editor: Don't type in it: it's a copy of how GameScene is set up right now
               defaults follow. "Read From" says when it was last read.
 Purpose: The game as it is right now = the New Game page's defaults: days to win, win time (VictoryScreen),
          day length, start time and the parts of the day (DaylightCycle), enemies per night (EnemySpawner),
-         hunger speed (PlayerHunger), the death / pickup / message rules and the Tool Test rule (GameRules).
+         hunger speed (PlayerHunger), the death / pickup / message rules and the Tool Test and Armor Test rules
+         (GameRules).
          Keeping them in an asset lets the title scene show them without loading GameScene.
 Requirement: NewGameDefaults.cs x-> VictoryScreen.cs, GameSetup.cs
              NewGameDefaults.cs <-x NewGameDefaultsSync.cs, NewGamePanel.cs, TitleSceneBuilder.cs
@@ -50,6 +51,8 @@ public class NewGameDefaults : ScriptableObject
     [Header("Testing (GameRules)")]
     [Tooltip("Tool Test: start with one of every tier tool.")]
     [SerializeField] bool toolTest = false;
+    [Tooltip("Armor Test: start with every armor piece (the Copper and Iron sets).")]
+    [SerializeField] bool armorTest = false;
 
     [Header("Where these came from")]
     [Tooltip("The scene and the moment these values were read.")]
@@ -72,6 +75,7 @@ public class NewGameDefaults : ScriptableObject
     public bool AutoPickupDrops => autoPickupDrops;
     public bool ShowNotifications => showNotifications;
     public bool ToolTest => toolTest;
+    public bool ArmorTest => armorTest;
     public string ReadFrom => readFrom;
 
     // What happens to the items when the player dies, from the two rules.

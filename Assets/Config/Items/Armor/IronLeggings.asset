@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: IronLeggings
   m_EditorClassIdentifier: 
   displayName: Iron Leggings
-  prefab: {fileID: 3304532717535580928, guid: 8f943ca8f78433a48873cf29a91a193a, type: 3}
+  prefab: {fileID: 8677422175175818279, guid: 1f105aa4154adfd4eb8c8efa723f5273, type: 3}
   pickup: 0
   icon:
     mode: 0
@@ -32,14 +32,17 @@ MonoBehaviour:
     tier: 1
   armor:
     slot: 4
-    protection: 1.5
+    protection: 3
     set: Iron
     piece: PlateSet1_Pants
     hides:
     - Starter_Pants
+    look: {fileID: 2100000, guid: 0fa5ddbc35f7d9e459603a29af14cd05, type: 2}
   minedWith: 0
   recipe:
+  - item: {fileID: 11400000, guid: 1199515bbcf981b4fa53d799abaea7e8, type: 2}
+    amount: 1
   - item: {fileID: 11400000, guid: 5c6e2eb642dbe4159a36e38d99e65413, type: 2}
-    amount: 7
+    amount: 5
   craftAmount: 1
   craftedAt: 0

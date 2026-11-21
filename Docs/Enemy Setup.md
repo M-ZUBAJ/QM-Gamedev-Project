@@ -5,16 +5,30 @@
 - flinches when hit;
 - falls over when killed, gives coins, and its body breaks into red particles during the fall (DeathEffect,
   `Docs/Death Effect Setup.md`);
-- cheers when the player dies.
+- cheers when the player dies;
+- when day comes (or the player dies at night and the morning comes back), burns away where it stands into orange
+  embers, at a random moment within 1.5 s of the others (no coins: nobody killed it). Test: ⋮ on EnemyAnimator >
+  **Test: Burn Away Now**, or ⋮ on the EnemySpawner > **Test Despawn Enemies**.
 
-Walls and buildings stop them, and they walk up and down the hills.
+Walls and buildings stop them, and they walk up and down the hills. They never spawn outside the world's barrier
+(`Docs/World Barrier Setup.md`).
+
+**In the day, in the new world's desert:** turtles (RPG Monster DUO's TurtleShell, `TurtleShellEnemy`), made the same
+way by **Tools > World > Build Desert Content** (it calls this tool's `EnemyBuilder.BuildMonster`). They're spawned by
+Tony's **DesertMonsterSpawner** (not Marko's EnemySpawner), stand still until the player comes near or hits them
+(Tony's **EnemyAggro**), and turn to sand at night. Guide: `Docs/Desert Setup.md`.
+
+**A different monster for the night:** select its prefab, run **Tools > Enemies > Build Monster Enemy**, and answer
+**Use** when it asks to put it in the EnemySpawner. Running it on a monster that already has an enemy prefab rebuilds
+it in place and keeps an EnemyAggro and the sand / ember colors other tools gave it.
 
 **How it works:**
 - **Movement, attacks, health, coins:** Marko's scripts (EnemyMovement, EnemyAttack, EnemyCombat, EnemySpawner).
 - **The look:** Tony's EnemyAnimator plays the monster's animations.
 - **Physics:** a Rigidbody and a Sphere Collider on the enemy make walls stop it and keep it on the ground.
 
-The changes to Marko's scripts are listed in `Docs/TonyEditMate/Marko/10-11-2026 Slime Enemy With Animations.md`.
+The changes to Marko's scripts are listed in `Docs/TonyEditMate/Marko/10-11-2026 Slime Enemy With Animations.md`
+(and the burning away at dawn in `Docs/TonyEditMate/Marko/20-11-2026 Night Enemies Burn Away At Day.md`).
 
 ## What you need
 

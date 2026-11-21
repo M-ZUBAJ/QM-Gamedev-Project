@@ -14,7 +14,8 @@ Unity Editor: Nothing to set up: the armor's Item Data says which part to show (
               shoulders, the gloves and the boots don't flicker.
 Purpose: Shows the armor the player wears (PlayerArmor) on this character. Blink's character has its armor already
          inside it, switched off: wearing the Iron Helmet switches its PlateSet1_Helmet part on (and switches off what
-         it covers, e.g. the hair). Taking it off puts every part back exactly how it was.
+         it covers, e.g. the hair), drawn in its set's colors (the piece's Armor > Look: Copper = copper, Iron = steel
+         grey; both sets use the same plate parts). Taking it off puts every part back exactly how it was.
          It also hides the skin under the clothes. Blink's clothes sit right on the body's skin (the shirt's sleeves are
          the arm's skin pushed out a hair, in places not at all), and two surfaces in the same spot take turns being
          drawn: the shoulders flickered between the shirt and the skin many times a second (z-fighting). Skin that a
@@ -98,6 +99,7 @@ public class ArmorLook : MonoBehaviour
     readonly Dictionary<string, GameObject> parts = new Dictionary<string, GameObject>();   // every part of the model, by name
     readonly Dictionary<GameObject, bool> startedOn = new Dictionary<GameObject, bool>();     // parts this changed, and how they were
     readonly Dictionary<SkinnedMeshRenderer, Mesh> ownMesh = new Dictionary<SkinnedMeshRenderer, Mesh>();   // parts drawn with a trimmed copy, and their own mesh
+    readonly Dictionary<Renderer, Material[]> ownMaterials = new Dictionary<Renderer, Material[]>();       // pieces drawn in a set's colors, and their own materials
     FirstPersonHands hands;   // only on the first-person copy: it draws nothing but its arms, hands and gloves
 
     public IReadOnlyList<SkinUnder> SkinUnderClothes => skinUnderClothes;
@@ -139,6 +141,11 @@ public class ArmorLook : MonoBehaviour
             if (part.Key != null) SetMesh(part.Key, part.Value);
         }
         ownMesh.Clear();
+        foreach (KeyValuePair<Renderer, Material[]> part in ownMaterials)
+        {
+            if (part.Key != null) part.Key.sharedMaterials = part.Value;
+        }
+        ownMaterials.Clear();
 
         PlayerArmor armor = PlayerArmor.Current;
         if (armor != null)
@@ -148,6 +155,7 @@ public class ArmorLook : MonoBehaviour
                 ItemData item = armor.WornIn(slot);
                 if (item == null || !item.IsArmor) continue;
                 Switch(item.Armor.piece, true);
+                Dress(item.Armor.piece, item.Armor.look);
                 if (item.Armor.hides == null) continue;
                 foreach (string covered in item.Armor.hides) Switch(covered, false);
             }
@@ -206,6 +214,20 @@ public class ArmorLook : MonoBehaviour
         Bounds box = skin.localBounds;
         skin.sharedMesh = mesh;
         skin.localBounds = box;
+    }
+
+    // Draws a worn piece with its set's material (Armor > Look), remembering its own to put back later. No look = as it is.
+    void Dress(string partName, Material look)
+    {
+        if (look == null || string.IsNullOrEmpty(partName) || !parts.TryGetValue(partName, out GameObject part) || part == null) return;
+        foreach (Renderer drawn in part.GetComponentsInChildren<Renderer>(true))
+        {
+            Material[] own = drawn.sharedMaterials;
+            if (!ownMaterials.ContainsKey(drawn)) ownMaterials[drawn] = own;
+            Material[] dressed = new Material[own.Length];
+            for (int i = 0; i < dressed.Length; i++) dressed[i] = look;
+            drawn.sharedMaterials = dressed;
+        }
     }
 
     // Switches the part with this name on or off (remembering how it was the first time, to put it back later).

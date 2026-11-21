@@ -450,7 +450,7 @@ public static class TitleSceneBuilder
         MakeToggleRow(rows.transform, "PickupRow", "Pick up dropped items by walking over them");
         MakeToggleRow(rows.transform, "MessagesRow", "Show \"+3 Wood\" messages");
         Section(rows.transform, "TESTING");
-        MakeToggleRow(rows.transform, "AllToolsRow", "Start with all tools (pickaxe, axe and sword in every tier)");
+        MakeTestingRow(rows.transform);
 
         TextMeshProUGUI summary = MakeText(page, "Summary", "Everything is set to the game as it is now.", 30f, SoftWhite,
                                        TextAlignmentOptions.Center);
@@ -888,8 +888,23 @@ public static class TitleSceneBuilder
         t.raycastTarget = false;
     }
 
-    // [x] Pick up dropped items...: a tick box with the row's text right of it.
-    static void MakeToggleRow(Transform parent, string objectName, string label)
+    // TESTING: two tick boxes side by side, all tools (GameRules Tool Test) and all armor (Armor Test). Side by side
+    // because the panel has no room for another row (its rows fill it to 2 px).
+    static void MakeTestingRow(Transform parent)
+    {
+        GameObject testing = NewUI("TestingRow", parent);
+        LayoutElement size = testing.AddComponent<LayoutElement>();
+        size.preferredHeight = size.minHeight = 46f;
+        HorizontalLayoutGroup pair = testing.AddComponent<HorizontalLayoutGroup>();
+        pair.spacing = 10f;
+        pair.childControlWidth = pair.childControlHeight = true;
+        pair.childForceExpandWidth = pair.childForceExpandHeight = true;   // two equal halves
+        MakeToggleRow(testing.transform, "AllToolsRow", "Start with all tools", 440f);
+        MakeToggleRow(testing.transform, "ArmorTestRow", "Start with all armor", 440f);
+    }
+
+    // [x] Pick up dropped items...: a tick box with the row's text right of it ("labelWidth" pixels wide).
+    static void MakeToggleRow(Transform parent, string objectName, string label, float labelWidth = 800f)
     {
         RectTransform row = MakeRow(parent, objectName, null, 46f);
 
@@ -907,7 +922,7 @@ public static class TitleSceneBuilder
         go.AddComponent<TogglePop>();
 
         TextMeshProUGUI text = MakeText(row, "Label", label, 26f, Color.white, TextAlignmentOptions.Left);
-        Place(text.gameObject, new Vector2(0f, 0.5f), new Vector2(RowLabelX + 60f + 400f, 0f), new Vector2(800f, 46f));
+        Place(text.gameObject, new Vector2(0f, 0.5f), new Vector2(RowLabelX + 60f + labelWidth / 2f, 0f), new Vector2(labelWidth, 46f));
     }
 
     // ----- Key binding templates -----

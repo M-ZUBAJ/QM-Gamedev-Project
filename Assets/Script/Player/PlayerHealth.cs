@@ -15,7 +15,7 @@ Purpose: Holds the player's health. TakeDamage / Heal change it and fire On Chan
          player back). Revive fills health back up.
 Requirement: PlayerHealth.cs o-> PlayerArmor.cs
              PlayerHealth.cs <-x DeathScreen.cs, EnemyAttack.cs, PerkChest.cs, PerkManager.cs, PlayerCoins.cs, PlayerRespawn.cs
-             PlayerHealth.cs <-o AutoCollector.cs, ChestPrompt.cs, DaylightCycle.cs, EnemyAnimator.cs, FirstPersonHands.cs, GainNotifier.cs, InteractOutline.cs, ItemConsumer.cs, ItemDropper.cs, PassiveRegen.cs, PlayerAnimator.cs, PlayerHunger.cs, PlayerInfoPage.cs, PlayerPerks.cs, PlayerSight.cs, PlayerStats.cs, StatBar.cs, WildAnimal.cs
+             PlayerHealth.cs <-o AutoCollector.cs, ChestPrompt.cs, DaylightCycle.cs, EnemyAggro.cs, EnemyAnimator.cs, FirstPersonHands.cs, GainNotifier.cs, InteractOutline.cs, ItemConsumer.cs, ItemDropper.cs, PassiveRegen.cs, PlayerAnimator.cs, PlayerHunger.cs, PlayerInfoPage.cs, PlayerPerks.cs, PlayerSight.cs, PlayerStats.cs, StatBar.cs, WildAnimal.cs
 */
 
 using UnityEngine;

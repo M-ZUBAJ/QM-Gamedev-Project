@@ -1,6 +1,6 @@
 /*
 First Date: 10/11/2026
-Date: 13/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Open GameScene, then menu Tools > Enemies > Build Monster Enemy.
@@ -16,7 +16,10 @@ Purpose: Turns a monster model into a working enemy in one click, using Marko's 
            > Model:   the monster prefab, 1 m tall, feet at the bottom, using the new controller
          The controller: Locomotion (IdleBattle / WalkFWD / RunFWD, picked by Speed), Attack (Attack01), Hit (GetHit),
          Victory, Dead (Die). The clips are taken from the monster's own demo controller, by state name.
-Requirement: EnemyBuilder.cs x-> UIBuildHelper.cs, AnimatorBuildHelper.cs, MeshBounds.cs, EnemyAnimator.cs, EnemyCombat.cs, EnemyMovement.cs, EnemyAttack.cs, EnemySpawner.cs, DeathEffectBuilder.cs, MenuOrder.cs
+         BuildMonster does the same for a monster by name, without asking (Tools > World > Build Desert Content: the
+         TurtleShell). A rebuild keeps an EnemyAggro and DeathEffect's Vanish Color that other tools gave the enemy.
+Requirement: EnemyBuilder.cs x-> UIBuildHelper.cs, AnimatorBuildHelper.cs, MeshBounds.cs, EnemyAnimator.cs, EnemyAggro.cs, EnemyCombat.cs, EnemyMovement.cs, EnemyAttack.cs, EnemySpawner.cs, DeathEffect.cs, DeathEffectBuilder.cs, MenuOrder.cs
+             EnemyBuilder.cs <-x DesertBuilder.cs
 */
 
 using System.Collections.Generic;
@@ -106,6 +109,31 @@ public static class EnemyBuilder
 
     // ===== My methods =====
 
+    // Builds (refills) the enemy for one of the monster prefabs by its file name (e.g. "TurtleShellPolyart"), without
+    // asking and without touching the EnemySpawner: its controller and prefab, like the menu. Tools > World > Build
+    // Desert Content uses it for the desert's turtle. Returns the prefab (null = no such monster, or it couldn't be
+    // saved); "report" says what happened.
+    public static GameObject BuildMonster(string monsterName, out string report)
+    {
+        GameObject monster = FindMonster(monsterName);
+        string problem = Problem(monster);
+        if (problem != null)
+        {
+            report = problem.Replace("\n\n", " ");
+            return null;
+        }
+
+        string name = EnemyName(monster);
+        string prefabPath = FindPrefabPath(PrefabFolder + "/" + name + ".prefab");
+        List<string> missing = new List<string>();
+        AnimatorController controller = BuildController(ControllerFolder + "/" + name + ".controller", ClipsByState(monster), missing);
+        GameObject prefab = BuildPrefab(monster, name, prefabPath, controller);
+        DeathEffectBuilder.MakeMeshesReadable();
+        report = prefab == null ? "couldn't save " + prefabPath
+                                : prefabPath + (missing.Count > 0 ? " (no " + string.Join(", ", missing) + " animation)" : "");
+        return prefab;
+    }
+
     // The monster to use: a prefab with an Animator selected in the Project window, else RPG Monster Duo's slime.
     static GameObject ChosenMonster()
     {
@@ -116,11 +144,16 @@ public static class EnemyBuilder
         {
             return selected;
         }
+        return FindMonster(DefaultMonster);
+    }
 
-        foreach (string guid in AssetDatabase.FindAssets(DefaultMonster + " t:Prefab", new[] { "Assets" }))
+    // A monster prefab by its file name, anywhere in Assets, or null.
+    static GameObject FindMonster(string fileName)
+    {
+        foreach (string guid in AssetDatabase.FindAssets(fileName + " t:Prefab", new[] { "Assets" }))
         {
             string path = AssetDatabase.GUIDToAssetPath(guid);
-            if (System.IO.Path.GetFileNameWithoutExtension(path) == DefaultMonster)
+            if (System.IO.Path.GetFileNameWithoutExtension(path) == fileName)
                 return AssetDatabase.LoadAssetAtPath<GameObject>(path);
         }
         return null;
@@ -243,6 +276,13 @@ public static class EnemyBuilder
         GameObject root = existed ? PrefabUtility.LoadPrefabContents(path) : new GameObject(name);
         try
         {
+            // What other tools gave it, kept through the rebuild: EnemyAggro (it waits until the player comes near, e.g.
+            // the desert's turtle) and DeathEffect's Vanish Color / Rise (the turtle dissolves into falling sand).
+            bool waits = existed && root.GetComponent<EnemyAggro>() != null;
+            DeathEffect oldEffect = existed ? root.GetComponent<DeathEffect>() : null;
+            SerializedObject oldLook = oldEffect != null ? new SerializedObject(oldEffect) : null;
+            Color? vanishColor = oldLook != null ? oldLook.FindProperty("vanishColor").colorValue : (Color?)null;
+            float vanishRise = oldLook != null ? oldLook.FindProperty("vanishRise").floatValue : 0f;
             if (existed) Empty(root);
             root.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);   // the world's middle, so Fit's measuring is simple
             root.transform.localScale = Vector3.one;
@@ -276,6 +316,15 @@ public static class EnemyBuilder
 
             root.AddComponent<EnemyAnimator>();
             DeathEffectBuilder.AddTo(root);   // its body turns into red particles during the death animation
+            if (waits) root.AddComponent<EnemyAggro>();
+            DeathEffect effect = root.GetComponent<DeathEffect>();
+            if (vanishColor.HasValue && effect != null)
+            {
+                SerializedObject so = new SerializedObject(effect);   // the names in quotes must match DeathEffect's fields
+                so.FindProperty("vanishColor").colorValue = vanishColor.Value;
+                so.FindProperty("vanishRise").floatValue = vanishRise;
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
             return PrefabUtility.SaveAsPrefabAsset(root, path);
         }
         finally

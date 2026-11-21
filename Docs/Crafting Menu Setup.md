@@ -1,4 +1,4 @@
-# Crafting Menu Setup (pictures, tabs, a scroll list and the tier tools)
+# Crafting Menu Setup (pictures, tabs, armor set panels, a scroll list and the tier tools)
 
 **What the player sees** (inventory > **Crafting** tab, or **C**):
 - One row per item: its **picture** and **name** ("Plank x2" when one craft makes two), and under it the **recipe as
@@ -10,8 +10,16 @@
   only that kind (by the item's Item Type: Material, Consumable, Tool, Armor), from the top of the list. A tab with
   nothing to craft is faded, and picking it says "Nothing to craft here yet." The picked tab stays picked when the
   list is closed and opened again.
+- **Armor set panels:** each armor set's pieces sit together in one box in the set's color (copper for Copper, steel
+  grey for Iron), with a header: the set's name ("COPPER SET"), how much the whole set protects and what wearing all
+  six gives ("10% protection - all 6: stamina recharges 50% faster"; Iron also says "counts as Copper"), and on the
+  right how many pieces are worn ("Worn 2/6"), or **BONUS ON** in gold while the whole set is worn.
+  A box shows in the All and Armor tabs and hides in the others.
+- An armor upgrade's recipe counts the piece you wear: "1/1 Copper Helmet (worn)". Crafting it takes the Copper Helmet
+  off and puts the Iron Helmet on in its place.
 - The list scrolls (mouse wheel, or the bar on the right), so any number of items fits.
-- The list: Plank, Stew, then the tools **Wooden > Stone > Iron**, each Pickaxe, Axe, Sword.
+- The list: Plank, Stew, then the tools **Wooden > Stone > Iron**, each Pickaxe, Axe, Sword, then the armor set by set
+  (Copper, then Iron), each Helmet to Boots.
 
 ## Quick way: one click
 
@@ -22,8 +30,12 @@
      **Viewport** > Rows, with a **Scrollbar**;
    - adds the tabs: Panel > **Tabs** (All, Materials, Food, Tools, Armor) above the list, Panel > Scroll > **Empty**
      (the "nothing here" text), and Tony's **CraftingTabs** on the Panel (built again every run);
+   - adds the armor set panels: Panel > Scroll > **SetPanel** (switched off: the look of a set's box) and Tony's
+     **CraftingSetPanels** on the Panel (built again every run);
    - sorts **Craftables**: the items that aren't tools stay first, in their order, then every tool that has a recipe
-     made at the Crafting page, weakest tier first. Gold and Diamond tools have no recipe, so they aren't listed.
+     made at the Crafting page, weakest tier first, then every armor piece with a recipe, set by set (the weakest set
+     first, by all its pieces' Protection added up), each helmet to boots. Gold and Diamond tools have no recipe, so
+     they aren't listed. (Tools > Items > Build Plate Armor sorts the list and adds the set panels too.)
 2. Nothing else: the inventory's Crafting page and the C menu are both copies of `Assets/Prefabs/UI/CraftingCanvas`.
 
 Run it again after giving more items recipes: it builds the row again and sorts the list again.
@@ -74,6 +86,13 @@ Recipes** (it puts only the recipes on the existing tools).
    **Label** (font size 20).
    In Scroll, a TextMeshPro **Empty** (stretched, "Nothing to craft here yet.", switched off). Then Add Component >
    **CraftingTabs** on the Panel. (The rows must be CraftingRow rows: they ask CraftingTabs whether to show.)
+5. **The armor set panels:** in Scroll (not in Rows: the list empties Rows every time it opens), a UI > Image named
+   **SetPanel** with the RoundedBox picture (Image Type Sliced, white) and a **Vertical Layout Group** (Padding 12 /
+   12 / 8 / 12, Spacing 8, Control Child Size both ticked, Child Force Expand Width ticked, Height not). In it an empty
+   **Header** (Layout Element: Min and Preferred Height 58) with an Image **Stripe** (an 8 px bar down its left), and
+   TextMeshPro texts **Title** (top half, bold 24), **Info** (bottom half, 18, Auto Size 13 - 18) and **Progress**
+   (top right, bold 20, right-aligned). Switch SetPanel off, then Add Component > **CraftingSetPanels** on the Panel.
+   Each set's name, color and bonus come from the Player's **PlayerArmor > Set Bonuses**.
 
 ## Problems
 
@@ -87,5 +106,9 @@ Recipes** (it puts only the recipes on the existing tools).
 | The tabs are huge and the list short | Tabs > Layout Element > **Flexible Height** must be 0. Run the tool again (it builds the tabs again, 40 high). |
 | A tab shows the wrong items | The item's Item Data > **Item Type** decides its tab (Material, Consumable = Food, Tool, Armor). |
 | Clicking a tab does nothing | The tabs must be named exactly All / Materials / Food / Tools / Armor inside Panel > Tabs, and CraftingTabs must be on the Panel. |
+| The armor isn't in boxes | Run the tool again (it adds Scroll > SetPanel and CraftingSetPanels). A set's pieces must sit next to each other in Craftables (the tool sorts them so). |
+| A set's box is grey instead of its color | PlayerArmor > Set Bonuses has no line for that set (or no Color): run Tools > Items > Build Plate Armor with GameScene open. |
+| One set is split into two boxes | Something else sits between its pieces in Craftables: run the tool to sort the list again. |
 
-Turki's change log: `Docs/TonyEditMate/Turki/19-11-2026 Crafting Menu Icons And Tier Tools.md`.
+Turki's change logs: `Docs/TonyEditMate/Turki/19-11-2026 Crafting Menu Icons And Tier Tools.md`,
+`Docs/TonyEditMate/Turki/20-11-2026 Crafting Tabs.md`, `Docs/TonyEditMate/Turki/20-11-2026 Reinforced Iron Armor And Set Panels.md`.

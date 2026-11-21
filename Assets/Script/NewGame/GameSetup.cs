@@ -14,6 +14,8 @@ Purpose: Remembers the player's New Game choices and puts them into the game whe
                                           his file isn't changed) and PlayerHunger.SetDrainPerSecond
            When I die, pickups, "+3 Wood" messages -> GameRules
            Testing: start with all tools           -> GameRules Tool Test (ToolTestKit gives the 15 tier tools)
+           Testing: start with all armor           -> GameRules Armor Test (ArmorTestKit gives the Copper and
+                                                      Iron sets)
            Map: Old world / New world              -> NewWorld: TitleMenu loads GameScene or ProceduralGenerateScene
                                                       (WorldGenerator: a new random world every game)
          Other scripts can read what was chosen, e.g. if (GameSetup.ChosenDifficulty == GameSetup.Difficulty.Hard).
@@ -50,6 +52,7 @@ public static class GameSetup
     public static bool? AutoPickupDrops;
     public static bool? ShowNotifications;
     public static bool? StartWithAllTools;     // Testing: one of every tier tool from the start
+    public static bool? StartWithAllArmor;     // Testing: every armor piece (the Copper and Iron sets) from the start
     public static bool? NewWorld;              // Map: true = the new world (a new random one every game), null = the old
 
     static bool chosen;   // START GAME was pressed: use the choices in every game scene that loads (Play Again too)
@@ -79,6 +82,7 @@ public static class GameSetup
         AutoPickupDrops = null;
         ShowNotifications = null;
         StartWithAllTools = null;
+        StartWithAllArmor = null;
         NewWorld = null;
         chosen = false;
     }
@@ -135,5 +139,6 @@ public static class GameSetup
         if (AutoPickupDrops.HasValue) GameRules.Set(GameRule.AutoPickupDrops, AutoPickupDrops.Value);
         if (ShowNotifications.HasValue) GameRules.Set(GameRule.ShowNotifications, ShowNotifications.Value);
         if (StartWithAllTools.HasValue) GameRules.Set(GameRule.ToolTest, StartWithAllTools.Value);
+        if (StartWithAllArmor.HasValue) GameRules.Set(GameRule.ArmorTest, StartWithAllArmor.Value);
     }
 }

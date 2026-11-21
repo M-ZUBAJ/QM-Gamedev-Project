@@ -12,20 +12,29 @@ Purpose: Makes the "New world" of the title screen's NEW GAME page: Assets/Scene
            - It's a copy of GameScene with everything the game needs (the player, camera, sun and day / night,
              HUD and menus, GameRules, key bindings, enemy, deer and tree spawners, Marko's fireball...),
            - without GameScene's hand-made map: its terrains, the trees, rocks, ores, chests, apples and deer placed
-             by hand, building pieces, and its walls (Boundaries) and helper objects (Spawn, Ore Testing);
+             by hand, building pieces, its walls (Boundaries) and World Barrier, and helper objects (Spawn, Ore
+             Testing). The World Generator makes the new world's barrier itself;
+           - a view distance on its Main Camera (ViewDistance, 100 m: nothing further is drawn, a mist hides the edge;
+             faster, most of all in the web build), and the scene saved with its fog on (Linear): a built game keeps
+             fog only if a scene in it has fog on, and the mist is the fog;
            - plus the World Generator (WorldGenerator), given the old terrain's ground textures (same order, so
              ObjectScatter's rules work the same) and material, the rock caves (Tools > World > Build Rock Caves,
              run first) and the Stone / Copper / Iron rocks for them, and the grass picture (Polytope's grass blades,
              copied once to Assets/Effects/Grass/GrassBlades.png with clamped edges; Polytope's own file isn't changed);
-             GameScene has two terrains (its painted Terrain and an unpainted one inside Sanyam's WorldMap): the
-             textures come from the one with the most of them;
-           - ObjectScatter (Sanyam's, his script unchanged) gets one more rule in this scene, Hill Rocks (stone rocks
-             on the rocky hills), and no terrain of its own: the World Generator gives it the new one;
+             GameScene has two terrains (the painted Terrain (1) inside Sanyam's WorldMap and an unpainted top-level
+             Terrain): the textures come from the one with the most of them;
+           - ObjectScatter (Sanyam's; his script has one [Tony] line: nothing spawns outside a barrier) gets two
+             more rules in this scene, Hill Rocks (stone rocks on the rocky hills) and Sandstone Rocks (the desert's
+             hard sandstone, DesertBuilder), loses the rules that put plain stone rocks on the sand (his Desert Rocks;
+             GameScene keeps it), and has no terrain of its own: the World Generator gives it the new one;
+           - the desert's content first (Tools > World > Build Desert Content: Gold, GoldNode, SandstoneNode, the
+             sandstone caves, the turtle), given to the World Generator (desert caves, gold, sandstone), and a "Desert
+             Monster Spawner" (DesertMonsterSpawner) with the turtle on the sand texture, in the day;
            - its light from the sky is saved (like Tools > World > Set Up Sky Lighting), and it's added to Build
              Settings, so the title screen can load it;
            - Unity's terrain grass shaders go into Project Settings > Graphics > Always Included Shaders (no saved
              scene has terrain grass, so a built game would leave them out).
-Requirement: NewWorldBuilder.cs x-> WorldGenerator.cs, RockCaveBuilder.cs, SkyLightingSetup.cs, ObjectScatter.cs, AnimalSpawner.cs, PlayerController.cs, ResourceNode.cs, PerkChest.cs, ItemPickup.cs, WildAnimal.cs, UIBuildHelper.cs, MenuOrder.cs
+Requirement: NewWorldBuilder.cs x-> WorldGenerator.cs, RockCaveBuilder.cs, DesertBuilder.cs, DesertMonsterSpawner.cs, SkyLightingSetup.cs, ObjectScatter.cs, AnimalSpawner.cs, PlayerController.cs, ResourceNode.cs, PerkChest.cs, ItemPickup.cs, WildAnimal.cs, WorldBarrier.cs, ViewDistance.cs, UIBuildHelper.cs, MenuOrder.cs
 */
 
 using System.Collections.Generic;
@@ -48,6 +57,7 @@ public static class NewWorldBuilder
     const string CopperPath = "Assets/Prefabs/ResourceNodes/CopperNode.prefab";
     const string IronPath = "Assets/Prefabs/ResourceNodes/IronNode.prefab";
     const string HillRule = "Hill Rocks";
+    const string SandstoneRule = "Sandstone Rocks";   // the desert's hard rock (DesertBuilder's SandstoneNode)
     const string GrassSource = "PT_Grass_01";                              // Polytope's grass blades picture (found by name)
     const string GrassPath = "Assets/Effects/Grass/GrassBlades.png";       // our copy, with clamped edges
 
@@ -75,7 +85,10 @@ public static class NewWorldBuilder
                 "- a copy of GameScene's game (player, HUD, menus, sun, spawners)\n" +
                 "- without its hand-made map (terrain, placed trees, rocks, ores, chests, walls)\n" +
                 "- with the World Generator: a new random 1000 x 1000 m world every game (grassland start, desert, " +
-                "rocky hills, rock caves with stone, copper and iron)\n" +
+                "rocky hills, rock caves with stone, copper and iron) inside a glowing barrier\n" +
+                "- the desert's content (Tools > World > Build Desert Content): sandstone caves with gold, hard sandstone " +
+                "rocks, and turtle monsters in the day\n" +
+                "- a 100 m view distance (ViewDistance on the Main Camera, with a mist)\n" +
                 "- the rock caves (Assets/Prefabs/World/Caves), its sky light, and a place in Build Settings\n\n" +
                 (exists ? "It replaces the ProceduralGenerateScene you have (changes made by hand there are lost).\n\n" : "") +
                 "Continue?", "Build", "Cancel"))
@@ -84,14 +97,17 @@ public static class NewWorldBuilder
         string reopen = SceneManager.GetActiveScene().path;
 
         List<GameObject> caves = RockCaveBuilder.BuildAll(out string caveReport);
+        DesertBuilder.Parts desert = DesertBuilder.BuildAll();
         CopyScene(exists);
         Scene scene = EditorSceneManager.OpenScene(NewScenePath, OpenSceneMode.Single);
 
         Terrain oldTerrain = PaintedTerrain(scene);
-        WorldGenerator generator = AddGenerator(oldTerrain, caves, scene, out string layerReport);   // before the old map goes
+        WorldGenerator generator = AddGenerator(oldTerrain, caves, desert, scene, out string layerReport);   // before the old map goes
         List<string> removed = RemoveOldMap(scene);
-        string scatter = SetUpScatter(scene, generator);
+        string scatter = SetUpScatter(scene, generator, desert.sandstone);
         foreach (AnimalSpawner spawner in FindAll<AnimalSpawner>(scene)) SetField(spawner, "terrain", null);   // whichever terrain is there
+        string monsters = AddDesertMonsters(scene, desert.monster, generator);
+        string view = AddViewDistance(scene);
 
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
@@ -103,7 +119,8 @@ public static class NewWorldBuilder
 
         Debug.Log(ToolName + ": " + NewScenePath + " made from GameScene. Removed the old map: " +
                   (removed.Count > 0 ? string.Join(", ", removed) : "nothing") + ". " + layerReport + " Caves: " + caveReport +
-                  ". " + scatter + " Sky light: " + light + ". It's in Build Settings. Test: MainTitleScene > Play > " +
+                  ". Desert: " + desert.report + ". " + scatter + " " + monsters + " " + view + " Sky light: " + light +
+                  ". It's in Build Settings. Test: MainTitleScene > Play > " +
                   "NEW GAME > Map: New world > START GAME (rebuild the title screen first: Tools > UI > Build Main Title Scene).");
         if (caves.Count == 0)
         {
@@ -127,7 +144,7 @@ public static class NewWorldBuilder
 
     // The World Generator object, filled in: the old terrain's textures (same order) and material, the caves, the ores,
     // ObjectScatter and the player. "report" says which texture is which, for the Console.
-    static WorldGenerator AddGenerator(Terrain oldTerrain, List<GameObject> caves, Scene scene, out string report)
+    static WorldGenerator AddGenerator(Terrain oldTerrain, List<GameObject> caves, DesertBuilder.Parts desert, Scene scene, out string report)
     {
         GameObject go = new GameObject("World Generator");
         SceneManager.MoveGameObjectToScene(go, scene);
@@ -158,6 +175,11 @@ public static class NewWorldBuilder
         so.FindProperty("stoneOre").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(FindPrefabPath(StonePath));
         so.FindProperty("copperOre").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(FindPrefabPath(CopperPath));
         so.FindProperty("ironOre").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(FindPrefabPath(IronPath));
+        SerializedProperty desertCaves = so.FindProperty("desertCavePrefabs");   // the desert's (DesertBuilder)
+        desertCaves.arraySize = desert.caves.Count;
+        for (int i = 0; i < desert.caves.Count; i++) desertCaves.GetArrayElementAtIndex(i).objectReferenceValue = desert.caves[i];
+        so.FindProperty("goldOre").objectReferenceValue = desert.goldOre;
+        so.FindProperty("sandstoneOre").objectReferenceValue = desert.sandstone;
         so.FindProperty("scatter").objectReferenceValue = Find<ObjectScatter>(scene);
         PlayerController player = Find<PlayerController>(scene);
         so.FindProperty("player").objectReferenceValue = player != null ? player.transform : null;
@@ -168,9 +190,9 @@ public static class NewWorldBuilder
         return generator;
     }
 
-    // GameScene's painted terrain: the one with the most ground textures. (GameScene also has Sanyam's WorldMap, with
-    // an unpainted Terrain (1) inside it; taking the first terrain found gave the new world no textures at all: a white
-    // checkerboard ground, and so no trees and no deer.) Null = no terrain has any.
+    // GameScene's painted terrain: the one with the most ground textures (the Terrain (1) inside Sanyam's WorldMap).
+    // (GameScene also has an unpainted top-level Terrain; taking the first terrain found gave the new world no textures
+    // at all: a white checkerboard ground, and so no trees and no deer.) Null = no terrain has any.
     static Terrain PaintedTerrain(Scene scene)
     {
         Terrain best = null;
@@ -271,49 +293,129 @@ public static class NewWorldBuilder
         if (root.GetComponentInChildren<PerkChest>(true) != null) return true;       // Marko's chests
         if (root.GetComponentInChildren<ItemPickup>(true) != null) return true;      // apples and items lying around
         if (root.GetComponentInChildren<WildAnimal>(true) != null) return true;
+        if (root.GetComponentInChildren<WorldBarrier>(true) != null) return true;    // the old map's barrier (Add World Barrier)
         string source = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(root);
         return !string.IsNullOrEmpty(source) && source.StartsWith(BuildingFolder);   // a building piece (e.g. a floor)
     }
 
     // ObjectScatter (Sanyam's): no terrain of its own (the World Generator gives it the new one when the game starts),
-    // and a Hill Rocks rule (stone rocks on the hills' rock texture) if it hasn't got one. Its other rules stay as in
-    // GameScene. Returns a sentence for the Console.
-    static string SetUpScatter(Scene scene, WorldGenerator generator)
+    // no plain stone rocks in the desert (its Desert Rocks rule is left out of this scene; GameScene keeps it), a Hill
+    // Rocks rule (stone rocks on the hills' rock texture) and a Sandstone Rocks rule (the desert's own hard rock, on the
+    // sand) if it hasn't got them. Its other rules stay as in GameScene. Returns a sentence for the Console.
+    static string SetUpScatter(Scene scene, WorldGenerator generator, GameObject sandstone)
     {
         ObjectScatter scatter = Find<ObjectScatter>(scene);
         if (scatter == null) return "No ObjectScatter in GameScene: the new world gets no trees, bushes, rocks or chests.";
 
         SerializedObject so = new SerializedObject(scatter);   // the names in quotes must match ObjectScatter's fields
         so.FindProperty("terrain").objectReferenceValue = null;
-        int rockLayer = new SerializedObject(generator).FindProperty("rockLayer").intValue;
+        SerializedObject layers = new SerializedObject(generator);
+        int rockLayer = layers.FindProperty("rockLayer").intValue;
+        int sandLayer = layers.FindProperty("sandLayer").intValue;
         GameObject stone = AssetDatabase.LoadAssetAtPath<GameObject>(FindPrefabPath(StonePath));
 
         SerializedProperty rules = so.FindProperty("rules");
-        bool hasHillRule = false;
-        for (int i = 0; i < rules.arraySize; i++) hasHillRule |= rules.GetArrayElementAtIndex(i).FindPropertyRelative("name").stringValue == HillRule;
-        string added = "";
-        if (!hasHillRule && rockLayer >= 0 && stone != null)
+        List<string> leftOut = new List<string>();
+        for (int i = rules.arraySize - 1; i >= 0; i--)
         {
-            rules.InsertArrayElementAtIndex(rules.arraySize);
-            SerializedProperty rule = rules.GetArrayElementAtIndex(rules.arraySize - 1);
-            rule.FindPropertyRelative("name").stringValue = HillRule;
-            rule.FindPropertyRelative("prefab").objectReferenceValue = stone;
-            rule.FindPropertyRelative("count").intValue = 60;
-            rule.FindPropertyRelative("yOffset").floatValue = 0f;
-            rule.FindPropertyRelative("terrainLayer").intValue = rockLayer;
-            rule.FindPropertyRelative("minStrength").floatValue = 0.5f;
-            rule.FindPropertyRelative("maxSlope").floatValue = 40f;
-            rule.FindPropertyRelative("minSpacing").floatValue = 12f;
-            rule.FindPropertyRelative("spacingGroup").stringValue = "";
-            rule.FindPropertyRelative("clearance").floatValue = 3f;
-            rule.FindPropertyRelative("patchSize").floatValue = 0f;
-            rule.FindPropertyRelative("openGround").floatValue = 0.35f;
-            rule.FindPropertyRelative("minSize").floatValue = 0.8f;
-            rule.FindPropertyRelative("maxSize").floatValue = 1.6f;
-            added = " + " + HillRule + " (60 stone rocks on the hills)";
+            SerializedProperty rule = rules.GetArrayElementAtIndex(i);
+            bool onSand = sandLayer >= 0 && rule.FindPropertyRelative("terrainLayer").intValue == sandLayer;
+            if (!onSand || !IsStone(rule.FindPropertyRelative("prefab").objectReferenceValue as GameObject)) continue;
+            leftOut.Add(rule.FindPropertyRelative("name").stringValue);
+            rules.DeleteArrayElementAtIndex(i);
         }
+
+        string added = "";
+        if (rockLayer >= 0 && stone != null && AddRule(rules, HillRule, stone, 60, rockLayer, 0.5f, 40f, 12f, 0.8f, 1.6f))
+            added += " + " + HillRule + " (60 stone rocks on the hills)";
+        if (sandLayer >= 0 && sandstone != null && AddRule(rules, SandstoneRule, sandstone, 40, sandLayer, 0.6f, 30f, 16f, 1f, 1.6f))
+            added += " + " + SandstoneRule + " (40 hard sandstone rocks in the desert)";
         so.ApplyModifiedPropertiesWithoutUndo();
-        return "ObjectScatter: " + rules.arraySize + " rules" + added + ".";
+        string removed = leftOut.Count > 0 ? ", left out " + string.Join(", ", leftOut) + " (plain stones in the desert)" : "";
+        return "ObjectScatter: " + rules.arraySize + " rules" + added + removed + ".";
+    }
+
+    // A new rule at the end of ObjectScatter's list (the names in quotes must match its ScatterRule's fields), unless one
+    // with that name is there already. True = added.
+    static bool AddRule(SerializedProperty rules, string name, GameObject prefab, int count, int layer, float minStrength,
+                        float maxSlope, float spacing, float minSize, float maxSize)
+    {
+        for (int i = 0; i < rules.arraySize; i++)
+        {
+            if (rules.GetArrayElementAtIndex(i).FindPropertyRelative("name").stringValue == name) return false;
+        }
+        rules.InsertArrayElementAtIndex(rules.arraySize);
+        SerializedProperty rule = rules.GetArrayElementAtIndex(rules.arraySize - 1);
+        rule.FindPropertyRelative("name").stringValue = name;
+        rule.FindPropertyRelative("prefab").objectReferenceValue = prefab;
+        rule.FindPropertyRelative("count").intValue = count;
+        rule.FindPropertyRelative("yOffset").floatValue = 0f;
+        rule.FindPropertyRelative("terrainLayer").intValue = layer;
+        rule.FindPropertyRelative("minStrength").floatValue = minStrength;
+        rule.FindPropertyRelative("maxSlope").floatValue = maxSlope;
+        rule.FindPropertyRelative("minSpacing").floatValue = spacing;
+        rule.FindPropertyRelative("spacingGroup").stringValue = "";
+        rule.FindPropertyRelative("clearance").floatValue = 3f;
+        rule.FindPropertyRelative("patchSize").floatValue = 0f;
+        rule.FindPropertyRelative("openGround").floatValue = 0.35f;
+        rule.FindPropertyRelative("minSize").floatValue = minSize;
+        rule.FindPropertyRelative("maxSize").floatValue = maxSize;
+        return true;
+    }
+
+    // The desert's day monsters: a "Desert Monster Spawner" (DesertMonsterSpawner) with the turtle, on the sand texture.
+    // One copied from GameScene is filled in instead of adding a second. Returns a sentence for the Console.
+    static string AddDesertMonsters(Scene scene, GameObject monster, WorldGenerator generator)
+    {
+        if (monster == null) return "No desert monster (RPG Monster DUO's TurtleShell wasn't found).";
+        int sandLayer = new SerializedObject(generator).FindProperty("sandLayer").intValue;
+        if (sandLayer < 0) return "No sand texture, so no desert monsters.";
+
+        DesertMonsterSpawner spawner = Find<DesertMonsterSpawner>(scene);
+        if (spawner == null)
+        {
+            GameObject go = new GameObject("Desert Monster Spawner");
+            SceneManager.MoveGameObjectToScene(go, scene);
+            spawner = go.AddComponent<DesertMonsterSpawner>();
+        }
+        SerializedObject so = new SerializedObject(spawner);   // the names in quotes must match DesertMonsterSpawner's fields
+        so.FindProperty("monsterPrefab").objectReferenceValue = monster;
+        so.FindProperty("terrainLayer").intValue = sandLayer;
+        so.FindProperty("terrain").objectReferenceValue = null;   // whichever terrain is there: the generated one
+        so.ApplyModifiedPropertiesWithoutUndo();
+        return "Desert monsters: " + monster.name + " in the day (Desert Monster Spawner, sand = texture " + sandLayer + ").";
+    }
+
+    // The new world's line of sight: ViewDistance on the Main Camera (100 m: nothing further is drawn, a mist hides the
+    // edge), and the scene's fog saved on, Linear, with the same distances. Unity leaves fog out of a built game when no
+    // scene in it has fog on (GameScene's is off), and the mist is that fog. Returns a sentence for the Console.
+    static string AddViewDistance(Scene scene)
+    {
+        Camera main = null;
+        foreach (Camera cam in FindAll<Camera>(scene))
+        {
+            if (main == null && cam.CompareTag("MainCamera")) main = cam;
+        }
+        if (main == null) return "No Main Camera found, so no view distance (everything far away is drawn too).";
+
+        ViewDistance view = main.GetComponent<ViewDistance>();
+        if (view == null) view = main.gameObject.AddComponent<ViewDistance>();
+        SerializedObject so = new SerializedObject(view);   // the names in quotes must match ViewDistance's fields
+        float distance = so.FindProperty("distance").floatValue;
+        float clear = so.FindProperty("clearShare").floatValue;
+
+        RenderSettings.fog = true;   // the open scene's settings: the new world (it's saved right after this)
+        RenderSettings.fogMode = FogMode.Linear;
+        RenderSettings.fogStartDistance = distance * clear;
+        RenderSettings.fogEndDistance = distance;
+        return "View distance: " + distance.ToString("0") + " m (ViewDistance on " + main.name + ", fog saved on).";
+    }
+
+    // Is this prefab a stone rock (a ResourceNode of type Stone, e.g. StoneNode or StoneNode Desert)?
+    static bool IsStone(GameObject prefab)
+    {
+        ResourceNode node = prefab != null ? prefab.GetComponentInChildren<ResourceNode>(true) : null;
+        return node != null && node.resourceType == ResourceNode.ResourceType.Stone;
     }
 
     // Unity draws terrain grass with its own hidden shaders. A built game only keeps the shaders its scenes use, and no

@@ -7,7 +7,8 @@ Unity Editor: Defaults = Assets/Config/NewGame/NewGameDefaults.asset (the game a
               It finds its rows by NAME, so keep the names: DaysRow (StepperRow), WinAtRow and StartTimeRow (each with a
               "Dropdown"), DayLengthRow, DifficultyRow, DeathRow (ChoiceRows), PickupRow and MessagesRow (each with a
               "Toggle"), and the texts DayLengthRow/Info, DifficultyInfo, Summary, plus DefaultsButton.
-              AllToolsRow (with a "Toggle", the Testing section) is optional: an older title scene without it still works.
+              AllToolsRow and ArmorTestRow (each with a "Toggle", side by side in the Testing section) are optional: an
+              older title scene without them still works.
               WorldRow (a ChoiceRow: Old world / New world, with an "Info" text) is optional too: without it the game
               always starts in the old world.
               Each row can have a small "Dot" picture: it pops up when that option differs from the game as it is now.
@@ -24,6 +25,8 @@ Purpose: The New Game options. Every option starts at the game as it is now (the
            When I die               = Keep items, Drop items or Lose items
            Pickups / messages       = GameRules Auto Pickup Drops / Show Notifications
            All tools (Testing)      = GameRules Tool Test: start with one of every tier tool (off by default)
+           All armor (Testing)      = GameRules Armor Test: start with every armor piece, the Copper and Iron sets
+                                      (off by default)
 Requirement: NewGamePanel.cs x-> NewGameDefaults.cs, GameSetup.cs, StepperRow.cs, ChoiceRow.cs, UITween.cs, TMP_Dropdown (Unity)
              NewGamePanel.cs <-x NewGameDefaultsSync.cs, TitleMenu.cs, TitleSceneBuilder.cs
 */
@@ -69,7 +72,7 @@ public class NewGamePanel : MonoBehaviour
     // The row names it looks for. If you rename them in the Hierarchy, rename them here too.
     static readonly string[] RowNames =
         { "DaysRow", "WinAtRow", "DayLengthRow", "StartTimeRow", "DifficultyRow", "DeathRow", "PickupRow", "MessagesRow",
-          "AllToolsRow", "WorldRow" };
+          "AllToolsRow", "WorldRow", "ArmorTestRow" };
     const int NormalDay = 1;   // Short, Normal, Long
     const int OldWorld = 0;    // Map: Old world (as now), New world
     const int NewWorld = 1;
@@ -80,6 +83,7 @@ public class NewGamePanel : MonoBehaviour
     ChoiceRow dayLength, difficulty, death;
     Toggle pickup, messages;
     Toggle allTools;           // Testing: start with all tools (null in an older title scene without the row)
+    Toggle allArmor;           // Testing: start with all armor (null in an older title scene without the row)
     ChoiceRow world;           // Map: Old world / New world (null in an older title scene without the row)
     TMP_Text dayLengthInfo, difficultyInfo, summary, worldInfo;
     Button defaultsButton;
@@ -126,6 +130,7 @@ public class NewGamePanel : MonoBehaviour
         pickup.isOn = defaults.AutoPickupDrops;
         messages.isOn = defaults.ShowNotifications;
         if (allTools != null) allTools.isOn = defaults.ToolTest;
+        if (allArmor != null) allArmor.isOn = defaults.ArmorTest;
         if (world != null) world.Pick(OldWorld, false);
         Refresh(true);
     }
@@ -154,6 +159,7 @@ public class NewGamePanel : MonoBehaviour
         if (pickup.isOn != defaults.AutoPickupDrops) GameSetup.AutoPickupDrops = pickup.isOn;
         if (messages.isOn != defaults.ShowNotifications) GameSetup.ShowNotifications = messages.isOn;
         if (allTools != null && allTools.isOn != defaults.ToolTest) GameSetup.StartWithAllTools = allTools.isOn;
+        if (allArmor != null && allArmor.isOn != defaults.ArmorTest) GameSetup.StartWithAllArmor = allArmor.isOn;
         if (world != null && world.Picked == NewWorld) GameSetup.NewWorld = true;
     }
 
@@ -168,6 +174,7 @@ public class NewGamePanel : MonoBehaviour
         pickup = FindDeep(FindDeep(transform, "PickupRow"), "Toggle")?.GetComponent<Toggle>();
         messages = FindDeep(FindDeep(transform, "MessagesRow"), "Toggle")?.GetComponent<Toggle>();
         allTools = FindDeep(FindDeep(transform, "AllToolsRow"), "Toggle")?.GetComponent<Toggle>();
+        allArmor = FindDeep(FindDeep(transform, "ArmorTestRow"), "Toggle")?.GetComponent<Toggle>();
         world = FindDeep(transform, "WorldRow")?.GetComponent<ChoiceRow>();
         worldInfo = FindDeep(FindDeep(transform, "WorldRow"), "Info")?.GetComponent<TMP_Text>();
         dayLengthInfo = FindDeep(FindDeep(transform, "DayLengthRow"), "Info")?.GetComponent<TMP_Text>();
@@ -239,6 +246,7 @@ public class NewGamePanel : MonoBehaviour
         pickup.SetIsOnWithoutNotify(GameSetup.AutoPickupDrops ?? defaults.AutoPickupDrops);
         messages.SetIsOnWithoutNotify(GameSetup.ShowNotifications ?? defaults.ShowNotifications);
         if (allTools != null) allTools.SetIsOnWithoutNotify(GameSetup.StartWithAllTools ?? defaults.ToolTest);
+        if (allArmor != null) allArmor.SetIsOnWithoutNotify(GameSetup.StartWithAllArmor ?? defaults.ArmorTest);
         if (world != null) world.Pick(GameSetup.NewWorld == true ? NewWorld : OldWorld, false);
     }
 
@@ -255,6 +263,7 @@ public class NewGamePanel : MonoBehaviour
         pickup.onValueChanged.AddListener(_ => Refresh(true));
         messages.onValueChanged.AddListener(_ => Refresh(true));
         if (allTools != null) allTools.onValueChanged.AddListener(_ => Refresh(true));
+        if (allArmor != null) allArmor.onValueChanged.AddListener(_ => Refresh(true));
         if (world != null) world.Changed += _ => Refresh(true);
         if (defaultsButton != null) defaultsButton.onClick.AddListener(SetDefaults);
     }
@@ -276,6 +285,7 @@ public class NewGamePanel : MonoBehaviour
             messages.isOn != defaults.ShowNotifications,
             allTools != null && allTools.isOn != defaults.ToolTest,
             world != null && world.Picked != OldWorld,
+            allArmor != null && allArmor.isOn != defaults.ArmorTest,
         };
 
         bool any = false;

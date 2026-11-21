@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: IronGloves
   m_EditorClassIdentifier: 
   displayName: Iron Gloves
-  prefab: {fileID: 6186990986826220751, guid: 38b067c3253a28746ada0a4934771d98, type: 3}
+  prefab: {fileID: 6441905473977017056, guid: 588b0026795f2824c953aab131a134a6, type: 3}
   pickup: 0
   icon:
     mode: 0
@@ -32,13 +32,16 @@ MonoBehaviour:
     tier: 1
   armor:
     slot: 3
-    protection: 1.5
+    protection: 2
     set: Iron
     piece: PlateSet1_Gloves
     hides: []
+    look: {fileID: 2100000, guid: 0fa5ddbc35f7d9e459603a29af14cd05, type: 2}
   minedWith: 0
   recipe:
+  - item: {fileID: 11400000, guid: 5d04b2ee946929d4d85e6f2dcb1e6315, type: 2}
+    amount: 1
   - item: {fileID: 11400000, guid: 5c6e2eb642dbe4159a36e38d99e65413, type: 2}
-    amount: 3
+    amount: 2
   craftAmount: 1
   craftedAt: 0

@@ -1,6 +1,6 @@
 /*
 First Date: 10/11/2026
-Date: 13/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: An enemy's top object, next to Marko's EnemyCombat, EnemyMovement and EnemyAttack, with the monster model
         (and its Animator) as a child. Tools > Enemies > Build Monster Enemy makes such enemies (e.g. SlimeEnemy).
@@ -9,14 +9,20 @@ Unity Editor: The numbers can be changed while playing. The Animator's controlle
               Testing: Play, select the EnemySpawner, click the ⋮ on its EnemySpawner component > Test Spawn Enemy.
               The enemy walks to the player and attacks; hit it and it flinches; kill it and it falls over, then
               disappears (with a DeathEffect: its body turns into red particles during the fall).
+              ⋮ > Test: Burn Away Now (or the EnemySpawner's ⋮ > Test Despawn Enemies) shows what happens at dawn.
 Purpose: Makes a monster act like a real enemy: it stands, walks or runs as fast as it really moves, attacks when
          Marko's EnemyAttack attacks, flinches when it loses health, plays its death animation before it
          disappears, and cheers when the player dies.
+         When day comes, Marko's EnemySpawner calls Vanish for the night's enemies: each one stops (at a random moment
+         within Vanish Spread seconds) and burns away into orange embers (its DeathEffect), then it's gone. No coins:
+         nobody killed it.
          It only shows the enemy: Marko's scripts still decide where it goes, when it attacks and its health.
 Requirement: EnemyAnimator.cs o-> EnemyCombat.cs, EnemyMovement.cs, EnemyAttack.cs, PlayerHealth.cs, DeathEffect.cs, Animator (Unity), Rigidbody (Unity)
-             EnemyAnimator.cs <-x DeathEffectBuilder.cs, EnemyAttack.cs, EnemyBuilder.cs, EnemyCombat.cs
+             EnemyAnimator.cs <-x DeathEffectBuilder.cs, EnemyAttack.cs, EnemyBuilder.cs, EnemyCombat.cs, EnemySpawner.cs
+             EnemyAnimator.cs <-o DesertMonsterSpawner.cs
 */
 
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -48,6 +54,11 @@ public class EnemyAnimator : MonoBehaviour
     [Tooltip("Cheer (the Victory animation) when the player dies.")]
     [SerializeField] bool cheerWhenPlayerDies = true;
 
+    [Header("When day comes")]
+    [Range(0f, 5f)]
+    [Tooltip("The night's enemies burn away when day comes (Vanish), each at a random moment within this many seconds, so they don't all go at once.")]
+    [SerializeField] float vanishSpread = 1.5f;
+
     static readonly int Speed = Animator.StringToHash(SpeedName);
     static readonly int Attack = Animator.StringToHash(AttackName);
     static readonly int Hit = Animator.StringToHash(HitName);
@@ -64,9 +75,11 @@ public class EnemyAnimator : MonoBehaviour
     readonly HashSet<int> parameters = new HashSet<int>();   // the controller's parameters (missing ones are skipped)
     float lastHealth;           // health in the last frame, to see when it went down
     Vector3 lastPosition;       // to measure the speed when there's no Rigidbody
-    bool dead;
+    bool dead;                  // stopped for good: dying, or burning away
+    bool vanishing;             // burning away (or about to) because day came
 
     public bool IsDead => dead;
+    public bool IsVanishing => vanishing;
 
     // ===== Unity messages (Unity calls these) =====
 
@@ -139,22 +152,64 @@ public class EnemyAnimator : MonoBehaviour
     {
         if (!dead)
         {
-            dead = true;
+            Stop();
             SetBool(Dead, true);
-            if (movement != null) movement.enabled = false;
-            if (attack != null) attack.enabled = false;
-            if (body != null)
-            {
-                body.velocity = Vector3.zero;   // before it turns kinematic (a kinematic body has no velocity)
-                body.isKinematic = true;        // stays where it fell
-            }
-            foreach (Collider part in GetComponentsInChildren<Collider>()) part.enabled = false;   // walk and swing through it
         }
         if (!parameters.Contains(Dead)) return 0f;   // no death animation = removed at once, like before (a DeathEffect bursts then)
 
         // A DeathEffect turns the body into particles during the death animation; it's removed once they've taken it.
         DeathEffect effect = GetComponent<DeathEffect>();
         return effect != null ? effect.Dissolve() : bodyStaysFor;
+    }
+
+    // Removes an enemy that wasn't killed: Marko's EnemySpawner calls this for the night's enemies when day comes.
+    // It stops and burns away into orange embers (its DeathEffect), then it's removed. No coins: nobody killed it.
+    // An enemy without an EnemyAnimator (Marko's old ball enemy) is removed at once, like before.
+    public static void Vanish(GameObject enemy)
+    {
+        if (enemy == null) return;
+        EnemyAnimator shown = enemy.GetComponent<EnemyAnimator>();
+        if (shown != null && shown.gameObject.activeInHierarchy) shown.StartVanishing();
+        else Destroy(enemy);
+    }
+
+    void StartVanishing()
+    {
+        if (dead || vanishing) return;   // dying already: dying removes it
+        vanishing = true;
+        StartCoroutine(Vanishing());
+    }
+
+    IEnumerator Vanishing()
+    {
+        yield return new WaitForSeconds(Random.Range(0f, vanishSpread));   // not all at the same moment
+        if (dead) yield break;   // killed while waiting: dying removes it
+
+        Stop();
+        if (parameters.Contains(Speed)) animator.SetFloat(Speed, 0f);   // stands still while it burns
+        DeathEffect effect = GetComponent<DeathEffect>();
+        Destroy(gameObject, effect != null ? effect.Vanish() : 0f);
+    }
+
+    // Stops the enemy for good (dying or burning away): no more moving, attacking or being hit.
+    void Stop()
+    {
+        dead = true;
+        if (movement != null) movement.enabled = false;
+        if (attack != null) attack.enabled = false;
+        if (body != null)
+        {
+            body.velocity = Vector3.zero;   // before it turns kinematic (a kinematic body has no velocity)
+            body.isKinematic = true;        // stays where it is
+        }
+        foreach (Collider part in GetComponentsInChildren<Collider>()) part.enabled = false;   // walk and swing through it
+    }
+
+    [ContextMenu("Test: Burn Away Now")]
+    void TestVanish()
+    {
+        if (Application.isPlaying) Vanish(gameObject);
+        else Debug.Log("Press Play first.");
     }
 
     void OnPlayerDied()
