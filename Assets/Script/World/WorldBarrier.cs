@@ -20,7 +20,7 @@ Purpose: The edge of the world, so a player can tell by looking that they can't 
            is spawned outside (Sanyam's ObjectScatter, the AnimalSpawner and Marko's EnemySpawner ask it).
 Requirement: WorldBarrier.cs o-> PlayerController.cs
              WorldBarrier.cs <-x EnemySpawner.cs, NewWorldBuilder.cs, ObjectScatter.cs, WorldBarrierBuilder.cs, WorldGenerator.cs
-             WorldBarrier.cs <-o AnimalSpawner.cs, DesertMonsterSpawner.cs, WildAnimal.cs
+             WorldBarrier.cs <-o AnimalSpawner.cs, DesertMonsterSpawner.cs, NightMonsters.cs, WildAnimal.cs
 */
 
 using System.Collections.Generic;

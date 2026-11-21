@@ -12,6 +12,8 @@ Unity Editor: Tier, Box Name and Color (the prompt under the crosshair, the perk
               PerkChest's Available Perks), New System Only (the legendary box: gone in the old system).
               Vanish Particles, Burst Count, Burst Speed: the burst in Color when a perk is bought and the box disappears.
               Testing: Play, buy a perk from a common box (2 coins): the next common box asks 3. Die: back to 2.
+              Wear the whole gold armor set: every box is 10 % cheaper (a 10-coin box asks 9; the panel shows the old
+              price crossed out).
 Purpose: A loot box's kind, price and how it works in each chest system. Every box of one kind costs the same, and each
          perk bought from that kind makes the next one dearer:
            Common     2, 3, 4, 5...       (+1)
@@ -20,6 +22,8 @@ Purpose: A loot box's kind, price and how it works in each chest system. Every b
            Legendary  150, 300, 600...    (x2, the new system only)
          The prices start again when the player dies (PlayerPerks calls ResetPrices: the perks are lost too) and when a
          new game starts (a scene loads).
+         The whole gold armor set takes 10 % off every price (PlayerArmor.ChestDiscount), rerolls too: rounded down, so
+         even a cheap box gets cheaper (2 -> 1, 10 -> 9, 100 -> 90), never under 1 coin. FullPrice = before the discount.
          Two chest systems (GameRules > New Chests):
            Old: every box lets you choose 1 of 3 from its PerkChest's Available Perks; REROLL only where Can Reroll is
                 on (the epic box).
@@ -33,6 +37,7 @@ Purpose: A loot box's kind, price and how it works in each chest system. Every b
          When a perk is bought (Marko's PerkChest calls Bought) the box bursts into particles in its color (common gold,
          rare blue, epic purple, legendary orange) and disappears.
 Requirement: ChestTier.cs x-> GameRules.cs, PerkData.cs, PerkEffects.cs
+             ChestTier.cs o-> PlayerArmor.cs
              ChestTier.cs <-x LootChestBuilder.cs, PerkChest.cs, PlayerPerks.cs
              ChestTier.cs <-o ChestPrompt.cs, PerkPanelInfo.cs, PerkRollUI.cs
 */
@@ -152,8 +157,21 @@ public class ChestTier : MonoBehaviour
 
     public bool NewSystemOnly => newSystemOnly;
 
-    // What a perk from this box costs now.
-    public int Price => PriceAfter(BoughtOf(tier));
+    // What a perk from this box costs now: with the worn armor's discount taken off (the whole gold set: 10 % off).
+    public int Price => Discounted(FullPrice);
+
+    // What it would cost without any discount (the perk panel shows it crossed out while there is one).
+    public int FullPrice => PriceAfter(BoughtOf(tier));
+
+    // The worn armor's chest discount now: 0.1 = 10 % off (the whole gold set), 0 = none.
+    public static float Discount
+    {
+        get
+        {
+            PlayerArmor armor = PlayerArmor.Current;
+            return armor != null ? armor.ChestDiscount : 0f;
+        }
+    }
 
     // What the next reroll at this box costs (at least 1 coin).
     public int RerollPrice => Mathf.Max(1, Round(Price * rerollShare * Mathf.Pow(rerollGrowth, rerolls)));
@@ -221,6 +239,15 @@ public class ChestTier : MonoBehaviour
     public static void ResetPrices()
     {
         System.Array.Clear(bought, 0, bought.Length);
+    }
+
+    // A price with the armor's discount taken off, rounded down so even a cheap box gets cheaper (2 -> 1, 10 -> 9), but
+    // never under 1 coin (a free box stays free).
+    static int Discounted(int price)
+    {
+        float discount = Discount;
+        if (discount <= 0f || price <= 1) return price;
+        return Mathf.Max(1, (int)System.Math.Floor(price * (1.0 - discount) + 0.0001));   // + a hair: 10 x 0.9 is 9, not 8.99999
     }
 
     // The price after "count" perks bought.

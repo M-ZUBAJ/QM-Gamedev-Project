@@ -1,11 +1,13 @@
 /*
 First Date: 19/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: The crafting list's row prefab (Assets/Prefabs/UI/Crafting/CraftingRow.prefab, made by Tools > UI > Build Crafting
         Menu). Turki's CraftingMenu copies it for every item in its list and calls Show(item) (a [Tony] line).
 Unity Editor: Nothing to connect: it finds its parts by NAME: "Icon" (Image), "Name" (text), "Ingredients" (a row with a
-              switched-off "Ingredient" template inside: an "Icon" image and an "Amount" text) and "Status" (text).
+              switched-off "Ingredient" template inside: an "Icon" image and an "Amount" text), "Status" (text) and
+              "Owned" (the green tick inside Icon; a row built before 21/11/2026 has none: run Tools > UI > Build
+              Crafting Menu).
               Testing: Play, open the inventory's Crafting tab (or press C): each item shows its picture and its recipe
               as pictures with amounts, green when you have enough and red when not. Craft something: they update.
 Purpose: One row of the crafting list, with pictures: the item's icon and name ("x2" when one craft makes two), and each
@@ -16,6 +18,8 @@ Purpose: One row of the crafting list, with pictures: the item's icon and name (
          picked tab isn't its item's kind; with set panels (CraftingSetPanels), a new list gets its armor grouped by set.
          An armor upgrade's recipe counts the piece the player wears, e.g. "1/1 Iron Helmet (worn)": crafting takes it
          off and puts the new piece on in its place (PlayerArmor).
+         An armor piece the player already has gets a green tick on its picture and "(owned)" after its name ("(worn)"
+         while it's worn), so it isn't crafted twice by mistake; it can still be crafted.
 Requirement: CraftingRow.cs x-> ItemData.cs, Recipe.cs, PlayerInventory.cs
              CraftingRow.cs o-> CraftingTabs.cs, CraftingSetPanels.cs, PlayerArmor.cs
              CraftingRow.cs <-x CraftingMenu.cs, CraftingMenuBuilder.cs, CraftingSetPanels.cs, CraftingTabs.cs
@@ -43,12 +47,20 @@ public class CraftingRow : MonoBehaviour
     [Tooltip("The words on the right when everything is there.")]
     [SerializeField] string craftText = "CRAFT";
 
+    [Tooltip("After an armor piece's name while the player has it in the inventory (with the green tick).")]
+    [SerializeField] string ownedText = "(owned)";
+
+    [Tooltip("After an armor piece's name while the player wears it (with the green tick).")]
+    [SerializeField] string wornText = "(worn)";
+
     ItemData item;               // what this row makes (null = nothing yet)
     Image icon;
     TMP_Text nameText;
     Transform ingredients;
     GameObject template;         // the switched-off "Ingredient" copied for each ingredient
     TMP_Text status;
+    GameObject ownedMark;        // the green tick on the picture (an armor piece the player has)
+    string nameWords = "";       // the item's name (and "x2"), before "(owned)"
     CanvasGroup group;
     bool partsFound;
     readonly List<Ingredient> shownIngredients = new List<Ingredient>();
@@ -86,7 +98,8 @@ public class CraftingRow : MonoBehaviour
             icon.sprite = picture;
             icon.enabled = picture != null;
         }
-        if (nameText != null) nameText.text = item.DisplayName + (item.CraftAmount > 1 ? " x" + item.CraftAmount : "");
+        nameWords = item.DisplayName + (item.CraftAmount > 1 ? " x" + item.CraftAmount : "");
+        if (nameText != null) nameText.text = nameWords;
         MakeIngredients();
         Refresh();
 
@@ -162,6 +175,21 @@ public class CraftingRow : MonoBehaviour
             status.color = haveColor;
         }
         if (group != null) group.alpha = everything ? 1f : missingAlpha;
+        ShowOwned(inventory, armor);
+    }
+
+    // An armor piece the player already has, in the inventory or worn: the green tick, and "(owned)" / "(worn)" after
+    // its name, in green. Anything else: no tick, just the name.
+    void ShowOwned(PlayerInventory inventory, PlayerArmor armor)
+    {
+        bool worn = item.IsArmor && armor != null && armor.IsWorn(item.Id);
+        bool owned = item.IsArmor && (worn || (inventory != null && inventory.Count(item.Id) > 0));
+        if (ownedMark != null) ownedMark.SetActive(owned);
+        if (nameText == null) return;
+        string words = worn ? wornText : ownedText;
+        nameText.text = owned && !string.IsNullOrEmpty(words)
+            ? nameWords + "  <size=75%><color=#" + ColorUtility.ToHtmlStringRGB(haveColor) + ">" + words + "</color></size>"
+            : nameWords;
     }
 
     // The row's parts, found once by name.
@@ -176,6 +204,10 @@ public class CraftingRow : MonoBehaviour
         nameText = part != null ? part.GetComponent<TMP_Text>() : null;
         part = transform.Find("Status");
         status = part != null ? part.GetComponent<TMP_Text>() : null;
+        part = icon != null ? icon.transform.Find("Owned") : null;
+        if (part == null) part = transform.Find("Owned");
+        ownedMark = part != null ? part.gameObject : null;
+        if (ownedMark != null) ownedMark.SetActive(false);
         ingredients = transform.Find("Ingredients");
         Transform templatePart = ingredients != null ? ingredients.Find("Ingredient") : null;
         template = templatePart != null ? templatePart.gameObject : null;

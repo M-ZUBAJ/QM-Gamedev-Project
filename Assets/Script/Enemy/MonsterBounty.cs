@@ -7,7 +7,8 @@ Unity Editor: The numbers are set elsewhere: the armor sets' Coins Per Kill on t
               copper 1, iron 2) and the Bounty Hunter Perk Data's Value (Assets/Config/Perks).
               Testing: Play with the whole copper set on and kill a slime: "+1 Coins" comes after Marko's coins.
 Purpose: The extra coins for killing a monster, on top of the coins Marko's EnemyCombat gives:
-           - the armor set bonus: the whole copper set +1, the whole iron set +2 (PlayerArmor.CoinsPerKill);
+           - the armor set bonus: the whole copper set +1, the whole iron set +2, the whole gold set +4
+             (PlayerArmor.CoinsPerKill);
            - the rare box's Bounty Hunter perk: +1 for each one picked (PerkEffects.BountyCoins).
          Only killing counts: night monsters that burn away at dawn give nothing.
 Requirement: MonsterBounty.cs o-> PlayerArmor.cs, PerkEffects.cs, PlayerCoins.cs

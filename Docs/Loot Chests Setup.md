@@ -28,6 +28,8 @@ system). Until then no box shows the REROLL button, in either system.
 
 - Every box of one kind costs the same, and a perk bought from one box makes all boxes of that kind dearer. The prices
   start again when you die (your perks are lost then too) and in a new game.
+- **The whole gold armor set** makes every box **10 % cheaper**, rerolls too (rounded down, never under 1 coin: 2 -> 1,
+  10 -> 9, 100 -> 90). The panel and the roll pop-up show the full price crossed out in front (`Docs/Armor Setup.md`).
 - Under the crosshair: **[E] Open rare box (coin) 10**. The title of the panel / pop-up is the box's name in its color.
 - **When you buy a perk the box bursts into particles in its color** (common gold, rare blue, epic purple, legendary
   orange) and disappears. In both systems.
@@ -173,6 +175,7 @@ Change logs: `Docs/TonyEditMate/Marko/21-11-2026 Loot Boxes And New Perks.md`,
 |---|---|---|
 | GameRules (scene) | **New Chests** | on = the new system (the New Game page sets it when you change it there) |
 | ChestTier (box prefab) | **Tier** | Common / Rare / Epic / Legendary (every box of a kind shares one price) |
+| PlayerArmor (Player) | **Set Bonuses > Chest Discount** | the gold set's 0.1 = every box 10 % cheaper while all six are worn |
 | | **Box Name**, **Color** | the prompt ("Open rare box"), the title and the burst's color |
 | | **Start Price**, **Growth** (Add / Multiply), **Grows By** | 2, Add, 1 (common); 10, Multiply, 1.5 (rare); 100, Multiply, 2 (epic); 150, Multiply, 2 (legendary) |
 | | **Can Reroll** | old system: the REROLL button (the epic box) |

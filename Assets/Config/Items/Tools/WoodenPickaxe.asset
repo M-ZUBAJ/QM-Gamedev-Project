@@ -30,6 +30,13 @@ MonoBehaviour:
   tool:
     kind: 0
     tier: 1
+  armor:
+    slot: 2
+    protection: 1.5
+    set: 
+    piece: 
+    hides: []
+    look: {fileID: 0}
   minedWith: 0
   recipe:
   - item: {fileID: 11400000, guid: d524931321f754afdaeefd6219e3fa3c, type: 2}

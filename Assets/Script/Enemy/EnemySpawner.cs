@@ -158,6 +158,15 @@ public class EnemySpawner : MonoBehaviour
             return;
         }
 
+        // [Tony] added (21/11/2026): Tony's NightMonsters (on this object) decides more about each spawn: which monster
+        // (from night 2 some are turtles; every night can bring a new one, and the ones before keep coming), its
+        // strength, and where it appears (farther away and out of the player's sight, so nothing pops up right in
+        // front of them when they turn around). Without NightMonsters everything works exactly as before.
+        // To undo: delete the lines marked [Tony] (21/11/2026) and put back enemyPrefab in Instantiate.
+        // Log: Docs/TonyEditMate/Marko/21-11-2026 Night Monsters And The Turtle Shell.md
+        NightMonsters nightMonsters = GetComponent<NightMonsters>();                                       // [Tony] added
+        int night = DaylightCycle.Current != null ? DaylightCycle.Current.Day : 1;                        // [Tony] added
+
         Vector3 spawnPosition = transform.position;
 
         // if the player is assigned, enemy appears in a random direction around them. If the
@@ -175,6 +184,7 @@ public class EnemySpawner : MonoBehaviour
             // the player's other side, so no enemy appears outside the world (stuck behind the barrier, or falling where
             // there's no ground). Log: Docs/TonyEditMate/Marko/20-11-2026 Night Enemies Burn Away At Day.md
             if (!WorldBarrier.Inside(spawnPosition, 2f)) spawnPosition = player.position - randomDirection * spawnDistance;   // [Tony] added
+            if (nightMonsters != null && nightMonsters.FindSpot(player, out Vector3 hidden)) spawnPosition = hidden;   // [Tony] added (21/11/2026): out of the player's sight
             //spawnPosition.y = transform.position.y;
             // [Tony] replaced (10/11/2026): spawnPosition.y = 0.5f;
             // A fixed 0.5 put enemies inside hills or in the air over dips. Now they appear on the ground that's there.
@@ -183,7 +193,8 @@ public class EnemySpawner : MonoBehaviour
         }
 
         GameObject enemy = Instantiate(
-            enemyPrefab,
+            // [Tony] replaced (21/11/2026): enemyPrefab,
+            nightMonsters != null ? nightMonsters.Pick(enemyPrefab, night) : enemyPrefab,   // [Tony] replaced: tonight's monster
             spawnPosition,
             Quaternion.identity
         );
@@ -207,6 +218,8 @@ public class EnemySpawner : MonoBehaviour
         {
             enemyAttack.attackDamage = 10f + (daysPassed * 2f);
         }
+
+        if (nightMonsters != null) nightMonsters.Prepare(enemy, night);   // [Tony] added (21/11/2026): a picked monster's own health / damage (the turtle)
 
 
         // Connect the spawned enemy to the player.

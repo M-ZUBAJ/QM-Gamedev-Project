@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &4947313974265354357
+--- !u!1 &1437149118544174584
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5550119417829680359}
-  - component: {fileID: 8038217847972297535}
-  - component: {fileID: 4436406982357915820}
+  - component: {fileID: 9063923923503471847}
+  - component: {fileID: 4487488211970990189}
+  - component: {fileID: 8756836486070010448}
   m_Layer: 0
   m_Name: Model
   m_TagString: Untagged
@@ -18,13 +18,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5550119417829680359
+--- !u!4 &9063923923503471847
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4947313974265354357}
+  m_GameObject: {fileID: 1437149118544174584}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -33,21 +33,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 3965017849619633043}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &8038217847972297535
+--- !u!33 &4487488211970990189
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4947313974265354357}
+  m_GameObject: {fileID: 1437149118544174584}
   m_Mesh: {fileID: 4300000, guid: d0e90e7746c98374fad9e619b4d64f06, type: 2}
---- !u!23 &4436406982357915820
+--- !u!23 &8756836486070010448
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4947313974265354357}
+  m_GameObject: {fileID: 1437149118544174584}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -92,8 +92,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3965017849619633043}
-  - component: {fileID: 7368747522005142050}
-  - component: {fileID: 7127640108642332142}
+  - component: {fileID: 8255307211009694133}
+  - component: {fileID: 3135435039545183427}
   m_Layer: 0
   m_Name: IronChestplate
   m_TagString: Untagged
@@ -114,10 +114,10 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 5550119417829680359}
+  - {fileID: 9063923923503471847}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &7368747522005142050
+--- !u!65 &8255307211009694133
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -138,7 +138,7 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.5732137, y: 0.58726317, z: 0.44898874}
   m_Center: {x: 0, y: -0.000000029802322, z: 0}
---- !u!114 &7127640108642332142
+--- !u!114 &3135435039545183427
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

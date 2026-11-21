@@ -9,7 +9,8 @@ Unity Editor: Nothing to connect by hand (the tool fills the fields). Testing: P
               many coins they need, and can't be clicked.
 Purpose: The extras on Marko's perk panel ("CHOOSE YOUR REWARD"):
            - a loot box's name as the title, in its color ("RARE BOX": Tony's ChestTier on the chest);
-           - the price of the chest that is open (PerkChest.Showing) and how many coins the player has;
+           - the price of the chest that is open (PerkChest.Showing) and how many coins the player has; while the gold
+             armor set makes it cheaper, the full price shows crossed out in front ("<s>10</s> 9 coins");
            - while the player can't pay, the three CHOOSE buttons can't be clicked and say "NEED 2 COINS", and a red
              line says how many are missing (Marko's chest takes the coins when a perk is picked);
            - the close hint names the chest's key ("E: close, or walk away");
@@ -142,7 +143,7 @@ public class PerkPanelInfo : MonoBehaviour
 
         if (priceText != null)
         {
-            priceText.text = cost + (cost == 1 ? " coin" : " coins");
+            priceText.text = PriceWords(chest, cost);
             priceText.color = canPay ? canPayColor : cantPayColor;
         }
         if (coinsText != null) coinsText.text = coins.ToString();
@@ -160,6 +161,14 @@ public class PerkPanelInfo : MonoBehaviour
             if (i < chooseLabels.Length && chooseLabels[i] != null)
                 chooseLabels[i].text = canPay ? chooseText : "NEED " + cost + (cost == 1 ? " COIN" : " COINS");
         }
+    }
+
+    // "9 coins", with the price before the gold armor's discount crossed out in front ("<s>10</s>  9 coins").
+    static string PriceWords(PerkChest chest, int cost)
+    {
+        string words = cost + (cost == 1 ? " coin" : " coins");
+        int full = chest != null && chest.Tier != null ? chest.Tier.FullPrice : cost;
+        return full > cost ? "<size=80%><s>" + full + "</s></size>  " + words : words;
     }
 
     // A loot box's name and color as the title ("RARE BOX"); any other chest keeps the built title.

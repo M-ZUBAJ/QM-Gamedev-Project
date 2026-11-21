@@ -2,6 +2,8 @@
 
 **What the player sees:** 15 tools from Abduo Bricks' free **Low Poly Tool Pack**: a pickaxe, an axe and a sword in
 **Wood, Stone, Iron, Gold and Diamond**.
+- **Crafting:** a crafted tool goes straight to the hotbar, into its leftmost empty slot (an upgrade into the old
+  tool's hotbar slot), so it's ready to use; only with a full hotbar does it go to the inventory.
 - **In the hand:** select a tool in the hotbar and the character holds it in its right fist, in first and third person.
   In first person the hands sit a little lower while a tool is in the fist (FirstPersonHands > **Tool Lower**, 15 % of the screen by default), so
   the tool doesn't cover the view. Axe and pickaxe handles are 30 % shorter than in the pack (the head keeps its shape).
@@ -25,18 +27,22 @@ They replaced Marko's three placeholder tools (Sword, Axe, PickAxe). Change logs
 | **Pickaxe can mine** | stone | + copper, iron | + gold | + diamond | everything |
 | **Strength at its job** (x Marko's numbers) | x1 | x1.25 | x1.56 | x1.95 | x2.44 |
 | **Sword damage** (Marko's Sword Damage 25) | 25 | 31 | 39 | 49 | 61 |
-| **Recipe** | 3 Plank + Wood (pickaxe 3, axe 3, sword 6) | the Wooden one + 3 Plank + Stone (pickaxe 6, axe 6, sword 9) | the Stone one + 3 Plank + Iron (same counts) | none yet | none yet |
+| **Recipe** | 3 Plank + Wood (pickaxe 3, axe 3, sword 6) | the Wooden one + 3 Plank + Stone (pickaxe 6, axe 6, sword 9) | the Stone one + 3 Plank + Iron (same counts) | the Iron one + 3 Plank + Gold (same counts) | none yet |
 
 - **The recipes are a chain** (19/11/2026): each tier is made from the same tool of the tier below, which crafting
   uses up (Wooden Axe + 3 Plank + 6 Stone = Stone Axe), and the new tool goes into the old tool's slot (hotbar or
-  inventory). **Tools > Items > Update Tool Recipes** puts them on existing tools; Build Tier Tools uses them too.
+  inventory). **Tools > Items > Update Tool Recipes** puts them on existing tools and then sorts Turki's crafting
+  list, so a tool that just got a recipe (Gold) shows there; Build Tier Tools uses them too.
   Table: `Docs/Crafting Menu Setup.md`.
 - **A bare hand** can still punch trees, stone and animals (slowly), but no ore.
 - **Copper and iron:** copper counts as the same tier as iron ("copper or iron can mine gold"). The pack has no copper
   tools.
-- **Gold and diamond:** there are no gold or diamond ores or items in the game yet. The rules are ready for them: give
-  the new item's Item Data a **Mined With** (gold: Iron, diamond: Gold). Gold and diamond tools come from the test rule
-  for now.
+- **Gold:** the Gold item comes from the gold rocks in the new world's desert caves (an Iron Pickaxe or better;
+  `Docs/Desert Setup.md`). Since 21/11/2026 the gold tools have their recipe (Iron tool + 3 Plank + 6 Gold, the sword
+  9 Gold) and are in the crafting list. The old world has no gold rocks: there, gold tools come from the test rule.
+- **Diamond:** there's no diamond ore or item in the game yet. The rules are ready: give the new item's Item Data a
+  **Mined With** (Gold), and the diamond tools get their recipe from **Tools > Items > Update Tool Recipes** (the
+  Gold tool + 3 Plank + Diamond). Until then they come from the test rule.
 - **Marko's damage numbers are unchanged** (on the Player's PlayerCombat: Hand Damage, Sword Damage, Axe Tree Damage,
   Pick Axe Stone Damage...). They're what a wooden tool does, and the tiers multiply them.
 

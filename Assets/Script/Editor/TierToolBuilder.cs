@@ -1,14 +1,14 @@
 /*
 First Date: 12/11/2026
-Date: 19/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Needs Abduo Bricks' free "Low Poly Tool Pack" (Assets/Imported3D/Abduo Bricks/Low Poly Tool Pack).
               Open GameScene, then menu Tools > Items > Build Tier Tools. It asks first, then:
               - makes 15 tools: a pickaxe, axe and sword in Wood, Stone, Iron, Gold and Diamond
                 (Assets/Config/Items/Tools/<Id>.asset + Assets/Prefabs/Item/Tools/<Id>.prefab, e.g. StonePickaxe), with
-                Standard copies of the pack's URP materials in Assets/Materials/Tools. Wood, Stone and Iron tools get
-                recipes (Gold and Diamond wait for their ores). Running it again rebuilds them in the same files.
+                Standard copies of the pack's URP materials in Assets/Materials/Tools. Wood, Stone, Iron and Gold tools
+                get recipes (Diamond waits for its ore). Running it again rebuilds them in the same files.
               - ores need pickaxes: Copper's and Iron's Mined With = Stone (and Gold = Iron, Diamond = Gold if they exist);
               - PlayerCharacter.prefab gets ToolInHand, so the body and the first-person hands hold the selected tool;
                 the Player gets ToolTestKit (the game rule Tool Test), and its PunchEffect's swing timing is measured;
@@ -19,7 +19,8 @@ Unity Editor: Needs Abduo Bricks' free "Low Poly Tool Pack" (Assets/Imported3D/A
               Undo (Ctrl + Z) works for the scene changes, not for files. Save the scene afterwards.
               Tools > Items > Rebuild Tool Models rebuilds only the 15 tool prefabs (e.g. after changing HandleShare
               below): names, recipes, ores and the scene stay as they are.
-              Tools > Items > Update Tool Recipes puts only the recipes (RecipeFor below) on the tools that exist.
+              Tools > Items > Update Tool Recipes puts only the recipes (RecipeFor below) on the tools that exist, then
+              sorts Turki's crafting list again (CraftingMenuBuilder.SortList), so new recipes (e.g. Gold) show there.
               Hand-made steps: Docs/Tool Setup.md
 Purpose: Replaces Marko's three placeholder tools with 15 tiered tools from the Low Poly Tool Pack, in one click.
          Each tool:
@@ -29,7 +30,7 @@ Purpose: Replaces Marko's three placeholder tools with 15 tiered tools from the 
                     handle sits in a squeezed "Handle Length" object, the head beside it keeps its shape.
          Its Item Data: Item Type Tool, Kind + Tier, icon = a photo of the prefab, and the recipe: a chain where
          each tier is made from the tool of the tier below (Wooden Axe + 3 Plank + 6 Stone = Stone Axe, see RecipeFor).
-Requirement: TierToolBuilder.cs x-> UIBuildHelper.cs, MaterialBuildHelper.cs, MeshBounds.cs, PunchEffectBuilder.cs, ItemData.cs, ItemPickup.cs, ToolStats.cs, ToolInHand.cs, ToolTestKit.cs, PunchEffect.cs, FirstPersonHands.cs, PlayerAnimator.cs, CraftingMenu.cs, Recipe.cs, MenuOrder.cs
+Requirement: TierToolBuilder.cs x-> UIBuildHelper.cs, MaterialBuildHelper.cs, MeshBounds.cs, PunchEffectBuilder.cs, ItemData.cs, ItemPickup.cs, ToolStats.cs, ToolInHand.cs, ToolTestKit.cs, PunchEffect.cs, FirstPersonHands.cs, PlayerAnimator.cs, CraftingMenu.cs, Recipe.cs, CraftingMenuBuilder.cs, MenuOrder.cs
 */
 
 using System.Collections.Generic;
@@ -129,11 +130,13 @@ public static class TierToolBuilder
     static void UpdateRecipes()
     {
         if (!EditorUtility.DisplayDialog("Update Tool Recipes",
-                "Give the Wooden, Stone and Iron tools the crafting chain?\n\n" +
+                "Give the Wooden, Stone, Iron and Gold tools the crafting chain?\n\n" +
                 "Wooden: 3 Plank + 3 Wood (pickaxe, axe), 3 Plank + 6 Wood (sword)\n" +
                 "Stone: the Wooden one + 3 Plank + 6 Stone (pickaxe, axe), + 9 Stone (sword)\n" +
-                "Iron: the Stone one + 3 Plank + 6 Iron (pickaxe, axe), + 9 Iron (sword)\n\n" +
-                "Recipes changed by hand on these tools are replaced.", "Update", "Cancel"))
+                "Iron: the Stone one + 3 Plank + 6 Iron (pickaxe, axe), + 9 Iron (sword)\n" +
+                "Gold: the Iron one + 3 Plank + 6 Gold (pickaxe, axe), + 9 Gold (sword)\n\n" +
+                "Recipes changed by hand on these tools are replaced. Then Turki's crafting list is sorted again, so the " +
+                "tools with a recipe show in it.", "Update", "Cancel"))
             return;
 
         List<string> done = new List<string>();
@@ -151,8 +154,9 @@ public static class TierToolBuilder
             }
         }
         AssetDatabase.SaveAssets();
+        string crafting = CraftingMenuBuilder.SortList();   // a tool that just got its first recipe (Gold) joins the list
         Debug.Log("Update Tool Recipes: " + (done.Count > 0 ? string.Join("; ", done) : "no tools in " + ItemFolder +
-                  " (run Tools > Items > Build Tier Tools)") + ". The crafting list shows them at once (Play, Tab > Crafting).");
+                  " (run Tools > Items > Build Tier Tools)") + ". Crafting list: " + crafting + " (Play, Tab > Crafting).");
     }
 
     // A recipe as words, e.g. "1 WoodenAxe + 3 Plank + 6 Stone" (empty = can't be crafted).
@@ -379,19 +383,21 @@ public static class TierToolBuilder
         }
     }
 
-    // What a tool costs: a chain where each tier is made from the same tool of the tier below (Tony, 19/11/2026):
+    // What a tool costs: a chain where each tier is made from the same tool of the tier below (Tony, 19/11/2026; Gold
+    // 21/11/2026):
     //   Wooden: 3 Plank + 3 Wood (pickaxe, axe), 3 Plank + 6 Wood (sword)
     //   Stone:  the Wooden one + 3 Plank + 6 Stone (pickaxe, axe), + 9 Stone (sword)
     //   Iron:   the Stone one  + 3 Plank + 6 Iron  (pickaxe, axe), + 9 Iron  (sword)
-    // Crafting uses the tool below up. Gold and Diamond: no recipe yet (their ores don't exist).
+    //   Gold:   the Iron one   + 3 Plank + 6 Gold  (pickaxe, axe), + 9 Gold  (sword)
+    // Crafting uses the tool below up. Diamond: no recipe yet (there's no Diamond item: its ore doesn't exist).
     // (Before 19/11/2026: Wooden = 4 / 3 / 2 Plank, Stone and Iron = 2 Plank + 2 or 1 of the material.)
     static List<(ItemData, int)> RecipeFor(ToolKind kind, ToolTier tier)
     {
         List<(ItemData, int)> recipe = new List<(ItemData, int)>();
-        string materialName = tier == ToolTier.Wood ? "Wood" : tier == ToolTier.Stone ? "Stone" : tier == ToolTier.Iron ? "Iron" : null;
+        string materialName = tier == ToolTier.Wood ? "Wood" : tier.ToString();   // Stone, Iron, Gold, Diamond: the item of that name
         ItemData plank = FindByName<ItemData>("Plank", "ItemData");
-        ItemData material = materialName != null ? FindByName<ItemData>(materialName, "ItemData") : null;
-        if (plank == null || material == null) return recipe;   // Gold, Diamond (or a missing item): can't be crafted yet
+        ItemData material = FindByName<ItemData>(materialName, "ItemData");
+        if (plank == null || material == null) return recipe;   // Diamond (or a missing item): can't be crafted yet
 
         if (tier != ToolTier.Wood)
         {

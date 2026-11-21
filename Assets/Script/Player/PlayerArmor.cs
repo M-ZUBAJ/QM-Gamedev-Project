@@ -7,7 +7,8 @@ Use by: The Player (next to PlayerInventory and PlayerHealth). Tools > Items > B
 Unity Editor: Worn = what the player wears now (one per slot), for checking while playing; dragging an armor's Item Data
               in there while playing puts it on at once (without taking it from the inventory).
               Set Bonuses = what wearing a whole set gives (Copper: +1 coin for every monster killed; Iron: +2, and it
-              counts as Copper), and each set's color in menus. Better sets go lower in the list.
+              counts as Copper; Gold: +4 and every chest 10 % cheaper, and it counts as Iron), and each set's color in
+              menus. Better sets go lower in the list.
               Testing: Play, get a piece of armor (craft it, or tick GameRules > Testing > Armor Test), Tab > Gear, click
               a slot and pick it. Then PlayerHealth's ⋮ > Test: Take Damage takes less off. With all six copper pieces
               on, kill a monster: one more coin than before, and the Info tab shows the bonus in gold.
@@ -16,14 +17,15 @@ Purpose: The armor the player wears: one piece per slot (Helmet, Shoulders, Ches
          off puts it back in the inventory (only if there's room). A piece held on the cursor (picked up on the Inventory
          page) can be put straight on by clicking its slot: the old piece then goes onto the cursor, like Minecraft.
          It protects: every worn piece's Protection is added up, in percent (the copper set: 1.5 % a piece, 2.5 % for
-         the chestplate, so 10 % for all six; the iron set 16 %), up to Max Protection. PlayerHealth asks it about every
-         hit (TakeDamage), but not about starving or bad food (LoseHealth).
+         the chestplate, so 10 % for all six; the iron set 15 %, the gold set 25 %), up to Max Protection. PlayerHealth
+         asks it about every hit (TakeDamage), but not about starving or bad food (LoseHealth).
          Set bonus: a piece of the same set in every slot (Armor > Set, e.g. Copper) gives that set's bonus from Set
-         Bonuses: extra coins for every monster killed (Coins Per Kill: the copper set +1, the iron set +2; Marko's
-         EnemyCombat gives them through MonsterBounty, which asks CoinsPerKill). A set can count as a lower one (Counts
-         As): Iron pieces fill Copper's slots too, so upgrading one piece at a time never loses the Copper bonus; all six
-         Iron give the better bonus.
-         Upgrading a worn piece: crafting an Iron piece can use the Copper piece the player wears (Turki's
+         Bonuses: extra coins for every monster killed (Coins Per Kill: the copper set +1, the iron set +2, the gold set
+         +4; Marko's EnemyCombat gives them through MonsterBounty, which asks CoinsPerKill), and cheaper chests (Chest
+         Discount: the gold set takes 10 % off every loot box price; ChestTier asks ChestDiscount). A set can count as a
+         lower one (Counts As): Iron pieces fill Copper's slots too, and Gold pieces Iron's (and so Copper's), so
+         upgrading one piece at a time never loses the bonus you had; all six of the better set give its bonus.
+         Upgrading a worn piece: crafting an Iron (Gold) piece can use the Copper (Iron) piece the player wears (Turki's
          CraftingMenu calls LendForUpgrade, then FinishUpgrade): it comes off for the recipe, and the new piece is
          worn in its place.
          A Set Bonuses list saved before 21/11/2026 (stamina bonuses, Iron first then Reinforced Iron) is replaced by
@@ -33,7 +35,7 @@ Purpose: The armor the player wears: one piece per slot (Helmet, Shoulders, Ches
          When the player dies, ItemDropper takes the armor off with the items (GameRules Keep Inventory off).
 Requirement: PlayerArmor.cs x-> PlayerInventory.cs, ItemData.cs, ArmorStats.cs
              PlayerArmor.cs <-x ArmorBuilder.cs, ArmorLook.cs, ArmorPicker.cs, ArmorSlotUI.cs, CraftingMenu.cs, CraftingSetPanels.cs, GearPage.cs, LootChestBuilder.cs
-             PlayerArmor.cs <-o ArmorTestKit.cs, CraftingRow.cs, ItemDropper.cs, MonsterBounty.cs, PlayerHealth.cs, PlayerInfoPage.cs
+             PlayerArmor.cs <-o ArmorTestKit.cs, ChestTier.cs, CraftingRow.cs, ItemDropper.cs, MonsterBounty.cs, PlayerHealth.cs, PlayerInfoPage.cs
 */
 
 using System.Collections.Generic;
@@ -53,6 +55,11 @@ public class PlayerArmor : MonoBehaviour
         [Min(0)]
         public int coinsPerKill = 1;
 
+        [Tooltip("While the whole set is worn, every loot box costs this share less (0.1 = 10 % off: the gold set), its " +
+                 "rerolls too. 0 = no discount.")]
+        [Range(0f, 0.9f)]
+        public float chestDiscount;
+
         [Tooltip("A lower set this one also counts as (Iron counts as Copper): its pieces fill that set's slots too, so " +
                  "a mix of Copper and Iron pieces still gives the Copper bonus. Empty = none.")]
         public string countsAs = "";
@@ -62,42 +69,52 @@ public class PlayerArmor : MonoBehaviour
 
         public SetBonus() { }
 
-        public SetBonus(string set, int coinsPerKill, string countsAs, Color color)
+        public SetBonus(string set, int coinsPerKill, string countsAs, Color color, float chestDiscount = 0f)
         {
             this.set = set;
             this.coinsPerKill = coinsPerKill;
             this.countsAs = countsAs;
             this.color = color;
+            this.chestDiscount = chestDiscount;
         }
 
-        // What it does, the way the Gear page and the crafting list say it (e.g. "+1 coin for every monster killed").
+        // What it does, the way the Gear page and the crafting list say it (e.g. "+1 coin for every monster killed",
+        // "+4 coins for every monster killed, 10% off every chest").
         public string Describe()
         {
-            return coinsPerKill > 0 ? "+" + Coins(coinsPerKill) + " for every monster killed" : "no bonus";
+            List<string> parts = new List<string>();
+            if (coinsPerKill > 0) parts.Add("+" + Coins(coinsPerKill) + " for every monster killed");
+            if (chestDiscount > 0f) parts.Add(Percent(chestDiscount) + " off every chest");
+            return parts.Count > 0 ? string.Join(", ", parts) : "no bonus";
         }
 
-        // The same, short (e.g. "+1 coin per kill"), for a line with little room.
+        // The same, short (e.g. "+1 coin per kill", "+4 coins per kill, chests -10%"), for a line with little room.
         public string Short()
         {
-            return coinsPerKill > 0 ? "+" + Coins(coinsPerKill) + " per kill" : "no bonus";
+            List<string> parts = new List<string>();
+            if (coinsPerKill > 0) parts.Add("+" + Coins(coinsPerKill) + " per kill");
+            if (chestDiscount > 0f) parts.Add("chests -" + Percent(chestDiscount));
+            return parts.Count > 0 ? string.Join(", ", parts) : "no bonus";
         }
 
         static string Coins(int count) => count + (count == 1 ? " coin" : " coins");
+        static string Percent(float share) => Mathf.RoundToInt(share * 100f) + "%";   // 0.1 -> "10%"
     }
 
     // The sets' colors in menus.
     public static readonly Color CopperColor = new Color(0.85f, 0.5f, 0.27f);        // copper
     public static readonly Color IronColor = new Color(0.56f, 0.6f, 0.67f);          // steel grey
-    public static readonly Color GoldColor = new Color(0.95f, 0.75f, 0.2f);          // gold: ready for a Gold set (not made yet)
+    public static readonly Color GoldColor = new Color(0.95f, 0.75f, 0.2f);          // gold
 
-    // The sets Tools > Items > Build Plate Armor makes, weakest first: Copper (+1 coin per monster killed) and Iron (each
-    // piece a Copper piece + iron: +2 coins, and it counts as Copper). A list saved before a set existed gets the
-    // missing ones added when the game starts, so a new set always has its bonus.
-    // A Gold set later: add new SetBonus("Gold", 3, "Iron", GoldColor) at the end (see ArmorBuilder's Sets).
+    // The sets Tools > Items > Build Plate Armor makes, weakest first: Copper (+1 coin per monster killed), Iron (each
+    // piece a Copper piece + iron: +2 coins, and it counts as Copper) and Gold (each piece an Iron piece + gold: +4 coins
+    // and 10 % off every chest, and it counts as Iron). A list saved before a set existed gets the missing ones added
+    // when the game starts, so a new set always has its bonus.
     public static List<SetBonus> DefaultBonuses() => new List<SetBonus>
     {
         new SetBonus("Copper", 1, "", CopperColor),
         new SetBonus("Iron", 2, "Copper", IronColor),
+        new SetBonus("Gold", 4, "Iron", GoldColor, 0.1f),
     };
 
     // Which version of the set bonuses a saved list has: 2 = coins per kill (21/11/2026). Older lists (stamina bonuses)
@@ -112,7 +129,8 @@ public class PlayerArmor : MonoBehaviour
 
     [Header("Set bonus")]
     [Tooltip("What wearing a whole set gives: a piece of that set (Armor > Set) in every slot. Copper: +1 coin for every " +
-             "monster killed; Iron: +2 (and its pieces count as Copper). Better sets go lower in the list.")]
+             "monster killed; Iron: +2 (and its pieces count as Copper); Gold: +4 and 10 % off every chest (and its " +
+             "pieces count as Iron). Better sets go lower in the list.")]
     [SerializeField] List<SetBonus> setBonuses = DefaultBonuses();
 
     [HideInInspector]
@@ -147,7 +165,7 @@ public class PlayerArmor : MonoBehaviour
 
     public static event System.Action Changed;   // a piece was put on or taken off
 
-    // Every worn piece's Protection added up, in percent (the full copper set: 10, the full iron set: 16).
+    // Every worn piece's Protection added up, in percent (the full copper set: 10, iron: 15, gold: 25).
     public float ProtectionPercent
     {
         get
@@ -183,6 +201,10 @@ public class PlayerArmor : MonoBehaviour
 
     // Extra coins for every monster killed right now (the active set bonus; 0 without one). MonsterBounty asks it.
     public int CoinsPerKill => ActiveBonus != null ? ActiveBonus.coinsPerKill : 0;
+
+    // How much cheaper every loot box is right now: the active set bonus's Chest Discount (the whole gold set: 0.1 =
+    // 10 % off), 0 without one. ChestTier asks it for every price.
+    public float ChestDiscount => ActiveBonus != null ? Mathf.Clamp(ActiveBonus.chestDiscount, 0f, 0.9f) : 0f;
 
     // ===== Unity messages (Unity calls these) =====
 

@@ -13,14 +13,17 @@
 Walls and buildings stop them, and they walk up and down the hills. They never spawn outside the world's barrier
 (`Docs/World Barrier Setup.md`).
 
-**In the day, in the new world's desert:** turtles (RPG Monster DUO's TurtleShell, `TurtleShellEnemy`), made the same
-way by **Tools > World > Build Desert Content** (it calls this tool's `EnemyBuilder.BuildMonster`). They're spawned by
-Tony's **DesertMonsterSpawner** (not Marko's EnemySpawner), stand still until the player comes near or hits them
-(Tony's **EnemyAggro**), and turn to sand at night. Guide: `Docs/Desert Setup.md`.
+**From night 2: turtles** (RPG Monster DUO's TurtleShell, `TurtleShellEnemy`; 21/11/2026), made the same way by
+**Tools > Enemies > Set Up Night Monsters** (it calls this tool's `EnemyBuilder.BuildMonster`; its controller gets the
+shell states Shell / Shell Hit). They come with the slimes, at about 3 in 10 of the spawns, and hide in their shell now
+and then (ShellDefense: melee hits on the shell hurt the player). Night monsters appear out of the player's sight.
+Guide: `Docs/Night Monsters Setup.md`. (Until 21/11/2026 the turtles were the new world's desert day monster.)
 
-**A different monster for the night:** select its prefab, run **Tools > Enemies > Build Monster Enemy**, and answer
-**Use** when it asks to put it in the EnemySpawner. Running it on a monster that already has an enemy prefab rebuilds
-it in place and keeps an EnemyAggro and the sand / ember colors other tools gave it.
+**Another monster for the night:** make it with **Tools > Enemies > Build Monster Enemy**, then add it to the
+EnemySpawner's **NightMonsters** > Monsters with its First Night (`Docs/Night Monsters Setup.md`). To replace the slime
+(the first night's monster), answer **Use** when the tool asks to put it in the EnemySpawner. Running it on a monster
+that already has an enemy prefab rebuilds it in place and keeps an EnemyAggro, a ShellDefense and the ember colors other
+tools gave it.
 
 **How it works:**
 - **Movement, attacks, health, coins:** Marko's scripts (EnemyMovement, EnemyAttack, EnemyCombat, EnemySpawner).

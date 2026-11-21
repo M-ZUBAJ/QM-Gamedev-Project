@@ -20,7 +20,7 @@ Purpose: What's left when a creature dies, so you can tell at a glance what you 
            color. The desert's turtle leaves at night the same way, as falling sand (its own Vanish Color and Rise).
          A creature removed without being killed (an animal left far behind, the scene closing) shows nothing.
 Requirement: DeathEffect.cs o-> ResourceNode.cs, EnemyCombat.cs, EnemyAttack.cs
-             DeathEffect.cs <-x DeathEffectBuilder.cs, DesertBuilder.cs, EnemyBuilder.cs
+             DeathEffect.cs <-x DeathEffectBuilder.cs, EnemyBuilder.cs, NightMonsterBuilder.cs
              DeathEffect.cs <-o EnemyAnimator.cs
 */
 

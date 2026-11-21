@@ -1,6 +1,6 @@
 /*
 First Date: 20/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Menu Tools > World > Build New World Scene (it asks first). Run it again whenever GameScene changes
@@ -28,13 +28,14 @@ Purpose: Makes the "New world" of the title screen's NEW GAME page: Assets/Scene
              hard sandstone, DesertBuilder), loses the rules that put plain stone rocks on the sand (his Desert Rocks;
              GameScene keeps it), and has no terrain of its own: the World Generator gives it the new one;
            - the desert's content first (Tools > World > Build Desert Content: Gold, GoldNode, SandstoneNode, the
-             sandstone caves, the turtle), given to the World Generator (desert caves, gold, sandstone), and a "Desert
-             Monster Spawner" (DesertMonsterSpawner) with the turtle on the sand texture, in the day;
+             sandstone caves, the turtle), given to the World Generator (desert caves, gold, sandstone). The turtle is
+             a night monster (since 21/11/2026): it comes with GameScene's EnemySpawner and its NightMonsters (Tools >
+             Enemies > Set Up Night Monsters), copied with the scene; no day monster spawner is added;
            - its light from the sky is saved (like Tools > World > Set Up Sky Lighting), and it's added to Build
              Settings, so the title screen can load it;
            - Unity's terrain grass shaders go into Project Settings > Graphics > Always Included Shaders (no saved
              scene has terrain grass, so a built game would leave them out).
-Requirement: NewWorldBuilder.cs x-> WorldGenerator.cs, RockCaveBuilder.cs, DesertBuilder.cs, DesertMonsterSpawner.cs, SkyLightingSetup.cs, ObjectScatter.cs, AnimalSpawner.cs, PlayerController.cs, ResourceNode.cs, PerkChest.cs, ItemPickup.cs, WildAnimal.cs, WorldBarrier.cs, ViewDistance.cs, UIBuildHelper.cs, MenuOrder.cs
+Requirement: NewWorldBuilder.cs x-> WorldGenerator.cs, RockCaveBuilder.cs, DesertBuilder.cs, SkyLightingSetup.cs, ObjectScatter.cs, AnimalSpawner.cs, PlayerController.cs, ResourceNode.cs, PerkChest.cs, ItemPickup.cs, WildAnimal.cs, WorldBarrier.cs, ViewDistance.cs, UIBuildHelper.cs, MenuOrder.cs
 */
 
 using System.Collections.Generic;
@@ -86,8 +87,8 @@ public static class NewWorldBuilder
                 "- without its hand-made map (terrain, placed trees, rocks, ores, chests, walls)\n" +
                 "- with the World Generator: a new random 1000 x 1000 m world every game (grassland start, desert, " +
                 "rocky hills, rock caves with stone, copper and iron) inside a glowing barrier\n" +
-                "- the desert's content (Tools > World > Build Desert Content): sandstone caves with gold, hard sandstone " +
-                "rocks, and turtle monsters in the day\n" +
+                "- the desert's content (Tools > World > Build Desert Content): sandstone caves with gold and hard " +
+                "sandstone rocks (the turtles come at night from night 2, with GameScene's night spawner)\n" +
                 "- a 100 m view distance (ViewDistance on the Main Camera, with a mist)\n" +
                 "- the rock caves (Assets/Prefabs/World/Caves), its sky light, and a place in Build Settings\n\n" +
                 (exists ? "It replaces the ProceduralGenerateScene you have (changes made by hand there are lost).\n\n" : "") +
@@ -106,7 +107,7 @@ public static class NewWorldBuilder
         List<string> removed = RemoveOldMap(scene);
         string scatter = SetUpScatter(scene, generator, desert.sandstone);
         foreach (AnimalSpawner spawner in FindAll<AnimalSpawner>(scene)) SetField(spawner, "terrain", null);   // whichever terrain is there
-        string monsters = AddDesertMonsters(scene, desert.monster, generator);
+        string monsters = "Night monsters: GameScene's EnemySpawner (and its NightMonsters: the turtle from night 2) came with the copy.";
         string view = AddViewDistance(scene);
 
         EditorSceneManager.MarkSceneDirty(scene);
@@ -361,29 +362,6 @@ public static class NewWorldBuilder
         rule.FindPropertyRelative("minSize").floatValue = minSize;
         rule.FindPropertyRelative("maxSize").floatValue = maxSize;
         return true;
-    }
-
-    // The desert's day monsters: a "Desert Monster Spawner" (DesertMonsterSpawner) with the turtle, on the sand texture.
-    // One copied from GameScene is filled in instead of adding a second. Returns a sentence for the Console.
-    static string AddDesertMonsters(Scene scene, GameObject monster, WorldGenerator generator)
-    {
-        if (monster == null) return "No desert monster (RPG Monster DUO's TurtleShell wasn't found).";
-        int sandLayer = new SerializedObject(generator).FindProperty("sandLayer").intValue;
-        if (sandLayer < 0) return "No sand texture, so no desert monsters.";
-
-        DesertMonsterSpawner spawner = Find<DesertMonsterSpawner>(scene);
-        if (spawner == null)
-        {
-            GameObject go = new GameObject("Desert Monster Spawner");
-            SceneManager.MoveGameObjectToScene(go, scene);
-            spawner = go.AddComponent<DesertMonsterSpawner>();
-        }
-        SerializedObject so = new SerializedObject(spawner);   // the names in quotes must match DesertMonsterSpawner's fields
-        so.FindProperty("monsterPrefab").objectReferenceValue = monster;
-        so.FindProperty("terrainLayer").intValue = sandLayer;
-        so.FindProperty("terrain").objectReferenceValue = null;   // whichever terrain is there: the generated one
-        so.ApplyModifiedPropertiesWithoutUndo();
-        return "Desert monsters: " + monster.name + " in the day (Desert Monster Spawner, sand = texture " + sandLayer + ").";
     }
 
     // The new world's line of sight: ViewDistance on the Main Camera (100 m: nothing further is drawn, a mist hides the

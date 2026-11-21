@@ -414,7 +414,10 @@ public class PerkRollUI : MonoBehaviour
 
         if (priceText != null)
         {
-            priceText.text = price + (price == 1 ? " coin" : " coins");
+            // The price before the gold armor's discount crossed out in front, while there is one ("<s>10</s>  9 coins").
+            int full = chest.Tier != null ? chest.Tier.FullPrice : price;
+            string words = price + (price == 1 ? " coin" : " coins");
+            priceText.text = full > price ? "<size=80%><s>" + full + "</s></size>  " + words : words;
             priceText.color = canPay ? canPayColor : cantPayColor;
         }
         if (coinsText != null) coinsText.text = coins.ToString();

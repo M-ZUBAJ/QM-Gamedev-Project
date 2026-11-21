@@ -17,6 +17,7 @@ Purpose: What the player can see (line of sight). Something counts as seen when 
          follows the new range at once.
 Requirement: PlayerSight.cs o-> Camera (Unity), PlayerHealth.cs, ViewDistance.cs
              PlayerSight.cs <-x AnimalSpawner.cs, DesertMonsterSpawner.cs, WorldSpawnSetup.cs
+             PlayerSight.cs <-o NightMonsters.cs
 */
 
 using System.Collections.Generic;

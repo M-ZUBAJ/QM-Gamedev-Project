@@ -16,7 +16,7 @@ Purpose: An enemy that minds its own business until the player comes near: it st
          (Marko's night slimes).
 Requirement: EnemyAggro.cs x-> EnemyMovement.cs, EnemyAttack.cs
              EnemyAggro.cs o-> EnemyCombat.cs, PlayerController.cs, PlayerHealth.cs, Rigidbody (Unity)
-             EnemyAggro.cs <-x DesertBuilder.cs, EnemyBuilder.cs
+             EnemyAggro.cs <-x EnemyBuilder.cs, NightMonsterBuilder.cs
              EnemyAggro.cs <-o DesertMonsterSpawner.cs
 */
 

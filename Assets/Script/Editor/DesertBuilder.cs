@@ -1,6 +1,6 @@
 /*
 First Date: 20/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Menu Tools > World > Build Desert Content (Tools > World > Build New World Scene runs it too, and puts it
@@ -20,11 +20,10 @@ Purpose: Everything the new world's desert needs, in one click:
              tinted), and their rock-break dust in their own colors (Tools > Effects > Build Rock Break runs again);
            - two desert caves of sandstone (Assets/Prefabs/World/Caves/Desert Cave Small and Desert Cave, from
              RockCaveBuilder): the World Generator puts gold and sandstone in them;
-           - the desert's day monster, Assets/Prefabs/Enemy/TurtleShellEnemy: RPG Monster DUO's TurtleShell made into an
-             enemy like the slime (Tools > Enemies > Build Monster Enemy's way), plus EnemyAggro (it stands still until
-             the player comes near or hits it) and sand-colored particles when it leaves at night (DeathEffect's
-             Vanish Color). The night's EnemySpawner isn't touched.
-Requirement: DesertBuilder.cs x-> ItemData.cs, ToolStats.cs, ItemPickup.cs, ShapeColor.cs, ResourceNode.cs, DeathEffect.cs, EnemyAggro.cs, EnemyBuilder.cs, RockCaveBuilder.cs, RockBreakBuilder.cs, UIBuildHelper.cs, MenuOrder.cs
+           - the turtle, Assets/Prefabs/Enemy/TurtleShellEnemy (NightMonsterBuilder.BuildTurtle): since 21/11/2026 a
+             night monster from night 2, with its shell (ShellDefense), no longer the desert's day monster. Tools >
+             Enemies > Set Up Night Monsters puts it in the scenes' night spawner.
+Requirement: DesertBuilder.cs x-> ItemData.cs, ToolStats.cs, ItemPickup.cs, ShapeColor.cs, ResourceNode.cs, NightMonsterBuilder.cs, RockCaveBuilder.cs, RockBreakBuilder.cs, UIBuildHelper.cs, MenuOrder.cs
              DesertBuilder.cs <-x NewWorldBuilder.cs
 */
 
@@ -55,12 +54,10 @@ public static class DesertBuilder
     const string RocksFolder = NodeFolder + "/Rocks";
     const string DesertStonePath = RocksFolder + "/StoneNode Desert.prefab";   // its material is the pack's sand color sheet
     const string MaterialFolder = "Assets/Materials/Rocks";
-    const string Monster = "TurtleShellPolyart";   // RPG Monster DUO's second monster (the first is the slime)
 
     static readonly Color GoldCube = new Color(1f, 0.78f, 0.22f);         // the Gold item's cube
     static readonly Color GoldTint = new Color(1f, 0.9f, 0.45f);          // the sand color sheet -> gold
     static readonly Color SandstoneTint = new Color(1f, 0.8f, 0.62f);     // the sand color sheet -> warm sandstone
-    static readonly Color SandDust = new Color(0.88f, 0.74f, 0.5f);       // the turtle turns into this when it leaves at night
 
     const float GoldHealth = 40f;        // Turki's rocks have 30
     const float SandstoneHealth = 75f;   // 2.5 times a stone rock: "harder to break"
@@ -241,33 +238,11 @@ public static class DesertBuilder
         }
     }
 
-    // The turtle as an enemy (EnemyBuilder), then what makes it a desert day monster: EnemyAggro and sand-colored
-    // particles when it leaves at night.
+    // The turtle, as a night monster with its shell (since 21/11/2026 it's no longer the desert's day monster):
+    // NightMonsterBuilder builds it the same way Tools > Enemies > Set Up Night Monsters does.
     static GameObject MakeMonster(List<string> report)
     {
-        GameObject prefab = EnemyBuilder.BuildMonster(Monster, out string built);
-        report.Add("desert monster: " + built);
-        if (prefab == null) return null;
-
-        string path = AssetDatabase.GetAssetPath(prefab);
-        GameObject root = PrefabUtility.LoadPrefabContents(path);
-        try
-        {
-            if (root.GetComponent<EnemyAggro>() == null) root.AddComponent<EnemyAggro>();
-            DeathEffect effect = root.GetComponent<DeathEffect>();
-            if (effect != null)
-            {
-                SerializedObject so = new SerializedObject(effect);   // the names in quotes must match DeathEffect's fields
-                so.FindProperty("vanishColor").colorValue = SandDust;
-                so.FindProperty("vanishRise").floatValue = -0.4f;   // sand falls, it doesn't float up like embers
-                so.ApplyModifiedPropertiesWithoutUndo();
-            }
-            return PrefabUtility.SaveAsPrefabAsset(root, path);
-        }
-        finally
-        {
-            PrefabUtility.UnloadPrefabContents(root);
-        }
+        return NightMonsterBuilder.BuildTurtle(report);
     }
 
     static ItemData FindItem(string id)

@@ -14,6 +14,7 @@ Purpose: The cinematic change from the menu to the game:
          It also blocks clicks while it plays, so nothing is pressed twice.
 Requirement: ScreenFader.cs x-> UITween.cs
              ScreenFader.cs <-x TitleMenu.cs
+             ScreenFader.cs <-o WorldGenerator.cs
 */
 
 using System.Collections;

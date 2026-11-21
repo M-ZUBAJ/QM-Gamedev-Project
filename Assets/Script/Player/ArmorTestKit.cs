@@ -1,6 +1,6 @@
 /*
 First Date: 20/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: The Player (next to PlayerInventory). Tools > Items > Build Plate Armor puts it there with every armor piece.
         A game scene saved without it (e.g. the tool ran while the title scene was open, so it couldn't reach the
@@ -8,11 +8,13 @@ Use by: The Player (next to PlayerInventory). Tools > Items > Build Plate Armor 
 Unity Editor: Turn the rule on: select the GameRules object > Testing > Armor Test. Ticking it while playing gives the
               armor at once (then Tab > Gear to put it on, or Tab > Crafting > Armor to try the upgrades). From the
               title screen: New Game > Testing > Start with all armor.
-Purpose: For testing armor: while the game rule Armor Test is on, the player gets one of each armor piece (the Copper
-         and Iron sets: 12) in the inventory, when the game starts or the moment the rule is turned on. Pieces
+Purpose: For testing armor: while the game rule Armor Test is on, the player gets one of each armor piece (the Copper,
+         Iron and Gold sets: 18) in the inventory, when the game starts or the moment the rule is turned on. Pieces
          the player already has, in the inventory or worn, aren't given twice, and turning the rule off takes nothing
-         away. Tools come from the separate rule Tool Test (ToolTestKit). A kit that added itself has an empty list,
-         so it gives every armor Item Data the game has loaded (the crafting list links them all).
+         away. Tools come from the separate rule Tool Test (ToolTestKit). It gives its list's pieces first, then every
+         other armor Item Data the game has loaded (the crafting list links them all), so a set added after the list
+         was saved (e.g. Gold in the new world's scene) is given too, and a kit that added itself (empty list) gives
+         them all.
 Requirement: ArmorTestKit.cs x-> PlayerInventory.cs, ItemData.cs, GameRules.cs
              ArmorTestKit.cs o-> PlayerArmor.cs
              ArmorTestKit.cs <-x ArmorBuilder.cs
@@ -26,8 +28,8 @@ using UnityEngine.SceneManagement;
 public class ArmorTestKit : MonoBehaviour
 {
     // ===== Fields =====
-    [Tooltip("The armor given while the game rule Armor Test is on (Tools > Items > Build Plate Armor fills it in: the " +
-             "Copper and Iron sets). Empty = every armor Item Data the game has loaded.")]
+    [Tooltip("The armor given first while the game rule Armor Test is on (Tools > Items > Build Plate Armor fills it in). " +
+             "Every other armor Item Data the game has loaded is given after it.")]
     [SerializeField] List<ItemData> armor = new List<ItemData>();
 
     bool wasOn;     // the rule's value last time we looked, so turning it on (not just being on) gives the armor
@@ -101,12 +103,12 @@ public class ArmorTestKit : MonoBehaviour
         }
     }
 
-    // The armor to give: the list from Build Plate Armor, or (an empty list, e.g. a kit that added itself) every armor
-    // Item Data the game has loaded: the crafting list links them all. Weakest set first, each set from helmet to
-    // boots, like the crafting list.
+    // The armor to give: the list from Build Plate Armor first, then every other armor Item Data the game has loaded (the
+    // crafting list links them all), so a set added later is given even by a list saved before it. The loaded ones go
+    // weakest set first, each set from helmet to boots, like the crafting list.
     List<ItemData> Pieces()
     {
-        if (armor.Exists(piece => piece != null)) return armor;
+        List<ItemData> pieces = armor.FindAll(piece => piece != null);
 
         List<ItemData> found = new List<ItemData>();
         Dictionary<string, float> setTotal = new Dictionary<string, float>();   // a set's protection, all pieces together
@@ -125,6 +127,10 @@ public class ArmorTestKit : MonoBehaviour
             if (order == 0) order = string.CompareOrdinal(setA, setB);   // two sets just as strong stay apart
             return order != 0 ? order : a.Armor.slot.CompareTo(b.Armor.slot);
         });
-        return found;
+        foreach (ItemData data in found)
+        {
+            if (!pieces.Contains(data)) pieces.Add(data);
+        }
+        return pieces;
     }
 }

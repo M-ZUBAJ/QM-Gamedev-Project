@@ -1,11 +1,12 @@
 /*
 First Date: 10/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: An enemy's top object, next to Marko's EnemyCombat, EnemyMovement and EnemyAttack, with the monster model
         (and its Animator) as a child. Tools > Enemies > Build Monster Enemy makes such enemies (e.g. SlimeEnemy).
 Unity Editor: The numbers can be changed while playing. The Animator's controller needs the parameters
-              Speed, Attack, Hit, Dead and Victory (the tool's controller has them).
+              Speed, Attack, Hit, Dead and Victory (the tool's controller has them; a monster with a shell, the turtle,
+              also Shell and ShellHit).
               Testing: Play, select the EnemySpawner, click the ⋮ on its EnemySpawner component > Test Spawn Enemy.
               The enemy walks to the player and attacks; hit it and it flinches; kill it and it falls over, then
               disappears (with a DeathEffect: its body turns into red particles during the fall).
@@ -16,10 +17,12 @@ Purpose: Makes a monster act like a real enemy: it stands, walks or runs as fast
          When day comes, Marko's EnemySpawner calls Vanish for the night's enemies: each one stops (at a random moment
          within Vanish Spread seconds) and burns away into orange embers (its DeathEffect), then it's gone. No coins:
          nobody killed it.
+         A monster with a shell (ShellDefense, the turtle) plays Defend while it's in its shell (SetShell), and
+         DefendGetHit instead of a flinch when it's hit there (PlayShellHit, or a fireball hurting it inside).
          It only shows the enemy: Marko's scripts still decide where it goes, when it attacks and its health.
 Requirement: EnemyAnimator.cs o-> EnemyCombat.cs, EnemyMovement.cs, EnemyAttack.cs, PlayerHealth.cs, DeathEffect.cs, Animator (Unity), Rigidbody (Unity)
              EnemyAnimator.cs <-x DeathEffectBuilder.cs, EnemyAttack.cs, EnemyBuilder.cs, EnemyCombat.cs, EnemySpawner.cs
-             EnemyAnimator.cs <-o DesertMonsterSpawner.cs
+             EnemyAnimator.cs <-o DesertMonsterSpawner.cs, ShellDefense.cs
 */
 
 using System.Collections;
@@ -35,6 +38,8 @@ public class EnemyAnimator : MonoBehaviour
     public const string HitName = "Hit";
     public const string DeadName = "Dead";
     public const string VictoryName = "Victory";
+    public const string ShellName = "Shell";         // a monster with a shell (the turtle): on = it's in its shell (Defend)
+    public const string ShellHitName = "ShellHit";   // a hit on its shell (DefendGetHit)
 
     // ===== Fields =====
     [Header("Moving")]
@@ -64,6 +69,8 @@ public class EnemyAnimator : MonoBehaviour
     static readonly int Hit = Animator.StringToHash(HitName);
     static readonly int Dead = Animator.StringToHash(DeadName);
     static readonly int Victory = Animator.StringToHash(VictoryName);
+    static readonly int Shell = Animator.StringToHash(ShellName);
+    static readonly int ShellHit = Animator.StringToHash(ShellHitName);
 
     Animator animator;          // on the model (a child object)
     Rigidbody body;             // can be missing (Marko's old ball enemy has none)
@@ -77,6 +84,7 @@ public class EnemyAnimator : MonoBehaviour
     Vector3 lastPosition;       // to measure the speed when there's no Rigidbody
     bool dead;                  // stopped for good: dying, or burning away
     bool vanishing;             // burning away (or about to) because day came
+    bool inShell;               // ShellDefense says it's in its shell: a hit shakes the shell instead of a flinch
 
     public bool IsDead => dead;
     public bool IsVanishing => vanishing;
@@ -132,12 +140,26 @@ public class EnemyAnimator : MonoBehaviour
         // Hurt: health went down since the last frame, and it's still alive (dying has its own animation).
         if (combat != null)
         {
-            if (flinchWhenHurt && combat.currentHealth < lastHealth && combat.currentHealth > 0f) SetTrigger(Hit);
+            if (flinchWhenHurt && combat.currentHealth < lastHealth && combat.currentHealth > 0f)
+                SetTrigger(inShell && parameters.Contains(ShellHit) ? ShellHit : Hit);   // in its shell: the shell shakes
             lastHealth = combat.currentHealth;
         }
     }
 
     // ===== My methods =====
+
+    // ShellDefense calls this when the monster pulls into its shell (true) or comes out (false): the Defend animation.
+    public void SetShell(bool hidden)
+    {
+        inShell = hidden;
+        SetBool(Shell, hidden);
+    }
+
+    // ShellDefense calls this when a melee hit bounces off the shell: the shell's hit animation (DefendGetHit).
+    public void PlayShellHit()
+    {
+        if (!dead) SetTrigger(ShellHit);
+    }
 
     // Marko's EnemyAttack calls this when it attacks.
     public void PlayAttack()

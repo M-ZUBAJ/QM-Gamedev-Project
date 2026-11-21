@@ -32,7 +32,7 @@ MonoBehaviour:
     tier: 1
   armor:
     slot: 5
-    protection: 2
+    protection: 2.25
     set: Iron
     piece: PlateSet1_Boots
     hides:

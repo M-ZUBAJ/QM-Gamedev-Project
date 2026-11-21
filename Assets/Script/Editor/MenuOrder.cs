@@ -11,7 +11,7 @@ Purpose: The order of every item in our Tools menu, in ONE place.
          - Numbers more than 10 apart = a separator line between them (a new group).
          - A submenu (UI, Building, Items...) sits where its smallest number is.
          Each tool's [MenuItem] uses one of these numbers, e.g. [MenuItem("Tools/UI/Build Inventory UI", false, MenuOrder.BuildInventoryUI)].
-Requirement: MenuOrder.cs <-x ArmorBuilder.cs, BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, ChestSetup.cs, CraftingMenuBuilder.cs, DeathEffectBuilder.cs, DesertBuilder.cs, EnemyBuilder.cs, FirstPersonHandsBuilder.cs, GameEndUIBuilder.cs, GearPageBuilder.cs, GrasslandTreeBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, LootChestBuilder.cs, NewWorldBuilder.cs, NotificationUIBuilder.cs, PerkPanelBuilder.cs, PerkRollBuilder.cs, PlayerAnimationSetup.cs, PlayerCharacterBuilder.cs, PunchEffectBuilder.cs, RockBreakBuilder.cs, RockBuilder.cs, RockCaveBuilder.cs, ScriptMapTool.cs, SkyLightingSetup.cs, TierToolBuilder.cs, TitleSceneBuilder.cs, TreeFallBuilder.cs, WildAnimalBuilder.cs, WorldBarrierBuilder.cs, WorldSpawnSetup.cs
+Requirement: MenuOrder.cs <-x ArmorBuilder.cs, BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, ChestSetup.cs, CraftingMenuBuilder.cs, DeathEffectBuilder.cs, DesertBuilder.cs, EnemyBuilder.cs, FirstPersonHandsBuilder.cs, GameEndUIBuilder.cs, GearPageBuilder.cs, GrasslandTreeBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, LootChestBuilder.cs, NewWorldBuilder.cs, NightMonsterBuilder.cs, NotificationUIBuilder.cs, PerkPanelBuilder.cs, PerkRollBuilder.cs, PlayerAnimationSetup.cs, PlayerCharacterBuilder.cs, PunchEffectBuilder.cs, RockBreakBuilder.cs, RockBuilder.cs, RockCaveBuilder.cs, ScriptMapTool.cs, SkyLightingSetup.cs, TierToolBuilder.cs, TitleSceneBuilder.cs, TreeFallBuilder.cs, WildAnimalBuilder.cs, WorldBarrierBuilder.cs, WorldSpawnSetup.cs
 */
 
 public static class MenuOrder
@@ -57,7 +57,7 @@ public static class MenuOrder
     public const int BuildRockCaves = 232;      // walk-in caves made of low-poly rocks, with spots for ores (for the new world)
     public const int BuildNewWorldScene = 233;  // ProceduralGenerateScene: GameScene's game with a new random world every game
     public const int AddWorldBarrier = 234;     // a glowing barrier around the open scene's map (the old world; the new world makes its own)
-    public const int BuildDesertContent = 235;  // the new world's desert: gold ore, hard sandstone rock, sandstone caves, the turtle day monster
+    public const int BuildDesertContent = 235;  // the new world's desert: gold ore, hard sandstone rock, sandstone caves (and the turtle, a night monster)
     public const int BuildLootChests = 236;     // common / rare / epic loot boxes: prices, new perks, where they spawn
 
     // ===== Tools > Player =====
@@ -67,6 +67,7 @@ public static class MenuOrder
 
     // ===== Tools > Enemies =====
     public const int BuildMonsterEnemy = 270;   // a monster model -> an animated enemy prefab (e.g. SlimeEnemy)
+    public const int SetUpNightMonsters = 271;  // the turtle as night 2's new monster (its shell), spawning out of sight
 
     // ===== Tools > Effects =====
     public const int BuildPunchWindBurst = 285; // the grey wind burst where a bare-handed punch hits something with health

@@ -10,6 +10,8 @@ Purpose: Draws the small game pictures in code and saves them as PNG sprites, so
            Assets/UI/Common/Coin.png          a gold coin (the HUD's coins, a chest's price)
            Assets/UI/Common/RoundedBox.png    a white box with round corners (9-sliced: any size, tinted any color)
            Assets/UI/Common/Glow.png          a soft round glow (behind the perk icons)
+           Assets/UI/Common/Tick.png          a green round badge with a white tick (an armor piece you already have,
+                                              on its crafting row)
            Assets/UI/Perks/PerkHealth.png     a red heart          (Max Health)
            Assets/UI/Perks/PerkStamina.png    a yellow lightning   (Max Stamina)
            Assets/UI/Perks/PerkSpeed.png      blue double arrows   (Move Speed)
@@ -117,6 +119,7 @@ public static class IconArt
     public static Sprite Coin() => Save(CommonFolder + "/Coin.png", () => Draw(IconSize, CoinPaint), Vector4.zero);
     public static Sprite RoundedBox() => Save(CommonFolder + "/RoundedBox.png", () => Draw(BoxSize, BoxPaint), Vector4.one * (BoxRadius + 4));
     public static Sprite Glow() => Save(CommonFolder + "/Glow.png", () => UIFXSprites.Draw(UIFXSprites.Shape.SoftDot), Vector4.zero);
+    public static Sprite Tick() => Save(CommonFolder + "/Tick.png", () => Draw(IconSize, TickPaint), Vector4.zero);
     public static Sprite PerkHealth() => Save(PerkFolder + "/PerkHealth.png", () => Draw(IconSize, HeartPaint), Vector4.zero);
     public static Sprite PerkStamina() => Save(PerkFolder + "/PerkStamina.png", () => Draw(IconSize, BoltPaint), Vector4.zero);
     public static Sprite PerkSpeed() => Save(PerkFolder + "/PerkSpeed.png", () => Draw(IconSize, SpeedPaint), Vector4.zero);
@@ -222,6 +225,14 @@ public static class IconArt
         if (d > 0.5f && d < 0.58f) c = Over(c, new Color(0.8f, 0.52f, 0.08f, 0.9f));                // a ring pressed into it
         if (d <= 0.74f && Circle(x + 0.3f, y - 0.32f, 0.16f)) c = Over(c, new Color(1f, 1f, 0.9f, 0.6f));   // a shine, top left
         return c;
+    }
+
+    // A green round badge with a white tick: "you have this" (on a crafting row's picture).
+    static Color TickPaint(float x, float y)
+    {
+        Color c = Icon(x, y, (px, py) => Circle(px, py, 0.8f), new Color(0.1f, 0.55f, 0.25f), new Color(0.35f, 0.82f, 0.45f), new Color(0.04f, 0.28f, 0.1f));
+        bool tick = Segment(x, y, -0.42f, 0.04f, -0.12f, -0.28f, 0.12f) || Segment(x, y, -0.12f, -0.28f, 0.44f, 0.34f, 0.12f);
+        return tick ? Over(c, Color.white) : c;
     }
 
     // White inside a box with round corners (the whole picture), clear outside the corners.

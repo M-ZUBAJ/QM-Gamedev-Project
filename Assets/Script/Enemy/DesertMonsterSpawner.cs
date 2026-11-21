@@ -1,8 +1,10 @@
 /*
 First Date: 20/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
-Use by: An empty object, e.g. "Desert Monster Spawner" (Tools > World > Build New World Scene puts one in the new world).
+Use by: Not used since 21/11/2026: the turtle is a night monster now (NightMonsters, Tools > Enemies > Set Up Night
+        Monsters removes the new world's spawner). Kept for a future day monster.
+        An empty object, e.g. "Desert Monster Spawner" (Tools > World > Build New World Scene used to put one in the new world).
         By hand: Create Empty, add this, drag the monster (Assets/Prefabs/Enemy/TurtleShellEnemy) into Monster Prefab
         and set Terrain Layer to the sand texture's number (its place in the terrain's Paint Texture list). The Player
         needs PlayerSight.
@@ -22,7 +24,7 @@ Purpose: The desert's day monsters: keeps up to Population of them on the sand a
              Color, sand for the turtle), with no coins, and none come until morning.
 Requirement: DesertMonsterSpawner.cs x-> PlayerSight.cs
              DesertMonsterSpawner.cs o-> DaylightCycle.cs, EnemyCombat.cs, EnemyAttack.cs, EnemyMovement.cs, EnemyAggro.cs, EnemyAnimator.cs, WorldBarrier.cs, Terrain (Unity)
-             DesertMonsterSpawner.cs <-x NewWorldBuilder.cs
+             DesertMonsterSpawner.cs <-x NightMonsterBuilder.cs
 */
 
 using System.Collections.Generic;

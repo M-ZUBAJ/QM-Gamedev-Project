@@ -6,16 +6,21 @@ Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so i
 Unity Editor: Open GameScene, then menu Tools > Items > Build Plate Armor (it asks first), and save the scene afterwards.
               Run it again any time: the items, their prefabs and the Gear page are refilled in place, and recipes you
               changed stay. Guide: Docs/Armor Setup.md
-Purpose: Blink's plate armor (the PlateSet1 parts already inside the player's character, switched off) as two armor
-         sets, 12 items the player can craft, wear and see, in one click. Copper comes first and Iron is its upgrade
-         (iron is the higher tier):
+Purpose: Blink's plate armor (the PlateSet1 parts already inside the player's character, switched off) as three
+         armor sets, 18 items the player can craft, wear and see, in one click. Copper comes first, Iron is its upgrade
+         and Gold Iron's. How much a whole set protects follows Tony's formula a[n] = 5/2 n^2 - 5/2 n + 10 percent for
+         the n-th set (copper 10 %, iron 15 %, gold 25 %; a diamond set would get 40 %), and each set splits it like
+         copper: the chestplate a quarter, every other piece 15 % (SetTotal, SlotShares):
            - Copper: Assets/Config/Items/Armor/Copper<Slot>.asset: Copper Helmet, Copper Shoulders, Copper Chestplate,
              Copper Gloves, Copper Leggings, Copper Boots. Protection 1.5 % each and 2.5 % for the chestplate (10 % off
              every hit for all six); all six: +1 coin for every monster killed; a recipe of Copper (5 / 4 / 8 / 3 / 7 / 4);
              copper colored;
-           - Iron: Iron<Slot>.asset ("Iron Helmet"...): 2.5 / 2.5 / 4 / 2 / 3 / 2 % (16 % for all six); all six: +2 coins
-             for every monster killed, and its pieces count as Copper (a mix of both still gives the Copper bonus); each
-             crafted from its Copper piece + Iron (4 / 3 / 6 / 2 / 5 / 3); steel grey;
+           - Iron: Iron<Slot>.asset ("Iron Helmet"...): 2.25 % each, 3.75 % for the chestplate (15 % for all six; 16 %
+             until 21/11/2026); all six: +2 coins for every monster killed, and its pieces count as Copper (a mix of both
+             still gives the Copper bonus); each crafted from its Copper piece + Iron (4 / 3 / 6 / 2 / 5 / 3); steel grey;
+           - Gold: Gold<Slot>.asset ("Gold Helmet"...): 3.75 % each, 6.25 % for the chestplate (25 % for all six); all
+             six: +4 coins for every monster killed and 10 % off every chest, and its pieces count as Iron; each crafted
+             from its Iron piece + Gold (4 / 3 / 6 / 2 / 5 / 3); bright gold with red leather and crimson cloth;
            - files from before the tiers were swapped (20/11/2026: Iron came first, and Reinforced Iron = an Iron piece
              + Copper) are renamed by tier: Iron... -> Copper..., ReinforcedIron... -> Iron..., with Iron and Copper
              swapped in their recipes, so everything linked to them stays linked;
@@ -25,16 +30,15 @@ Purpose: Blink's plate armor (the PlateSet1 parts already inside the player's ch
            - each set's look: Assets/Materials/Armor/<Set> Armor.mat with <Set> Armor Palette.png = Blink's palette
              picture with the four strips the plate parts use repainted in the set's colors (plates, trims, leather
              straps, cloth; their light-to-dark shading kept) and a little metal shine. Made only if missing: change the
-             colors by hand, or delete the two files to get the tool's colors again. Gold is ready too (Gold Armor.mat:
-             bright gold, red leather, crimson cloth) but its items aren't made yet (its Build is off in Sets below);
-           - Assets/Prefabs/Item/Armor/<Id>.prefab (+ Meshes/Iron<Slot>.asset, shared by both sets): the piece frozen
+             colors by hand, or delete the two files to get the tool's colors again;
+           - Assets/Prefabs/Item/Armor/<Id>.prefab (+ Meshes/Iron<Slot>.asset, shared by every set): the piece frozen
              in the character's pose, in its set's colors, for its icon and for when it's dropped;
            - ArmorLook on Assets/Prefabs/Player/PlayerCharacter, so the body, the first-person hands and the Gear page's
              preview show the worn pieces, with the skin under the clothes (so nothing flickers): Blink's rows (the
              skin each piece covers from every side, switched off) and trimmed copies of the skin a piece covers only
              partly (Assets/Prefabs/Player/SkinUnderClothes: the arms under the chestplate and the hands in the gloves,
              without the faces under them; for the body and for the first-person hands);
-           - PlayerArmor on the Player (the worn armor: it takes its share off every hit) with both sets' bonuses, and
+           - PlayerArmor on the Player (the worn armor: it takes its share off every hit) with every set's bonus, and
              the armor in the Player's ArmorTestKit (GameRules > Armor Test gives it; it's taken out of the Tool
              Test kit, which had it before);
            - the armor in Turki's crafting list, after the tools, set by set, each set in one panel (Tools > UI > Build
@@ -131,6 +135,25 @@ public static class ArmorBuilder
         new Strip { x = ClothX, dark = new Color(0.12f, 0.01f, 0.03f), light = new Color(0.85f, 0.12f, 0.2f) },             // crimson cloth
     };
 
+    // How much a whole set protects, in percent (Tony, 21/11/2026): a[n] = 5/2 x n^2 - 5/2 x n + 10 for the n-th set,
+    // so each set adds 5 % more than the step before it: copper (n = 1) 10 %, iron (2) 15 %, gold (3) 25 %, and a
+    // diamond set (4) would get 40 %.
+    static float SetTotal(int n) => 2.5f * n * n - 2.5f * n + 10f;
+
+    // Each slot's share of its set's protection, as copper's first numbers had it (1.5 % a piece and 2.5 % for the
+    // chestplate, of 10 %): the chestplate a quarter, every other piece 15 %. Helmet, Shoulders, Chest, Gloves, Legs,
+    // Boots. Declared before Sets, which uses it (Unity fills these in from top to bottom).
+    static readonly float[] SlotShares = { 0.15f, 0.15f, 0.25f, 0.15f, 0.15f, 0.15f };
+
+    // A set's protection spread over its six pieces, each rounded to a hundredth: Spread(15) = 2.25, 2.25, 3.75, 2.25,
+    // 2.25, 2.25.
+    static float[] Spread(float total)
+    {
+        float[] pieces = new float[SlotShares.Length];
+        for (int i = 0; i < pieces.Length; i++) pieces[i] = Mathf.Round(total * SlotShares[i] * 100f) / 100f;
+        return pieces;
+    }
+
     // One armor set: its name (Armor > Set and PlayerArmor's Set Bonuses), the start of its pieces' Item Ids, each
     // slot's Protection (percent) and cost, what the cost is (an item's Id), the set whose piece for the same slot each
     // recipe also uses up (an upgrade), its colors and shine. Build = false: only its look (material and palette
@@ -151,25 +174,23 @@ public static class ArmorBuilder
         new ArmorSet
         {
             name = "Copper", idStart = "Copper", costItem = "Copper",
-            protection = new[] { 1.5f, 1.5f, 2.5f, 1.5f, 1.5f, 1.5f },   // 10 % off every hit for all six
+            protection = Spread(SetTotal(1)),                             // 10 % for all six: 1.5 each, 2.5 for the chestplate
             cost = new[] { 5, 4, 8, 3, 7, 4 },
             palette = CopperColors, metallic = 0.6f, smoothness = 0.55f,
         },
         new ArmorSet
         {
             name = "Iron", idStart = "Iron", costItem = "Iron", upgradeOf = "Copper",
-            protection = new[] { 2.5f, 2.5f, 4f, 2f, 3f, 2f },            // 16 % off every hit for all six
+            protection = Spread(SetTotal(2)),                             // 15 %: 2.25 each, 3.75 for the chestplate (was 16 %)
             cost = new[] { 4, 3, 6, 2, 5, 3 },                            // Iron, on top of the Copper piece
             palette = SteelColors, metallic = 0.5f, smoothness = 0.5f,
         },
-        // Gold, ready but not made yet (Build = false): only Gold Armor.mat and its palette picture are made, so the gold
-        // look can be checked and changed first. To add the set: Build = true here, add its bonus to PlayerArmor's
-        // DefaultBonuses (e.g. new SetBonus("Gold", 2.5f, "Iron", GoldColor)), then run this tool again (the Gold
-        // item comes from Tools > World > Build Desert Content). Numbers below are a first guess.
+        // Gold (made since 21/11/2026; the Gold item comes from Tools > World > Build Desert Content): its bonus is in
+        // PlayerArmor's DefaultBonuses (+4 coins per kill, 10 % off every chest, counts as Iron).
         new ArmorSet
         {
-            name = "Gold", idStart = "Gold", costItem = "Gold", upgradeOf = "Iron", build = false,
-            protection = new[] { 3f, 3f, 5f, 3f, 4f, 3f },                // 21 % off every hit for all six
+            name = "Gold", idStart = "Gold", costItem = "Gold", upgradeOf = "Iron",
+            protection = Spread(SetTotal(3)),                             // 25 %: 3.75 each, 6.25 for the chestplate
             cost = new[] { 4, 3, 6, 2, 5, 3 },                            // Gold, on top of the Iron piece
             palette = GoldColors, metallic = 0.75f, smoothness = 0.7f,
         },
@@ -196,12 +217,14 @@ public static class ArmorBuilder
             return;
         }
         if (!EditorUtility.DisplayDialog(ToolName,
-                "This makes Blink's plate armor wearable, as two sets of 6 pieces (helmet, shoulders, chestplate, gloves, " +
+                "This makes Blink's plate armor wearable, as three sets of 6 pieces (helmet, shoulders, chestplate, gloves, " +
                 "leggings, boots) in " + ItemFolder + ":\n\n" +
                 "- Copper (copper colored): 1.5 % protection each, 2.5 % for the chestplate (10 % for all six); all six = " +
                 "+1 coin for every monster killed; recipes of Copper\n" +
-                "- Iron (steel grey): 16 % for all six; all six = +2 coins for every monster killed, and it counts as " +
+                "- Iron (steel grey): 15 % for all six; all six = +2 coins for every monster killed, and it counts as " +
                 "Copper; each piece = its Copper piece + Iron (a worn Copper piece can be upgraded where it's worn)\n" +
+                "- Gold (gold): 25 % for all six; all six = +4 coins for every monster killed and 10 % off every chest, and " +
+                "it counts as Iron; each piece = its Iron piece + Gold\n" +
                 "- armor files from when Iron came first (and Reinforced Iron) renamed by tier: Iron to Copper, " +
                 "Reinforced Iron to Iron\n" +
                 "- each set's colors in " + LookFolder + " (only if missing)\n" +
@@ -272,7 +295,7 @@ public static class ArmorBuilder
         string info = InventoryUIBuilder.AddArmorRowToCanvas();
         AssetDatabase.SaveAssets();
 
-        Debug.Log(ToolName + ": " + items.Count + " armor items (Copper, then Iron) in " + ItemFolder +
+        Debug.Log(ToolName + ": " + items.Count + " armor items (Copper, Iron, Gold) in " + ItemFolder +
                   (renamed > 0 ? " (" + renamed + " old pieces renamed by tier: Iron to Copper, Reinforced Iron to Iron, " +
                                  "with Iron and Copper swapped in their recipes)" : "") +
                   (missing.Count > 0 ? " (not found on the character: " + string.Join(", ", missing) + ")" : "") +
@@ -980,10 +1003,10 @@ public static class ArmorBuilder
         return " PlayerArmor on the Player." + bonusReport + kitReport;
     }
 
-    // The set bonuses PlayerArmor's list is missing, added at its end. A list saved before 21/11/2026 (stamina bonuses,
-    // Iron first then Reinforced Iron) is replaced first by today's: Copper +1 and Iron +2 coins per kill (counts as
-    // Copper). Other bonuses already there are left as they are, except a color that was never set (a list saved
-    // before sets had colors) gets the set's own.
+    // The set bonuses PlayerArmor's list is missing (e.g. Gold: +4 coins per kill and 10 % off every chest), added at
+    // its end. A list saved before 21/11/2026 (stamina bonuses, Iron first then Reinforced Iron) is replaced first by
+    // today's: Copper +1, Iron +2 (counts as Copper) and Gold +4 coins per kill. Other bonuses already there are left as
+    // they are, except a color that was never set (a list saved before sets had colors) gets the set's own.
     static string AddSetBonuses(PlayerArmor armor)
     {
         if (armor == null) return "";
@@ -1009,6 +1032,7 @@ public static class ArmorBuilder
             fresh.FindPropertyRelative("coinsPerKill").intValue = bonus.coinsPerKill;
             fresh.FindPropertyRelative("countsAs").stringValue = bonus.countsAs;
             fresh.FindPropertyRelative("color").colorValue = bonus.color;
+            fresh.FindPropertyRelative("chestDiscount").floatValue = bonus.chestDiscount;
             added.Add(bonus.set);
         }
         so.ApplyModifiedProperties();   // with Undo

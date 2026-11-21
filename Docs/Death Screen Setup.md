@@ -3,6 +3,12 @@
 When the player's health reaches 0, a page shows what they did in that life, and a **Respawn** button brings
 them back at the respawn point (0, 0.5, 0) with full health, food and stamina.
 
+**In the new world** (21/11/2026) Respawn makes a **brand-new world** instead (World Generator > **New World On
+Death**, on): the page stays up with its button switched off, the screen fades to black ("DAY 1 - A new world") and a
+new random world loads, Day 1, everything fresh, like a new game. While the page is up, the day's clock stands still
+in both worlds (the day already went back to its start when the player died), so a long look at the page doesn't let
+night or the next day go by.
+
 **Items:** decided by the GameRule **Keep Inventory** (on the GameRules object):
 - **Off** (default, like Minecraft): every stack (inventory, hotbar, cursor) is thrown out around the body
   (ItemDropper on the Player). Walk back and pick them up. They disappear after ItemDropper's Despawn Minutes (5).

@@ -53,3 +53,4 @@ the perk's Perk Data in `Assets/Config/Perks`, so change it there (and here). Ho
   It costs a tenth of the box's price, and twice as much each time at the same box.
 - **Unlocked after:** such a perk only shows up once you have the perk named there.
 - **When you die** every perk is lost, and every box's price starts again.
+- **The whole gold armor set** makes every box 10 % cheaper (rounded down: 10 -> 9, 100 -> 90).

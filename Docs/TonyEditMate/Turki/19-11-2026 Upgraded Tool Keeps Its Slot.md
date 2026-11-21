@@ -20,3 +20,5 @@ the hand) vanished from there. Now the new tool goes into the same slot, hotbar 
 So crafting a Plank or anything that isn't an upgrade works exactly as before.
 
 **To undo:** in `Craft`, delete the `[Tony] added` line and change `inv.AddInto(oldToolSlot, ` back to `inv.Add(`.
+
+**Update 21/11/2026:** the `AddInto` line was replaced by `inv.AddCrafted(item, item.CraftAmount, oldToolSlot)`: crafted tools and food go to the hotbar first, and an upgrade keeps the old tool's slot when that was on the hotbar (else the hotbar's leftmost empty slot). See `21-11-2026 Crafted Tools And Food Go To The Hotbar.md`.

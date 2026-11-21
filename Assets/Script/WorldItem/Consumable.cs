@@ -11,7 +11,7 @@ Unity Editor: Select an Item Data file (e.g. Assets/Config/Items/Apple) > set It
               The player needs ItemConsumer. Full steps: Docs/Item Setup.md
 Purpose: What eating / drinking an item does to the player's stats (Health, Hunger, Stamina).
          ItemConsumer reads it and changes the stats. Stats never go above their max or below 0.
-Requirement: Consumable.cs <-x CraftingTabs.cs, ItemConsumer.cs, ItemData.cs, ItemDataEditor.cs
+Requirement: Consumable.cs <-x CraftingTabs.cs, ItemConsumer.cs, ItemData.cs, ItemDataEditor.cs, PlayerInventory.cs
 */
 
 using UnityEngine;

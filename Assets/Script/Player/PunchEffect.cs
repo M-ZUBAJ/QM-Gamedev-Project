@@ -22,8 +22,10 @@ Purpose: A grey burst of wind (dust clouds, wind lines, a shock ring and a few s
          (red), even from a tool. A punch that lands on a monster pushes it away (Knockback; a heavy punch harder, the
          Brawler perk farther: PerkEffects.KnockbackMultiplier). With the Vampire perk the player heals a share of the
          damage each hit really does (PerkEffects.WithVampire).
+         A swing that lands on a turtle hiding in its shell (ShellDefense.Blocks) bounces off: no damage, no wind burst,
+         no push; the shell hurts the player instead, with sparks and "BLOCKED!" (ShellDefense.Deflect).
 Requirement: PunchEffect.cs x-> PlayerAnimator.cs, PunchCombo.cs, Knockback.cs
-             PunchEffect.cs o-> PerkEffects.cs
+             PunchEffect.cs o-> PerkEffects.cs, ShellDefense.cs
              PunchEffect.cs <-x PlayerAnimationSetup.cs, PlayerCombat.cs, PunchEffectBuilder.cs, TierToolBuilder.cs
 */
 
@@ -150,6 +152,10 @@ public class PunchEffect : MonoBehaviour
             if (critical && burst <= 0f) burst = 1f;   // a critical hit always shows
             Current.StartCoroutine(Current.Land(target, hit.point, hit.normal, hurt, Current.DelayFor(swing), burst, swing, critical));
         }
+        else if (ShellDefense.Blocks(target))
+        {
+            ShellDefense.Deflect(target, hit.point, hit.normal);   // a turtle in its shell: the hit bounces off
+        }
         else
         {
             hurt?.Invoke();
@@ -206,6 +212,13 @@ public class PunchEffect : MonoBehaviour
         {
             point = body.TransformPoint(spot);
             normal = body.TransformDirection(facing);
+        }
+        // A turtle in its shell (ShellDefense): the hit bounces off. No damage, no wind burst, no push: sparks,
+        // "BLOCKED!" and the shell hurts the player instead.
+        if (target != null && ShellDefense.Blocks(target))
+        {
+            ShellDefense.Deflect(target, point, normal);
+            yield break;
         }
         if (target != null)
         {

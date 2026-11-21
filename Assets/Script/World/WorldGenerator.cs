@@ -1,12 +1,14 @@
 /*
 First Date: 20/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: An empty object in the new world's scene (Assets/Scenes/ProceduralGenerateScene, "World Generator").
         Tools > World > Build New World Scene puts it there, filled in.
 Unity Editor: Seed = 0: a new random world every game (the Console says which seed each game used). Any other number =
               that world every time, handy to look at one world again. The ground textures, the terrain's material, the
               caves and the ores are filled in by the tool; the other numbers are in meters.
+              New World On Death (on): when the player dies, Respawn makes a brand-new world (Day 1, everything fresh,
+              like a new game). Off: the player comes back at the start of the same world, like the old world.
               Testing: open MainTitleScene, Play, NEW GAME > Map: New world > START GAME. Or press Play in
               ProceduralGenerateScene. Every game is a different world.
 Purpose: Makes the new world while its scene loads, before anything else in it starts:
@@ -25,9 +27,13 @@ Purpose: Makes the new world while its scene loads, before anything else in it s
          - then the usual spawners fill it in, as in the old world: Sanyam's ObjectScatter (trees, berry bushes,
            rocks and chests, on the painted textures) and AnimalSpawner (deer in the grassland).
          The same seed always makes the same world, trees and rocks included.
+         When the player dies, the death screen's Respawn makes a brand-new world (New World On Death): the scene loads
+         again behind the screen fader ("DAY 1", "A new world"), so it's Day 1 with a new seed and everything fresh
+         (inventory, armor, perks, coins), like a new game; the New Game page's choices stay.
 Requirement: WorldGenerator.cs x-> Terrain (Unity), WorldBarrier.cs
-             WorldGenerator.cs o-> ObjectScatter.cs, PlayerController.cs, PlayerRespawn.cs, ViewDistance.cs, Rigidbody (Unity)
+             WorldGenerator.cs o-> ObjectScatter.cs, PlayerController.cs, PlayerRespawn.cs, ViewDistance.cs, ScreenFader.cs, Rigidbody (Unity)
              WorldGenerator.cs <-x LootChestBuilder.cs, NewWorldBuilder.cs, WorldBarrierBuilder.cs
+             WorldGenerator.cs <-o PlayerRespawn.cs
 */
 
 using System.Collections.Generic;
@@ -61,6 +67,10 @@ public class WorldGenerator : MonoBehaviour
     [Tooltip("0 = a new random world every game. Any other number = that same world every time (the Console says the " +
              "seed of each game, so a world you liked can be made again).")]
     [SerializeField] int seed = 0;
+
+    [Tooltip("On: when the player dies, Respawn makes a brand-new world (Day 1 and everything fresh, like a new game; a " +
+             "new seed unless Seed is set). Off: the player comes back at the start of this same world, as in the old world.")]
+    [SerializeField] bool newWorldOnDeath = true;
 
     [Tooltip("How wide and long the world is, in meters: the square inside the barrier, its middle at 0, 0.")]
     [Min(200f)]
@@ -205,6 +215,7 @@ public class WorldGenerator : MonoBehaviour
     const string OreSpotName = "OreSpot";
 
     static WorldGenerator current;
+    bool startingNewWorld;   // the player died and a new world is loading (it starts only once)
     float[,] heights;      // the ground's height grid, [z, x], 0 = bottom, 1 = Max Height
     int res;               // heights along each side
     float terrainSize;     // the terrain's width and length: the world + the land beyond the barrier on both sides
@@ -220,6 +231,10 @@ public class WorldGenerator : MonoBehaviour
     public static WorldGenerator Current => current;
 
     public int Seed { get; private set; }
+
+    // True when respawning makes a brand-new world instead of coming back here (PlayerRespawn asks): the new world, with
+    // New World On Death on. False in the old world (no WorldGenerator).
+    public static bool NewWorldOnRespawn => current != null && current.newWorldOnDeath;
     public Vector3 SpawnPoint => spawn;
     public Terrain Terrain => terrain;
     public float WorldSize => worldSize;
@@ -767,6 +782,18 @@ public class WorldGenerator : MonoBehaviour
         }
         PlayerRespawn respawn = player.GetComponent<PlayerRespawn>();
         if (respawn != null) respawn.SetRespawnPoint(at);
+    }
+
+    // The player died and clicked Respawn (PlayerRespawn asks NewWorldOnRespawn first): this scene loads again behind the
+    // screen fader's title card, which makes a brand-new world (Seed 0 = a new seed) with Day 1 and everything fresh,
+    // like a new game. The New Game page's choices stay (GameSetup keeps them, as for Play Again).
+    public void StartNewWorld()
+    {
+        if (startingNewWorld) return;   // only once (e.g. the button clicked twice)
+        startingNewWorld = true;
+        Time.timeScale = 1f;            // the new world must not start frozen
+        Debug.Log("World Generator: the player died, so a new world is made (New World On Death).");
+        ScreenFader.LoadScene(gameObject.scene.name, "DAY 1", "A new world");
     }
 
     // Sanyam's ObjectScatter spawns the trees, bushes, rocks and chests on the painted textures in its Start: it gets

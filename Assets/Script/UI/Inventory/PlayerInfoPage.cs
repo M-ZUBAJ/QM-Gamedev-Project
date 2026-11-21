@@ -22,7 +22,8 @@ Purpose: The player's status, updated 4 times a second while the Info tab is ope
          perks" (Bounty Hunter), and on the right the perks the player has, with their icons, names and stats
          (PlayerPerks).
          An armor set bonus shows in gold, on a gold-tinted row, so it stands out from the perks' green: with the whole
-         copper set on, Coins says "+1 per kill (Copper Set)" and Armor says "Copper Set bonus" (PlayerArmor).
+         copper set on, Coins says "+1 per kill (Copper Set)" and Armor says "Copper Set bonus" (PlayerArmor); the
+         gold set's cheaper chests show there too ("Gold Set bonus, chests -10%").
 Requirement: PlayerInfoPage.cs x-> ArmorStats.cs
              PlayerInfoPage.cs o-> PlayerHealth.cs, PlayerHunger.cs, PlayerStamina.cs, PlayerController.cs, PlayerJump.cs, PlayerFireball.cs, PlayerCoins.cs, PlayerPerks.cs, PlayerArmor.cs, PerkEffects.cs
              PlayerInfoPage.cs <-x InventoryUIBuilder.cs
@@ -217,7 +218,8 @@ public class PlayerInfoPage : MonoBehaviour
     }
 
     // The Armor row: how much the worn armor takes off every hit, then its set: "Iron Set bonus" in gold (and the row
-    // tinted) once the whole set is worn, else how many of its pieces are on ("Iron set 4/6").
+    // tinted) once the whole set is worn (the gold set adds its cheaper chests: "Gold Set bonus, chests -10%"), else how
+    // many of its pieces are on ("Iron set 4/6").
     void ShowArmor(PlayerArmor armor, PlayerArmor.SetBonus setBonus)
     {
         if (armorRow == null) return;
@@ -231,7 +233,9 @@ public class PlayerInfoPage : MonoBehaviour
         float percent = armor.Protection * 100f;
         string value = ArmorStats.Percent(percent);
         string set = armor.MostWornSet(out int count);
-        if (setBonus != null) Show(armorRow, value, SetBonusText(setBonus.set + " Set bonus"), true);
+        string discount = setBonus != null && setBonus.chestDiscount > 0f
+            ? ", chests -" + Mathf.RoundToInt(setBonus.chestDiscount * 100f) + "%" : "";   // the gold set's cheaper chests
+        if (setBonus != null) Show(armorRow, value, SetBonusText(setBonus.set + " Set bonus" + discount), true);
         else if (set != null) Show(armorRow, value, set + " set " + count + "/" + armor.SetSize, false);
         else Show(armorRow, value, percent > 0f ? "less damage per hit" : "none worn", false);
     }

@@ -10,7 +10,8 @@ Unity Editor: Menu Tools > UI > Build Crafting Menu. It asks first, because it c
 Purpose: Gives Turki's crafting list pictures and the tier tools, in one click:
            - makes Assets/Prefabs/UI/Crafting/CraftingRow.prefab: a row with the item's picture and name and its recipe
              as pictures with "have / need" amounts (Tony's CraftingRow), and puts it in Turki's CraftingMenu > Row
-             Prefab (his old CraftRow prefab is kept, just not used);
+             Prefab (his old CraftRow prefab is kept, just not used); the picture has a switched-off "Owned" badge (a
+             green tick, IconArt.Tick) that shows while the player already has that armor piece;
            - makes Turki's panel bigger (Panel Size) and puts its rows in a scroll list with a scroll bar, so any number
              of items fits (the mouse wheel scrolls it);
            - tabs over the list (Panel > Tabs: All, Materials, Food, Tools, Armor; Tony's CraftingTabs on the panel)
@@ -27,7 +28,7 @@ Purpose: Gives Turki's crafting list pictures and the tier tools, in one click:
          worn armor piece can be upgraded). Logs: Docs/TonyEditMate/Turki/19-11-2026 Crafting Menu Icons And Tier
          Tools.md, .../20-11-2026 Reinforced Iron Armor And Set Panels.md
 Requirement: CraftingMenuBuilder.cs x-> CraftingMenu.cs, CraftingRow.cs, CraftingTabs.cs, CraftingSetPanels.cs, ItemData.cs, ToolStats.cs, IconArt.cs, UIBuildHelper.cs, MenuOrder.cs
-             CraftingMenuBuilder.cs <-x ArmorBuilder.cs
+             CraftingMenuBuilder.cs <-x ArmorBuilder.cs, TierToolBuilder.cs
 */
 
 using System.Collections.Generic;
@@ -51,6 +52,7 @@ public static class CraftingMenuBuilder
     const float IconSize = 58f;
     const float TextLeft = 92f;      // where the name and the recipe start, after the picture
     const float StatusWidth = 150f;  // the CRAFT text on the right
+    const float OwnedSize = 26f;     // the green tick on the picture's corner (an armor piece the player has)
     const float TabHeight = 40f;     // the tabs over the list
     const float TabWidth = 150f;     // each tab (the five sit in the middle, not stretched across the panel)
     const string SetPanelName = "SetPanel";   // Scroll > SetPanel: the look of an armor set's box (CraftingSetPanels)
@@ -82,7 +84,8 @@ public static class CraftingMenuBuilder
         }
         if (!EditorUtility.DisplayDialog(ToolName,
                 "This changes Turki's CraftingCanvas prefab:\n\n" +
-                "- rows with pictures (the item and its recipe, green / red for enough / missing)\n" +
+                "- rows with pictures (the item and its recipe, green / red for enough / missing; a green tick on armor " +
+                "you already have)\n" +
                 "- a bigger panel with a scroll list\n" +
                 "- tabs over the list: All, Materials, Food, Tools, Armor\n" +
                 "- each armor set's pieces grouped in one panel (Copper, Iron)\n" +
@@ -119,6 +122,17 @@ public static class CraftingMenuBuilder
         i.anchorMin = i.anchorMax = new Vector2(0f, 0.5f);
         i.anchoredPosition = new Vector2(TextLeft / 2f, 0f);
         i.sizeDelta = new Vector2(IconSize, IconSize);
+
+        // A green tick on the picture's top right corner: CraftingRow shows it while the player already has that armor
+        // piece (in the inventory or worn), so it isn't crafted twice by mistake.
+        Image owned = NewUI("Owned", icon.transform).AddComponent<Image>();
+        owned.sprite = IconArt.Tick();
+        owned.raycastTarget = false;
+        RectTransform o = owned.rectTransform;
+        o.anchorMin = o.anchorMax = new Vector2(1f, 1f);
+        o.anchoredPosition = new Vector2(-2f, -2f);   // its middle a little inside the corner
+        o.sizeDelta = new Vector2(OwnedSize, OwnedSize);
+        owned.gameObject.SetActive(false);
 
         TextMeshProUGUI name = AddText(NewUI("Name", row.transform), "Item", 26f, TextAlignmentOptions.MidlineLeft);
         name.color = NameColor;

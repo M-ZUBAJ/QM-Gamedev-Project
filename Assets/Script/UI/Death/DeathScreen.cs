@@ -1,6 +1,6 @@
 /*
 First Date: 11/10/2026
-Date: 10/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Drag this script onto DeadCanvas (the top object of the death page).
 Unity Editor: Nothing to connect. It finds these children by their NAME, so keep the names:
@@ -13,7 +13,8 @@ Unity Editor: Nothing to connect. It finds these children by their NAME, so keep
               Testing: in Play mode, click PlayerHealth's ⋮ menu > "Test: Die", then click Respawn.
 Purpose: When the player dies, closes every other open menu (MenuState.CloseAll), shows the death page with what
          they did this life (PlayerStats), frees the mouse and freezes the player. Clicking Respawn brings them back (PlayerRespawn)
-         and hides the page again.
+         and hides the page again. In the new world (WorldGenerator > New World On Death) Respawn makes a brand-new
+         world instead: the page stays up, its button off, until the screen fades to black and the new world loads.
 Requirement: DeathScreen.cs x-> PlayerHealth.cs, PlayerRespawn.cs, MenuState.cs, Canvas (Unity)
              DeathScreen.cs o-> PlayerStats.cs
 */
@@ -117,6 +118,15 @@ public class DeathScreen : MonoBehaviour
 
         // Forget the clicked button, so Space / Enter can't press it again later.
         if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
+
+        // The new world makes a brand-new world instead (PlayerRespawn.StartsNewWorld): this page stays up, its button
+        // switched off, until the screen has faded to black and the new world loads.
+        if (respawn != null && respawn.StartsNewWorld)
+        {
+            if (respawnButton != null) respawnButton.interactable = false;
+            respawn.Respawn();
+            return;
+        }
 
         if (respawn != null) respawn.Respawn();
 

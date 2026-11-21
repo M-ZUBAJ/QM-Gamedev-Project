@@ -10,8 +10,8 @@
   - Further out: a sandy **desert** on one side, and **rocky hills** with snowy tops all around the rest. Some hill
     slopes are too steep to climb.
   - **The desert** (guide `Docs/Desert Setup.md`): hard **sandstone rocks** (they give Stone but take 2.5 times as
-    long to break), up to 3 **sandstone caves** with **Gold** rocks inside (an Iron Pickaxe or better), and **turtle
-    monsters in the day** that wait until you come close, then attack; at night they turn to sand.
+    long to break), and up to 3 **sandstone caves** with **Gold** rocks inside (an Iron Pickaxe or better). Since
+    21/11/2026 no day monster: the turtles come at night from night 2, in both worlds (`Docs/Night Monsters Setup.md`).
   - **A glowing barrier** all round the edge (no mountains): a see-through force field with sliding stripes. It shows
     faintly as you come near, lights up and ripples where you touch it, and nobody gets through. The land goes on a
     little behind it, fading into the mist. Guide: `Docs/World Barrier Setup.md`.
@@ -69,7 +69,7 @@ The tool:
 
 | Part | Where | What it does |
 |---|---|---|
-| **WorldGenerator** | ProceduralGenerateScene > World Generator | Makes the world while the scene loads, before anything else starts (it wakes up first): the terrain's shape and textures, the grass, the start clearing, the caves and their ores, and the **World Barrier** around it all. It moves the player to the start (also their **Respawn Point**) and gives ObjectScatter the new terrain. The same **Seed** always makes the same world. |
+| **WorldGenerator** | ProceduralGenerateScene > World Generator | Makes the world while the scene loads, before anything else starts (it wakes up first): the terrain's shape and textures, the grass, the start clearing, the caves and their ores, and the **World Barrier** around it all. It moves the player to the start (also their **Respawn Point**) and gives ObjectScatter the new terrain. The same **Seed** always makes the same world. **New World On Death** (on, 21/11/2026): when the player dies, the death screen's **Respawn** makes a brand-new world: the scene loads again behind the title card "DAY 1 - A new world", so it's Day 1 with a new seed (unless Seed is set) and everything fresh (inventory, armor, perks, coins), like a new game; the New Game page's choices stay. Off = come back at the start of the same world, like the old world. |
 | **WorldBarrier** | World Barrier (made while playing) | The glowing edge of the world, with solid walls just outside it. Spawners and deer ask it whether a spot is inside. |
 | **ViewDistance** | ProceduralGenerateScene > Main Camera | How far the player can see (100 m): the camera stops drawing there, a mist hides the edge, the grass is drawn only that far, and the player's sight (for spawning deer out of view) ends there too. |
 | **Rock caves** | `Assets/Prefabs/World/Caves` | Rock Cave Small / Rock Cave / Rock Cave Big: a ring of rocks with a gap at the front, a rock either side of the gap and one across the top, flat rocks as a roof, a few rocks around the outside, and empty `OreSpot` markers on the floor. Every rock has a collider of its own shape. |
@@ -156,7 +156,8 @@ A new cave: build one like that, save it as a prefab, and drag it into the World
 2. Walk out: a desert on one side, rocky hills elsewhere. At the edge (500 m from the middle) a striped barrier shows
    up as you come near, lights up where you are, and stops you. Deer never cross it.
 3. Find a cave (60 - 230 m from the start, a rocky mound): walk in, mine the stone, copper and iron rocks. In the
-   desert: sandstone caves with gold (Iron Pickaxe), sandstone rocks, and turtles in the day (`Docs/Desert Setup.md`).
+   desert: sandstone caves with gold (Iron Pickaxe) and sandstone rocks (`Docs/Desert Setup.md`); turtles come at night
+   from night 2, everywhere (`Docs/Night Monsters Setup.md`).
 4. Stop, Play again: a different world.
 5. From the title screen: **NEW GAME > Map: New world > START GAME**. **Play Again** on the victory screen makes a
    new world; dying brings the player back to the start clearing.

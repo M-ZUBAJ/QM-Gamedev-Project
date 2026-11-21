@@ -1,6 +1,6 @@
 /*
 First Date: 10/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Open GameScene, then menu Tools > Enemies > Build Monster Enemy.
@@ -15,11 +15,14 @@ Purpose: Turns a monster model into a working enemy in one click, using Marko's 
                       EnemyMovement and EnemyAttack, and Tony's EnemyAnimator
            > Model:   the monster prefab, 1 m tall, feet at the bottom, using the new controller
          The controller: Locomotion (IdleBattle / WalkFWD / RunFWD, picked by Speed), Attack (Attack01), Hit (GetHit),
-         Victory, Dead (Die). The clips are taken from the monster's own demo controller, by state name.
-         BuildMonster does the same for a monster by name, without asking (Tools > World > Build Desert Content: the
-         TurtleShell). A rebuild keeps an EnemyAggro and DeathEffect's Vanish Color that other tools gave the enemy.
-Requirement: EnemyBuilder.cs x-> UIBuildHelper.cs, AnimatorBuildHelper.cs, MeshBounds.cs, EnemyAnimator.cs, EnemyAggro.cs, EnemyCombat.cs, EnemyMovement.cs, EnemyAttack.cs, EnemySpawner.cs, DeathEffect.cs, DeathEffectBuilder.cs, MenuOrder.cs
-             EnemyBuilder.cs <-x DesertBuilder.cs
+         Victory, Dead (Die). The clips are taken from the monster's own demo controller, by state name. A monster with
+         a shell (the turtle: Defend / DefendGetHit) also gets Shell (Defend, held while the Shell parameter is on) and
+         Shell Hit (DefendGetHit, the ShellHit trigger, back to the shell's inside pose), for ShellDefense.
+         BuildMonster does the same for a monster by name, without asking (Tools > Enemies > Set Up Night Monsters and
+         Tools > World > Build Desert Content: the TurtleShell). A rebuild keeps an EnemyAggro, a ShellDefense (with its
+         settings) and DeathEffect's Vanish Color that other tools gave the enemy.
+Requirement: EnemyBuilder.cs x-> UIBuildHelper.cs, AnimatorBuildHelper.cs, MeshBounds.cs, EnemyAnimator.cs, EnemyAggro.cs, ShellDefense.cs, EnemyCombat.cs, EnemyMovement.cs, EnemyAttack.cs, EnemySpawner.cs, DeathEffect.cs, DeathEffectBuilder.cs, MenuOrder.cs
+             EnemyBuilder.cs <-x NightMonsterBuilder.cs
 */
 
 using System.Collections.Generic;
@@ -58,6 +61,8 @@ public static class EnemyBuilder
     const string HitState = "GetHit";
     const string DieState = "Die";
     const string VictoryState = "Victory";
+    const string ShellState = "Defend";            // a monster with a shell (the turtle): pulls into it (plays once, then holds)
+    const string ShellHitState = "DefendGetHit";   // hit while in its shell
 
     // ===== Menu (Unity calls this) =====
 
@@ -244,10 +249,44 @@ public static class EnemyBuilder
         PlayOnce(sm, hit, EnemyAnimator.HitName, locomotion);
         PlayOnce(sm, attack, EnemyAnimator.AttackName, locomotion);
         PlayOnce(sm, victory, EnemyAnimator.VictoryName, locomotion);
+        AddShell(c, sm, clips, locomotion, new[] { locomotion, hit, attack, victory });
 
         EditorUtility.SetDirty(c);
         AssetDatabase.SaveAssets();
         return c;
+    }
+
+    // A monster with a shell (its demo controller has Defend; the turtle): ShellDefense pulls it in with the Shell
+    // parameter (Defend plays once and holds its last pose, inside the shell) and a hit on the shell plays DefendGetHit
+    // (the ShellHit trigger), then goes back to the inside pose (offset 0.99, so it doesn't pull in again). Shell off =
+    // back to moving. Not for other monsters (no Defend clip): nothing is added.
+    static void AddShell(AnimatorController c, AnimatorStateMachine sm, Dictionary<string, Motion> clips,
+                         AnimatorState locomotion, AnimatorState[] from)
+    {
+        if (!clips.TryGetValue(ShellState, out Motion hide) || hide == null) return;
+
+        c.AddParameter(EnemyAnimator.ShellName, AnimatorControllerParameterType.Bool);
+        c.AddParameter(EnemyAnimator.ShellHitName, AnimatorControllerParameterType.Trigger);
+        AnimatorState shell = AddState(sm, "Shell", hide, new Vector3(300f, 340f));
+        foreach (AnimatorState state in from)   // from these, not Any State (that would restart it every frame)
+        {
+            AnimatorStateTransition inside = state.AddTransition(shell);
+            inside.AddCondition(AnimatorConditionMode.If, 0f, EnemyAnimator.ShellName);
+            inside.AddCondition(AnimatorConditionMode.IfNot, 0f, EnemyAnimator.DeadName);
+            Instant(inside, 0.1f);
+        }
+        AnimatorStateTransition outside = shell.AddTransition(locomotion);
+        outside.AddCondition(AnimatorConditionMode.IfNot, 0f, EnemyAnimator.ShellName);
+        Instant(outside, 0.2f);
+
+        if (!clips.TryGetValue(ShellHitState, out Motion knock) || knock == null) return;
+        AnimatorState shellHit = AddState(sm, "Shell Hit", knock, new Vector3(560f, 340f));
+        AnimatorStateTransition hitIt = sm.AddAnyStateTransition(shellHit);
+        hitIt.AddCondition(AnimatorConditionMode.If, 0f, EnemyAnimator.ShellHitName);
+        hitIt.AddCondition(AnimatorConditionMode.IfNot, 0f, EnemyAnimator.DeadName);
+        Instant(hitIt, 0.05f);
+        AnimatorStateTransition back = AfterPlaying(shellHit, shell, 0.9f, 0.1f);
+        back.offset = 0.99f;   // straight to the shell's last pose: still inside
     }
 
     // A state that plays once when its trigger is set (not while dead), then goes back to moving.
@@ -279,6 +318,8 @@ public static class EnemyBuilder
             // What other tools gave it, kept through the rebuild: EnemyAggro (it waits until the player comes near, e.g.
             // the desert's turtle) and DeathEffect's Vanish Color / Rise (the turtle dissolves into falling sand).
             bool waits = existed && root.GetComponent<EnemyAggro>() != null;
+            ShellDefense oldShell = existed ? root.GetComponent<ShellDefense>() : null;   // the turtle's shell, with its settings
+            string shellSettings = oldShell != null ? EditorJsonUtility.ToJson(oldShell) : null;
             DeathEffect oldEffect = existed ? root.GetComponent<DeathEffect>() : null;
             SerializedObject oldLook = oldEffect != null ? new SerializedObject(oldEffect) : null;
             Color? vanishColor = oldLook != null ? oldLook.FindProperty("vanishColor").colorValue : (Color?)null;
@@ -317,6 +358,7 @@ public static class EnemyBuilder
             root.AddComponent<EnemyAnimator>();
             DeathEffectBuilder.AddTo(root);   // its body turns into red particles during the death animation
             if (waits) root.AddComponent<EnemyAggro>();
+            if (shellSettings != null) EditorJsonUtility.FromJsonOverwrite(shellSettings, root.AddComponent<ShellDefense>());
             DeathEffect effect = root.GetComponent<DeathEffect>();
             if (vanishColor.HasValue && effect != null)
             {

@@ -33,6 +33,7 @@ night is on by default (**Moonlight**).
 | **Night Ambient Color** | with Moonlight on: the dark blue that lights the shadows at night (what a white wall in the shade looks like) |
 | **Night Sky Exposure** (0.2) | how bright the night sky is (the day keeps the sky material's own, 1.3) |
 | **Night Sky Tint** | the night sky's color |
+| **Reset On Player Death** (on) | when the player dies, the day, the time and the light go back to how the game started, and the clock stands still on the death screen until the player respawns (21/11/2026: before, a long look at the death screen let night and the next day go by, so the player came back on Day 2). Off = time carries on |
 
 ## Testing
 
@@ -51,3 +52,4 @@ night is on by default (**Moonlight**).
 | The sky stays black at night | The scene's sky material has no Exposure (or there is none): Window > Rendering > Lighting > Environment > Skybox Material = Default-Skybox. |
 | No moon in the sky | The sky material's **Sun** is None, or **Sun Source** (Lighting > Environment) is another light. |
 | Shadows pitch black when starting from the title screen | The scene has no saved sky light: Tools > World > Set Up Sky Lighting. Until then the night's blue light from everywhere isn't used. |
+| After dying it isn't Day 1 at the start time | **Reset On Player Death** is off, or the Player has no PlayerHealth. (In the new world, Respawn makes a whole new world: Day 1 anyway.) |

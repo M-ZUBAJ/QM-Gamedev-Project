@@ -30,6 +30,13 @@ MonoBehaviour:
   tool:
     kind: 1
     tier: 5
+  armor:
+    slot: 2
+    protection: 1.5
+    set: 
+    piece: 
+    hides: []
+    look: {fileID: 0}
   minedWith: 0
   recipe: []
   craftAmount: 1

@@ -173,7 +173,13 @@ public class CraftingMenu : MonoBehaviour
         // Original: if (inv.Add(item.Id, item.DisplayName, item.GetIcon(), item.CraftAmount, item))
         int oldToolSlot = inv.SlotOf(item.UpgradedFrom);   // [Tony] added: where the old tool is (-1 = not an upgrade)
         item.TakeRecipeFrom(inv);
-        if (inv.AddInto(oldToolSlot, item.Id, item.DisplayName, item.GetIcon(), item.CraftAmount, item))   // [Tony] replaced
+        // [Tony] replaced (21/11/2026): crafted tools and food (Item Type Tool or Consumable) go to the hotbar first, the
+        // leftmost free slot (or onto a hotbar stack of the same item), so they're ready in hand; an upgraded tool still
+        // takes the old tool's slot when that was on the hotbar. Materials and armor go where they went before.
+        // Tony's PlayerInventory.AddCrafted decides. To undo: put the line below back.
+        // Log: Docs/TonyEditMate/Turki/21-11-2026 Crafted Tools And Food Go To The Hotbar.md
+        // Was: if (inv.AddInto(oldToolSlot, item.Id, item.DisplayName, item.GetIcon(), item.CraftAmount, item))   // [Tony] replaced
+        if (inv.AddCrafted(item, item.CraftAmount, oldToolSlot))                                // [Tony] replaced
         {
             if (armor != null) armor.FinishUpgrade(item, true);                               // [Tony] added: the new piece is worn
             message.text = "Crafted " + item.DisplayName + "!";

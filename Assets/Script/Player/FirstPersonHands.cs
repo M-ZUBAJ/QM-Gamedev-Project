@@ -1,6 +1,6 @@
 /*
 First Date: 12/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: A copy of the player's character under the Main Camera, on the same object as that copy's Animator.
         Tools > Player > Add First Person Hands puts one there, already set up.
@@ -19,10 +19,12 @@ Purpose: Minecraft-style hands for the first-person view. A copy of the player's
          They show in first person while alive. A selected tool sits in the right fist (ToolInHand, on the same copy)
          and swings with it (PlayerAnimator.Play: Attack for a sword or axe, Mine for a pickaxe); while a tool is in the
          fist the hands sit lower (Tool Lower, a share of the screen), so it doesn't cover the view.
+         When a hit bounces off something (a turtle's shell: ShellDefense calls Recoil) the hands jump back toward the
+         camera and ease back (Recoil Distance / Recoil Seconds), so the player feels it didn't go in.
 Requirement: FirstPersonHands.cs x-> Animator (Unity)
              FirstPersonHands.cs o-> PlayerAnimator.cs, CameraController.cs, PlayerInventory.cs, PlayerHealth.cs, PlayerController.cs, Camera (Unity)
              FirstPersonHands.cs <-x ArmorBuilder.cs, FirstPersonArmsHelper.cs, FirstPersonHandsBuilder.cs, TierToolBuilder.cs
-             FirstPersonHands.cs <-o ArmorLook.cs, GearPreview.cs, HeldItemView.cs, ToolInHand.cs
+             FirstPersonHands.cs <-o ArmorLook.cs, GearPreview.cs, HeldItemView.cs, ShellDefense.cs, ToolInHand.cs
 */
 
 using System.Collections.Generic;
@@ -68,6 +70,16 @@ public class FirstPersonHands : MonoBehaviour
     [Range(0f, 20f)]
     [Tooltip("How fast they bob while walking (steps).")]
     [SerializeField] float bobSpeed = 9f;
+
+    [Range(0f, 0.3f)]
+    [Tooltip("How far the hands jump back toward you when a hit bounces off (a turtle's shell), in meters. 0 = no jump.")]
+    [SerializeField] float recoilDistance = 0.1f;
+
+    [Range(0.05f, 1f)]
+    [Tooltip("Seconds they take to come back after jumping back.")]
+    [SerializeField] float recoilSeconds = 0.3f;
+
+    static float recoilStart = -100f;   // Time.time of the last bounce (Recoil)
 
     [Header("Drawing on top")]
     [Range(8, 31)]
@@ -187,7 +199,22 @@ public class FirstPersonHands : MonoBehaviour
         if (needsFraming) FrameFists();
         toolWeight = Mathf.MoveTowards(toolWeight, ToolOut() ? 1f : 0f, Time.deltaTime * 5f);
         float drop = ToolDrop() * Mathf.SmoothStep(0f, 1f, toolWeight);   // eases in and out, no jerk
-        transform.localPosition = eyesAt + framing + nudge + Bob() + Vector3.down * drop;
+        transform.localPosition = eyesAt + framing + nudge + Bob() + Vector3.down * drop + RecoilOffset();
+    }
+
+    // A hit bounced off (a turtle's shell: ShellDefense calls this): the first-person hands jump back and ease in again.
+    public static void Recoil()
+    {
+        recoilStart = Time.time;
+    }
+
+    // Back toward the camera and a little down, at once, then easing back to nothing over Recoil Seconds.
+    Vector3 RecoilOffset()
+    {
+        float since = Time.time - recoilStart;
+        if (since < 0f || since >= recoilSeconds || recoilSeconds <= 0f) return Vector3.zero;   // (a new Play restarts the clock)
+        float k = 1f - since / recoilSeconds;
+        return new Vector3(0f, -0.4f, -1f) * (recoilDistance * k * k);
     }
 
     // ===== My methods =====

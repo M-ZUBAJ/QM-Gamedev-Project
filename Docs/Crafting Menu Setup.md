@@ -5,7 +5,12 @@
   pictures**, each with **have / need** and its name, e.g. `1/2 Plank`: **green** when you have enough, **red** when
   not.
 - A row you can craft says **CRAFT** on the right; a row with something missing is faded.
+- **An armor piece you already have** gets a **green tick** on its picture and "(owned)" after its name ("(worn)" while
+  you wear it), so you don't craft the same piece twice by mistake. You still can: it's only a reminder.
 - Click a row to craft it (Turki's message line says what happened or what's missing). The amounts update at once.
+- **Crafted tools and food go to the hotbar first** (21/11/2026): onto a hotbar stack of the same item, else the
+  leftmost empty hotbar slot, ready to use; only with no room on the hotbar do they go to the inventory. Materials
+  (Plank...) and armor go to the inventory as before.
 - **Tabs** over the list: **All** (picked at the start), **Materials**, **Food**, **Tools**, **Armor**. A tab shows
   only that kind (by the item's Item Type: Material, Consumable, Tool, Armor), from the top of the list. A tab with
   nothing to craft is faded, and picking it says "Nothing to craft here yet." The picked tab stays picked when the
@@ -34,8 +39,9 @@
      **CraftingSetPanels** on the Panel (built again every run);
    - sorts **Craftables**: the items that aren't tools stay first, in their order, then every tool that has a recipe
      made at the Crafting page, weakest tier first, then every armor piece with a recipe, set by set (the weakest set
-     first, by all its pieces' Protection added up), each helmet to boots. Gold and Diamond tools have no recipe, so
-     they aren't listed. (Tools > Items > Build Plate Armor sorts the list and adds the set panels too.)
+     first, by all its pieces' Protection added up: Copper, Iron, Gold), each helmet to boots. Diamond tools have no
+     recipe, so they aren't listed. (Tools > Items > Build Plate Armor and Tools > Items > Update Tool Recipes sort the
+     list too; Build Plate Armor also adds the set panels.)
 2. Nothing else: the inventory's Crafting page and the C menu are both copies of `Assets/Prefabs/UI/CraftingCanvas`.
 
 Run it again after giving more items recipes: it builds the row again and sorts the list again.
@@ -49,10 +55,10 @@ Run it again after giving more items recipes: it builds the row again and sorts 
 | Iron | Stone Pickaxe + 3 Plank + 6 Iron | Stone Axe + 3 Plank + 6 Iron | Stone Sword + 3 Plank + 9 Iron |
 
 A chain (19/11/2026): each tier is made **from the same tool of the tier below**, which crafting uses up. So a Stone
-Axe needs a Wooden Axe first, and the new Stone Axe goes into **the slot the Wooden Axe was in** (hotbar or
-inventory; a tool in hand stays in hand). If the old tool was a stack of 2, one stays there and the new tool goes
-to the first free slot. (Plank x2 = 1 Wood.) The crafting list shows the tool you need with its picture, like
-any other ingredient.
+Axe needs a Wooden Axe first. When the Wooden Axe was on the hotbar, the new Stone Axe goes into **its slot** (a tool in
+hand stays in hand); otherwise (it was in the inventory, or a stack of 2) the new tool goes to the hotbar's leftmost
+empty slot, and only with a full hotbar into the old tool's slot. (Plank x2 = 1 Wood.) The crafting list shows the
+tool you need with its picture, like any other ingredient.
 
 To change one, select the tool's Item Data in `Assets/Config/Items/Tools` and edit its **Recipe**. To change them all
 for every future build, edit `RecipeFor` in `Editor/TierToolBuilder.cs`, then run **Tools > Items > Update Tool

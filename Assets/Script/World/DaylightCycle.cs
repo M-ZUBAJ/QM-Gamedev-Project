@@ -1,6 +1,6 @@
 /*
 First Date: 4/10/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Drag this script onto the Directional Light (the sun) in the scene.
 Unity Editor: For a sky that turns orange at sunset and dark blue with a moon at night, use the default Procedural
@@ -21,7 +21,8 @@ Purpose: Day and night. Turns the sun around the world and changes its brightnes
          Tells other scripts when night and day start (NightStarted / DayStarted), e.g. to spawn enemies at night.
          Only moves while the GameRule "DoDaylightCycle" is on (off = time stops, like Minecraft).
          When the player dies (PlayerHealth), the day, time and light go back to how the game started
-         (Reset On Player Death).
+         (Reset On Player Death), and the clock stands still until they respawn: a long look at the death screen
+         doesn't let night or the next day go by (before 21/11/2026 the player came back on Day 2 that way).
          The New Game page can change the start time and day length before the game starts (SetStartTime /
          SetDayLength, used by GameSetup).
          If the scene has no saved light from the sky (pitch-black shadows when the title screen opens it), it asks
@@ -140,7 +141,8 @@ public class DaylightCycle : MonoBehaviour
 
     [Header("Player Death")]
     [Tooltip("On: when the player dies, the day, the time and the light go back to how the game started " +
-             "(the Day and Time Of Day set here before pressing Play). Off: time just carries on.")]
+             "(the Day and Time Of Day set here before pressing Play), and time stands still on the death screen " +
+             "until the player respawns. Off: time just carries on.")]
     [SerializeField] bool resetOnPlayerDeath = true;
 
     Light sun;   // this Directional Light: the sun in the day, the moon at night (Moonlight)
@@ -252,7 +254,9 @@ public class DaylightCycle : MonoBehaviour
 
     void Update()
     {
-        if (GameRules.DoDaylightCycle) AdvanceTime();
+        // While the player is dead (the death screen) the clock waits: it went back to the start when they died, so it's
+        // still the start when they respawn (and no night comes over the death screen with its enemies).
+        if (GameRules.DoDaylightCycle && !WaitingForRespawn) AdvanceTime();
         ApplyLight();   // always, so dragging Time Of Day works even when time is stopped
         CheckPhase();   // also catches dragging Time Of Day in the Inspector
     }
@@ -305,6 +309,9 @@ public class DaylightCycle : MonoBehaviour
     {
         if (resetOnPlayerDeath) ResetToStart();
     }
+
+    // The player is dead and the day was reset for them: time waits until they respawn.
+    bool WaitingForRespawn => resetOnPlayerDeath && playerHealth != null && playerHealth.IsDead;
 
     // Back to how the game started: the starting day, time of day and light. Listening scripts hear about it
     // (e.g. dying at night = DayStarted, so Marko's EnemySpawner removes the night's enemies).
