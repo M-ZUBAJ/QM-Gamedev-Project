@@ -51,6 +51,14 @@ public class PerkChest : MonoBehaviour
     ChestTier tier;                                         // [Tony] added: found in Start (can be missing)
     public ChestTier Tier => tier;                          // [Tony] added: for Tony's prompt and perk panel (the box's name)
 
+    // [Tony] added (21/11/2026): the new chest system (Tony's ChestTier, GameRules > New Chests, picked on the New Game
+    // page): a common or epic box rolls ONE random perk in Tony's pop-up (PerkRollUI: BUY or REROLL) instead of your
+    // panel, every box can reroll, and the common and rare boxes offer the old common and rare perks together.
+    // The old system works exactly as before. Log: Docs/TonyEditMate/Marko/21-11-2026 New Chest System.md
+    bool rollSeen;                                          // [Tony] added: the roll was shown once (opening again shows the result at once)
+    bool RandomRoll => tier != null && tier.RandomRoll;     // [Tony] added: this box rolls one perk (new system)
+    List<PerkData> PerksNow() => tier != null ? tier.PerksFor(availablePerks) : availablePerks;   // [Tony] added: the perks it offers now
+
 
 
     [Header("Available Perks")]
@@ -82,7 +90,9 @@ public class PerkChest : MonoBehaviour
             if (!PanelOpen()) Showing = null;                                         // [Tony] added
             else                                                                      // [Tony] added
             {                                                                         // [Tony] added
-                if (Input.GetKeyDown(interactKey) || TooFar()) ClosePanel();         // [Tony] added
+                // [Tony] edited (21/11/2026): while Tony's roll pop-up is still rolling, E skips the roll instead of
+                // closing (PerkRollUI.BlocksClose). Was: if (Input.GetKeyDown(interactKey) || TooFar()) ClosePanel();
+                if ((Input.GetKeyDown(interactKey) && !PerkRollUI.BlocksClose) || TooFar()) ClosePanel();   // [Tony] edited
                 return;                                                               // [Tony] added
             }                                                                         // [Tony] added
         }                                                                             // [Tony] added
@@ -131,7 +141,7 @@ public class PerkChest : MonoBehaviour
         //     Debug.LogWarning("The chest needs at least 3 available perks.");
         //     return;
         // }
-        if (availablePerks == null || availablePerks.Count == 0)                      // [Tony] replaced
+        if (PerksNow() == null || PerksNow().Count == 0)                              // [Tony] replaced (21/11/2026: PerksNow(), was availablePerks)
         {                                                                             // [Tony] replaced
             Debug.LogWarning("The chest has nothing in its Available Perks list.");   // [Tony] replaced
             return;                                                                   // [Tony] replaced
@@ -162,7 +172,7 @@ public class PerkChest : MonoBehaviour
         if (choices == null)                                                          // [Tony] added
         {                                                                             // [Tony] added
             List<PerkData> pool = new List<PerkData>(
-                availablePerks.FindAll(perk => perk != null && PerkRules.CanOffer(perk))   // [Tony] edited (21/11/2026): only perks the player may get now (was: perk != null)
+                PerksNow().FindAll(perk => perk != null && PerkRules.CanOffer(perk))   // [Tony] edited (21/11/2026): only perks the player may get now, from the list it offers now (was: availablePerks.FindAll(perk => perk != null))
             );
 
             // [Tony] replaced (21/11/2026): fewer than 3 is fine now (1 or 2 cards show); none left = nothing to offer.
@@ -181,12 +191,23 @@ public class PerkChest : MonoBehaviour
             choices = new List<PerkData>();                                           // [Tony] edited: the field, made once
 
             // Randomly select three different perks.
-            for (int i = 0; i < 3 && pool.Count > 0; i++)                             // [Tony] edited (21/11/2026): stops when the pool runs out (was: i < 3)
+            for (int i = 0; i < (RandomRoll ? 1 : 3) && pool.Count > 0; i++)          // [Tony] edited (21/11/2026): stops when the pool runs out, a random box rolls 1 (was: i < 3)
             {
                 int index = Random.Range(0, pool.Count);
                 choices.Add(pool[index]);
                 pool.RemoveAt(index);
             }
+        }                                                                             // [Tony] added
+
+        // [Tony] added (21/11/2026): a random box (new system) shows its one perk in Tony's roll pop-up: the roll plays
+        // the first time (it can be skipped), then BUY pays and gives it (BuyRolled), REROLL rolls again, and E or walking
+        // away closes it without paying. No pop-up in the scene = your panel with that one card.
+        if (RandomRoll && PerkRollUI.Instance != null)                                // [Tony] added
+        {                                                                             // [Tony] added
+            if (!PerkRollUI.Instance.Open(this, choices[0], PerksNow(), !rollSeen)) return;   // [Tony] added
+            rollSeen = true;                                                          // [Tony] added
+            Showing = this;                                                           // [Tony] added
+            return;                                                                   // [Tony] added
         }                                                                             // [Tony] added
 
         // Show the UI before taking payment.
@@ -254,7 +275,9 @@ public class PerkChest : MonoBehaviour
     // [Tony] added (19/11/2026): opening and closing the panel. Log: Docs/TonyEditMate/Marko/19-11-2026 Perk Panel, E Toggle And Pay On Pick.md
     bool PanelOpen()                                                                  // [Tony] added
     {                                                                                 // [Tony] added
-        return PerkSelectionUI.Instance != null && PerkSelectionUI.Instance.IsOpen;   // [Tony] added
+        // [Tony] edited (21/11/2026): or Tony's roll pop-up shows this chest. Was:
+        // return PerkSelectionUI.Instance != null && PerkSelectionUI.Instance.IsOpen;
+        return (PerkSelectionUI.Instance != null && PerkSelectionUI.Instance.IsOpen) || PerkRollUI.IsOpenFor(this);   // [Tony] edited
     }                                                                                 // [Tony] added
 
     // [Tony] added: closes the panel (nothing is paid). Nothing opens again this frame, even though E is down.
@@ -262,7 +285,10 @@ public class PerkChest : MonoBehaviour
     {                                                                                 // [Tony] added
         Showing = null;                                                               // [Tony] added
         closedFrame = Time.frameCount;                                                // [Tony] added
-        if (PanelOpen()) PerkSelectionUI.Instance.Hide();                             // [Tony] added
+        // [Tony] edited (21/11/2026): your panel or Tony's roll pop-up, whichever is open. Was:
+        // if (PanelOpen()) PerkSelectionUI.Instance.Hide();
+        if (PerkSelectionUI.Instance != null && PerkSelectionUI.Instance.IsOpen) PerkSelectionUI.Instance.Hide();   // [Tony] edited
+        if (PerkRollUI.IsOpenFor(this)) PerkRollUI.Instance.Close();                  // [Tony] added (21/11/2026)
     }                                                                                 // [Tony] added
 
     // [Tony] added: farther than Interaction Range (+ Close Margin) from the camera (where the E ray starts) to the
@@ -284,8 +310,10 @@ public class PerkChest : MonoBehaviour
     }                                                                                 // [Tony] added
 
     // [Tony] added (21/11/2026): rerolling, for Tony's REROLL button on the perk panel. Only a chest whose ChestTier
-    // allows it (the epic box). The first reroll at a box costs a tenth of its price, each next one there twice as
+    // allows it (the epic box; in the new chest system every box). The first reroll at a box costs a tenth of its price, each next one there twice as
     // much (ChestTier.RerollPrice). Log: Docs/TonyEditMate/Marko/21-11-2026 Loot Boxes And New Perks.md
+    // [Tony] added (21/11/2026): in both chest systems REROLL only works once the player has the Reroll perk (an epic or
+    // legendary box offers it): Tony's ChestTier.CanReroll checks that too. Log: Docs/TonyEditMate/Marko/21-11-2026 Reroll Perk, Keen Eye And Long Reach.md
     public bool RerollAllowed => tier != null && tier.CanReroll;                      // [Tony] added: show the button
     public int RerollCost => tier != null ? tier.RerollPrice : 0;                     // [Tony] added
     public bool RerollWouldChange => choices != null && OtherPerksLeft();             // [Tony] added: else it'd show the same perks
@@ -298,17 +326,29 @@ public class PerkChest : MonoBehaviour
         if (PlayerCoins.Instance == null || PerkSelectionUI.Instance == null) return false;   // [Tony] added
         if (!PlayerCoins.Instance.SpendCoins(RerollCost)) return false;               // [Tony] added
         tier.Rerolled();                                                              // [Tony] added: the next reroll here costs twice as much
-        List<PerkData> pool = availablePerks.FindAll(perk => perk != null && PerkRules.CanOffer(perk));   // [Tony] added
-        choices = PerkRules.Pick(pool, 3, choices);                                   // [Tony] added
-        PerkSelectionUI.Instance.Refresh(choices);                                    // [Tony] added
+        // [Tony] edited (21/11/2026): the list it offers now (was availablePerks), a random box rolls 1 perk (was 3) and
+        // its roll plays again in Tony's pop-up (was always: PerkSelectionUI.Instance.Refresh(choices);).
+        List<PerkData> pool = PerksNow().FindAll(perk => perk != null && PerkRules.CanOffer(perk));   // [Tony] edited
+        choices = PerkRules.Pick(pool, RandomRoll ? 1 : 3, choices);                  // [Tony] edited
+        if (RandomRoll && PerkRollUI.IsOpenFor(this)) PerkRollUI.Instance.Open(this, choices[0], PerksNow(), true);   // [Tony] edited
+        else PerkSelectionUI.Instance.Refresh(choices);                               // [Tony] edited
         return true;                                                                  // [Tony] added
     }                                                                                 // [Tony] added
 
     // [Tony] added: the list holds a perk the player may get that isn't on screen now.
     bool OtherPerksLeft()                                                             // [Tony] added
     {                                                                                 // [Tony] added
-        return availablePerks != null &&                                              // [Tony] added
-               availablePerks.Exists(perk => perk != null && PerkRules.CanOffer(perk) && !choices.Contains(perk));   // [Tony] added
+        List<PerkData> list = PerksNow();                                             // [Tony] edited (21/11/2026): the list it offers now (was availablePerks)
+        return list != null &&                                                        // [Tony] edited
+               list.Exists(perk => perk != null && PerkRules.CanOffer(perk) && !choices.Contains(perk));   // [Tony] edited
+    }                                                                                 // [Tony] added
+
+    // [Tony] added (21/11/2026): Tony's roll pop-up's BUY button: pays and gives the rolled perk, like picking it on your
+    // panel (OnPerkSelected: the price, the box's burst, the perk, then the chest disappears).
+    public bool CanBuyRolled => !opened && Showing == this && choices != null && choices.Count > 0;   // [Tony] added
+    public void BuyRolled()                                                           // [Tony] added
+    {                                                                                 // [Tony] added
+        if (CanBuyRolled) OnPerkSelected(choices[0]);                                 // [Tony] added
     }                                                                                 // [Tony] added
 
 

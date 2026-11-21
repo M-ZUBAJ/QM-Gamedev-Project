@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: Perk_LastStand
   m_EditorClassIdentifier: 
   displayName: Last Stand
-  description: Once a life, a killing blow leaves you at 1 health, safe for 2 seconds.
+  description: A killing blow leaves you at 1 health, safe for 2 seconds. Then it's
+    used up, and a box can offer it again.
   icon: {fileID: 21300000, guid: b15dbcb231e27204cab2735de5f4f586, type: 3}
   perkType: 13
   value: 2

@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &4992031944668448747
+--- !u!1 &2198618116105243228
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8165258368984458452}
-  - component: {fileID: 6464478628215904013}
-  - component: {fileID: 1393610865757434632}
+  - component: {fileID: 5627803832307220790}
+  - component: {fileID: 2646108658773803247}
+  - component: {fileID: 3610277882266953567}
   m_Layer: 0
   m_Name: Model
   m_TagString: Untagged
@@ -18,13 +18,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8165258368984458452
+--- !u!4 &5627803832307220790
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4992031944668448747}
+  m_GameObject: {fileID: 2198618116105243228}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0, y: -0.0018707514, z: -0}
@@ -33,21 +33,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2223623544400976369}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &6464478628215904013
+--- !u!33 &2646108658773803247
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4992031944668448747}
+  m_GameObject: {fileID: 2198618116105243228}
   m_Mesh: {fileID: 2100010192547350584, guid: 9f7db4934ac022e43be316dd9f59e2c8, type: 3}
---- !u!23 &1393610865757434632
+--- !u!23 &3610277882266953567
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4992031944668448747}
+  m_GameObject: {fileID: 2198618116105243228}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -61,7 +61,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -8496345235063655875, guid: 9f7db4934ac022e43be316dd9f59e2c8, type: 3}
+  - {fileID: 2100000, guid: 82a8b94c998462c4793fc4058dbf1a68, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -117,7 +117,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 8165258368984458452}
+  - {fileID: 5627803832307220790}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &5649970465904471877
@@ -166,6 +166,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f3c9f27d2726d52489b364ee2c8fe201, type: 2}
   - {fileID: 11400000, guid: b6a60acdca13a0c4183f54abb63a3f15, type: 2}
   - {fileID: 11400000, guid: 312cdea7d3ce16c44a4d2f2434126400, type: 2}
+  - {fileID: 11400000, guid: b7eb8cffda98fc64aa9d362fa646bb73, type: 2}
+  - {fileID: 11400000, guid: 69bc7c1c3d2474a4fab1e04df81ff892, type: 2}
 --- !u!114 &6304843954728769153
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -185,8 +187,32 @@ MonoBehaviour:
   growth: 1
   growBy: 1.5
   canReroll: 0
+  rerollNeedsPerk: 1
   rerollShare: 0.1
   rerollGrowth: 2
+  randomInNewSystem: 0
+  rerollInNewSystem: 1
+  newSystemPerks:
+  - {fileID: 11400000, guid: f273ba9728486024796a32707b415d6e, type: 2}
+  - {fileID: 11400000, guid: 469ac1d90ef7d61449a6f0b2a48b24b5, type: 2}
+  - {fileID: 11400000, guid: a18daf5e52897e54ca46edc61d61c0d8, type: 2}
+  - {fileID: 11400000, guid: ee1e4fd06507bce499d4808f1fe31bed, type: 2}
+  - {fileID: 11400000, guid: 0a93bcda174d05446b4bf5ebf5a584f0, type: 2}
+  - {fileID: 11400000, guid: 0a747260dba827b45b3ef3382356e6ca, type: 2}
+  - {fileID: 11400000, guid: 93f28a08c58e11946b2f3895d25f7f00, type: 2}
+  - {fileID: 11400000, guid: 2c80177220aba2b4b80619d43a1b7d04, type: 2}
+  - {fileID: 11400000, guid: 2c1abf234c42e3440898dffa3a4f0b8f, type: 2}
+  - {fileID: 11400000, guid: b69b75bbef2cc304cb4d1f142ff05d34, type: 2}
+  - {fileID: 11400000, guid: f3c9f27d2726d52489b364ee2c8fe201, type: 2}
+  - {fileID: 11400000, guid: b6a60acdca13a0c4183f54abb63a3f15, type: 2}
+  - {fileID: 11400000, guid: 312cdea7d3ce16c44a4d2f2434126400, type: 2}
+  - {fileID: 11400000, guid: b7eb8cffda98fc64aa9d362fa646bb73, type: 2}
+  - {fileID: 11400000, guid: 69bc7c1c3d2474a4fab1e04df81ff892, type: 2}
+  newSystemOnly: 0
+  vanishParticles: {fileID: 8133225597941850435, guid: 22c3e71fbeb4f724e8c4f18585709146, type: 3}
+  burstCount: 140
+  burstSpeed: 2.6
+  toolVersion: 2
 --- !u!114 &3735826342916297626
 MonoBehaviour:
   m_ObjectHideFlags: 0

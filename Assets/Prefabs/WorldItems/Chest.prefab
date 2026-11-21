@@ -133,13 +133,37 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tier: 0
   boxName: Common box
-  color: {r: 0.86, g: 0.87, b: 0.92, a: 1}
+  color: {r: 1, g: 0.78, b: 0.25, a: 1}
   startPrice: 2
   growth: 0
   growBy: 1
   canReroll: 0
+  rerollNeedsPerk: 1
   rerollShare: 0.1
   rerollGrowth: 2
+  randomInNewSystem: 1
+  rerollInNewSystem: 1
+  newSystemPerks:
+  - {fileID: 11400000, guid: f273ba9728486024796a32707b415d6e, type: 2}
+  - {fileID: 11400000, guid: 469ac1d90ef7d61449a6f0b2a48b24b5, type: 2}
+  - {fileID: 11400000, guid: a18daf5e52897e54ca46edc61d61c0d8, type: 2}
+  - {fileID: 11400000, guid: ee1e4fd06507bce499d4808f1fe31bed, type: 2}
+  - {fileID: 11400000, guid: 0a93bcda174d05446b4bf5ebf5a584f0, type: 2}
+  - {fileID: 11400000, guid: 0a747260dba827b45b3ef3382356e6ca, type: 2}
+  - {fileID: 11400000, guid: 93f28a08c58e11946b2f3895d25f7f00, type: 2}
+  - {fileID: 11400000, guid: 2c80177220aba2b4b80619d43a1b7d04, type: 2}
+  - {fileID: 11400000, guid: 2c1abf234c42e3440898dffa3a4f0b8f, type: 2}
+  - {fileID: 11400000, guid: b69b75bbef2cc304cb4d1f142ff05d34, type: 2}
+  - {fileID: 11400000, guid: f3c9f27d2726d52489b364ee2c8fe201, type: 2}
+  - {fileID: 11400000, guid: b6a60acdca13a0c4183f54abb63a3f15, type: 2}
+  - {fileID: 11400000, guid: 312cdea7d3ce16c44a4d2f2434126400, type: 2}
+  - {fileID: 11400000, guid: b7eb8cffda98fc64aa9d362fa646bb73, type: 2}
+  - {fileID: 11400000, guid: 69bc7c1c3d2474a4fab1e04df81ff892, type: 2}
+  newSystemOnly: 0
+  vanishParticles: {fileID: 8133225597941850435, guid: 22c3e71fbeb4f724e8c4f18585709146, type: 3}
+  burstCount: 110
+  burstSpeed: 2.6
+  toolVersion: 2
 --- !u!1001 &694966618082988762
 PrefabInstance:
   m_ObjectHideFlags: 0

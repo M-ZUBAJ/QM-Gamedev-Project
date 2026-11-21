@@ -1,6 +1,6 @@
 /*
 First Date: 7/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Menu Tools > UI > Build Main Title Scene. It asks to save the open scene first, and asks before replacing
@@ -20,6 +20,8 @@ Purpose: Builds the whole title screen in one click:
                                      FX > Shockwave, IntroBlack
          The New Game page's WORLD section starts with Map: Old world (GameScene) / New world (ProceduralGenerateScene,
          a new random world every game: Tools > World > Build New World Scene makes it).
+         Its TESTING section: Start with all tools, Start with all armor, and Old chests / New chests (the two loot
+         box systems, GameRules > New Chests; New is the default).
 Requirement: TitleSceneBuilder.cs x-> UIBuildHelper.cs, MenuOrder.cs, NewGameDefaultsSync.cs, NewGameDefaults.cs, UIFXSprites.cs, UITween.cs, TitleMenu.cs, TitleBackground.cs, TitleTextFX.cs, ButtonFX.cs, CascadeIn.cs, PulseFX.cs, TabFX.cs, TabGroup.cs, ChoiceRow.cs, StepperRow.cs, TogglePop.cs, DropdownUnfold.cs, NewGamePanel.cs, KeyBindingMenu.cs, IncomingMessage.cs, KeyBindings.cs
 */
 
@@ -888,8 +890,9 @@ public static class TitleSceneBuilder
         t.raycastTarget = false;
     }
 
-    // TESTING: two tick boxes side by side, all tools (GameRules Tool Test) and all armor (Armor Test). Side by side
-    // because the panel has no room for another row (its rows fill it to 2 px).
+    // TESTING: three parts side by side: the tick boxes all tools (GameRules Tool Test) and all armor (Armor Test), and
+    // Old chests / New chests (GameRules New Chests). Side by side because the panel has no room for another row (its
+    // rows fill it to 2 px).
     static void MakeTestingRow(Transform parent)
     {
         GameObject testing = NewUI("TestingRow", parent);
@@ -898,9 +901,12 @@ public static class TitleSceneBuilder
         HorizontalLayoutGroup pair = testing.AddComponent<HorizontalLayoutGroup>();
         pair.spacing = 10f;
         pair.childControlWidth = pair.childControlHeight = true;
-        pair.childForceExpandWidth = pair.childForceExpandHeight = true;   // two equal halves
-        MakeToggleRow(testing.transform, "AllToolsRow", "Start with all tools", 440f);
-        MakeToggleRow(testing.transform, "ArmorTestRow", "Start with all armor", 440f);
+        pair.childForceExpandWidth = pair.childForceExpandHeight = true;   // three equal parts
+        MakeToggleRow(testing.transform, "AllToolsRow", "Start with all tools", 280f);
+        MakeToggleRow(testing.transform, "ArmorTestRow", "Start with all armor", 280f);
+        MakeChoiceRow(testing.transform, "ChestRow", null, new[] { "Old chests", "New chests" }, 150f, null, false);
+        LayoutElement chestSize = testing.transform.Find("ChestRow").GetComponent<LayoutElement>();
+        chestSize.preferredHeight = chestSize.minHeight = 46f;   // as tall as the tick boxes' parts
     }
 
     // [x] Pick up dropped items...: a tick box with the row's text right of it ("labelWidth" pixels wide).

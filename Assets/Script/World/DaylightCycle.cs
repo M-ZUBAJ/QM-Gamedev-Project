@@ -29,7 +29,7 @@ Purpose: Day and night. Turns the sun around the world and changes its brightnes
 Requirement: DaylightCycle.cs x-> GameRules.cs, Light (Unity)
              DaylightCycle.cs o-> PlayerHealth.cs
              DaylightCycle.cs <-x DayCounter.cs, EnemySpawner.cs, GameSetup.cs, NewGameDefaultsSync.cs, TimeCounter.cs, VictoryScreen.cs
-             DaylightCycle.cs <-o DesertMonsterSpawner.cs, ViewDistance.cs
+             DaylightCycle.cs <-o DesertMonsterSpawner.cs, PerkEffects.cs, ViewDistance.cs
 */
 
 using UnityEngine;

@@ -18,7 +18,8 @@ Purpose: Builds the "CHOOSE YOUR REWARD" panel of Marko's perk chests in one cli
          a heart (Max Health), lightning (Max Stamina), double arrows (Move Speed), a flame (Fireball), and the loot
          boxes' perks theirs (IconArt.ForPerk).
          The cards keep their width when a box shows only 1 or 2 perks (centered). REROLL (bottom right) only shows
-         for a box that allows rerolls (the epic box: PerkPanelInfo).
+         for a box that allows rerolls (PerkPanelInfo: the epic box in the old chest system, every box in the new one).
+         The new chest system's random boxes use their own pop-up instead (Tools > UI > Build Perk Roll Popup).
          UpdatePrefab brings a panel built before the loot boxes up to date in place (Tools > World > Build Loot Chests
          calls it): the cards' width, the REROLL button, the title and reroll fields of PerkPanelInfo.
 Requirement: PerkPanelBuilder.cs x-> UIBuildHelper.cs, IconArt.cs, PerkSelectionUI.cs, PerkPanelInfo.cs, PerkData.cs, ButtonFX.cs, MenuOrder.cs

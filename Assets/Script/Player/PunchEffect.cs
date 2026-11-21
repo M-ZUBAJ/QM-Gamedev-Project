@@ -20,7 +20,8 @@ Purpose: A grey burst of wind (dust clouds, wind lines, a shock ring and a few s
          Any script can make a burst: PunchEffect.Play(where, whichWayOut);
          A critical hit (the Critical Strike perk: Marko's PlayerCombat passes critical = true) bursts in Critical Color
          (red), even from a tool. A punch that lands on a monster pushes it away (Knockback; a heavy punch harder, the
-         Brawler perk farther: PerkEffects.KnockbackMultiplier).
+         Brawler perk farther: PerkEffects.KnockbackMultiplier). With the Vampire perk the player heals a share of the
+         damage each hit really does (PerkEffects.WithVampire).
 Requirement: PunchEffect.cs x-> PlayerAnimator.cs, PunchCombo.cs, Knockback.cs
              PunchEffect.cs o-> PerkEffects.cs
              PunchEffect.cs <-x PlayerAnimationSetup.cs, PlayerCombat.cs, PunchEffectBuilder.cs, TierToolBuilder.cs
@@ -142,6 +143,7 @@ public class PunchEffect : MonoBehaviour
     // pushes a monster away. Without a PunchEffect on the Player, hurt happens at once.
     public static void Hit(Component target, RaycastHit hit, System.Action hurt, PlayerAction swing, bool critical = false)
     {
+        hurt = PerkEffects.WithVampire(target, hurt);   // the Vampire perk: the damage it really does heals the player
         if (Current != null && Current.isActiveAndEnabled)
         {
             float burst = PunchCombo.IsHeavy(swing) ? Current.heavyBurstSize : PunchCombo.IsPunch(swing) ? 1f : Current.toolBurstSize;   // 0 = no burst

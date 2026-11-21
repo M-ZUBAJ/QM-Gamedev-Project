@@ -2,12 +2,18 @@
 
 **What the player sees:**
 - **Looking at a chest** from close by (where E works): an outline (yellow common box, blue rare box, purple epic
-  box), and under the crosshair **[E] Open common box (coin) 2**. The price is red while you have fewer coins than that.
+  box, orange legendary box), and under the crosshair **[E] Open common box (coin) 2**. The price is red while you have
+  fewer coins than that.
+- In the **new chest system** (the New Game page's default) the common and epic boxes don't use this panel: they roll
+  one random perk in their own pop-up (**Tools > UI > Build Perk Roll Popup**, `Docs/Loot Chests Setup.md`). The rare
+  and legendary boxes use this panel in both systems.
 - **E:** the panel opens. The box's name as the title, in its color (COMMON BOX, RARE BOX, EPIC BOX); up to three perk
   cards (icon, name, what it does), each with a **CHOOSE** button; at the top the price and your coins. Looking is free.
   A box with fewer perks left for you (some can be picked only once, or only after another one) shows 1 or 2 cards.
-- **REROLL** (bottom right, only at an epic box): new perks for coins, a tenth of the box's price, then twice as much
-  each time at that same box. It says NOTHING NEW TO ROLL when the box has no other perk for you.
+- **REROLL** (bottom right; old chest system: only at an epic box, new system: at every box; in both only once you
+  have the **Reroll** perk from an epic or legendary box): new perks for coins, a
+  tenth of the box's price, then twice as much each time at that same box. It says NOTHING NEW TO ROLL when the box has
+  no other perk for you.
 - **Prices** (loot boxes: `Docs/Loot Chests Setup.md`): every box of a kind costs the same, and each perk bought from
   that kind makes the next one dearer (common 2, 3, 4...; rare 10, 15, 23...; epic 100, 200, 400...).
 - **CHOOSE:** now the coins are paid, the perk is given and shows in the HUD's perk row (top middle), and the chest
@@ -115,8 +121,9 @@ PerkSelectCanvas              Marko's PerkSelectionUI + Tony's PerkPanelInfo (So
 5. Click **CHOOSE**: the coins go down (the coin counter pops), the perk shows in the HUD's perk row, the chest is gone.
 6. With fewer coins than the price: the CHOOSE buttons are faded and say what's needed.
 7. With the panel open, select GameEndCanvas > VictoryScreen > **⋮** > **Test: Win**: the panel closes.
-8. At an epic box (the desert): the title is purple EPIC BOX and **REROLL 10 COINS** shows at the bottom right. With only
-   the 3 epic perks there's nothing else to roll yet: it says NOTHING NEW TO ROLL (add more epic perks to use it).
+8. Old chest system, at an epic box (the desert): the title is purple EPIC BOX; once you have the Reroll perk,
+   **REROLL 10 COINS** shows at the bottom right. New chest system: a rare box shows REROLL too (1 coin at a 10-coin
+   box), also only with the Reroll perk.
 
 ## Problems
 
@@ -127,5 +134,5 @@ PerkSelectCanvas              Marko's PerkSelectionUI + Tony's PerkPanelInfo (So
 | E does nothing at a chest | Look straight at it from closer than Interaction Range. In third person the camera is too far back. An open menu (inventory, building) blocks it too. |
 | A picked perk doesn't show in the HUD's perk row | The Player needs **PlayerPerks** (Tools > UI > Build HUD adds it). |
 | No prompt under the crosshair | Run **Tools > UI > Build HUD** (it adds HUDCanvas > ChestPrompt). |
-| No REROLL button, or the title stays CHOOSE YOUR REWARD at a loot box | The panel was built before the loot boxes: run **Tools > World > Build Loot Chests** (it updates the prefab). |
+| No REROLL button, or the title stays CHOOSE YOUR REWARD at a loot box | REROLL needs the **Reroll** perk first (an epic or legendary box offers it). Otherwise the panel was built before the loot boxes: run **Tools > World > Build Loot Chests** (it updates the prefab). |
 | "Nothing left in this box for you." | Every perk that box can give was picked already (once-a-life perks), or needs another perk first. |

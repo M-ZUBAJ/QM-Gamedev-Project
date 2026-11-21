@@ -5,8 +5,8 @@ Author: Tony
 Use by: The prompt under the crosshair in the HUD (Tools > UI > Build HUD makes it: HUDCanvas > ChestPrompt > Pill >
         Key > KeyText, Label, CoinIcon, Price).
 Unity Editor: Nothing to connect (the tool fills the fields). Testing: Play and look at a chest from close by (where
-              E opens it): "E  Open chest  (coin) 2" shows under the crosshair. The price is red while you have fewer
-              coins than that.
+              E opens it): "E  Open common box  (coin) 2" shows under the crosshair (the box's name: common, rare, epic
+              or legendary). The price is red while you have fewer coins than that.
 Purpose: Tells the player what E does and what the chest costs while the crosshair is on one of Marko's perk chests
          within its reach: the same test as the chest's E key and its yellow outline (InteractOutline). Hidden while a
          menu is open (e.g. the perk panel itself), while the player is dead, and once the chest is used.

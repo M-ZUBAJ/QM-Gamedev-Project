@@ -1,6 +1,6 @@
 /*
 First Date: 8/10/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: To reorder the Tools menu, change the numbers below and save. Unity updates the menu after it compiles
@@ -11,7 +11,7 @@ Purpose: The order of every item in our Tools menu, in ONE place.
          - Numbers more than 10 apart = a separator line between them (a new group).
          - A submenu (UI, Building, Items...) sits where its smallest number is.
          Each tool's [MenuItem] uses one of these numbers, e.g. [MenuItem("Tools/UI/Build Inventory UI", false, MenuOrder.BuildInventoryUI)].
-Requirement: MenuOrder.cs <-x ArmorBuilder.cs, BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, ChestSetup.cs, CraftingMenuBuilder.cs, DeathEffectBuilder.cs, DesertBuilder.cs, EnemyBuilder.cs, FirstPersonHandsBuilder.cs, GameEndUIBuilder.cs, GearPageBuilder.cs, GrasslandTreeBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, LootChestBuilder.cs, NewWorldBuilder.cs, NotificationUIBuilder.cs, PerkPanelBuilder.cs, PlayerAnimationSetup.cs, PlayerCharacterBuilder.cs, PunchEffectBuilder.cs, RockBreakBuilder.cs, RockBuilder.cs, RockCaveBuilder.cs, ScriptMapTool.cs, SkyLightingSetup.cs, TierToolBuilder.cs, TitleSceneBuilder.cs, TreeFallBuilder.cs, WildAnimalBuilder.cs, WorldBarrierBuilder.cs, WorldSpawnSetup.cs
+Requirement: MenuOrder.cs <-x ArmorBuilder.cs, BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, ChestSetup.cs, CraftingMenuBuilder.cs, DeathEffectBuilder.cs, DesertBuilder.cs, EnemyBuilder.cs, FirstPersonHandsBuilder.cs, GameEndUIBuilder.cs, GearPageBuilder.cs, GrasslandTreeBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, LootChestBuilder.cs, NewWorldBuilder.cs, NotificationUIBuilder.cs, PerkPanelBuilder.cs, PerkRollBuilder.cs, PlayerAnimationSetup.cs, PlayerCharacterBuilder.cs, PunchEffectBuilder.cs, RockBreakBuilder.cs, RockBuilder.cs, RockCaveBuilder.cs, ScriptMapTool.cs, SkyLightingSetup.cs, TierToolBuilder.cs, TitleSceneBuilder.cs, TreeFallBuilder.cs, WildAnimalBuilder.cs, WorldBarrierBuilder.cs, WorldSpawnSetup.cs
 */
 
 public static class MenuOrder
@@ -34,6 +34,7 @@ public static class MenuOrder
     public const int BuildHUD = 160;
     public const int BuildNotifications = 161;
     public const int BuildPerkPanel = 162;      // the chests' "CHOOSE YOUR REWARD" panel (Marko's PerkSelectionUI + Tony's PerkPanelInfo)
+    public const int BuildPerkRollPopup = 163;  // the new chest system's slot-machine pop-up (PerkRollUI: BUY / REROLL)
     // --- line ---
     // Game end (victory screen)
     public const int BuildGameEndUI = 180;

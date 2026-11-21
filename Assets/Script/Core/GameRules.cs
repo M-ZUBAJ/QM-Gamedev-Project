@@ -1,6 +1,6 @@
 /*
 First Date: 4/10/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Create an empty GameObject called "GameRules" in the scene and add this script.
         (If you forget to add this script, one is created by itself with the default rules.)
@@ -38,8 +38,11 @@ Purpose: On / off rules for the world, like Minecraft's /gamerule.
            gold and diamond: 15) in the inventory, at the start or the moment it's ticked (ToolTestKit, for testing).
          - ArmorTest (default off): on = the player gets one of every armor piece (the Copper and Iron sets: 12) in
            the inventory, at the start or the moment it's ticked (ArmorTestKit, for testing).
+         - NewChests (default on): the new chest system (ChestTier: random common and epic boxes, a legendary box,
+           REROLL at every box); off = the old one (every box: choose 1 of 3; REROLL only at the epic box).
+           Read when a box wakes up (the New Game page sets it before that).
          Adding a rule = new GameRule entry + bool field + a case in Get and Set + static property.
-Requirement: GameRules.cs <-x ArmorTestKit.cs, AutoCollector.cs, DaylightCycle.cs, GameRulesEditor.cs, GameSetup.cs, HeldItemUI.cs, ItemDropper.cs, ItemIconRules.cs, NewGameDefaultsSync.cs, NotificationFeed.cs, PerkBar.cs, SlotUI.cs, ToolTestKit.cs
+Requirement: GameRules.cs <-x ArmorTestKit.cs, AutoCollector.cs, ChestTier.cs, DaylightCycle.cs, GameRulesEditor.cs, GameSetup.cs, HeldItemUI.cs, ItemDropper.cs, ItemIconRules.cs, NewGameDefaultsSync.cs, NotificationFeed.cs, PerkBar.cs, SlotUI.cs, ToolTestKit.cs
 */
 
 using UnityEngine;
@@ -58,6 +61,7 @@ public enum GameRule
     ToolTest,
     PerkIcons,
     ArmorTest,
+    NewChests,
 }
 
 // Which side of the screen the "+3 Wood" messages show on while Show Notifications is on (a dropdown).
@@ -138,6 +142,11 @@ public class GameRules : MonoBehaviour
              "takes nothing away.")]
     [SerializeField] bool armorTest = false;
 
+    [Tooltip("On: the new chest system (random common and epic boxes, a legendary box in the desert, REROLL at every " +
+             "box). Off: the old one (every box lets you choose 1 of 3, REROLL only at the epic box). The New Game page " +
+             "picks it (Testing > Old chests / New chests).")]
+    [SerializeField] bool newChests = true;
+
     static GameRules instance;   // the one GameRules in the scene
 
     // Other scripts subscribe to this to be told when any rule changes.
@@ -155,6 +164,7 @@ public class GameRules : MonoBehaviour
     public static bool ToolTest         => Get(GameRule.ToolTest);
     public static bool PerkIcons        => Get(GameRule.PerkIcons);
     public static bool ArmorTest        => Get(GameRule.ArmorTest);
+    public static bool NewChests        => Get(GameRule.NewChests);
 
     // The dropdown under Overwrite Item Icon (only used while that rule is on).
     public static ItemIconStyle ItemIconStyle => Current.itemIconStyle;
@@ -222,6 +232,7 @@ public class GameRules : MonoBehaviour
             case GameRule.ToolTest:         return r.toolTest;
             case GameRule.PerkIcons:        return r.perkIcons;
             case GameRule.ArmorTest:        return r.armorTest;
+            case GameRule.NewChests:        return r.newChests;
         }
         return false;   // a new GameRule with no field yet
     }
@@ -243,6 +254,7 @@ public class GameRules : MonoBehaviour
             case GameRule.ToolTest:         r.toolTest = value;          break;
             case GameRule.PerkIcons:        r.perkIcons = value;         break;
             case GameRule.ArmorTest:        r.armorTest = value;         break;
+            case GameRule.NewChests:        r.newChests = value;         break;
         }
 
         Changed?.Invoke();   // tell every listening script (if there are any)

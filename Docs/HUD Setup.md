@@ -41,7 +41,7 @@ Use it any time the HUD was deleted or broken: everything comes back connected.
 | Day and time | The Directional Light with **DaylightCycle** |
 | Coins | The Player with Marko's **PlayerCoins** |
 | Perks | The Player with **PlayerPerks** (the tool adds it); perk chests (Marko's **PerkChest**) fill it |
-| The crosshair colors | The Player with **ItemGrabber** |
+| The crosshair colors | The Player with **ItemGrabber**; with the Keen Eye perk it turns yellow while a click would hit (Marko's **PlayerCombat** and **PerkEffects** on the Player, `Docs/Loot Chests Setup.md`) |
 | The chest prompt | Marko's perk chests (**PerkChest**) |
 
 Nothing has to be dragged in: every HUD script finds what it needs.

@@ -52,12 +52,15 @@ public class FireballProjectile : MonoBehaviour
         // if fireball hit an enemy, make it take damage
         if (enemy != null)
         {
-            enemy.TakeDamage(damage);
+            // [Tony] replaced (21/11/2026): enemy.TakeDamage(damage);
+            // The same hit, through Tony's PerkEffects: with the Vampire perk the player heals a share of the damage.
+            PerkEffects.Hurt(enemy, () => enemy.TakeDamage(damage));             // [Tony] replaced
         }
         // otherwise if it hit a resource/animal, make that take damage instead.
         else if (resource != null)
         {
-            resource.TakeDamage(damage);
+            // [Tony] replaced (21/11/2026): resource.TakeDamage(damage);
+            PerkEffects.Hurt(resource, () => resource.TakeDamage(damage));       // [Tony] replaced (Vampire: animals only)
         }
 
         Destroy(gameObject);

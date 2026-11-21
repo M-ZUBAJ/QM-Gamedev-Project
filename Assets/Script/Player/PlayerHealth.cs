@@ -13,11 +13,12 @@ Purpose: Holds the player's health. TakeDamage / Heal change it and fire On Chan
          LoseHealth is for what no armor stops (starving, bad food).
          The epic box's Last Stand perk (PerkEffects): once a life, a hit that would kill leaves 1 health instead, and
          nothing can hurt the player for a moment (Is Shielded).
+         The Night Power perk (PerkEffects) raises max health at night (SetMaxBoost); health keeps its share of the bar.
          At 0 health the player dies: the Died event fires once (PlayerRespawn listens to it and brings the
          player back). Revive fills health back up.
 Requirement: PlayerHealth.cs o-> PlayerArmor.cs, PerkEffects.cs
              PlayerHealth.cs <-x DeathScreen.cs, EnemyAttack.cs, PerkChest.cs, PerkManager.cs, PlayerCoins.cs, PlayerRespawn.cs
-             PlayerHealth.cs <-o AutoCollector.cs, ChestPrompt.cs, DaylightCycle.cs, EnemyAggro.cs, EnemyAnimator.cs, FirstPersonHands.cs, GainNotifier.cs, InteractOutline.cs, ItemConsumer.cs, ItemDropper.cs, PassiveRegen.cs, PlayerAnimator.cs, PlayerHunger.cs, PlayerInfoPage.cs, PlayerPerks.cs, PlayerSight.cs, PlayerStats.cs, StatBar.cs, WildAnimal.cs
+             PlayerHealth.cs <-o AutoCollector.cs, ChestPrompt.cs, DaylightCycle.cs, EnemyAggro.cs, EnemyAnimator.cs, FirstPersonHands.cs, GainNotifier.cs, InteractOutline.cs, ItemConsumer.cs, ItemDropper.cs, PassiveRegen.cs, PerkEffects.cs, PlayerAnimator.cs, PlayerHunger.cs, PlayerInfoPage.cs, PlayerPerks.cs, PlayerSight.cs, PlayerStats.cs, StatBar.cs, WildAnimal.cs
 */
 
 using UnityEngine;
@@ -50,12 +51,13 @@ public class PlayerHealth : MonoBehaviour
     bool dead;           // already died (so Died fires only once per death)
     bool dieNextFrame;   // 0 was typed into Health in the Inspector: die in the next Update (see OnValidate)
     float shieldedUntil; // Last Stand: no hit hurts until this time
+    float maxBoost = 1f; // Night Power: max health x this at night (SetMaxBoost), 1 = normal
 
     // Fired once when health reaches 0. Scripts subscribe in code, e.g. PlayerRespawn: health.Died += Respawn;
     public event System.Action Died;
 
     public float Health => health;         // other scripts can read but not set it
-    public float MaxHealth => maxHealth;
+    public float MaxHealth => maxHealth * maxBoost;   // perks included (Night Power at night)
     public float StartMaxHealth => startMaxHealth;   // max health before any perk (the inventory's Info tab shows the difference)
     public bool IsDead => health <= 0f;
 
@@ -74,7 +76,7 @@ public class PlayerHealth : MonoBehaviour
     // Unity calls this when a value is changed in the Inspector, so the bar follows while testing.
     void OnValidate()
     {
-        health = Mathf.Clamp(health, 0f, maxHealth);   // keep it between 0 and max
+        health = Mathf.Clamp(health, 0f, MaxHealth);   // keep it between 0 and max
         UpdateBar();
 
         // Typing 0 into Health while playing counts as dying, so respawning can be tested that way too.
@@ -103,7 +105,7 @@ public class PlayerHealth : MonoBehaviour
         // A killing blow: the Last Stand perk (once a life) leaves 1 health and a moment of safety instead.
         if (health - amount <= 0f && PerkEffects.TryLastStand(out float shieldSeconds))
         {
-            health = Mathf.Min(1f, maxHealth);
+            health = Mathf.Min(1f, MaxHealth);
             shieldedUntil = Time.time + shieldSeconds;
             UpdateBar();
             return;
@@ -149,19 +151,33 @@ public class PlayerHealth : MonoBehaviour
     public void ResetMaxHealth()
     {
         maxHealth = startMaxHealth;
-        health = Mathf.Min(health, maxHealth);
+        health = Mathf.Min(health, MaxHealth);
         UpdateBar();
     }
 
 
 
 
+    // The Night Power perk (PerkEffects) calls this when night starts and at dawn: max health is "times" as much
+    // (1.1 = +10 %), 1 = normal. Health keeps its share of the bar (half full stays half full), so the bar doesn't jump
+    // and the boost ending at dawn can't kill anyone.
+    public void SetMaxBoost(float times)
+    {
+        times = Mathf.Max(0.1f, times);
+        if (Mathf.Approximately(times, maxBoost)) return;
+
+        float share = MaxHealth > 0f ? health / MaxHealth : 1f;
+        maxBoost = times;
+        health = share * MaxHealth;
+        UpdateBar();
+    }
+
     // Get health back, never above max.
     public void Heal(float amount)
     {
         if (amount <= 0f) return;
 
-        health = Mathf.Min(health + amount, maxHealth);
+        health = Mathf.Min(health + amount, MaxHealth);
         if (!IsDead) dead = false;   // healed from 0 = alive again
         UpdateBar();
     }
@@ -169,14 +185,14 @@ public class PlayerHealth : MonoBehaviour
     // Back to life with full health (PlayerRespawn calls this).
     public void Revive()
     {
-        health = maxHealth;
+        health = MaxHealth;
         dead = false;
         UpdateBar();
     }
 
     void UpdateBar()
     {
-        onChanged?.Invoke(health, maxHealth);
+        onChanged?.Invoke(health, MaxHealth);
     }
 
     void Die()

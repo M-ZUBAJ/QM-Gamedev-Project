@@ -1,6 +1,6 @@
 /*
 First Date: 7/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Nothing to set up (code only, no component). The New Game page fills it; it works by itself in the game.
 Unity Editor: Nothing to set. Pressing Play straight in GameScene (testing) changes nothing: the choices are only used
@@ -16,6 +16,7 @@ Purpose: Remembers the player's New Game choices and puts them into the game whe
            Testing: start with all tools           -> GameRules Tool Test (ToolTestKit gives the 15 tier tools)
            Testing: start with all armor           -> GameRules Armor Test (ArmorTestKit gives the Copper and
                                                       Iron sets)
+           Testing: Old chests / New chests        -> GameRules New Chests (ChestTier: the two chest systems)
            Map: Old world / New world              -> NewWorld: TitleMenu loads GameScene or ProceduralGenerateScene
                                                       (WorldGenerator: a new random world every game)
          Other scripts can read what was chosen, e.g. if (GameSetup.ChosenDifficulty == GameSetup.Difficulty.Hard).
@@ -54,6 +55,7 @@ public static class GameSetup
     public static bool? StartWithAllTools;     // Testing: one of every tier tool from the start
     public static bool? StartWithAllArmor;     // Testing: every armor piece (the Copper and Iron sets) from the start
     public static bool? NewWorld;              // Map: true = the new world (a new random one every game), null = the old
+    public static bool? NewChests;             // Testing: true = the new chest system, false = the old one
 
     static bool chosen;   // START GAME was pressed: use the choices in every game scene that loads (Play Again too)
 
@@ -84,6 +86,7 @@ public static class GameSetup
         StartWithAllTools = null;
         StartWithAllArmor = null;
         NewWorld = null;
+        NewChests = null;
         chosen = false;
     }
 
@@ -140,5 +143,6 @@ public static class GameSetup
         if (ShowNotifications.HasValue) GameRules.Set(GameRule.ShowNotifications, ShowNotifications.Value);
         if (StartWithAllTools.HasValue) GameRules.Set(GameRule.ToolTest, StartWithAllTools.Value);
         if (StartWithAllArmor.HasValue) GameRules.Set(GameRule.ArmorTest, StartWithAllArmor.Value);
+        if (NewChests.HasValue) GameRules.Set(GameRule.NewChests, NewChests.Value);
     }
 }

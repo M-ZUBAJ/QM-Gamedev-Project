@@ -1,6 +1,6 @@
 /*
 First Date: 7/11/2026
-Date: 20/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Put this on the New Game page (Tools > UI > Build Main Title Scene does it: TitleCanvas > Pages > NewGamePage).
 Unity Editor: Defaults = Assets/Config/NewGame/NewGameDefaults.asset (the game as it is now; the tool fills it in).
@@ -10,7 +10,8 @@ Unity Editor: Defaults = Assets/Config/NewGame/NewGameDefaults.asset (the game a
               AllToolsRow and ArmorTestRow (each with a "Toggle", side by side in the Testing section) are optional: an
               older title scene without them still works.
               WorldRow (a ChoiceRow: Old world / New world, with an "Info" text) is optional too: without it the game
-              always starts in the old world.
+              always starts in the old world. So is ChestRow (a ChoiceRow: Old chests / New chests, in the Testing
+              section): without it the game keeps GameScene's GameRules > New Chests.
               Each row can have a small "Dot" picture: it pops up when that option differs from the game as it is now.
               Testing: Play, click PLAY, change the options; DEFAULTS puts them all back.
 Purpose: The New Game options. Every option starts at the game as it is now (the defaults). Changed options get a dot,
@@ -27,6 +28,8 @@ Purpose: The New Game options. Every option starts at the game as it is now (the
            All tools (Testing)      = GameRules Tool Test: start with one of every tier tool (off by default)
            All armor (Testing)      = GameRules Armor Test: start with every armor piece, the Copper and Iron sets
                                       (off by default)
+           Chests (Testing)         = GameRules New Chests: Old chests (every box: choose 1 of 3) or New chests (random
+                                      common and epic boxes, a legendary box, REROLL everywhere: the default)
 Requirement: NewGamePanel.cs x-> NewGameDefaults.cs, GameSetup.cs, StepperRow.cs, ChoiceRow.cs, UITween.cs, TMP_Dropdown (Unity)
              NewGamePanel.cs <-x NewGameDefaultsSync.cs, TitleMenu.cs, TitleSceneBuilder.cs
 */
@@ -72,10 +75,12 @@ public class NewGamePanel : MonoBehaviour
     // The row names it looks for. If you rename them in the Hierarchy, rename them here too.
     static readonly string[] RowNames =
         { "DaysRow", "WinAtRow", "DayLengthRow", "StartTimeRow", "DifficultyRow", "DeathRow", "PickupRow", "MessagesRow",
-          "AllToolsRow", "WorldRow", "ArmorTestRow" };
+          "AllToolsRow", "WorldRow", "ArmorTestRow", "ChestRow" };
     const int NormalDay = 1;   // Short, Normal, Long
     const int OldWorld = 0;    // Map: Old world (as now), New world
     const int NewWorld = 1;
+    const int OldChests = 0;   // Testing: Old chests, New chests
+    const int NewChests = 1;
     const string AllDefault = "Everything is set to the game as it is now.";
 
     StepperRow days;
@@ -85,6 +90,7 @@ public class NewGamePanel : MonoBehaviour
     Toggle allTools;           // Testing: start with all tools (null in an older title scene without the row)
     Toggle allArmor;           // Testing: start with all armor (null in an older title scene without the row)
     ChoiceRow world;           // Map: Old world / New world (null in an older title scene without the row)
+    ChoiceRow chests;          // Testing: Old chests / New chests (null in an older title scene without the row)
     TMP_Text dayLengthInfo, difficultyInfo, summary, worldInfo;
     Button defaultsButton;
     readonly Dictionary<string, RectTransform> dots = new Dictionary<string, RectTransform>();   // row name -> its Dot
@@ -132,6 +138,7 @@ public class NewGamePanel : MonoBehaviour
         if (allTools != null) allTools.isOn = defaults.ToolTest;
         if (allArmor != null) allArmor.isOn = defaults.ArmorTest;
         if (world != null) world.Pick(OldWorld, false);
+        if (chests != null) chests.Pick(defaults.NewChests ? NewChests : OldChests, false);
         Refresh(true);
     }
 
@@ -161,6 +168,7 @@ public class NewGamePanel : MonoBehaviour
         if (allTools != null && allTools.isOn != defaults.ToolTest) GameSetup.StartWithAllTools = allTools.isOn;
         if (allArmor != null && allArmor.isOn != defaults.ArmorTest) GameSetup.StartWithAllArmor = allArmor.isOn;
         if (world != null && world.Picked == NewWorld) GameSetup.NewWorld = true;
+        if (chests != null && (chests.Picked == NewChests) != defaults.NewChests) GameSetup.NewChests = chests.Picked == NewChests;
     }
 
     void FindRows()
@@ -177,6 +185,7 @@ public class NewGamePanel : MonoBehaviour
         allArmor = FindDeep(FindDeep(transform, "ArmorTestRow"), "Toggle")?.GetComponent<Toggle>();
         world = FindDeep(transform, "WorldRow")?.GetComponent<ChoiceRow>();
         worldInfo = FindDeep(FindDeep(transform, "WorldRow"), "Info")?.GetComponent<TMP_Text>();
+        chests = FindDeep(transform, "ChestRow")?.GetComponent<ChoiceRow>();
         dayLengthInfo = FindDeep(FindDeep(transform, "DayLengthRow"), "Info")?.GetComponent<TMP_Text>();
         difficultyInfo = FindDeep(transform, "DifficultyInfo")?.GetComponent<TMP_Text>();
         summary = FindDeep(transform, "Summary")?.GetComponent<TMP_Text>();
@@ -248,6 +257,7 @@ public class NewGamePanel : MonoBehaviour
         if (allTools != null) allTools.SetIsOnWithoutNotify(GameSetup.StartWithAllTools ?? defaults.ToolTest);
         if (allArmor != null) allArmor.SetIsOnWithoutNotify(GameSetup.StartWithAllArmor ?? defaults.ArmorTest);
         if (world != null) world.Pick(GameSetup.NewWorld == true ? NewWorld : OldWorld, false);
+        if (chests != null) chests.Pick((GameSetup.NewChests ?? defaults.NewChests) ? NewChests : OldChests, false);
     }
 
     void Listen()
@@ -265,6 +275,7 @@ public class NewGamePanel : MonoBehaviour
         if (allTools != null) allTools.onValueChanged.AddListener(_ => Refresh(true));
         if (allArmor != null) allArmor.onValueChanged.AddListener(_ => Refresh(true));
         if (world != null) world.Changed += _ => Refresh(true);
+        if (chests != null) chests.Changed += _ => Refresh(true);
         if (defaultsButton != null) defaultsButton.onClick.AddListener(SetDefaults);
     }
 
@@ -286,6 +297,7 @@ public class NewGamePanel : MonoBehaviour
             allTools != null && allTools.isOn != defaults.ToolTest,
             world != null && world.Picked != OldWorld,
             allArmor != null && allArmor.isOn != defaults.ArmorTest,
+            chests != null && (chests.Picked == NewChests) != defaults.NewChests,
         };
 
         bool any = false;

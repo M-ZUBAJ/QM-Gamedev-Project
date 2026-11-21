@@ -582,7 +582,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7494012006072683705, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 465.19
+      value: 465.19003
       objectReference: {fileID: 0}
     - target: {fileID: 8070574319609505244, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
       propertyPath: m_Name
@@ -657,7 +657,7 @@ MonoBehaviour:
   rules:
   - name: ChestsForest
     prefab: {fileID: 8644458751390724045, guid: caebce93f6b77cd43aed49b2216edb87, type: 3}
-    count: 10
+    count: 20
     yOffset: 0.6
     terrainLayer: 0
     minStrength: 0.6
@@ -671,7 +671,7 @@ MonoBehaviour:
     maxSize: 1
   - name: Rare Chests Grass
     prefab: {fileID: 5508622133717038746, guid: 046bd5d07fbdfdb488db4fca94657675, type: 3}
-    count: 3
+    count: 6
     yOffset: 0.6
     terrainLayer: 0
     minStrength: 0.6
@@ -685,7 +685,7 @@ MonoBehaviour:
     maxSize: 1
   - name: ChestsDesert
     prefab: {fileID: 8644458751390724045, guid: caebce93f6b77cd43aed49b2216edb87, type: 3}
-    count: 15
+    count: 30
     yOffset: 0.6
     terrainLayer: 1
     minStrength: 0.6
@@ -699,7 +699,7 @@ MonoBehaviour:
     maxSize: 1
   - name: Rare Chests Desert
     prefab: {fileID: 5508622133717038746, guid: 046bd5d07fbdfdb488db4fca94657675, type: 3}
-    count: 6
+    count: 12
     yOffset: 0.6
     terrainLayer: 1
     minStrength: 0.6
@@ -713,6 +713,20 @@ MonoBehaviour:
     maxSize: 1
   - name: Epic Chests Desert
     prefab: {fileID: 778164086490228726, guid: 5f095398cd0813e4fab04a6c5015b22c, type: 3}
+    count: 4
+    yOffset: 0.6
+    terrainLayer: 1
+    minStrength: 0.6
+    maxSlope: 15
+    minSpacing: 20
+    spacingGroup: Chests
+    clearance: 3
+    patchSize: 0
+    openGround: 0.35
+    minSize: 1
+    maxSize: 1
+  - name: Legendary Chests Desert
+    prefab: {fileID: 7850518171655344300, guid: 36b8aa0d1acbb814dbaa9cd012866652, type: 3}
     count: 2
     yOffset: 0.6
     terrainLayer: 1
@@ -1342,6 +1356,103 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7656359462529125084, guid: 5a9635006fad84d4ea4caabe92368ab8, type: 3}
   m_PrefabInstance: {fileID: 640212376}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &985800447
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4359964550570459806, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_Name
+      value: PerkRollCanvas
+      objectReference: {fileID: 0}
+    - target: {fileID: 7656435341141801262, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7656435341141801262, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7656435341141801262, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7656435341141801262, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7656435341141801262, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7656435341141801262, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7656435341141801262, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7656435341141801262, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7656435341141801262, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7656435341141801262, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7656435341141801262, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7656435341141801262, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7656435341141801262, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7656435341141801262, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7656435341141801262, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7656435341141801262, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7656435341141801262, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7656435341141801262, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7656435341141801262, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7656435341141801262, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 721f5d7a94a2a584e9fec6de7bb949e9, type: 3}
 --- !u!1 &1068360018
 GameObject:
   m_ObjectHideFlags: 0
@@ -2346,6 +2457,7 @@ MonoBehaviour:
   defaultShieldSeconds: 2
   flashColor: {r: 1, g: 0.8, b: 0.25, a: 0.55}
   flashSeconds: 0.9
+  tellNightPower: 1
 --- !u!1 &1690935956
 GameObject:
   m_ObjectHideFlags: 0
@@ -2388,6 +2500,7 @@ MonoBehaviour:
   perkIcons: 1
   toolTest: 0
   armorTest: 0
+  newChests: 1
 --- !u!4 &1690935958
 Transform:
   m_ObjectHideFlags: 0
@@ -4816,3 +4929,4 @@ SceneRoots:
   - {fileID: 538607312}
   - {fileID: 898840731}
   - {fileID: 1751678631}
+  - {fileID: 985800447}

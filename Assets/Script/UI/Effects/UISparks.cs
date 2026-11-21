@@ -9,6 +9,7 @@ Purpose: A burst of small glowing sparks flying out of a UI object (e.g. a click
            UISparks.Burst(buttonRect, Color.yellow, 14);
 Requirement: UISparks.cs x-> UITween.cs, UIFXSprites.cs
              UISparks.cs <-x ButtonFX.cs, TitleMenu.cs
+             UISparks.cs <-o PerkRollUI.cs
 */
 
 using System.Collections.Generic;

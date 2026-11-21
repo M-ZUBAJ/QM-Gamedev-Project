@@ -10,7 +10,8 @@ Purpose: Holds the player's stamina. Sprinting (PlayerController) and jumping (P
          and it fills back up by itself after a short rest.
          When it hits 0 the player is tired: no sprinting or jumping until it has refilled to "Recover To".
          Other scripts can make it fill faster (SetRegenBoost: the Second Wind perk, from PerkEffects) and make
-         sprinting cheaper (SetSprintCost: the Sprinter perk).
+         sprinting cheaper (SetSprintCost: the Sprinter perk). The Night Power perk raises max stamina at night
+         (SetMaxBoost); stamina keeps its share of the bar.
 Requirement: PlayerStamina.cs <-x PerkChest.cs, PerkManager.cs, PlayerCombat.cs
              PlayerStamina.cs <-o ItemConsumer.cs, PerkEffects.cs, PlayerController.cs, PlayerInfoPage.cs, PlayerJump.cs, PlayerPerks.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
 */
@@ -68,9 +69,10 @@ public class PlayerStamina : MonoBehaviour
         new System.Collections.Generic.Dictionary<Object, float>();   // who makes stamina come back faster, and how much
     float regenBoost = 1f;       // all of them multiplied together (1.5 = 50 % faster)
     float sprintCost = 1f;       // perks: 0.75 = sprinting uses a quarter less (SetSprintCost)
+    float maxBoost = 1f;         // Night Power: max stamina x this at night (SetMaxBoost), 1 = normal
 
     public float Stamina => stamina;          // other scripts can read but not set it
-    public float MaxStamina => maxStamina;
+    public float MaxStamina => maxStamina * maxBoost;   // perks included (Night Power at night)
     public float StartMaxStamina => startMaxStamina;   // max stamina before any perk (the inventory's Info tab shows the difference)
     public float RegenBoost => regenBoost;             // how much faster it comes back now: 1 = normal, 1.5 = 50 % faster
     public float RegenPerSecond => regenPerSecond * regenBoost;   // stamina gained back per second while resting, boosts included
@@ -98,7 +100,7 @@ public class PlayerStamina : MonoBehaviour
     // Unity calls this when a value is changed in the Inspector, so the bar follows while testing.
     void OnValidate()
     {
-        stamina = Mathf.Clamp(stamina, 0f, maxStamina);   // keep it between 0 and max
+        stamina = Mathf.Clamp(stamina, 0f, MaxStamina);   // keep it between 0 and max
         UpdateBar();
     }
 
@@ -132,8 +134,8 @@ public class PlayerStamina : MonoBehaviour
     {
         if (amount <= 0f) return;
 
-        stamina = Mathf.Min(stamina + amount, maxStamina);
-        if (stamina >= Mathf.Min(recoverTo, maxStamina)) tired = false;
+        stamina = Mathf.Min(stamina + amount, MaxStamina);
+        if (stamina >= Mathf.Min(recoverTo, MaxStamina)) tired = false;
         UpdateBar();
     }
 
@@ -158,13 +160,26 @@ public class PlayerStamina : MonoBehaviour
     public void ResetMaxStamina()
     {
         maxStamina = startMaxStamina;
-        stamina = Mathf.Min(stamina, maxStamina);
+        stamina = Mathf.Min(stamina, MaxStamina);
         UpdateBar();
     }
 
 
 
 
+
+    // The Night Power perk (PerkEffects) calls this when night starts and at dawn: max stamina is "times" as much
+    // (1.1 = +10 %), 1 = normal. Stamina keeps its share of the bar, so the bar doesn't jump.
+    public void SetMaxBoost(float times)
+    {
+        times = Mathf.Max(0.1f, times);
+        if (Mathf.Approximately(times, maxBoost)) return;
+
+        float share = MaxStamina > 0f ? stamina / MaxStamina : 1f;
+        maxBoost = times;
+        stamina = share * MaxStamina;
+        UpdateBar();
+    }
 
     // Sprinting uses "times" as much stamina as normal (1 = normal, 0.75 = a quarter less). The Sprinter perk
     // (PerkEffects) sets it.
@@ -190,17 +205,17 @@ public class PlayerStamina : MonoBehaviour
     void Regen()
     {
         if (Time.time - lastUsedTime < regenDelay) return;   // still resting
-        if (stamina >= maxStamina) return;                    // already full
+        if (stamina >= MaxStamina) return;                    // already full
 
         // Time.deltaTime = seconds since last frame, so the regen is per second, not per frame.
-        stamina = Mathf.Min(stamina + RegenPerSecond * Time.deltaTime, maxStamina);
-        if (stamina >= Mathf.Min(recoverTo, maxStamina)) tired = false;
+        stamina = Mathf.Min(stamina + RegenPerSecond * Time.deltaTime, MaxStamina);
+        if (stamina >= Mathf.Min(recoverTo, MaxStamina)) tired = false;
         UpdateBar();
     }
 
     void UpdateBar()
     {
-        onChanged?.Invoke(stamina, maxStamina);
+        onChanged?.Invoke(stamina, MaxStamina);
     }
 
     // Click the component's ⋮ menu in the Inspector to run this (Play mode).

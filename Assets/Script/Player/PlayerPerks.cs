@@ -17,7 +17,9 @@ Purpose: Remembers which perks the player has, in the order they were gained, an
            the loot boxes' new perks (Second Wind, Critical Strike, Glide...) -> PerkEffects.Describe
          The kinds are Marko's ChestPerkType (PerkData.cs), the same list his Perk Data use.
          It also remembers each Perk Data picked (TimesPicked), so a chest knows what may be offered (PerkRules: a perk
-         that needs another one first, a perk that can be picked only once a life).
+         that needs another one first, a perk the player may have only one of at a time).
+         Lose(kind) takes one away again: Last Stand once it has saved the player (PerkEffects) leaves the HUD, and a
+         loot box may offer it again.
          When the player dies, every perk is lost (Reset On Death): the list is emptied and the boosts are undone
          (max health, max stamina and walk speed back to their start, the fireball locked again, the new perks undone by
          PerkEffects), and the loot boxes' prices start again (ChestTier).
@@ -75,7 +77,7 @@ public class PlayerPerks : MonoBehaviour
     PlayerFireball fireball;
     readonly Dictionary<PerkData, int> picked = new Dictionary<PerkData, int>();   // each Perk Data picked in this life, and how often
 
-    // Fired whenever a perk is gained (e.g. the HUD redraws).
+    // Fired whenever a perk is gained or lost (e.g. the HUD redraws).
     public event System.Action Changed;
 
     public IReadOnlyList<OwnedPerk> Owned => owned;
@@ -136,6 +138,35 @@ public class PlayerPerks : MonoBehaviour
     {
         if (perk == null || Current == null) return 0;
         return Current.picked.TryGetValue(perk, out int count) ? count : 0;
+    }
+
+    // Takes one perk of this kind away again (Last Stand once it has saved the player: PerkEffects calls it): one stack
+    // less (the HUD drops it at 0) and one pick less of its Perk Data, so a loot box may offer it again.
+    public static void Lose(ChestPerkType type)
+    {
+        if (Current != null) Current.Remove(type);
+    }
+
+    public void Remove(ChestPerkType type)
+    {
+        OwnedPerk perk = owned.Find(p => p.type == type);
+        if (perk != null)
+        {
+            perk.stacks--;
+            if (perk.stacks <= 0) owned.Remove(perk);
+        }
+
+        PerkData data = null;   // a Perk Data of this kind that was picked
+        foreach (KeyValuePair<PerkData, int> entry in picked)
+        {
+            if (entry.Key != null && entry.Key.perkType == type && entry.Value > 0) { data = entry.Key; break; }
+        }
+        if (data != null)
+        {
+            if (picked[data] <= 1) picked.Remove(data);
+            else picked[data]--;
+        }
+        Changed?.Invoke();
     }
 
     public void Add(PerkData perk)
@@ -209,6 +240,13 @@ public class PlayerPerks : MonoBehaviour
             case ChestPerkType.Brawler:        return "Brawler";
             case ChestPerkType.LastStand:      return "Last Stand";
             case ChestPerkType.Glide:          return "Glide";
+            case ChestPerkType.AttackSpeed:    return "Attack Speed";
+            case ChestPerkType.Vampire:        return "Vampire";
+            case ChestPerkType.Thorns:         return "Thorns";
+            case ChestPerkType.NightPower:     return "Night Power";
+            case ChestPerkType.Reroll:         return "Reroll";
+            case ChestPerkType.KeenEye:        return "Keen Eye";
+            case ChestPerkType.LongReach:      return "Long Reach";
             default:                           return type.ToString();
         }
     }

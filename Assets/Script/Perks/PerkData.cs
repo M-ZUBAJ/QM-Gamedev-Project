@@ -23,7 +23,21 @@ public enum ChestPerkType
     Sprinter,        // [Tony] added: sprint faster, using less stamina
     Brawler,         // [Tony] added: punches knock monsters back farther
     LastStand,       // [Tony] added: survive one killing blow each life
-    Glide            // [Tony] added: hold Space in the air to float down, tap it twice to dive
+    Glide,           // [Tony] added: hold Space in the air to float down, tap it twice to dive (21/11/2026: a comma added)
+    // [Tony] added (21/11/2026): four more (attack speed for the rare boxes; the rest for the epic and legendary boxes).
+    // Log: Docs/TonyEditMate/Marko/21-11-2026 New Chest System.md
+    AttackSpeed,     // [Tony] added: attacks come faster
+    Vampire,         // [Tony] added: heal a share of the damage you deal
+    Thorns,          // [Tony] added: a monster that hits you takes a share of that damage back
+    NightPower,      // [Tony] added: more health, stamina, speed and damage at night (21/11/2026: a comma added)
+    // [Tony] added (21/11/2026): three more. Reroll (epic and legendary boxes): the REROLL button only works once the
+    // player has it. Keen Eye (epic and legendary boxes): the crosshair turns yellow when the attack can reach what it
+    // points at. Long Reach (rare boxes, in the new system common boxes too; only after Keen Eye): the attack reaches
+    // farther.
+    // Log: Docs/TonyEditMate/Marko/21-11-2026 Reroll Perk, Keen Eye And Long Reach.md
+    Reroll,          // [Tony] added: unlocks the REROLL button at loot boxes
+    KeenEye,         // [Tony] added: the crosshair turns yellow when the attack can reach what it points at
+    LongReach        // [Tony] added: melee attacks reach farther
 }
 
 [CreateAssetMenu(
@@ -52,7 +66,7 @@ public class PerkData : ScriptableObject
     [Tooltip("Only offered once the player has picked this perk in this life (e.g. Spring Legs needs Glide). Empty = always.")]   // [Tony] added
     public PerkData requires;                                                                         // [Tony] added
 
-    [Tooltip("How many times one life can pick it: 1 = once (e.g. Last Stand), 0 = no limit.")]      // [Tony] added
+    [Tooltip("How many of it the player can have at a time: 1 = one (e.g. Last Stand, offered again once it's used up), 0 = no limit.")]   // [Tony] added (21/11/2026: text edited, was "How many times one life can pick it: 1 = once (e.g. Last Stand), 0 = no limit.")
     [Min(0)]                                                                                           // [Tony] added
     public int maxPicks;                                                                              // [Tony] added
 }

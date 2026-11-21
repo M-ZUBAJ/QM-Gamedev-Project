@@ -19,7 +19,11 @@ Purpose: Draws the small game pictures in code and saves them as PNG sprites, so
                                               Legs), a coin and a plus (Bounty Hunter), a drumstick with a sparkle
                                               (Gourmet), a log (Lumberjack), a rock with ore (Prospector), a running
                                               boot (Sprinter), a fist (Brawler), a gold shield with a heart (Last
-                                              Stand), a feather (Glide)
+                                              Stand), a feather (Glide), a sword with swing lines (Attack Speed), a
+                                              blood drop with a green plus (Vampire), a thorny green ball (Thorns),
+                                              a crescent moon with a star (Night Power), two gold arrows round a die
+                                              (Reroll), an eye in a yellow ring (Keen Eye), a spear with a green
+                                              plus (Long Reach)
            Assets/UI/Stats/Hunger.png         a drumstick          (the inventory's Info tab: hunger)
            Assets/UI/Stats/Jump.png           a green up arrow     (the inventory's Info tab: jump height)
            Assets/UI/Stats/Armor.png          a steel breastplate  (the inventory's Info tab: armor)
@@ -29,7 +33,7 @@ Purpose: Draws the small game pictures in code and saves them as PNG sprites, so
          GivePerkIcons puts the perk pictures in the player's PlayerPerks (its Icons list), for the HUD's perk icons
          and the Info tab. ForPerk gives each perk kind (Marko's ChestPerkType) its picture.
 Requirement: IconArt.cs x-> UIBuildHelper.cs, UIFXSprites.cs, PlayerPerks.cs, ArmorStats.cs, PerkData.cs
-             IconArt.cs <-x CraftingMenuBuilder.cs, GearPageBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, LootChestBuilder.cs, PerkPanelBuilder.cs
+             IconArt.cs <-x CraftingMenuBuilder.cs, GearPageBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, LootChestBuilder.cs, PerkPanelBuilder.cs, PerkRollBuilder.cs
 */
 
 using System.IO;
@@ -93,11 +97,20 @@ public static class IconArt
         new Vector2(-0.78f, -0.58f), new Vector2(-0.6f, 0.18f), new Vector2(-0.22f, 0.6f), new Vector2(0.34f, 0.54f),
         new Vector2(0.78f, 0.08f), new Vector2(0.66f, -0.58f),
     };
+    static readonly Vector2[] Blade =   // a sword blade from the hilt (down left) to its point (up right)
+    {
+        new Vector2(-0.378f, -0.222f), new Vector2(0.561f, 0.716f), new Vector2(0.78f, 0.78f), new Vector2(0.716f, 0.561f),
+        new Vector2(-0.222f, -0.378f),
+    };
+    static readonly Vector2[] DropTip = { new Vector2(-0.47f, -0.05f), new Vector2(0.47f, -0.05f), new Vector2(0f, 0.9f) };
+    static readonly Vector2[] ThornBall = StarPoints(12, 0.9f, 0.56f);   // a ball with 12 thorns
     static readonly Vector2[] Shield =
     {
         new Vector2(-0.66f, 0.74f), new Vector2(0.66f, 0.74f), new Vector2(0.62f, 0.02f), new Vector2(0f, -0.88f),
         new Vector2(-0.62f, 0.02f),
     };
+    static readonly Vector2[] RerollHeadTop = ArrowHead(150f);      // the top arrow's head (it turns to the left)
+    static readonly Vector2[] RerollHeadBottom = ArrowHead(330f);   // the bottom arrow's head (to the right)
 
     // ===== My methods =====
 
@@ -123,6 +136,13 @@ public static class IconArt
     public static Sprite PerkBrawler() => Save(PerkFolder + "/PerkBrawler.png", () => Draw(IconSize, FistPaint), Vector4.zero);
     public static Sprite PerkLastStand() => Save(PerkFolder + "/PerkLastStand.png", () => Draw(IconSize, ShieldPaint), Vector4.zero);
     public static Sprite PerkGlide() => Save(PerkFolder + "/PerkGlide.png", () => Draw(IconSize, FeatherPaint), Vector4.zero);
+    public static Sprite PerkAttackSpeed() => Save(PerkFolder + "/PerkAttackSpeed.png", () => Draw(IconSize, SwordPaint), Vector4.zero);
+    public static Sprite PerkVampire() => Save(PerkFolder + "/PerkVampire.png", () => Draw(IconSize, VampirePaint), Vector4.zero);
+    public static Sprite PerkThorns() => Save(PerkFolder + "/PerkThorns.png", () => Draw(IconSize, ThornsPaint), Vector4.zero);
+    public static Sprite PerkNightPower() => Save(PerkFolder + "/PerkNightPower.png", () => Draw(IconSize, MoonPaint), Vector4.zero);
+    public static Sprite PerkReroll() => Save(PerkFolder + "/PerkReroll.png", () => Draw(IconSize, RerollPaint), Vector4.zero);
+    public static Sprite PerkKeenEye() => Save(PerkFolder + "/PerkKeenEye.png", () => Draw(IconSize, EyePaint), Vector4.zero);
+    public static Sprite PerkLongReach() => Save(PerkFolder + "/PerkLongReach.png", () => Draw(IconSize, SpearPaint), Vector4.zero);
 
     // A white outline of an armor piece, shown faintly in an empty slot on the Gear page (tinted by the slot).
     public static Sprite ArmorSlotIcon(ArmorSlot slot) =>
@@ -149,6 +169,13 @@ public static class IconArt
             case ChestPerkType.Brawler:        return PerkBrawler();
             case ChestPerkType.LastStand:      return PerkLastStand();
             case ChestPerkType.Glide:          return PerkGlide();
+            case ChestPerkType.AttackSpeed:    return PerkAttackSpeed();
+            case ChestPerkType.Vampire:        return PerkVampire();
+            case ChestPerkType.Thorns:         return PerkThorns();
+            case ChestPerkType.NightPower:     return PerkNightPower();
+            case ChestPerkType.Reroll:         return PerkReroll();
+            case ChestPerkType.KeenEye:        return PerkKeenEye();
+            case ChestPerkType.LongReach:      return PerkLongReach();
             default:                           return null;
         }
     }
@@ -322,6 +349,70 @@ public static class IconArt
         return Over(c, heart);
     }
 
+    // A steel sword swung up right, a gold hilt, and two swing lines behind it.
+    static Color SwordPaint(float x, float y)
+    {
+        Color c = Icon(x, y, InSwingLines, new Color(0.2f, 0.6f, 0.95f), new Color(0.6f, 0.9f, 1f), new Color(0.06f, 0.25f, 0.45f));
+        c = Over(c, Icon(x, y, (px, py) => InPolygon(px, py, Blade), new Color(0.55f, 0.6f, 0.68f), new Color(0.96f, 0.97f, 1f), new Color(0.2f, 0.22f, 0.28f)));
+        return Over(c, Icon(x, y, InHilt, new Color(0.7f, 0.45f, 0.08f), new Color(1f, 0.82f, 0.35f), new Color(0.35f, 0.2f, 0.03f)));
+    }
+
+    // A red drop of blood with a shine, and a green plus (healing).
+    static Color VampirePaint(float x, float y)
+    {
+        float dx = x + 0.1f, dy = y + 0.05f;   // the drop sits a little down left, so the plus has room
+        Color c = Icon(dx, dy, InDrop, new Color(0.5f, 0.02f, 0.06f), new Color(0.95f, 0.2f, 0.24f), new Color(0.28f, 0.01f, 0.03f));
+        if (Circle(dx + 0.2f, dy + 0.08f, 0.1f)) c = Over(c, new Color(1f, 1f, 1f, 0.7f));   // the shine, up left on the round part
+        return Over(c, Icon(x, y, InPlus, new Color(0.15f, 0.6f, 0.2f), new Color(0.55f, 0.95f, 0.45f), new Color(0.05f, 0.28f, 0.08f)));
+    }
+
+    // A green ball of thorns with a darker middle.
+    static Color ThornsPaint(float x, float y)
+    {
+        Color c = Icon(x, y, (px, py) => InPolygon(px, py, ThornBall), new Color(0.16f, 0.36f, 0.1f), new Color(0.52f, 0.78f, 0.3f), new Color(0.07f, 0.17f, 0.04f));
+        if (Circle(x, y, 0.3f)) c = Over(c, new Color(0.1f, 0.25f, 0.06f, 0.55f));
+        return c;
+    }
+
+    // A pale crescent moon with a gold star in its curve.
+    static Color MoonPaint(float x, float y)
+    {
+        Color c = Icon(x, y, InCrescent, new Color(0.5f, 0.52f, 0.85f), new Color(0.95f, 0.95f, 1f), new Color(0.18f, 0.18f, 0.42f));
+        return Over(c, Icon(x, y, (px, py) => InPolygon(px - 0.48f, py - 0.42f, Sparkle), new Color(1f, 0.78f, 0.15f), new Color(1f, 0.97f, 0.6f), new Color(0.55f, 0.38f, 0.05f)));
+    }
+
+    // Two gold arrows chasing each other round a white die: a fresh roll.
+    static Color RerollPaint(float x, float y)
+    {
+        Color c = Icon(x, y, InReroll, new Color(0.8f, 0.5f, 0.05f), new Color(1f, 0.88f, 0.35f), new Color(0.4f, 0.24f, 0.02f));
+        c = Over(c, Icon(x, y, InDie, new Color(0.82f, 0.84f, 0.9f), Color.white, new Color(0.25f, 0.27f, 0.35f)));
+        bool pip = Circle(x + 0.12f, y - 0.12f, 0.05f) || Circle(x, y, 0.05f) || Circle(x - 0.12f, y + 0.12f, 0.05f);   // a 3, corner to corner
+        if (pip && InDie(x, y)) c = Over(c, new Color(0.15f, 0.15f, 0.2f));
+        return c;
+    }
+
+    // A white eye with a gold iris inside a yellow ring (the crosshair turning yellow).
+    static Color EyePaint(float x, float y)
+    {
+        Color c = Icon(x, y, InRing, new Color(0.95f, 0.72f, 0.05f), new Color(1f, 0.95f, 0.4f), new Color(0.45f, 0.3f, 0.02f));
+        c = Over(c, Icon(x, y, InEye, new Color(0.78f, 0.82f, 0.9f), Color.white, new Color(0.2f, 0.22f, 0.32f)));
+        if (!InEye(x, y)) return c;
+        if (Circle(x, y, 0.25f)) c = Over(c, Color.Lerp(new Color(0.75f, 0.45f, 0.02f), new Color(1f, 0.85f, 0.25f), (y + 0.25f) / 0.5f));   // the iris
+        if (Circle(x, y, 0.11f)) c = Over(c, new Color(0.08f, 0.06f, 0.05f));                  // the pupil
+        if (Circle(x + 0.09f, y - 0.09f, 0.055f)) c = Over(c, new Color(1f, 1f, 1f, 0.85f));   // a shine, up left
+        return c;
+    }
+
+    // A spear pointing up right (a long reach), with a dark binding under its head, and a green plus.
+    static Color SpearPaint(float x, float y)
+    {
+        Color c = Icon(x, y, InSpearShaft, new Color(0.45f, 0.28f, 0.12f), new Color(0.72f, 0.5f, 0.27f), new Color(0.22f, 0.12f, 0.04f));
+        float along = (x + y) * 0.7071f, across = (x - y) * 0.7071f;
+        if (Mathf.Abs(across) <= 0.075f && along >= 0.42f && along <= 0.53f) c = Over(c, new Color(0.3f, 0.18f, 0.08f));
+        c = Over(c, Icon(x, y, InSpearHead, new Color(0.55f, 0.6f, 0.68f), new Color(0.96f, 0.97f, 1f), new Color(0.2f, 0.22f, 0.28f)));
+        return Over(c, Icon(x, y, (px, py) => InPlus(-px, py), new Color(0.15f, 0.6f, 0.2f), new Color(0.55f, 0.95f, 0.45f), new Color(0.05f, 0.28f, 0.08f)));
+    }
+
     // A white feather, tilted.
     static Color FeatherPaint(float x, float y) =>
         Icon(x, y, InFeather, new Color(0.7f, 0.82f, 1f), new Color(1f, 1f, 1f), new Color(0.25f, 0.35f, 0.55f));
@@ -421,6 +512,75 @@ public static class IconArt
         Segment(x, y, 0.58f, 0.32f, 0.58f, 0.86f, 0.1f) || Segment(x, y, 0.31f, 0.59f, 0.85f, 0.59f, 0.1f);
 
     static bool InLogBody(float x, float y) => Segment(x, y, -0.62f, -0.08f, 0.3f, -0.08f, 0.36f);
+
+    // The sword's guard (across the blade), grip and round pommel.
+    static bool InHilt(float x, float y) =>
+        Segment(x, y, -0.532f, -0.108f, -0.108f, -0.532f, 0.075f) || Segment(x, y, -0.36f, -0.36f, -0.62f, -0.62f, 0.06f) ||
+        Circle(x + 0.7f, y + 0.7f, 0.1f);
+
+    // Two lines along the sword, above it: the swing.
+    static bool InSwingLines(float x, float y) =>
+        Segment(x, y, -0.62f, 0.3f, -0.18f, 0.74f, 0.05f) || Segment(x, y, -0.84f, 0.02f, -0.5f, 0.36f, 0.05f);
+
+    // A drop: a round bottom and a point at the top.
+    static bool InDrop(float x, float y) => Circle(x, y + 0.25f, 0.52f) || InPolygon(x, y, DropTip);
+
+    // A crescent: a circle with a smaller circle cut out of its upper right.
+    static bool InCrescent(float x, float y) => Circle(x, y, 0.74f) && !Circle(x - 0.3f, y - 0.22f, 0.6f);
+
+    // Two arcs of a ring (top and bottom, gaps on the left and right) with an arrowhead at the end of each.
+    static bool InReroll(float x, float y)
+    {
+        float d = Mathf.Sqrt(x * x + y * y);
+        float angle = Mathf.Atan2(y, x) * Mathf.Rad2Deg;   // 0 = right, 90 = up
+        if (angle < 0f) angle += 360f;
+        bool arcs = d >= 0.46f && d <= 0.68f && ((angle >= 20f && angle <= 150f) || (angle >= 200f && angle <= 330f));
+        return arcs || InPolygon(x, y, RerollHeadTop) || InPolygon(x, y, RerollHeadBottom);
+    }
+
+    // An arrowhead at the end of an arc that turns to the left: its base across the ring at "degrees", its point 30
+    // degrees further round.
+    static Vector2[] ArrowHead(float degrees)
+    {
+        float a = degrees * Mathf.Deg2Rad, tip = (degrees + 30f) * Mathf.Deg2Rad;
+        return new[]
+        {
+            new Vector2(Mathf.Cos(a) * 0.3f, Mathf.Sin(a) * 0.3f), new Vector2(Mathf.Cos(a) * 0.84f, Mathf.Sin(a) * 0.84f),
+            new Vector2(Mathf.Cos(tip) * 0.57f, Mathf.Sin(tip) * 0.57f),
+        };
+    }
+
+    // A small box with round corners in the middle: the die.
+    static bool InDie(float x, float y)
+    {
+        const float half = 0.26f, r = 0.08f;   // half its width, its corners' radius
+        float cx = Mathf.Abs(x) - (half - r), cy = Mathf.Abs(y) - (half - r);
+        if (cx <= 0f && Mathf.Abs(y) <= half) return true;
+        if (cy <= 0f && Mathf.Abs(x) <= half) return true;
+        return cx * cx + cy * cy <= r * r;
+    }
+
+    // An almond (where two big circles overlap): the eye.
+    static bool InEye(float x, float y) => Circle(x, y - 0.42f, 0.74f) && Circle(x, y + 0.42f, 0.74f);
+
+    // A thin ring round the edge.
+    static bool InRing(float x, float y) => Mathf.Abs(Mathf.Sqrt(x * x + y * y) - 0.8f) <= 0.065f;
+
+    // The spear's wooden shaft, from the bottom left corner up right ("along" and "across" the spear).
+    static bool InSpearShaft(float x, float y)
+    {
+        float along = (x + y) * 0.7071f, across = (x - y) * 0.7071f;
+        return Mathf.Abs(across) <= 0.055f && along >= -1.12f && along <= 0.62f;
+    }
+
+    // The spear's steel head: a leaf shape, widest a third of the way to its point.
+    static bool InSpearHead(float x, float y)
+    {
+        float along = (x + y) * 0.7071f, across = (x - y) * 0.7071f;
+        if (along < 0.5f || along > 1.2f) return false;
+        float width = along < 0.72f ? (along - 0.5f) / 0.22f : (1.2f - along) / 0.48f;
+        return Mathf.Abs(across) <= 0.18f * width;
+    }
     static bool InLogEnd(float x, float y) => Circle(x - 0.36f, y + 0.08f, 0.36f);
 
     static bool InSprint(float x, float y) =>

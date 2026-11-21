@@ -13,9 +13,10 @@ Purpose: The extras on Marko's perk panel ("CHOOSE YOUR REWARD"):
            - while the player can't pay, the three CHOOSE buttons can't be clicked and say "NEED 2 COINS", and a red
              line says how many are missing (Marko's chest takes the coins when a perk is picked);
            - the close hint names the chest's key ("E: close, or walk away");
-           - the REROLL button, only for a box that allows it (the epic box): "REROLL  10 COINS" shows new perks for
-             coins (each reroll at the same box costs twice as much); faded while you can't pay, and it says so when
-             the box has no other perk to roll into;
+           - the REROLL button, only for a box that allows it (the epic box in the old chest system, every box in the
+             new one) and only once the player has the Reroll perk (ChestTier.CanReroll): "REROLL  10 COINS" shows new
+             perks for coins (each reroll at the same box costs twice as much); faded while you can't pay, and it says
+             so when the box has no other perk to roll into;
            - the window pops in when the panel opens.
 Requirement: PerkPanelInfo.cs x-> PerkSelectionUI.cs, PerkChest.cs, PlayerCoins.cs, UITween.cs
              PerkPanelInfo.cs o-> ChestTier.cs
@@ -49,7 +50,7 @@ public class PerkPanelInfo : MonoBehaviour
     [Tooltip("The line under the title (a loot box's color).")]
     [SerializeField] Image titleLine;
 
-    [Header("Reroll (the epic box)")]
+    [Header("Reroll (a box that allows it)")]
     [Tooltip("The REROLL button: shown only for a box whose ChestTier allows rerolls.")]
     [SerializeField] Button rerollButton;
 

@@ -34,7 +34,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 466330337815889618}
+  - {fileID: 1168339197915569163}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &4630258940319513808
@@ -80,6 +80,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 97f5abba8599e584aab26b46589be9b5, type: 2}
   - {fileID: 11400000, guid: fabe439a19e30db4ea80b9fda1928eed, type: 2}
   - {fileID: 11400000, guid: 9bcc23092d96afe438282c721bd0e4ee, type: 2}
+  - {fileID: 11400000, guid: cddc96d5521751743b7b05ea8107cd60, type: 2}
+  - {fileID: 11400000, guid: 931031fdf433a9946a1a7044c50987e8, type: 2}
+  - {fileID: 11400000, guid: 6e39a84c9ee2c7949b8727d4009b5259, type: 2}
+  - {fileID: 11400000, guid: 0b0c5207e69a81d438f77c86f370da46, type: 2}
+  - {fileID: 11400000, guid: 36fe88525278fc54e9785a96325f5d52, type: 2}
 --- !u!114 &2177638928340098234
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -99,8 +104,17 @@ MonoBehaviour:
   growth: 1
   growBy: 2
   canReroll: 1
+  rerollNeedsPerk: 1
   rerollShare: 0.1
   rerollGrowth: 2
+  randomInNewSystem: 1
+  rerollInNewSystem: 1
+  newSystemPerks: []
+  newSystemOnly: 0
+  vanishParticles: {fileID: 8133225597941850435, guid: 22c3e71fbeb4f724e8c4f18585709146, type: 3}
+  burstCount: 180
+  burstSpeed: 2.6
+  toolVersion: 2
 --- !u!114 &7486479275853587366
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -136,7 +150,7 @@ MonoBehaviour:
   showWhen: 0
   range: 3
   fadeSeconds: 0.12
---- !u!1 &914122121523986841
+--- !u!1 &9148633531709581428
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -144,9 +158,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 466330337815889618}
-  - component: {fileID: 5023487268951334248}
-  - component: {fileID: 8383019825724413907}
+  - component: {fileID: 1168339197915569163}
+  - component: {fileID: 4150797813960495761}
+  - component: {fileID: 1528969951798342907}
   m_Layer: 0
   m_Name: Model
   m_TagString: Untagged
@@ -154,13 +168,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &466330337815889618
+--- !u!4 &1168339197915569163
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 914122121523986841}
+  m_GameObject: {fileID: 9148633531709581428}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.00000008940697, y: -0.0011838078, z: -0.000000044703484}
@@ -169,21 +183,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 830475199259574848}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &5023487268951334248
+--- !u!33 &4150797813960495761
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 914122121523986841}
+  m_GameObject: {fileID: 9148633531709581428}
   m_Mesh: {fileID: 1112115847375050598, guid: e8df03bcfb938054dbf2a8b131ee9f1c, type: 3}
---- !u!23 &8383019825724413907
+--- !u!23 &1528969951798342907
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 914122121523986841}
+  m_GameObject: {fileID: 9148633531709581428}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -197,7 +211,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 4648902631597695032, guid: e8df03bcfb938054dbf2a8b131ee9f1c, type: 3}
+  - {fileID: 2100000, guid: 8f6f5468f77ac5e44b384ecd89605342, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

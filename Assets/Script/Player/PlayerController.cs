@@ -23,7 +23,8 @@ Purpose: Move the player with W A S D (or the arrow keys, both set in KeyBinding
          Collision checking is Continuous, so even a fast player can't pass through the terrain or a wall.
          Hold Sprint (Left Shift) to run faster (Sprint Multiplier), forward only like Minecraft (Sprint Forward Only).
          With a PlayerStamina on the player, sprinting uses stamina and stops when the player is tired.
-         The Sprinter perk makes sprinting faster (SetSprintBoost, from PerkEffects).
+         The Sprinter perk makes sprinting faster (SetSprintBoost, from PerkEffects), the Night Power perk walking and
+         sprinting at night (SetMoveBoost).
          The shape never tips over or rolls. The player's collider has no friction (Slippery Body).
 Requirement: PlayerController.cs x-> KeyBindings.cs, MenuState.cs, Rigidbody (Unity)
              PlayerController.cs o-> PlayerStamina.cs, PlayerJump.cs
@@ -91,6 +92,7 @@ public class PlayerController : MonoBehaviour
 
     float startSpeed;      // walking speed before any perk
     float sprintBoost = 1f;    // perks: 1.15 = sprinting 15 % faster (SetSprintBoost)
+    float moveBoost = 1f;      // Night Power: walking x this at night (SetMoveBoost), 1 = normal
     Rigidbody rb;          // the physics component: keeps gravity and collisions working
     Collider body;         // the player's shape (for sticking to the ground)
     PlayerStamina stamina; // sprinting uses it up (can be missing = sprint forever)
@@ -123,7 +125,7 @@ public class PlayerController : MonoBehaviour
     public bool IsWedged => wedged;
 
     // Walking speed right now, in meters per second (perks can raise it: IncreaseMoveSpeed). PlayerPerks shows it.
-    public float Speed => speed;
+    public float Speed => speed * moveBoost;   // Night Power included (at night)
 
     // Walking speed before any perk (the inventory's Info tab shows how much perks added), and sprint = Speed x this.
     public float StartSpeed => startSpeed;
@@ -248,7 +250,7 @@ public class PlayerController : MonoBehaviour
     // so walking up a gentle slope goes up and walking down goes down, without flying off.
     void MoveOnGround(Vector3 wish, bool sprinting)
     {
-        float currentSpeed = sprinting ? speed * SprintMultiplier : speed;
+        float currentSpeed = sprinting ? Speed * SprintMultiplier : Speed;
         Vector3 move = wish * currentSpeed;
 
         move = BlockSteep(move);   // never push into a wall / too-steep slope (that's how it used to climb them)
@@ -269,10 +271,10 @@ public class PlayerController : MonoBehaviour
 
         if (wish.sqrMagnitude > 0f)
         {
-            Vector3 target = wish * speed;
+            Vector3 target = wish * Speed;
             // Only steer if that doesn't speed the player up past walking speed (a running jump keeps its speed).
             Vector3 steered = Vector3.MoveTowards(flat, target, airControl * Time.fixedDeltaTime);
-            if (steered.magnitude <= Mathf.Max(flat.magnitude, speed)) flat = steered;
+            if (steered.magnitude <= Mathf.Max(flat.magnitude, Speed)) flat = steered;
         }
 
         flat = BlockSteep(flat);   // can't push up a cliff from the air either
@@ -481,6 +483,13 @@ public class PlayerController : MonoBehaviour
     public void SetSprintBoost(float times)
     {
         sprintBoost = Mathf.Max(0.1f, times);
+    }
+
+    // Walking (and so sprinting) goes "times" as fast as it normally would (1 = normal, 1.1 = 10 % faster). The Night
+    // Power perk (PerkEffects) sets it when night starts and puts it back to 1 at dawn.
+    public void SetMoveBoost(float times)
+    {
+        moveBoost = Mathf.Max(0.1f, times);
     }
 
 

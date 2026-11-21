@@ -9,6 +9,12 @@ public class PlayerCombat : MonoBehaviour
 
     public float attackRange = 2.5f; // from how far away player can attack
 
+    // [Tony] added (21/11/2026): how far the attack reaches now: Attack Range, longer with the Long Reach perk (Tony's
+    // PerkEffects: +10 % per pick). Tony's crosshair uses it too: with the Keen Eye perk it turns yellow when what it
+    // points at is this close (a click will hit it). To undo: delete these lines and put back the attack's raycast below.
+    // Log: Docs/TonyEditMate/Marko/21-11-2026 Reroll Perk, Keen Eye And Long Reach.md
+    public float AttackReach => attackRange * PerkEffects.ReachMultiplier;                    // [Tony] added
+
     [Header("Attack Cooldown")]
     [Min(0f)]
     public float attackCooldown = 0.5f; // half a second
@@ -88,7 +94,10 @@ public class PlayerCombat : MonoBehaviour
             return;
         }
 
-        nextAttackTime = Time.time + attackCooldown;
+        // [Tony] replaced (21/11/2026): nextAttackTime = Time.time + attackCooldown;
+        // The rare box's Attack Speed perk (Tony's PerkEffects: +10 % per pick) makes the wait between attacks shorter.
+        // To undo: put the line above back. Log: Docs/TonyEditMate/Marko/21-11-2026 New Chest System.md
+        nextAttackTime = Time.time + attackCooldown / PerkEffects.AttackSpeedMultiplier;          // [Tony] replaced
 
         if (playerStamina != null)
         {
@@ -115,7 +124,9 @@ public class PlayerCombat : MonoBehaviour
 
         RaycastHit hit;
 
-        if (Physics.Raycast(ray, out hit, attackRange))
+        // [Tony] replaced (21/11/2026): if (Physics.Raycast(ray, out hit, attackRange))
+        // The Long Reach perk makes the attack reach farther (AttackReach, at the top). To undo: put the line above back.
+        if (Physics.Raycast(ray, out hit, AttackReach))                                           // [Tony] replaced
         {
             EnemyCombat enemy =
                 hit.collider.GetComponentInParent<EnemyCombat>();
@@ -174,6 +185,10 @@ public class PlayerCombat : MonoBehaviour
                 }
 
                 damage *= PunchCombo.Power(swing);
+
+                // [Tony] added (21/11/2026): the epic box's Night Power perk (Tony's PerkEffects): +10 % damage per pick
+                // at night. To undo: delete this line. Log: Docs/TonyEditMate/Marko/21-11-2026 New Chest System.md
+                damage *= PerkEffects.DamageMultiplier;                                                     // [Tony] added
 
                 // [Tony] added (21/11/2026): the epic box's Critical Strike perk (Tony's PerkEffects): a chance for this
                 // hit to do double damage; the wind burst turns red. Log: Docs/TonyEditMate/Marko/21-11-2026 Loot Boxes And New Perks.md
@@ -236,6 +251,7 @@ public class PlayerCombat : MonoBehaviour
                 // at trees, the pickaxe at rock and ores, the sword at animals (ToolRules.Boost).
                 damage *= ToolRules.Boost(tool, ToolRules.JobFor(resource));                      // [Tony] added
                 damage *= PunchCombo.Power(swing);                                                // [Tony] added: a heavy punch hits harder (13/11/2026)
+                damage *= PerkEffects.DamageMultiplier;                                           // [Tony] added (21/11/2026): Night Power perk, like above
                 bool critical = PerkEffects.RollCritical();                                       // [Tony] added (21/11/2026): Critical Strike perk, like above
                 if (critical) damage *= PerkEffects.CriticalMultiplier;                           // [Tony] added
 
