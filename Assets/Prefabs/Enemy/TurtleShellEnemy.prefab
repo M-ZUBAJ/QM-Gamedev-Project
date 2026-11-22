@@ -9,14 +9,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9093802311041804697}
-  - component: {fileID: 6859415194947110542}
-  - component: {fileID: 6419756643587269362}
-  - component: {fileID: 4491752536580772176}
-  - component: {fileID: 6655337811867485617}
-  - component: {fileID: 7573840128463418074}
-  - component: {fileID: 3665418445692821120}
-  - component: {fileID: 5547113688697637413}
-  - component: {fileID: 5543691880714611239}
+  - component: {fileID: 7535765584023446236}
+  - component: {fileID: 4920969547289170992}
+  - component: {fileID: 5991695606682848722}
+  - component: {fileID: 4367537991945982238}
+  - component: {fileID: 4435501305432894865}
+  - component: {fileID: 520828830842639511}
+  - component: {fileID: 2804661151568969308}
+  - component: {fileID: 8299284894493283773}
   m_Layer: 0
   m_Name: TurtleShellEnemy
   m_TagString: Untagged
@@ -37,10 +37,10 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 4134053625821782071}
+  - {fileID: 1713881125953213900}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!54 &6859415194947110542
+--- !u!54 &7535765584023446236
 Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -67,7 +67,7 @@ Rigidbody:
   m_Interpolate: 1
   m_Constraints: 112
   m_CollisionDetection: 2
---- !u!135 &6419756643587269362
+--- !u!135 &4920969547289170992
 SphereCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -88,7 +88,7 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0.5, z: 0}
---- !u!114 &4491752536580772176
+--- !u!114 &5991695606682848722
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -102,8 +102,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 50
   currentHealth: 0
+  coinMultiplier: 1
   missChance: 5
---- !u!114 &6655337811867485617
+--- !u!114 &4367537991945982238
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -119,7 +120,7 @@ MonoBehaviour:
   moveSpeed: 2
   stopDistance: 1.5
   turnSpeed: 360
---- !u!114 &7573840128463418074
+--- !u!114 &4435501305432894865
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -135,7 +136,7 @@ MonoBehaviour:
   attackDamage: 10
   attackCooldown: 1.5
   target: {fileID: 0}
---- !u!114 &3665418445692821120
+--- !u!114 &520828830842639511
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -152,7 +153,7 @@ MonoBehaviour:
   bodyStaysFor: 2.5
   cheerWhenPlayerDies: 1
   vanishSpread: 1.5
---- !u!114 &5547113688697637413
+--- !u!114 &2804661151568969308
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -177,7 +178,7 @@ MonoBehaviour:
   vanishColor: {r: 1, g: 0.5, b: 0.08, a: 1}
   vanishSeconds: 1.6
   vanishRise: 0.35
---- !u!114 &5543691880714611239
+--- !u!114 &8299284894493283773
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -198,7 +199,7 @@ MonoBehaviour:
   deflectEffect: {fileID: 1285030139309171555, guid: 48b6b6607bb41be4086cd3e142bf1b3c, type: 3}
   blockedText: BLOCKED!
   blockedColor: {r: 1, g: 0.85, b: 0.3, a: 1}
---- !u!1001 &8047193714280972983
+--- !u!1001 &4700234221813020492
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -271,8 +272,8 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 24a0663f813d4beb91fc0c6b1e8fef36, type: 3}
---- !u!4 &4134053625821782071 stripped
+--- !u!4 &1713881125953213900 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6265206175713501824, guid: 24a0663f813d4beb91fc0c6b1e8fef36, type: 3}
-  m_PrefabInstance: {fileID: 8047193714280972983}
+  m_PrefabInstance: {fileID: 4700234221813020492}
   m_PrefabAsset: {fileID: 0}

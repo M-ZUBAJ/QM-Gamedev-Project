@@ -198,7 +198,7 @@ cave is 13 m around.
 | The ground is a white checkerboard, no trees, no deer | The World Generator has no ground textures (its **Layers** list is empty; the Console warns "no ground textures"). Run the tool again: it takes the textures from GameScene's painted terrain. |
 | A glowing barrier, or the land ends | An old copy of the scene, or old scripts: run **Build New World Scene** again. |
 | Small stutters while walking | A chunk is being made or shown. Lower **Frame Budget**, or make fewer things grow (a bigger **Rules Area**, smaller rule Counts). |
-| The game gets slower the longer I play | Fixed 22/11/2026 (see "Keeping it fast" below): night monsters no longer pile up (at most 20, far ones go), far chunks let go of their things, trees and rocks skip their empty Update. If it still happens: lower **Content Distance**, or **NightMonsters > Most At Once**. In the Editor, keep the Hierarchy's "Generated World" folded and the Console's Collapse on: a big open Hierarchy slows the Editor. |
+| The game gets slower the longer I play | Fixed 22/11/2026 (see "Keeping it fast" below): far chunks let go of their things, trees and rocks skip their empty Update. If it still happens while exploring: lower **Content Distance**. At night, many monsters out at once cost time too (Normal and Hard don't limit them: kill them, or pick Easy, which keeps at most 20). In the Editor, keep the Hierarchy's "Generated World" folded and the Console's Collapse on: a big open Hierarchy slows the Editor. |
 | A tree I chopped (or a chest I bought) is back | It shouldn't be: chunks remember what was used up. Only a tree left half-chopped comes back whole. Check that the World Generator's scripts are the 22/11/2026 ones. |
 | The land pops in close by | You're faster than the chunk maker (e.g. a dive with Glide): raise **Load Distance** or **Frame Budget**. |
 | No snow / desert after walking far | Biomes are patchy: walk another way, or use **⋮ > Test: Go To The Snow**. |
@@ -221,12 +221,16 @@ The new world used to get slower the longer it was played. What did it, and what
 
 | What grew | Now | The setting |
 |---|---|---|
-| **Night monsters piled up:** Marko's spawner had a Max Enemy Number (40), but its counter was never counted up, so nights 3 - 5 brought a monster every 5 s all night (about 55 by dawn), each walking, animating and pushing the others, and the ones left far behind kept chasing until dawn | At most 20 alive at once (all kinds); one farther than 90 m that you can't see is taken away quietly, so a new one comes nearer | EnemySpawner > **NightMonsters > Most At Once** (20), **Leave Distance** (90 m); Marko's **Max Enemy Number** caps it too |
 | **Every chunk ever made kept all its things:** a few hundred trees, rocks and chests each, switched off but still in memory, and more to clean up for the game's garbage collector the farther you walked | Chunks past 500 m let go of their things and make them again when you come back (what you used up stays gone; rocks keep their shape: RockLook picks it from where the rock stands) | World Generator > **Content Distance** (500 m) |
 | **Every tree and rock ran an empty Update** every frame (about 2000 near you in a forest) | Only berry bushes run it (Turki's ResourceNode switches it off for the rest after it starts) | (none) |
 | **Building a chunk's ground** happened in one frame (a stutter each time new land appeared) | Spread over a few frames | World Generator > **Frame Budget** |
 | **Each damage number** left a copy of the font's material behind (one a hit) | Removed with the number | (none) |
 | **The web build** wrote every plain message (every hit, every chest that appeared) to the browser's console with its stack trace | A finished build writes only warnings and errors (Utility/BuildLogs; the Editor and Development Builds still show everything) | File > Build Settings > **Development Build** to see them |
+
+**Night monsters aren't limited on Normal and Hard.** A limit was tried the same day (20 alive at once, ones left far
+behind taken away) and taken out again: Tony noticed the game didn't slow down while he stayed in one place with 10 -
+12 slimes around, only while exploring. So the nights are as busy as Marko made them (a monster every 5 s from night 3
+on, until dawn). The limit lives on as **Easy** on the NEW GAME page.
 
 Made from Sanyam's world pieces: his **ObjectScatter**'s rules fill every chunk of the new world (his script isn't
 changed for it; log `Docs/TonyEditMate/Sanyam/21-11-2026 Endless World Uses The Scatter Rules.md`). His old

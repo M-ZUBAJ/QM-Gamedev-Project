@@ -7,9 +7,9 @@ Unity Editor: Nothing to click. Every time GameScene is saved, the New Game page
               (Assets/Config/NewGame/NewGameDefaults.asset) are read again from it, and the Console says so when
               something changed. Tools > UI > Build Main Title Scene also uses it to make that asset.
 Purpose: Keeps "the game as it is now" up to date for the New Game page: copies from GameScene the days to win and
-         win time (VictoryScreen), day length, start time and parts of the day (DaylightCycle), enemies per night
-         (EnemySpawner), hunger speed (PlayerHunger), starting coins (PlayerCoins) and the rules (GameRules) into
-         NewGameDefaults.
+         win time (VictoryScreen), day length, start time and parts of the day (DaylightCycle), the night monsters
+         (EnemySpawner: on / off and the seconds between them on nights 1 - 5), hunger speed (PlayerHunger), starting
+         coins (PlayerCoins) and the rules (GameRules) into NewGameDefaults.
          Also, after each compile, fills an EMPTY Defaults on the New Game page (TitleCanvas.prefab > NewGamePanel)
          with that asset: without it the page can't start and shows "Option A". It only saves the prefab then.
 Requirement: NewGameDefaultsSync.cs x-> NewGameDefaults.cs, NewGamePanel.cs, VictoryScreen.cs, DaylightCycle.cs, EnemySpawner.cs, PlayerHunger.cs, PlayerCoins.cs, GameRules.cs, KeyBindings.cs
@@ -96,7 +96,8 @@ public static class NewGameDefaultsSync
         DaylightCycle sun = Find<DaylightCycle>(scene);
         Copy(sun, d, "dayLengthMinutes", "dawnStart", "morningStart", "afternoonStart", "duskStart", "nightStart");
         CopyAs(sun, "timeOfDay", d, "startTime");
-        Copy(Find<EnemySpawner>(scene), d, "spawnAtNight", "enemiesPerNight");
+        Copy(Find<EnemySpawner>(scene), d, "spawnAtNight", "night1SpawnInterval", "night2SpawnInterval",
+             "night3SpawnInterval", "night4SpawnInterval", "night5SpawnInterval");
         CopyAs(Find<PlayerHunger>(scene), "drainPerSecond", d, "hungerDrainPerSecond");
         CopyAs(Find<PlayerCoins>(scene), "startingCoins", d, "startCoins");
         Copy(Find<GameRules>(scene), d, "keepInventory", "clearItemOnDead", "autoPickupDrops", "showNotifications", "toolTest",

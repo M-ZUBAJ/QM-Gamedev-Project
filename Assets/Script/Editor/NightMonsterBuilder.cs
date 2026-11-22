@@ -23,8 +23,9 @@ Purpose: A new monster on each of the first nights, in one click: the turtle fro
              monster (FlyingEnemy: high up out of sword reach, it dives to bite, then climbs away), burning away at dawn;
            - each game scene (the Build Settings scenes with Marko's EnemySpawner: GameScene, ProceduralGenerateScene):
              NightMonsters on the EnemySpawner's object with the Turtle (night 2), the Chest Monster (night 3) and the
-             Beholder (night 4), each added only if it isn't there, so your numbers stay, and the desert's day monster
-             spawner (Desert Monster Spawner) taken out. Then saved.
+             Beholder (night 4), each added only if it isn't there, so your numbers stay (a line's Coins is filled in
+             only while it's 0: the turtle 1.5, the Chest Monster 2, the Beholder 3 times the slime's coins), and the
+             desert's day monster spawner (Desert Monster Spawner) taken out. Then saved.
          BuildTurtle is also what Tools > World > Build Desert Content uses for the turtle.
 Requirement: NightMonsterBuilder.cs x-> EnemyBuilder.cs, NightMonsters.cs, ShellDefense.cs, EnemyAggro.cs, EnemyMovement.cs, DeathEffect.cs, DesertMonsterSpawner.cs, EnemySpawner.cs, UIBuildHelper.cs, MenuOrder.cs
              NightMonsterBuilder.cs <-x DesertBuilder.cs
@@ -61,14 +62,14 @@ public static class NightMonsterBuilder
 
     // A monster's line in NightMonsters, used only when the tool adds it (your numbers stay after that): its name, first
     // night, share of the spawns (+ per night after its first), most alive at once (+ per night), health and damage (+ per
-    // night).
+    // night) and its coins (times the slime's; also filled into an existing line whose Coins is still 0).
     struct NightLine
     {
         public string name;
         public int firstNight, maxAlive, maxAlivePerNight;
-        public float share, sharePerNight, health, healthPerNight, damage, damagePerNight;
+        public float share, sharePerNight, health, healthPerNight, damage, damagePerNight, coins;
         public NightLine(string name, int firstNight, float share, float sharePerNight, int maxAlive, int maxAlivePerNight,
-                         float health, float healthPerNight, float damage, float damagePerNight)
+                         float health, float healthPerNight, float damage, float damagePerNight, float coins)
         {
             this.name = name;
             this.firstNight = firstNight;
@@ -80,17 +81,19 @@ public static class NightMonsterBuilder
             this.healthPerNight = healthPerNight;
             this.damage = damage;
             this.damagePerNight = damagePerNight;
+            this.coins = coins;
         }
     }
     // The turtle: 3 in 10 of night 2's monsters (+5 % a night), at most 3 at once (+1 a night), 90 health (the slime has
-    // 60 on night 2) and the slime's damage, 12.
-    static readonly NightLine TurtleLine = new NightLine("Turtle", 2, 0.3f, 0.05f, 3, 1, 90f, 15f, 12f, 2f);
+    // 60 on night 2) and the slime's damage, 12. Its coins: 1.5 times the slime's (4 - 9).
+    static readonly NightLine TurtleLine = new NightLine("Turtle", 2, 0.3f, 0.05f, 3, 1, 90f, 15f, 12f, 2f, 1.5f);
     // The Chest Monster: 2 in 10 of night 3's (+5 % a night), at most 2 at once (+1), tough (120; the turtle has 105 on
-    // night 3) and it bites hard (15; the slime 14).
-    static readonly NightLine ChestLine = new NightLine("Chest Monster", 3, 0.2f, 0.05f, 2, 1, 120f, 20f, 15f, 2f);
+    // night 3) and it bites hard (15; the slime 14). Twice the slime's coins (6 - 12).
+    static readonly NightLine ChestLine = new NightLine("Chest Monster", 3, 0.2f, 0.05f, 2, 1, 120f, 20f, 15f, 2f, 2f);
     // The Beholder: 15 in 100 of night 4's (+5 % a night), at most 2 at once (+1), less health (70: it's hard to reach up
     // there) and a lighter bite (12), but it keeps coming back. On night 4 the slimes still get 2 in 10 of the spawns.
-    static readonly NightLine BeholderLine = new NightLine("Beholder", 4, 0.15f, 0.05f, 2, 1, 70f, 15f, 12f, 2f);
+    // Three times the slime's coins (9 - 18): the hardest to hit.
+    static readonly NightLine BeholderLine = new NightLine("Beholder", 4, 0.15f, 0.05f, 2, 1, 70f, 15f, 12f, 2f, 3f);
 
     // ===== Menu (Unity calls this) =====
 
@@ -110,6 +113,7 @@ public static class NightMonsterBuilder
                 "to it and hurts you (15), with sparks and \"BLOCKED!\"; the fireball still hurts it\n" +
                 "- the chest monster: a mimic on four legs, tougher and a bit faster than the slime\n" +
                 "- the beholder flies 3.5 m up, out of sword reach (shoot it), and dives down to bite, then climbs away\n" +
+                "- bigger monsters drop more coins: turtle x1.5, chest monster x2, beholder x3 (the slime's 3 - 6)\n" +
                 "- night monsters appear 24 - 34 m away where you can't see them (never right in front of you)\n" +
                 "- the desert has no day monster any more\n\n" +
                 "It rebuilds Assets/Prefabs/Enemy/TurtleShellEnemy, ChestMonsterEnemy and BeholderEnemy, makes " + EffectPath +
@@ -412,7 +416,9 @@ public static class NightMonsterBuilder
             }
             foreach ((GameObject prefab, NightLine line) in lines)
             {
-                if (prefab != null && AddLine(monsters, prefab, line)) done.Add("the " + line.name + " from night " + line.firstNight);
+                if (prefab == null) continue;
+                if (AddLine(monsters, prefab, line)) done.Add("the " + line.name + " from night " + line.firstNight);
+                else if (FillCoins(monsters, prefab, line)) done.Add("the " + line.name + "'s coins x" + line.coins);
             }
         }
 
@@ -455,7 +461,27 @@ public static class NightMonsterBuilder
         line.FindPropertyRelative("healthPerNight").floatValue = numbers.healthPerNight;
         line.FindPropertyRelative("damage").floatValue = numbers.damage;
         line.FindPropertyRelative("damagePerNight").floatValue = numbers.damagePerNight;
+        line.FindPropertyRelative("coins").floatValue = numbers.coins;
         so.ApplyModifiedPropertiesWithoutUndo();
         return true;
+    }
+
+    // A line that was there before Coins existed (or was set to 0) gets the tool's coins; any other number you typed stays.
+    // True = filled in.
+    static bool FillCoins(NightMonsters monsters, GameObject prefab, NightLine numbers)
+    {
+        SerializedObject so = new SerializedObject(monsters);
+        SerializedProperty list = so.FindProperty("monsters");
+        for (int i = 0; i < list.arraySize; i++)
+        {
+            SerializedProperty line = list.GetArrayElementAtIndex(i);
+            if (line.FindPropertyRelative("prefab").objectReferenceValue != prefab) continue;
+            SerializedProperty coins = line.FindPropertyRelative("coins");
+            if (coins.floatValue > 0f) return false;   // your number
+            coins.floatValue = numbers.coins;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return true;
+        }
+        return false;
     }
 }

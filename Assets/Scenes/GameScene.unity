@@ -1065,7 +1065,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7494012006072683705, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 465.19
+      value: 465.19003
       objectReference: {fileID: 0}
     - target: {fileID: 8070574319609505244, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
       propertyPath: m_Name
@@ -6416,6 +6416,7 @@ MonoBehaviour:
     healthPerNight: 15
     damage: 12
     damagePerNight: 2
+    coins: 1.5
   - name: Chest Monster
     prefab: {fileID: 6224794163476448643, guid: aadb3e250a05b3c438808251b0c7db1c, type: 3}
     firstNight: 3
@@ -6427,6 +6428,7 @@ MonoBehaviour:
     healthPerNight: 20
     damage: 15
     damagePerNight: 2
+    coins: 2
   - name: Beholder
     prefab: {fileID: 8017682935526200720, guid: a2eb81ac4cafec741a3bbefb40f24be7, type: 3}
     firstNight: 4
@@ -6438,6 +6440,10 @@ MonoBehaviour:
     healthPerNight: 15
     damage: 12
     damagePerNight: 2
+    coins: 3
+  mostShare: 0.95
+  mostAtOnce: 0
+  leaveDistance: 0
   minDistance: 24
   maxDistance: 34
   outOfSight: 1

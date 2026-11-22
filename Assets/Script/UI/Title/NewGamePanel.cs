@@ -24,7 +24,13 @@ Purpose: The New Game options. Every option starts at the game as it is now (the
            Days to win / Win at     = when the player wins (VictoryScreen)
            Day length               = Short / Normal / Long (half / as now / double the day length)
            Start time               = when the first day starts
-           Difficulty               = Peaceful (no enemies), Easy, Normal (as now), Hard: enemies per night and hunger
+           Difficulty               = Peaceful (no monsters), Easy, Normal (as now), Hard: how often the night
+                                      monsters come (Marko's Night 1 - 5 Spawn Interval: x2 on Easy = half as many,
+                                      / 1.5 on Hard) and hunger; Easy also keeps at most 20 alive at once, and far
+                                      unseen ones give up (NightMonsters' limits: Easy Most At Once / Easy Leave
+                                      Distance). DifficultyInfo explains the picked one in two lines:
+                                      what it means in plain words, then the seconds between monsters each night (a
+                                      title scene built before 22/11/2026 has room for the first line only)
            Starting coins           = the coins the player starts with, and goes back to after dying (PlayerCoins),
                                       0 - 9999: - / + change it by 10, or click the number and type one (default 20)
            When I die               = Keep items, Drop items or Lose items
@@ -40,6 +46,7 @@ Requirement: NewGamePanel.cs x-> NewGameDefaults.cs, GameSetup.cs, StepperRow.cs
 */
 
 using System.Collections.Generic;
+using System.Globalization;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -52,13 +59,25 @@ public class NewGamePanel : MonoBehaviour
     [SerializeField] NewGameDefaults defaults;
 
     [Header("Difficulty (compared to Normal = the game as it is now)")]
-    [Range(0f, 1f)]
-    [Tooltip("Easy: enemies per night = Normal's x this (at least 1). 0.5 = half.")]
+    [Range(0.1f, 1f)]
+    [Tooltip("Easy: night monsters come this many times as often as on Normal. 0.5 = half as often: the seconds " +
+             "between them (EnemySpawner > Night 1 - 5 Spawn Interval) are doubled, 10 s -> 20 s.")]
     [SerializeField] float easyEnemies = 0.5f;
 
     [Range(1f, 3f)]
-    [Tooltip("Hard: enemies per night = Normal's x this. 1.5 = half as many again.")]
+    [Tooltip("Hard: night monsters come this many times as often as on Normal. 1.5 = half as many again: the seconds " +
+             "between them are divided by 1.5, 10 s -> 6.7 s.")]
     [SerializeField] float hardEnemies = 1.5f;
+
+    [Range(0, 100)]
+    [Tooltip("Easy: the most night monsters alive at once (NightMonsters > Most At Once; 0 = no limit). Normal and Hard " +
+             "have no limit: the ones the player doesn't kill gather until dawn.")]
+    [SerializeField] int easyMostAtOnce = 20;
+
+    [Range(0f, 400f)]
+    [Tooltip("Easy: a night monster farther than this (meters) that the player can't see gives up and is taken away " +
+             "(NightMonsters > Leave Distance; 0 = never). Normal and Hard: never.")]
+    [SerializeField] float easyLeaveDistance = 90f;
 
     [Range(0.25f, 1f)]
     [Tooltip("Easy: hunger drains this many times as fast (0.7 = slower).")]
@@ -87,6 +106,8 @@ public class NewGamePanel : MonoBehaviour
     const int OldChests = 0;   // Testing: Old chests, New chests
     const int NewChests = 1;
     const string AllDefault = "Everything is set to the game as it is now.";
+    const float TwoLineHeight = 45f;   // a DifficultyInfo this tall has room for two lines (54 since 22/11/2026, 30 before)
+    const string WordsColor = "#DBDEEB";   // the explanation's first line: brighter than the numbers under it
 
     StepperRow days;
     TMP_Dropdown winAt, startAt;
@@ -103,6 +124,7 @@ public class NewGamePanel : MonoBehaviour
     readonly Dictionary<string, RectTransform> dots = new Dictionary<string, RectTransform>();   // row name -> its Dot
     readonly List<float> startTimes = new List<float>();   // the Time Of Day of each Start time option
     int defaultStart;          // which Start time option is the game as it is now
+    bool twoLineInfo;          // DifficultyInfo has room for its second line (a title scene built since 22/11/2026)
     bool ready;
 
     // The chosen days to win (e.g. for the "DAY 1 - Survive 5 nights" card).
@@ -167,7 +189,12 @@ public class NewGamePanel : MonoBehaviour
         {
             GameSetup.ChosenDifficulty = level;
             GameSetup.SpawnEnemies = level != GameSetup.Difficulty.Peaceful;
-            GameSetup.EnemiesPerNight = EnemiesFor(level);
+            if (level != GameSetup.Difficulty.Peaceful) GameSetup.SpawnIntervalScale = 1f / RateFor(level);   // Easy x2, Hard / 1.5
+            if (level == GameSetup.Difficulty.Easy)
+            {
+                GameSetup.MonstersAtOnce = easyMostAtOnce;            // at most 20 alive at once,
+                GameSetup.MonsterLeaveDistance = easyLeaveDistance;   // and ones left far behind give up
+            }
             GameSetup.HungerDrainPerSecond = defaults.HungerDrainPerSecond * HungerFor(level);
         }
 
@@ -201,6 +228,8 @@ public class NewGamePanel : MonoBehaviour
         coins = FindDeep(transform, "CoinsRow")?.GetComponent<StepperRow>();
         dayLengthInfo = FindDeep(FindDeep(transform, "DayLengthRow"), "Info")?.GetComponent<TMP_Text>();
         difficultyInfo = FindDeep(transform, "DifficultyInfo")?.GetComponent<TMP_Text>();
+        twoLineInfo = difficultyInfo != null && difficultyInfo.TryGetComponent(out LayoutElement infoSize) &&
+                      infoSize.preferredHeight >= TwoLineHeight;
         summary = FindDeep(transform, "Summary")?.GetComponent<TMP_Text>();
         defaultsButton = FindDeep(transform, "DefaultsButton")?.GetComponent<Button>();
 
@@ -365,28 +394,110 @@ public class NewGamePanel : MonoBehaviour
                ", then win at " + winAt.options[winAt.value].text + " on day " + (n + 1) + ".";
     }
 
+    // The text under Difficulty, so the player knows what they pick: first what the level means in plain words, then
+    // the numbers (the seconds between night monsters on each night: GameScene's EnemySpawner, read into the defaults,
+    // stretched for Easy / Hard just like GameSetup will do it). An older DifficultyInfo has room for the words only.
+    //   Peaceful: No monsters at night: explore, gather and build in peace. Hunger works as normal.
+    //             No monsters means no monster coins either: only your starting coins (below) open chests.
+    //   Easy:     Monsters come half as often at night (at most 20 at once), and you get hungry 30% more slowly.
+    //             A monster every 20 seconds on night 1, every 14 on night 2 and every 10 from night 3 on.
+    //   Normal:   The game as it's made: the nights get busier, with no limit on monsters, and hunger works as normal.
+    //             A monster every 10 seconds on night 1, every 7 on night 2 and every 5 from night 3 on.
+    //   Hard:     Monsters come 1.5 times as often at night, and you get hungry 50% faster.
+    //             A monster every 6.7 seconds on night 1, every 4.7 on night 2 and every 3.3 from night 3 on.
     string DifficultyText(GameSetup.Difficulty level)
     {
-        bool enemies = level == GameSetup.Difficulty.Peaceful ? false
-                     : level == GameSetup.Difficulty.Normal ? defaults.SpawnAtNight : true;
-        int count = EnemiesFor(level);
-        string enemyText = enemies && count > 0 ? count + (count == 1 ? " enemy" : " enemies") + " every night"
-                                                : "No enemies at night";
-        float hunger = HungerFor(level);
-        string hungerText = hunger < 1f ? "slower hunger" : hunger > 1f ? "faster hunger" : "normal hunger";
-        return enemyText + ", " + hungerText;
+        bool monsters = level == GameSetup.Difficulty.Normal ? defaults.SpawnAtNight : level != GameSetup.Difficulty.Peaceful;
+        string hunger = HungerWords(HungerFor(level));
+        string words, numbers;
+
+        if (!monsters)
+        {
+            words = "No monsters at night: explore, gather and build in peace. " + Capital(hunger) + ".";
+            numbers = "No monsters means no monster coins either: only your starting coins (below) open chests.";
+        }
+        else if (level == GameSetup.Difficulty.Normal)
+        {
+            bool busier = defaults.SpawnInterval(NewGameDefaults.SpawnNights) < defaults.SpawnInterval(1) - 0.01f;
+            words = "The game as it's made: " + (busier ? "the nights get busier" : "the same every night") +
+                    ", with no limit on monsters, and " + hunger + ".";
+            numbers = NightsLine(1f);
+        }
+        else
+        {
+            string limit = level == GameSetup.Difficulty.Easy && easyMostAtOnce > 0
+                         ? " (at most " + easyMostAtOnce + " at once)" : "";
+            words = "Monsters come " + Often(RateFor(level)) + " at night" + limit + ", and " + hunger + ".";
+            numbers = NightsLine(1f / RateFor(level));
+        }
+
+        return twoLineInfo ? "<color=" + WordsColor + ">" + words + "</color>\n" + numbers : words;
     }
 
-    int EnemiesFor(GameSetup.Difficulty level)
+    // "A monster every 20 seconds on night 1, every 14 on night 2 and every 10 from night 3 on": EnemySpawner's seconds
+    // between monsters x scale, nights in a row with the same seconds put together. Night 5's seconds go on for every
+    // night after it, so the last part has no end ("from night 3 on"; the same seconds every night: ", every night").
+    string NightsLine(float scale)
     {
-        int normal = defaults.EnemiesPerNight;
+        List<string> parts = new List<string>();
+        int first = 1;
+        for (int night = 2; night <= NewGameDefaults.SpawnNights + 1; night++)
+        {
+            string seconds = Seconds(first, scale);
+            bool lastPart = night > NewGameDefaults.SpawnNights;   // night 5 and every night after it
+            if (!lastPart && Seconds(night, scale) == seconds) continue;   // same seconds: keep going
+
+            string when = !lastPart ? (night - 1 == first ? " on night " + first : " on nights " + first + " - " + (night - 1))
+                        : first == 1 ? ", every night"
+                        : " from night " + first + " on";
+            string unit = parts.Count > 0 ? "" : seconds == "1" ? " second" : " seconds";   // only the first says it
+            parts.Add("every " + seconds + unit + when);
+            first = night;
+        }
+
+        string list = parts.Count == 1 ? parts[0]
+                    : string.Join(", ", parts.GetRange(0, parts.Count - 1)) + " and " + parts[parts.Count - 1];
+        return "A monster " + list + ".";
+    }
+
+    // The seconds between night monsters on this night as the game will have them, e.g. "6.7".
+    string Seconds(int night, float scale)
+    {
+        float seconds = GameSetup.Stretched(defaults.SpawnInterval(night), scale);
+        return (Mathf.Round(seconds * 10f) / 10f).ToString("0.#", CultureInfo.InvariantCulture);
+    }
+
+    // How often the night monsters come compared to Normal: 0.5 = half as often, 1.5 = half as many again.
+    float RateFor(GameSetup.Difficulty level)
+    {
         switch (level)
         {
-            case GameSetup.Difficulty.Peaceful: return 0;
-            case GameSetup.Difficulty.Easy: return Mathf.Max(1, Mathf.RoundToInt(normal * easyEnemies));
-            case GameSetup.Difficulty.Hard: return Mathf.Max(normal + 1, Mathf.RoundToInt(normal * hardEnemies));
-            default: return normal;
+            case GameSetup.Difficulty.Easy: return Mathf.Max(0.1f, easyEnemies);
+            case GameSetup.Difficulty.Hard: return Mathf.Max(0.1f, hardEnemies);
+            default: return 1f;
         }
+    }
+
+    // A rate in words: 0.5 -> "half as often", 1.5 -> "1.5 times as often".
+    static string Often(float rate)
+    {
+        if (Mathf.Abs(rate - 0.5f) < 0.01f) return "half as often";
+        if (Mathf.Abs(rate - 2f) < 0.01f) return "twice as often";
+        if (Mathf.Abs(rate - 1f) < 0.01f) return "as often as on Normal";
+        return rate.ToString("0.##", CultureInfo.InvariantCulture) + " times as often";
+    }
+
+    // Hunger speed in words: 0.7 -> "you get hungry 30% more slowly", 1.5 -> "you get hungry 50% faster".
+    static string HungerWords(float times)
+    {
+        int percent = Mathf.RoundToInt(Mathf.Abs(times - 1f) * 100f);
+        if (percent == 0) return "hunger works as normal";
+        return "you get hungry " + percent + "% " + (times < 1f ? "more slowly" : "faster");
+    }
+
+    static string Capital(string words)
+    {
+        return string.IsNullOrEmpty(words) ? words : char.ToUpperInvariant(words[0]) + words.Substring(1);
     }
 
     float HungerFor(GameSetup.Difficulty level)

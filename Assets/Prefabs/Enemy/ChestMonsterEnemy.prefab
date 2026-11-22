@@ -9,13 +9,13 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3844383794809634391}
-  - component: {fileID: 2597674516127899242}
-  - component: {fileID: 7869361201278114406}
-  - component: {fileID: 7060369185626810886}
-  - component: {fileID: 3287890259682930301}
-  - component: {fileID: 6223282177546976444}
-  - component: {fileID: 2578571960392389195}
-  - component: {fileID: 346297155732964948}
+  - component: {fileID: 8853143963160860147}
+  - component: {fileID: 5816908069089061956}
+  - component: {fileID: 5951228668199789085}
+  - component: {fileID: 5185032330144817624}
+  - component: {fileID: 2438895760148862825}
+  - component: {fileID: 4867850117709579820}
+  - component: {fileID: 8774861241454140352}
   m_Layer: 0
   m_Name: ChestMonsterEnemy
   m_TagString: Untagged
@@ -36,10 +36,10 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 4805095238186237780}
+  - {fileID: 623738637634890652}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!54 &2597674516127899242
+--- !u!54 &8853143963160860147
 Rigidbody:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -66,7 +66,7 @@ Rigidbody:
   m_Interpolate: 1
   m_Constraints: 112
   m_CollisionDetection: 2
---- !u!135 &7869361201278114406
+--- !u!135 &5816908069089061956
 SphereCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -87,7 +87,7 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.44417983
   m_Center: {x: 0, y: 0.44417983, z: 0}
---- !u!114 &7060369185626810886
+--- !u!114 &5951228668199789085
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -101,8 +101,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 50
   currentHealth: 0
+  coinMultiplier: 1
   missChance: 5
---- !u!114 &3287890259682930301
+--- !u!114 &5185032330144817624
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -118,7 +119,7 @@ MonoBehaviour:
   moveSpeed: 2.5
   stopDistance: 1.5
   turnSpeed: 360
---- !u!114 &6223282177546976444
+--- !u!114 &2438895760148862825
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -134,7 +135,7 @@ MonoBehaviour:
   attackDamage: 10
   attackCooldown: 1.5
   target: {fileID: 0}
---- !u!114 &2578571960392389195
+--- !u!114 &4867850117709579820
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -151,7 +152,7 @@ MonoBehaviour:
   bodyStaysFor: 2.5
   cheerWhenPlayerDies: 1
   vanishSpread: 1.5
---- !u!114 &346297155732964948
+--- !u!114 &8774861241454140352
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -176,7 +177,7 @@ MonoBehaviour:
   vanishColor: {r: 1, g: 0.5, b: 0.08, a: 1}
   vanishSeconds: 1.6
   vanishRise: 0.35
---- !u!1001 &6220344532878221913
+--- !u!1001 &2043451362713597585
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -249,8 +250,8 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a50dc8fc460c47aa9033b698c00b2133, type: 3}
---- !u!4 &4805095238186237780 stripped
+--- !u!4 &623738637634890652 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1512148224729488653, guid: a50dc8fc460c47aa9033b698c00b2133, type: 3}
-  m_PrefabInstance: {fileID: 6220344532878221913}
+  m_PrefabInstance: {fileID: 2043451362713597585}
   m_PrefabAsset: {fileID: 0}

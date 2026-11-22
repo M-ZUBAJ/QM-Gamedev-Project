@@ -7,6 +7,13 @@ public class EnemyCombat : MonoBehaviour
     public float maxHealth = 50f;
     public float currentHealth;
 
+    // [Tony] added (22/11/2026): how many times your coins this enemy drops when it dies (1 = as you made it: the slime).
+    // Tony's NightMonsters sets it when a turtle (1.5), a Chest Monster (2) or a Beholder (3) spawns.
+    // To undo: delete this field and put back the line in the [Tony] replaced comment in Die().
+    // Log: Docs/TonyEditMate/Marko/22-11-2026 Bigger Monsters Drop More Coins.md
+    [Tooltip("[Tony] Coins dropped = your 3 - 6 x this (1 = the slime). Tony's NightMonsters sets it per monster when it spawns.")]
+    public float coinMultiplier = 1f;                                                 // [Tony] added
+
     // [Tony] added (10/11/2026): true once the enemy has died. The body now stays for its death animation, and
     // without this a second hit in that time would call Die() again and give the coins twice.
     // To undo: delete every line marked [Tony] and put back the line in the [Tony] replaced comment in Die().
@@ -59,7 +66,10 @@ public class EnemyCombat : MonoBehaviour
         }
         Debug.Log("Enemy defeated!");
 
-        int coinsEarned = Random.Range(3, 7);// player can get 1-3 coins per kill
+        // [Tony] replaced (22/11/2026): int coinsEarned = Random.Range(3, 7);// player can get 1-3 coins per kill
+        // Bigger monsters drop more: your 3 - 6 coins x Coin Multiplier, rounded (the turtle 1.5 = 4 - 9, the Chest Monster
+        // 2 = 6 - 12, the Beholder 3 = 9 - 18; the slime 1 = 3 - 6 as before).
+        int coinsEarned = Mathf.RoundToInt(Random.Range(3, 7) * coinMultiplier);     // [Tony] replaced
 
         if (PlayerCoins.Instance != null) // if the player has a PlayerCoins component
         {

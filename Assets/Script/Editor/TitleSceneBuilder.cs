@@ -25,6 +25,9 @@ Purpose: Builds the whole title screen in one click:
          Its GOAL section has Days to win and Win at side by side in one row (GoalPairRow, since 22/11/2026), which
          leaves room for Starting coins under DIFFICULTY (CoinsRow: - / + change it by 10, or click the number and type
          one; 0 - 9999, the default read from GameScene's PlayerCoins > Starting Coins, 20).
+         Under the Difficulty buttons, DifficultyInfo explains the picked level in two lines (since 22/11/2026: what it
+         means, then the seconds between night monsters on each night). To make room, the New Game rows are 48 px tall
+         (were 50) and its section titles 32 (were 34).
          Settings: KEY BINDINGS (KeyBindingMenu), CONTROLS (ControlsMenu: Mouse sensitivity 1 - 10 on a SliderRow,
          Invert mouse) and DISPLAY (DisplayMenu: Fullscreen, and a Damage numbers panel: Show damage numbers with its
          child Only monsters and animals, locked while it's off, and sample numbers); since 21/11/2026, before they
@@ -76,7 +79,9 @@ public static class TitleSceneBuilder
     // Sizes (pixels on a 1920 x 1080 screen).
     const float RowLabelX = 40f;       // where row names start (the changed-dot sits left of them)
     const float ControlX = 380f;       // where the row's buttons / dropdowns start
-    const float RowHeight = 50f;
+    const float RowHeight = 48f;       // a New Game row (50 until 22/11/2026: 2 px each went to the DifficultyInfo)
+    const float SectionHeight = 32f;   // the New Game page's section titles GOAL, WORLD... (34 on the settings pages)
+    const float InfoHeight = 54f;      // DifficultyInfo: two lines (NewGamePanel shows the second from 45 px up)
     const float HalfControlX = 230f;   // Days to win's - button, in the GOAL row's left half
     const float WinAtControlX = 150f;  // Win at's dropdown, in the GOAL row's right half
     const int MaxStartCoins = 9999;    // Starting coins: 0 - 9999 (four digits to type)
@@ -449,25 +454,25 @@ public static class TitleSceneBuilder
         v.childForceExpandHeight = false;
         SetCascade(rows.AddComponent<CascadeIn>(), new Vector2(50f, 0f), 0.035f, 0.4f, UITween.Ease.OutCubic);
 
-        Section(rows.transform, "GOAL");
+        Section(rows.transform, "GOAL", SectionHeight);
         MakeGoalPairRow(rows.transform, d.DaysToWin);   // Days to win | Win at: one row, so Starting coins fits below
-        Section(rows.transform, "WORLD");
+        Section(rows.transform, "WORLD", SectionHeight);
         MakeChoiceRow(rows.transform, "WorldRow", "Map", new[] { "Old world", "New world" }, 190f, null, true);
         WidenInfo(rows.transform.Find("WorldRow"), 260f);   // room for "new random map"
         MakeChoiceRow(rows.transform, "DayLengthRow", "Day length", new[] { "Short", "Normal", "Long" }, 150f, null, true);
         MakeDropdownRow(rows.transform, "StartTimeRow", "Start time");
-        Section(rows.transform, "DIFFICULTY");
+        Section(rows.transform, "DIFFICULTY", SectionHeight);
         MakeChoiceRow(rows.transform, "DifficultyRow", null, new[] { "Peaceful", "Easy", "Normal", "Hard" }, 170f,
                       DifficultyColors, false);
         MakeInfoRow(rows.transform, "DifficultyInfo", "");
         MakeStepperRow(rows.transform, "CoinsRow", "Starting coins", d.StartCoins, 0, MaxStartCoins, CoinStep, true);
         AddRowHint(rows.transform.Find("CoinsRow"), ControlX + 252f, "or click the number and type one");
-        Section(rows.transform, "RULES");
+        Section(rows.transform, "RULES", SectionHeight);
         MakeChoiceRow(rows.transform, "DeathRow", "When I die", new[] { "Keep items", "Drop items", "Lose items" }, 190f,
                       null, false);
         MakeToggleRow(rows.transform, "PickupRow", "Pick up dropped items by walking over them");
         MakeRulesPairRow(rows.transform);   // "+3 Wood" messages | the pause menu pauses the game
-        Section(rows.transform, "TESTING");
+        Section(rows.transform, "TESTING", SectionHeight);
         MakeTestingRow(rows.transform);
 
         TextMeshProUGUI summary = MakeText(page, "Summary", "Everything is set to the game as it is now.", 30f, SoftWhite,
@@ -1021,11 +1026,12 @@ public static class TitleSceneBuilder
         return (RectTransform)row.transform;
     }
 
-    static void Section(Transform parent, string title)
+    // A gold section title (GOAL, MOUSE...), "height" pixels tall with the words at its bottom.
+    static void Section(Transform parent, string title, float height = 34f)
     {
         GameObject row = NewUI(title.Substring(0, 1) + title.Substring(1).ToLower() + "Header", parent);
         LayoutElement le = row.AddComponent<LayoutElement>();
-        le.preferredHeight = le.minHeight = 34f;
+        le.preferredHeight = le.minHeight = height;
         TextMeshProUGUI text = MakeText(row.transform, "Title", title, 22f, Gold, TextAlignmentOptions.BottomLeft);
         Stretch(text.gameObject, 14f, 0f, 0f, 2f);
         text.fontStyle = FontStyles.Bold;
@@ -1263,15 +1269,20 @@ public static class TitleSceneBuilder
         info.anchoredPosition = new Vector2(left + width / 2f, info.anchoredPosition.y);
     }
 
-    // The line under Difficulty ("4 enemies every night, normal hunger").
+    // The two lines under Difficulty (NewGamePanel writes them): what the picked level means in plain words, then the
+    // seconds between night monsters ("A monster every 10 seconds on night 1, every 7 on night 2..."). Its height
+    // (InfoHeight) tells NewGamePanel there's room for the second line. A longer text shrinks to fit (22 down to 16).
     static void MakeInfoRow(Transform parent, string objectName, string text)
     {
         GameObject row = NewUI(objectName, parent);
         LayoutElement le = row.AddComponent<LayoutElement>();
-        le.preferredHeight = le.minHeight = 30f;
+        le.preferredHeight = le.minHeight = InfoHeight;
         TextMeshProUGUI t = row.AddComponent<TextMeshProUGUI>();
         t.text = text;
-        t.fontSize = 24f;
+        t.fontSize = 22f;
+        t.enableAutoSizing = true;   // too long for its box: smaller letters instead of spilling into Starting coins
+        t.fontSizeMin = 16f;
+        t.fontSizeMax = 22f;
         t.color = Dim;
         t.fontStyle = FontStyles.Italic;
         t.alignment = TextAlignmentOptions.Left;

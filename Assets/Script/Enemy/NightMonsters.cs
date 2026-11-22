@@ -5,30 +5,38 @@ Author: Tony
 Use by: The object with Marko's EnemySpawner (in both game scenes). Tools > Enemies > Set Up Night Monsters puts it there
         with the turtle (night 2), the Chest Monster (night 3) and the flying Beholder (night 4).
 Unity Editor: Monsters = the night monsters after the first night's (the EnemySpawner's Enemy Prefab, the slime, comes
-              every night): each with its First Night, its Share of the night's spawns, Max Alive, and its own Health and
-              Damage (0 = the spawner's numbers). A monster for a later night: click + under Monsters, drag its enemy
+              every night): each with its First Night, its Share of the night's spawns, Max Alive, its own Health and
+              Damage (0 = the spawner's numbers) and Coins (times the slime's 3 - 6). A monster for a later night: click + under Monsters, drag its enemy
               prefab in, First Night 5 (the list is read top to bottom: keep it in order of First Night).
               Where they appear: Min / Max Distance from the player, and Out Of Sight.
+              Limits: Most At Once and Leave Distance, both 0 = off (Normal, Hard). Easy on the NEW GAME page sets them
+              when the game loads (20 and 90 m); to try them while testing, type them in here.
               Testing: Play, select the sun (DaylightCycle): Day = 2, then drag Time Of Day past 0.77 (night). About a
               third of the monsters are turtles. Turn around quickly: none pops up right in front of you.
 Purpose: Which monsters come each night, how strong they are, and where they appear. Marko's EnemySpawner asks it for
          every spawn:
            - Pick: night 1 = only the spawner's Enemy Prefab (the slime); from a monster's First Night on, that share of
              the spawns is that monster (the turtle from night 2: 30 %, 5 % more each night, at most Max Alive at once,
-             one more each night). So every night can bring a new monster, and the ones before keep coming;
-           - Prepare: the picked monster's own Health and Damage (growing each night after its first); the slime keeps
-             the spawner's numbers;
+             one more each night). So every night can bring a new monster, and the ones before keep coming. Together
+             they take at most Most Share (95 %) of the spawns: once their shares grow past it (night 6 on), each keeps
+             its part of it, so a monster lower in the list (the Beholder) isn't squeezed out by the ones above it;
+           - Prepare: the picked monster's own Health and Damage (growing each night after its first) and its Coins
+             (EnemyCombat's Coin Multiplier: the turtle 1.5, the Chest Monster 2, the Beholder 3 times the slime's 3 -
+             6 coins); the slime keeps the spawner's numbers;
            - FindSpot: a spot Min - Max Distance away that the player can't see (PlayerSight: behind them, or behind a
              hill or a tree), inside the world barrier, so no monster appears right in front of the player when they
              turn around (before, they appeared 10 m away in any direction). If every try is in sight, the one most
-             behind the camera;
-           - MostAtOnce (22/11/2026): Marko's EnemySpawner asks it before each spawn: at most Most At Once (20) night
-             monsters alive together, every kind (before, nothing stopped them: about 55 by the end of nights 3 - 5, and
-             the game got slower and slower);
-           - far ones go: every 2 s, a monster it spawned that's farther than Leave Distance (90 m) from the player and
-             out of their sight is taken away quietly, so ones left far behind don't take a place or the game's time.
+             behind the camera.
+         Limits: none on Normal and Hard (the monsters the player doesn't kill gather and follow them until dawn, as
+         Marko made it). Easy on the NEW GAME page turns two on through GameSetup (SetLimits):
+           - Most At Once (20): at most that many night monsters alive together, every kind (Marko's EnemySpawner asks
+             RoomForMore() before each spawn);
+           - Leave Distance (90 m): one that far from the player, where they can't see it, gives up and is taken away
+             quietly (no coins), so ones left far behind don't follow all night.
+         Both were every night's rule for a while on 22/11/2026 (to stop a slowdown that turned out to come from
+         exploring); Tony found the nights easier that way, so it became Easy.
 Requirement: NightMonsters.cs o-> PlayerSight.cs, WorldBarrier.cs, EnemyCombat.cs, EnemyAttack.cs, EnemyAnimator.cs, PlayerController.cs
-             NightMonsters.cs <-x EnemySpawner.cs, NightMonsterBuilder.cs
+             NightMonsters.cs <-x EnemySpawner.cs, GameSetup.cs, NightMonsterBuilder.cs
 */
 
 using System.Collections.Generic;
@@ -83,6 +91,11 @@ public class NightMonsters : MonoBehaviour
         [Min(0f)]
         public float damagePerNight = 2f;
 
+        [Tooltip("Coins for killing it, times the first night's monster's (the slime drops 3 - 6): 1.5 = half as many " +
+                 "again, 2 = twice, 3 = three times. 0 = the same as the slime.")]
+        [Min(0f)]
+        public float coins = 0f;
+
         [System.NonSerialized] List<GameObject> alive;   // the ones out now (for Max Alive)
 
         public List<GameObject> Alive => alive ?? (alive = new List<GameObject>());
@@ -93,6 +106,8 @@ public class NightMonsters : MonoBehaviour
         public float ShareOn(int night) => Mathf.Clamp01(share + sharePerNight * NightsAfterFirst(night));
 
         public int MaxAliveOn(int night) => maxAlive + maxAlivePerNight * NightsAfterFirst(night);
+
+        public float CoinsTimes => coins > 0f ? coins : 1f;   // 0 = the slime's coins
 
         public int AliveCount()
         {
@@ -107,19 +122,25 @@ public class NightMonsters : MonoBehaviour
              "(the turtle from night 2). Add the next night's monster here.")]
     [SerializeField] List<Monster> monsters = new List<Monster>();
 
-    [Header("How many at once")]
-    [Tooltip("The most night monsters alive at once, every kind together (slimes too). Each one walks, animates and " +
-             "pushes the others: past about 20 the game slows down, most of all in the web build. Marko's EnemySpawner " +
-             "asks this before each spawn (its own Max Enemy Number caps it too, whichever is lower). Before 22/11/2026 " +
-             "nothing did: nights 3 - 5 brought one every 5 s all night, about 55 by dawn.")]
-    [Range(1, 100)]
-    [SerializeField] int mostAtOnce = 20;
+    [Tooltip("The most of the night's spawns these monsters take together (0.95 = 95 %: the first night's monster, the " +
+             "slime, keeps at least 5 %). Their shares grow every night; once they add up to more, each keeps its part " +
+             "of this (turtle 0.5 + chest 0.35 + beholder 0.25 = 1.1 on night 6 -> about 43 / 30 / 22 %). Before " +
+             "22/11/2026 the list was read top to bottom, so the last monsters got squeezed out (no beholders by night 8).")]
+    [Range(0.5f, 1f)]
+    [SerializeField] float mostShare = 0.95f;
+
+    [Header("Limits (off on Normal and Hard: Easy on the NEW GAME page turns them on)")]
+    [Tooltip("The most night monsters alive at once, every kind together (slimes too). 0 = no limit: the ones the player " +
+             "doesn't kill gather until dawn, as Marko made it (Normal, Hard). Easy sets 20 (NewGamePanel > Easy Most At " +
+             "Once). Marko's EnemySpawner asks RoomForMore() before each spawn.")]
+    [Range(0, 100)]
+    [SerializeField] int mostAtOnce = 0;
 
     [Tooltip("A night monster farther than this from the player (meters, over the ground), where the player can't see " +
-             "it, is taken away quietly: ones left far behind (the player walked or ran off) don't keep a place in Most At " +
-             "Once (a new one comes nearer) or use the game's time. 0 = never.")]
+             "it, gives up and is taken away quietly (no coins). 0 = never (Normal, Hard). Easy sets 90 (NewGamePanel > " +
+             "Easy Leave Distance).")]
     [Range(0f, 400f)]
-    [SerializeField] float leaveDistance = 90f;
+    [SerializeField] float leaveDistance = 0f;
 
     [Header("Where they appear")]
     [Tooltip("The nearest a monster appears to the player, in meters (more than PlayerSight's Notice Radius, 20: closer " +
@@ -142,18 +163,18 @@ public class NightMonsters : MonoBehaviour
     const float LeaveCheckEvery = 2f;   // seconds between two looks for monsters left far behind
 
     Monster picked;                  // what Pick chose, for Prepare right after
-    readonly List<GameObject> spawned = new List<GameObject>();   // every monster the spawner made tonight (for Leave Distance)
+    readonly List<GameObject> spawned = new List<GameObject>();   // every monster the spawner made (for the limits)
     Transform playerBody;            // the player (PlayerController), found once
     float nextLeaveCheck;
 
     public IReadOnlyList<Monster> Monsters => monsters;
-
-    // The most night monsters alive at once (Marko's EnemySpawner asks before each spawn).
-    public int MostAtOnce => mostAtOnce;
+    public int MostAtOnce => mostAtOnce;            // 0 = no limit
+    public float LeaveDistance => leaveDistance;    // 0 = never
 
     // ===== Unity messages (Unity calls these) =====
 
-    // Every Leave Check: monsters left far behind, out of sight, are taken away (no coins, nobody sees it).
+    // With a Leave Distance (Easy): every 2 s, monsters left far behind, out of sight, give up and are taken away
+    // (no coins, nobody sees it).
     void Update()
     {
         if (leaveDistance <= 0f || Time.time < nextLeaveCheck) return;
@@ -179,18 +200,43 @@ public class NightMonsters : MonoBehaviour
 
     // ===== My methods =====
 
+    // Marko's EnemySpawner asks this before each spawn: false while Most At Once night monsters are out (Easy). With
+    // no limit (0: Normal, Hard) always true, so they gather until dawn.
+    public bool RoomForMore()
+    {
+        if (mostAtOnce <= 0) return true;
+        spawned.RemoveAll(enemy => enemy == null);   // killed, burnt away at dawn, or given up
+        return spawned.Count < mostAtOnce;
+    }
+
+    // GameSetup calls this for Easy when the game loads: Most At Once and Leave Distance (0 = off).
+    public void SetLimits(int most, float leave)
+    {
+        mostAtOnce = Mathf.Max(0, most);
+        leaveDistance = Mathf.Max(0f, leave);
+    }
+
     // Marko's EnemySpawner asks this for every spawn: which prefab to make. "first" = its Enemy Prefab (the first
     // night's monster, which comes every night). A monster whose First Night has come gets its Share of the spawns
-    // while fewer than its Max Alive are out; otherwise it's "first".
+    // while fewer than its Max Alive are out; otherwise it's "first". Shares adding up to more than Most Share are
+    // shrunk evenly to fit it, so every monster keeps its part (none is squeezed out by the ones above it in the list).
     public GameObject Pick(GameObject first, int night)
     {
         picked = null;
+
+        float total = 0f;   // tonight's shares together (also of the ones at Max Alive, so the parts don't jump around)
+        foreach (Monster monster in monsters)
+        {
+            if (Comes(monster, night)) total += monster.ShareOn(night);
+        }
+        float fit = total > mostShare ? mostShare / total : 1f;   // 1 = nothing to shrink (nights 1 - 5)
+
         float roll = Random.value;
         foreach (Monster monster in monsters)
         {
-            if (monster == null || monster.prefab == null || night < monster.firstNight) continue;
-            if (monster.AliveCount() >= monster.MaxAliveOn(night)) continue;
-            float share = monster.ShareOn(night);
+            if (!Comes(monster, night)) continue;
+            if (monster.AliveCount() >= monster.MaxAliveOn(night)) continue;   // its part goes to "first" tonight
+            float share = monster.ShareOn(night) * fit;
             if (roll < share)
             {
                 picked = monster;
@@ -201,11 +247,17 @@ public class NightMonsters : MonoBehaviour
         return first;
     }
 
+    // Has this monster's First Night come (and does it have a prefab)?
+    static bool Comes(Monster monster, int night)
+    {
+        return monster != null && monster.prefab != null && night >= monster.firstNight;
+    }
+
     // Right after the spawn (Marko's EnemySpawner calls it): the picked monster's own health and damage for tonight,
     // and it's counted for Max Alive. The first night's monster keeps the spawner's numbers.
     public void Prepare(GameObject enemy, int night)
     {
-        if (enemy != null) spawned.Add(enemy);   // every spawn, the first night's monster too (Leave Distance)
+        if (enemy != null) spawned.Add(enemy);   // every spawn, the first night's monster too (for the limits)
         Monster monster = picked;
         picked = null;
         if (monster == null || enemy == null) return;
@@ -218,6 +270,7 @@ public class NightMonsters : MonoBehaviour
             combat.maxHealth = monster.health + monster.healthPerNight * after;
             combat.currentHealth = combat.maxHealth;
         }
+        if (combat != null) combat.coinMultiplier = monster.CoinsTimes;   // Marko's 3 - 6 coins x this when it dies
         EnemyAttack attack = enemy.GetComponent<EnemyAttack>();
         if (attack != null && monster.damage > 0f) attack.attackDamage = monster.damage + monster.damagePerNight * after;
     }

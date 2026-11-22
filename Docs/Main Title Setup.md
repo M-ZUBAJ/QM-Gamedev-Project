@@ -63,7 +63,7 @@ today's game. These values are read from GameScene and kept in `NewGameDefaults.
 | **Win at** | VictoryScreen > Win Time (Dawn, Morning, Midday, Afternoon, Dusk, Night, Midnight; times from the sun) | from GameScene |
 | **Day length** | the sun's Day Length Minutes: Short = half, Normal = as now, Long = double | Normal |
 | **Start time** | the time of day the first day starts (and where dying brings you back to) | from GameScene ("Now (hh:mm)" if it isn't one of the listed times) |
-| **Difficulty** | Peaceful = no enemies; Easy = half the enemies, slower hunger; **Normal = as now**; Hard = 1.5x enemies, faster hunger | Normal |
+| **Difficulty** | How often the night monsters come and how fast hunger drains. Peaceful = no monsters (so no monster coins: only the starting coins open chests), normal hunger; Easy = monsters half as often (the seconds between them doubled: night 1 every 20 s), at most 20 out at once and ones left more than 90 m behind (out of sight) give up, hunger 30% slower; **Normal = as now** (a monster every 10 s on night 1, every 7 s on night 2, every 5 s from night 3 on); Hard = monsters 1.5 times as often (night 1 every 6.7 s, from night 3 every 3.3 s), hunger 50% faster. On Normal and Hard nothing limits how many are out at once: the ones you don't kill gather until dawn. The two lines under the buttons explain the picked one | Normal |
 | **Starting coins** (DIFFICULTY, 22/11/2026) | the coins the player starts with (Marko's PlayerCoins > Starting Coins), and what dying puts them back to. **-** / **+** change it by 10; or click the number, type one (0 - 9999) and press Enter or click somewhere else (Esc puts the old number back) | 20 (from GameScene) |
 | **When I die** | Keep items / Drop items / Lose items (GameRules Keep Inventory / Clear Item On Dead) | from GameScene |
 | **Pick up dropped items by walking over them** | GameRules Auto Pickup Drops | from GameScene |
@@ -73,8 +73,18 @@ today's game. These values are read from GameScene and kept in `NewGameDefaults.
 | **Start with all armor** (TESTING, middle) | GameRules Armor Test: every armor piece, the Copper and Iron sets (12), in the inventory from the start (ArmorTestKit) | off (from GameScene) |
 | **Old chests / New chests** (TESTING, right) | GameRules New Chests: the two loot box systems. Old = every box lets you choose 1 of 3; New = random common and epic boxes (a slot-machine roll), a legendary box, REROLL at every box (both: REROLL only once the Reroll perk is found; `Docs/Loot Chests Setup.md`) | New chests (from GameScene) |
 
-The difficulty numbers can be changed on **NewGamePage > NewGamePanel**: Easy / Hard enemies and hunger
-(compared to Normal), and Short / Long day.
+The difficulty numbers can be changed on **NewGamePage > NewGamePanel**: Easy / Hard enemies (how often the night
+monsters come compared to Normal: 0.5 = half as often, 1.5 = half as many again) and hunger (compared to Normal), and
+Short / Long day.
+
+**How Easy and Hard work** (22/11/2026): Marko's EnemySpawner spawns a monster every few seconds all night, with its
+own **Night 1 - 5 Spawn Interval** (10 / 7 / 5 / 5 / 5 seconds). When the game loads, GameSetup multiplies those seconds:
+x2 on Easy, / 1.5 on Hard (his file isn't changed: they're public settings). Easy also turns on two limits in Tony's
+NightMonsters: at most 20 alive at once (Marko's spawner asks it before each spawn, a `[Tony]` line) and far unseen ones
+give up after 90 m (NewGamePanel > **Easy Most At Once** / **Easy Leave Distance**). The explanation under the buttons reads
+the same seconds from GameScene (saved into `NewGameDefaults` every time GameScene is saved), so if Marko changes them,
+the New Game page follows. Every night after night 5 keeps night 5's seconds (a `[Tony]` line in Marko's
+`GetSpawnInterval`, 22/11/2026; before, no monsters came after night 5, which a game of more than 5 days to win reached).
 
 Pressing **Play straight in GameScene** (testing) still uses GameScene's own settings: the choices are only used
 after START GAME. **Play Again** on the victory screen keeps them.
@@ -86,6 +96,10 @@ panel has no room for another row.
 **Starting coins** is new too (22/11/2026): run the tool again to get it. To make room for it, **Days to win** and **Win
 at** now share one row (`GoalPairRow`). An older title scene without it still works (the game keeps PlayerCoins'
 Starting Coins). While you type the number, Esc only stops the typing; it doesn't leave the page.
+
+**The two-line Difficulty explanation** is new too (22/11/2026): run the tool again to get it. To make room, the rows
+are 2 px shorter (48) and the section titles 2 px shorter (32). An older title scene shows only the first line (what
+the level means), because its `DifficultyInfo` is one line tall.
 
 ## The Settings page: Key Bindings
 

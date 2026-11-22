@@ -15,9 +15,14 @@
 - **Monsters never pop up right in front of you.** They appear 24 - 34 m away, where you can't see them: behind you,
   or behind a hill or a tree. Before, they appeared 10 m away in any direction, so turning around could show one
   right there.
-- **At most 20 at once** (22/11/2026), every kind together, and one left farther than 90 m behind you, out of sight, is
-  taken away quietly (a new one comes nearer). Before, nothing stopped them: nights 3 - 5 brought one every 5 s all
-  night (about 55 by dawn) and the game got slower and slower.
+- **Bigger monsters drop more coins** (22/11/2026): the slime 3 - 6 (Marko's numbers), the turtle 1.5 times that
+  (4 - 9), the Chest Monster twice (6 - 12) and the Beholder three times (9 - 18). The armor set bonus and Bounty
+  Hunter's extra coins stay the same for every kill.
+- **How many come.** A monster every 10 s on night 1, 7 s on night 2 and 5 s from night 3 on, all night (Marko's
+  EnemySpawner). On **Normal** and **Hard** nothing limits them: the ones you don't kill gather and follow you until
+  dawn burns them away. On **Easy** (NEW GAME page) at most **20** are out at once, and one left more than 90 m behind
+  you, out of sight, gives up (22/11/2026: that was every night's rule for a while, until the slowdown turned out to
+  come from exploring; Tony kept it as Easy).
 - **The turtle** (RPG Monster DUO's TurtleShell) fights for about 6 seconds near you, then **pulls into its shell** for
   3 seconds: it stops walking and attacking. When you hurt it, there's also a 1 in 3 chance it hides at once.
 - **Hitting the shell:** a punch, sword, axe or pickaxe hit on a turtle in its shell **does nothing to it and hurts
@@ -61,8 +66,8 @@ same way (no day monster any more).
 
 | Part | Where | What it does |
 |---|---|---|
-| **EnemySpawner** (Marko's) | the EnemySpawner object | spawns the night's monsters every few seconds (night 1: 10 s, night 2: 7 s, nights 3 - 5: 5 s) and removes them at dawn. `[Tony]` lines ask NightMonsters which monster, where, and how strong |
-| **NightMonsters** | next to the EnemySpawner | **Pick:** night 1 = the EnemySpawner's **Enemy Prefab** (the slime) only; from a monster's **First Night** on, its **Share** of the spawns is that monster, while fewer than its **Max Alive** are out. **Prepare:** that monster's own Health and Damage. **FindSpot:** a spot 24 - 34 m away the player can't see (PlayerSight), inside the world barrier. **MostAtOnce** (22/11/2026): the EnemySpawner asks it before each spawn (20 alive at most); every 2 s a monster it spawned that's past **Leave Distance** (90 m) and out of sight is removed |
+| **EnemySpawner** (Marko's) | the EnemySpawner object | spawns the night's monsters every few seconds (night 1: 10 s, night 2: 7 s, from night 3 on: 5 s; every night after night 5 keeps night 5's seconds since 22/11/2026, a `[Tony]` line in `GetSpawnInterval`: before, nights 6+ had none) and removes them at dawn. `[Tony]` lines ask NightMonsters which monster, where, and how strong. The NEW GAME page's **Difficulty** changes those seconds when the game loads (GameSetup, 22/11/2026): x2 on Easy (half as many monsters), / 1.5 on Hard, none on Peaceful. Before each spawn it asks NightMonsters `RoomForMore()` (a `[Tony]` line; only Easy ever says no) |
+| **NightMonsters** | next to the EnemySpawner | **Pick:** night 1 = the EnemySpawner's **Enemy Prefab** (the slime) only; from a monster's **First Night** on, its **Share** of the spawns is that monster, while fewer than its **Max Alive** are out. Together the monsters take at most **Most Share** (95 %) of the spawns: once their growing shares add up to more (night 6 on), each is shrunk evenly to fit, so every kind keeps coming (22/11/2026; before, the list was read top to bottom and the last ones got squeezed out: no Beholders by night 8). **Prepare:** that monster's own Health and Damage, and its **Coins** (Marko's EnemyCombat > Coin Multiplier, which his `Die()` multiplies his 3 - 6 coins by: a `[Tony]` line, 22/11/2026). **FindSpot:** a spot 24 - 34 m away the player can't see (PlayerSight), inside the world barrier. **Limits** (Easy only, set by GameSetup through `SetLimits`): `RoomForMore()` says no while **Most At Once** (20) are out; every 2 s a monster it spawned that's past **Leave Distance** (90 m) and out of sight is taken away |
 | **ShellDefense** | on the turtle | fights, hides, fights...; while hidden: Marko's EnemyMovement / EnemyAttack off, the body stops. `Blocks` / `Deflect`: a melee hit on the shell bounces off |
 | **PunchEffect** | the Player | when a melee swing lands, asks ShellDefense first: a hit on a shell bounces off (no damage, no wind burst, no push) |
 | **EnemyAnimator** | each monster | the **Shell** (Defend) and **ShellHit** (DefendGetHit) animations; **LastAttackTime** (when it last bit) |
@@ -71,7 +76,8 @@ same way (no day monster any more).
 | **FirstPersonHands** | the first-person hands | **Recoil**: the hands jump back when a hit bounces off |
 | **PlayerSight** | the Player | "could the player see a monster here?" (on screen, in range, nothing in the way); 20 m or closer always counts as seen |
 
-Change log for Marko's EnemySpawner: `Docs/TonyEditMate/Marko/21-11-2026 Night Monsters And The Turtle Shell.md`.
+Change log for Marko's EnemySpawner: `Docs/TonyEditMate/Marko/21-11-2026 Night Monsters And The Turtle Shell.md`
+(nights after 5: `.../22-11-2026 Monsters Keep Coming After Night 5.md`).
 
 ## A new monster for a later night (night 5...)
 
@@ -107,9 +113,7 @@ turtle has 0.4, the chest monster 0.25, the beholder 0.15: the slimes still get 
 
 | Where | Setting | What it does |
 |---|---|---|
-| NightMonsters (EnemySpawner object) | **Monsters** | each monster after the first night's: **First Night**, **Share** (0.3 = 3 in 10 of the spawns) + **Share Per Night**, **Max Alive** (3) + **Max Alive Per Night** (1), **Health** (90) + **Health Per Night** (15), **Damage** (12) + **Damage Per Night** (2); Health / Damage 0 = the spawner's (50 + 10 / 10 + 2 per day passed). The tool's lines: Turtle night 2, 0.3 + 0.05, 3 + 1, 90 + 15, 12 + 2; Chest Monster night 3, 0.2 + 0.05, 2 + 1, 120 + 20, 15 + 2; Beholder night 4, 0.15 + 0.05, 2 + 1, 70 + 15, 12 + 2 |
-| | **Most At Once** (20) | (22/11/2026) the most night monsters alive together, every kind; more = harder, but slower (each walks, animates and pushes the others). Marko's EnemySpawner > **Max Enemy Number** (40) caps it too, whichever is lower |
-| | **Leave Distance** (90 m) | a monster farther than this from you, out of sight, is taken away quietly (no coins); 0 = never |
+| NightMonsters (EnemySpawner object) | **Monsters** | each monster after the first night's: **First Night**, **Share** (0.3 = 3 in 10 of the spawns) + **Share Per Night**, **Max Alive** (3) + **Max Alive Per Night** (1), **Health** (90) + **Health Per Night** (15), **Damage** (12) + **Damage Per Night** (2), **Coins** (times the slime's 3 - 6 coins; 0 = the same as the slime); Health / Damage 0 = the spawner's (50 + 10 / 10 + 2 per day passed). The tool's lines: Turtle night 2, 0.3 + 0.05, 3 + 1, 90 + 15, 12 + 2, coins 1.5; Chest Monster night 3, 0.2 + 0.05, 2 + 1, 120 + 20, 15 + 2, coins 2; Beholder night 4, 0.15 + 0.05, 2 + 1, 70 + 15, 12 + 2, coins 3 (a line from before 22/11/2026 has Coins 0 = the slime's: run the tool once, it fills only Coins still at 0) |
 | | **Min / Max Distance** (24 / 34 m) | how far from the player monsters appear |
 | | **Out Of Sight** (on), **Tries** (16) | only where the player can't see; tries before taking the spot most behind the player |
 | ShellDefense (turtle prefab) | **Fight Seconds** (6) + **Fight Jitter** (1.5) | how long it fights near the player before hiding (counted only within **Fight Range**, 10 m) |
@@ -125,7 +129,10 @@ turtle has 0.4, the chest monster 0.25, the beholder 0.15: the slimes still get 
 | | **Bob Height** (0.15 m), **Bob Speed** (0.8 a second) | the gentle hover |
 | ChestMonsterEnemy / BeholderEnemy | EnemyMovement **Move Speed** (2.5 / 3.5), EnemyAttack **Attack Range** (2) | how fast it walks / flies, how close it bites (Marko's numbers on Tony's prefabs) |
 | FirstPersonHands | **Recoil Distance** (0.1 m), **Recoil Seconds** (0.3) | the hands bouncing back |
-| EnemySpawner (Marko's) | **Enemy Prefab**, night spawn intervals | the first night's monster and how often monsters come |
+| NightMonsters | **Most Share** (0.95) | the most of the night's spawns the monsters after the first night's take together (the slime keeps the rest). From night 6 their shares add up to more, so they're shrunk to fit: about 43 % turtles, 30 % Chest Monsters, 22 % Beholders, 5 % slimes |
+| | **Most At Once** (0 = no limit) | the most night monsters alive together, every kind. 0 on Normal and Hard; Easy sets **20** when the game loads (NewGamePanel > **Easy Most At Once**). Type a number here to try it while testing |
+| | **Leave Distance** (0 = never) | a monster farther than this from you, out of sight, gives up and is taken away quietly (no coins). 0 on Normal and Hard; Easy sets **90 m** (NewGamePanel > **Easy Leave Distance**) |
+| EnemySpawner (Marko's) | **Enemy Prefab**, **Night 1 - 5 Spawn Interval** (10 / 7 / 5 / 5 / 5 s; later nights use Night 5's) | the first night's monster and how often monsters come on Normal (Easy doubles the seconds, Hard divides them by 1.5; the NEW GAME page shows them, read from GameScene when it's saved) |
 
 ## Testing
 
@@ -151,8 +158,9 @@ turtle has 0.4, the chest monster 0.25, the beholder 0.15: the slimes still get 
 | Problem | Why / fix |
 |---|---|
 | No turtles at night | It's night 1 (turtles start on night 2), the EnemySpawner has no NightMonsters (run the tool), or 3 turtles are already out (Max Alive). |
-| Fewer monsters than before, late at night | On purpose since 22/11/2026: at most **Most At Once** (20) alive together. Raise it for a harder night (the game gets slower). |
-| The game gets slower and slower at night | Marko's spawner is older than 22/11/2026 (its Max Enemy Number didn't stop spawns), or Most At Once is set very high. |
+| Lots of monsters late at night | On purpose on Normal and Hard: nothing limits how many are out (a monster every 5 s from night 3 on, about 56 a night with 10-minute days; more with long days or on Hard). Kill them as they come, or pick Easy on the NEW GAME page (half as many, at most 20 at once). |
+| The game gets slower at night, the longer it goes | Many monsters out at once (Normal and Hard don't limit them, and Marko's Max Enemy Number doesn't stop spawns). Kill them, or pick Easy. To limit Normal too, set NightMonsters > **Most At Once** in the scene (the NEW GAME page's Normal text still says "no limit" then). |
+| More than 20 monsters on Easy | You pressed Play straight in GameScene (the NEW GAME choices only apply after START GAME), or Marko's EnemySpawner is older than 22/11/2026 (no `RoomForMore()` line). |
 | Monsters still appear near me | The EnemySpawner object has no NightMonsters, or the Player has no **PlayerSight** (Tools > World > Set Up World Spawning): without it only the screen is checked. |
 | Hitting the shell does nothing at all | The turtle has no ShellDefense (run the tool), or the Player has no PunchEffect (Tools > Effects > Build Punch Wind Burst): the shell check is in PunchEffect. |
 | The turtle never hides | You're farther than Fight Range (10 m) from it, or it was built before the tool: run the tool. |
