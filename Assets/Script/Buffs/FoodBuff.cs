@@ -1,6 +1,6 @@
 /*
 First Date: 16/11/2026
-Date: 16/11/2026
+Date: 19/11/2026
 Author: Turki
 Use by: Drag this script onto the Player (next to ItemConsumer and PlayerHealth).
 Unity Editor: In "Buffs", add one entry per food that gives a buff: drag its Item Data into "Food", then set
@@ -9,7 +9,9 @@ Purpose: Crafted food (e.g. Stew) gives a temporary max health buff after it is 
          even at full health and hunger. Only one buff is active at a time: eating the same food again restarts
          its timer, and eating another buff food replaces the current one (buffs do not stack).
          The buff ends when its timer runs out or the player dies.
+         The properties at the top of "My methods" let the HUD (BuffDisplay) show the buff without changing it.
 Requirement: FoodBuff.cs o-> ItemConsumer.cs, PlayerHealth.cs, ItemData.cs
+             FoodBuff.cs <-o BuffDisplay.cs
 */
 
 using System.Collections.Generic;
@@ -41,6 +43,14 @@ public class FoodBuff : MonoBehaviour
     Buff active;           // the buff running now (null = none)
     float remaining;       // seconds left on it
     float appliedAmount;   // how much max health it added, so we can take exactly that away again
+
+    // Read-only info for the HUD. Other scripts can read these but not change them, so only FoodBuff
+    // decides when a buff starts or ends.
+    public bool IsActive => active != null;
+    public ItemData ActiveFood => active != null ? active.food : null;       // gives the name and icon
+    public float MaxHealthPercent => active != null ? active.maxHealthPercent : 0f;
+    public float Remaining => remaining;                                      // seconds left
+    public float Duration => active != null ? active.duration : 0f;           // full length, for the timer bar
 
     // ===== Unity messages (Unity calls these) =====
 

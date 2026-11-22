@@ -22,7 +22,7 @@ Purpose: One kind of item (a material like Wood or Stone, or food like an Apple)
 Requirement: ItemData.cs <-> Recipe.cs
              ItemData.cs x-> Consumable.cs, ToolStats.cs, IconCapture.cs, IconSource.cs, PlayerInventory.cs
              ItemData.cs <-x AutoCollector.cs, CraftingMenu.cs, Crosshair.cs, ItemConsumer.cs, ItemDataEditor.cs, ItemIconRules.cs, ItemPickup.cs, ItemTools.cs, PlayerInventory.cs, PlayerStats.cs, ResourceNode.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs
-             ItemData.cs <-o FoodBuff.cs
+             ItemData.cs <-o BuffDisplay.cs, FoodBuff.cs
 */
 
 using System.Collections.Generic;

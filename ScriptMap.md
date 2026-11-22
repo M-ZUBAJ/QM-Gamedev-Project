@@ -50,7 +50,8 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 |---|---|---|---|
 | [AnimalSpawner.cs](<Assets/Script/Animal/AnimalSpawner.cs>) | Animal | PlayerSight.cs, Terrain (Unity) (optional) | WorldSpawnSetup.cs |
 | [WildAnimal.cs](<Assets/Script/Animal/WildAnimal.cs>) | Animal | Animator (Unity) (optional), ResourceNode.cs (optional), PlayerController.cs (optional), PlayerHealth.cs (optional) | DeathEffectBuilder.cs, WildAnimalBuilder.cs, WorldSpawnSetup.cs |
-| [FoodBuff.cs](<Assets/Script/Buffs/FoodBuff.cs>) | Buffs | ItemConsumer.cs (optional), PlayerHealth.cs (optional), ItemData.cs (optional) | - |
+| [BuffDisplay.cs](<Assets/Script/Buffs/BuffDisplay.cs>) | Buffs | FoodBuff.cs (optional), ItemData.cs (optional) | - |
+| [FoodBuff.cs](<Assets/Script/Buffs/FoodBuff.cs>) | Buffs | ItemConsumer.cs (optional), PlayerHealth.cs (optional), ItemData.cs (optional) | BuffDisplay.cs (optional) |
 | [Blueprint.cs](<Assets/Script/Building/Blueprint.cs>) | Building | BuildingData.cs, BuiltPiece.cs | BlueprintPlacer.cs |
 | [BlueprintPlacer.cs](<Assets/Script/Building/BlueprintPlacer.cs>) | Building | Blueprint.cs, BuildingData.cs, BuildSnap.cs, BuiltPiece.cs, BoundsUtil.cs, ClickClaim.cs, InteractionGate.cs, KeyBindings.cs, MenuState.cs, PlayerInventory.cs | BuildMenu.cs, BuildMenuUIBuilder.cs, BuildModeHUD.cs, PlayerStats.cs |
 | [BuildingData.cs](<Assets/Script/Building/BuildingData.cs>) | Building | IconCapture.cs, IconSource.cs, Recipe.cs, PlayerInventory.cs | Blueprint.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingTools.cs, BuildMenu.cs, BuildMenuAutoList.cs, BuildMenuUIBuilder.cs, BuildSnap.cs, BuiltPiece.cs, ItemTools.cs, PlayerStats.cs |
@@ -193,7 +194,7 @@ Made by **Tools > Script Map** in Unity. Don't edit this file by hand, it is rew
 | [ObjectScatter.cs](<Assets/Script/World/ObjectScatter.cs>) | World | - | GrasslandTreeBuilder.cs, WildAnimalBuilder.cs, WorldSpawnSetup.cs |
 | [Consumable.cs](<Assets/Script/WorldItem/Consumable.cs>) | WorldItem | - | ItemConsumer.cs, ItemData.cs, ItemDataEditor.cs |
 | [DroppedStack.cs](<Assets/Script/WorldItem/DroppedStack.cs>) | WorldItem | ItemPickup.cs, PlayerInventory.cs | ItemDropper.cs |
-| [ItemData.cs](<Assets/Script/WorldItem/ItemData.cs>) | WorldItem | Recipe.cs (each other), Consumable.cs, ToolStats.cs, IconCapture.cs, IconSource.cs, PlayerInventory.cs | AutoCollector.cs, CraftingMenu.cs, Crosshair.cs, FoodBuff.cs (optional), ItemConsumer.cs, ItemDataEditor.cs, ItemIconRules.cs, ItemPickup.cs, ItemTools.cs, PlayerInventory.cs, PlayerStats.cs, Recipe.cs (each other), ResourceNode.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs |
+| [ItemData.cs](<Assets/Script/WorldItem/ItemData.cs>) | WorldItem | Recipe.cs (each other), Consumable.cs, ToolStats.cs, IconCapture.cs, IconSource.cs, PlayerInventory.cs | AutoCollector.cs, BuffDisplay.cs (optional), CraftingMenu.cs, Crosshair.cs, FoodBuff.cs (optional), ItemConsumer.cs, ItemDataEditor.cs, ItemIconRules.cs, ItemPickup.cs, ItemTools.cs, PlayerInventory.cs, PlayerStats.cs, Recipe.cs (each other), ResourceNode.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs |
 | [ItemPickup.cs](<Assets/Script/WorldItem/ItemPickup.cs>) | WorldItem | ItemData.cs, IconCapture.cs | AutoCollector.cs, BuildingTools.cs, Crosshair.cs, DroppedStack.cs, ItemDropper.cs, ItemGrabber.cs, ItemTools.cs, TierToolBuilder.cs |
 | [Recipe.cs](<Assets/Script/WorldItem/Recipe.cs>) | WorldItem | ItemData.cs (each other), PlayerInventory.cs | BuildingButton.cs, BuildingData.cs, CraftingMenu.cs, ItemData.cs (each other) |
 | [ToolStats.cs](<Assets/Script/WorldItem/ToolStats.cs>) | WorldItem | - | ItemData.cs, PlayerCombat.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs |
