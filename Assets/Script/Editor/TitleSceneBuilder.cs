@@ -22,11 +22,13 @@ Purpose: Builds the whole title screen in one click:
          a new random world every game: Tools > World > Build New World Scene makes it).
          Its TESTING section: Start with all tools, Start with all armor, and Old chests / New chests (the two loot
          box systems, GameRules > New Chests; New is the default).
-         Settings: KEY BINDINGS (KeyBindingMenu) and CONTROLS (ControlsMenu: Mouse sensitivity 1 - 10 on a SliderRow,
-         Invert mouse; since 21/11/2026, before it was "coming soon"), DISPLAY and AUDIO still "coming soon".
+         Settings: KEY BINDINGS (KeyBindingMenu), CONTROLS (ControlsMenu: Mouse sensitivity 1 - 10 on a SliderRow,
+         Invert mouse) and DISPLAY (DisplayMenu: Fullscreen, and a Damage numbers panel: Show damage numbers with its
+         child Only monsters and animals, locked while it's off, and sample numbers); since 21/11/2026, before they
+         were "coming soon". AUDIO is still "coming soon".
          MakeSettingsTabs (the tab bar and pages) and its small helpers are shared with PauseMenuBuilder, so the Esc
          pause menu's KEY BINDINGS and CONTROLS look and work the same.
-Requirement: TitleSceneBuilder.cs x-> UIBuildHelper.cs, MenuOrder.cs, SliderRow.cs, ControlsMenu.cs, MouseSettings.cs, NewGameDefaultsSync.cs, NewGameDefaults.cs, UIFXSprites.cs, UITween.cs, TitleMenu.cs, TitleBackground.cs, TitleTextFX.cs, ButtonFX.cs, CascadeIn.cs, PulseFX.cs, TabFX.cs, TabGroup.cs, ChoiceRow.cs, StepperRow.cs, TogglePop.cs, DropdownUnfold.cs, NewGamePanel.cs, KeyBindingMenu.cs, IncomingMessage.cs, KeyBindings.cs
+Requirement: TitleSceneBuilder.cs x-> UIBuildHelper.cs, MenuOrder.cs, SliderRow.cs, ControlsMenu.cs, MouseSettings.cs, DisplayMenu.cs, NewGameDefaultsSync.cs, NewGameDefaults.cs, UIFXSprites.cs, UITween.cs, TitleMenu.cs, TitleBackground.cs, TitleTextFX.cs, ButtonFX.cs, CascadeIn.cs, PulseFX.cs, TabFX.cs, TabGroup.cs, ChoiceRow.cs, StepperRow.cs, TogglePop.cs, DropdownUnfold.cs, NewGamePanel.cs, KeyBindingMenu.cs, IncomingMessage.cs, KeyBindings.cs
              TitleSceneBuilder.cs <-x PauseMenuBuilder.cs
 */
 
@@ -494,14 +496,14 @@ public static class TitleSceneBuilder
     }
 
     // The settings' tab bar and its pages, inside "page": KEY BINDINGS (KeyBindingMenu), CONTROLS (ControlsMenu: mouse
-    // sensitivity and invert) and, with withComingSoon (the title screen), DISPLAY and AUDIO, still "coming soon". The
-    // tab bar sits 140 px under the top of the page, the pages (1200 x 700) in its middle. The Esc pause menu has the
-    // same, without the "coming soon" ones (PauseMenuBuilder).
+    // sensitivity and invert), DISPLAY (DisplayMenu: fullscreen, damage numbers) and, with withComingSoon (the title
+    // screen), AUDIO, still "coming soon". The tab bar sits 140 px under the top of the page, the pages (1200 x 700) in
+    // its middle. The Esc pause menu has the same, without the "coming soon" one (PauseMenuBuilder).
     internal static void MakeSettingsTabs(Transform page, bool withComingSoon)
     {
         // The tab bar: the tab buttons side by side, and the gold underline that glides under the open one.
         GameObject bar = NewUI("Tabs", page);
-        Place(bar, new Vector2(0.5f, 1f), new Vector2(0f, -140f), new Vector2(withComingSoon ? 1200f : 760f, 64f));
+        Place(bar, new Vector2(0.5f, 1f), new Vector2(0f, -140f), new Vector2(withComingSoon ? 1200f : 1000f, 64f));
         ((RectTransform)bar.transform).pivot = new Vector2(0.5f, 1f);
         HorizontalLayoutGroup h = bar.AddComponent<HorizontalLayoutGroup>();
         h.spacing = 10f;
@@ -509,9 +511,9 @@ public static class TitleSceneBuilder
         h.childForceExpandWidth = h.childForceExpandHeight = true;
 
         string[] tabNames = withComingSoon ? new[] { "KEY BINDINGS", "CONTROLS", "DISPLAY", "AUDIO" }
-                                           : new[] { "KEY BINDINGS", "CONTROLS" };
+                                           : new[] { "KEY BINDINGS", "CONTROLS", "DISPLAY" };
         string[] tabObjects = withComingSoon ? new[] { "KeyBindingsTab", "ControlsTab", "DisplayTab", "AudioTab" }
-                                             : new[] { "KeyBindingsTab", "ControlsTab" };
+                                             : new[] { "KeyBindingsTab", "ControlsTab", "DisplayTab" };
         Button[] tabButtons = new Button[tabNames.Length];
         for (int i = 0; i < tabNames.Length; i++) tabButtons[i] = MakeTab(bar.transform, tabObjects[i], tabNames[i]);
 
@@ -521,12 +523,11 @@ public static class TitleSceneBuilder
 
         GameObject holder = NewUI("TabPages", page);
         Place(holder, new Vector2(0.5f, 0.5f), new Vector2(0f, -60f), new Vector2(1200f, 700f));
-        List<GameObject> pageList = new List<GameObject> { MakeKeyBindingsPage(holder.transform), MakeControlsPage(holder.transform) };
-        if (withComingSoon)
+        List<GameObject> pageList = new List<GameObject>
         {
-            pageList.Add(MakeIncomingPage(holder.transform, "DisplayPage", "Fullscreen, quality and more."));
-            pageList.Add(MakeIncomingPage(holder.transform, "AudioPage", "Music and sound volume."));
-        }
+            MakeKeyBindingsPage(holder.transform), MakeControlsPage(holder.transform), MakeDisplayPage(holder.transform),
+        };
+        if (withComingSoon) pageList.Add(MakeIncomingPage(holder.transform, "AudioPage", "Music and sound volume."));
         GameObject[] tabPages = pageList.ToArray();
 
         TabGroup tabs = bar.AddComponent<TabGroup>();
@@ -640,6 +641,140 @@ public static class TitleSceneBuilder
         page.AddComponent<ControlsMenu>();
         page.SetActive(false);   // TabGroup opens it
         return page;
+    }
+
+    // DISPLAY: Fullscreen (Alt + Enter or F11 too), and the Damage numbers panel: Show damage numbers with, under it and
+    // joined to it by a line, its child Only monsters and animals (DisplayMenu greys it out and locks it while the parent
+    // is off), and sample numbers (normal, critical). A hint and RESET at the bottom.
+    static GameObject MakeDisplayPage(Transform parent)
+    {
+        GameObject page = NewUI("DisplayPage", parent);
+        Stretch(page, 0f, 0f, 0f, 0f);
+
+        GameObject list = NewUI("List", page.transform);
+        Stretch(list, 0f, 0f, 0f, 70f);
+        AddBox(list).color = PanelColor;
+        GameObject content = NewUI("Content", list.transform);
+        Stretch(content, 20f, 14f, 20f, 14f);
+        VerticalLayoutGroup v = content.AddComponent<VerticalLayoutGroup>();
+        v.spacing = 8f;
+        v.childControlWidth = v.childControlHeight = true;
+        v.childForceExpandWidth = true;
+        v.childForceExpandHeight = false;
+        SetCascade(content.AddComponent<CascadeIn>(), new Vector2(50f, 0f), 0.04f, 0.35f, UITween.Ease.OutCubic);
+
+        Section(content.transform, "SCREEN");
+        MakeSettingToggle(content.transform, "FullscreenRow", "Fullscreen", "Alt + Enter or F11 too. In the browser, Esc leaves it.");
+        Section(content.transform, "DAMAGE NUMBERS");
+        MakeDamagePanel(content.transform);
+
+        TextMeshProUGUI hint = MakeText(page.transform, "Hint", "Changes work at once. Damage numbers are saved on this computer.",
+                                        24f, SoftWhite, TextAlignmentOptions.Left);
+        Place(hint.gameObject, new Vector2(0f, 0f), new Vector2(10f, 14f), new Vector2(880f, 44f));
+        ((RectTransform)hint.transform).pivot = new Vector2(0f, 0f);
+
+        Button reset = MakeButton(page.transform, "ResetDisplayButton", "RESET", new Vector2(240f, 56f), 24f, 10, false, false);
+        Place(reset.gameObject, new Vector2(1f, 0f), new Vector2(-126f, 34f), new Vector2(240f, 56f));
+
+        page.AddComponent<DisplayMenu>();
+        page.SetActive(false);   // TabGroup opens it
+        return page;
+    }
+
+    // One framed box for the damage numbers, so it reads as one setting with a part: a gold bar down its left side, the
+    // parent tick box on top, a line from it down and across to the child's tick box (indented under it), and on the
+    // right what the numbers look like. Sizes in pixels from the panel's top left (1160 x 170).
+    static void MakeDamagePanel(Transform parent)
+    {
+        GameObject panel = NewUI("DamagePanel", parent);
+        LayoutElement le = panel.AddComponent<LayoutElement>();
+        le.preferredHeight = le.minHeight = 170f;
+        AddBox(panel).color = new Color(1f, 1f, 1f, 0.06f);
+        Image bar = AddImage(NewUI("GroupBar", panel.transform), null, Gold);   // the gold bar: everything here is one setting
+        RectTransform barRect = (RectTransform)bar.transform;
+        barRect.anchorMin = new Vector2(0f, 0f);
+        barRect.anchorMax = new Vector2(0f, 1f);
+        barRect.pivot = new Vector2(0f, 0.5f);
+        barRect.anchoredPosition = new Vector2(10f, 0f);
+        barRect.sizeDelta = new Vector2(5f, -28f);   // 14 px short of the box's round corners
+
+        // The parent: Show damage numbers. Row 14 - 74 px down; its tick box's middle 54 px from the left, 44 px down.
+        RectTransform top = PanelRow(panel.transform, "DamageRow", 14f, 60f);
+        PanelToggle(top, 54f, 44f, true);
+        TextMeshProUGUI name = MakeText(top, "Label", "Show damage numbers", 26f, Color.white, TextAlignmentOptions.Left);
+        Place(name.gameObject, new Vector2(0f, 0.5f), new Vector2(100f + 200f, 0f), new Vector2(400f, 60f));
+        name.fontStyle = FontStyles.Bold;
+        TextMeshProUGUI info = MakeText(top, "Info", "A number pops up where a hit lands.", 22f, Dim, TextAlignmentOptions.Left);
+        Place(info.gameObject, new Vector2(0f, 0.5f), new Vector2(565f + 200f, 0f), new Vector2(400f, 60f));
+
+        // The child: Only monsters and animals. Row 96 - 152 px down; its tick box indented (middle 128 px from the left,
+        // 124 px down, left side at 108). DisplayMenu fades and locks this whole row (its CanvasGroup) while the parent is off.
+        RectTransform child = PanelRow(panel.transform, "DamageCreaturesRow", 96f, 56f);
+        child.gameObject.AddComponent<CanvasGroup>();
+        // The branch, first so it's behind: from under the parent's tick box (66 px down) to the child's middle, then
+        // across to the child's tick box. It's inside the child's row (positions from the row's top, 96 px down the
+        // panel), so it fades with it.
+        PanelLine(child, "BranchDown", new Vector2(54f, 0f), new Vector2(3f, 60f));          // 66 - 126 px down the panel
+        PanelLine(child, "BranchAcross", new Vector2(80f, -28.5f), new Vector2(54f, 3f));   // 53 - 107 px from the left
+        PanelToggle(child, 128f, 40f, false);
+        TextMeshProUGUI childName = MakeText(child, "Label", "Only monsters and animals", 24f, Color.white, TextAlignmentOptions.Left);
+        Place(childName.gameObject, new Vector2(0f, 0.5f), new Vector2(170f + 190f, 0f), new Vector2(380f, 56f));
+        TextMeshProUGUI note = MakeText(child, "Note", "Off: every hit, trees and rocks too.", 22f, Dim, TextAlignmentOptions.Left);
+        Place(note.gameObject, new Vector2(0f, 0.5f), new Vector2(565f + 200f, 0f), new Vector2(400f, 56f));
+        TextMeshProUGUI locked = MakeText(child, "LockNote", "Turn on Show damage numbers first.", 22f, Gold, TextAlignmentOptions.Left);
+        Place(locked.gameObject, new Vector2(0f, 0.5f), new Vector2(565f + 200f, 0f), new Vector2(400f, 56f));
+        locked.fontStyle = FontStyles.Italic;
+        locked.gameObject.SetActive(false);   // DisplayMenu shows it (instead of the Note) while the child is locked
+
+        // What the numbers look like, on a dark box like the world behind them (the game's colors: DamageNumbers).
+        GameObject preview = NewUI("DamagePreview", panel.transform);
+        Place(preview, new Vector2(1f, 0.5f), new Vector2(-95f, 0f), new Vector2(170f, 150f));
+        AddBox(preview).color = new Color(0f, 0f, 0f, 0.35f);
+        TextMeshProUGUI caption = MakeText(preview.transform, "Caption", "LOOKS LIKE", 16f, Dim, TextAlignmentOptions.Center);
+        Place(caption.gameObject, new Vector2(0.5f, 1f), new Vector2(0f, -15f), new Vector2(170f, 22f));
+        caption.characterSpacing = 4f;
+        TextMeshProUGUI normal = MakeText(preview.transform, "Normal", "12", 32f, Color.white, TextAlignmentOptions.Center);
+        Place(normal.gameObject, new Vector2(0.5f, 1f), new Vector2(0f, -48f), new Vector2(170f, 40f));
+        normal.fontStyle = FontStyles.Bold;
+        TextMeshProUGUI critical = MakeText(preview.transform, "Critical", "<size=45%>CRITICAL</size>\n24!", 40f,
+                                            new Color(1f, 0.38f, 0.12f), TextAlignmentOptions.Center);
+        Place(critical.gameObject, new Vector2(0.5f, 1f), new Vector2(0f, -106f), new Vector2(170f, 76f));
+        critical.fontStyle = FontStyles.Bold;
+    }
+
+    // A row inside the damage panel, its top "fromTop" pixels below the panel's top, the panel's full width.
+    static RectTransform PanelRow(Transform panel, string objectName, float fromTop, float height)
+    {
+        RectTransform row = (RectTransform)NewUI(objectName, panel).transform;
+        row.anchorMin = new Vector2(0f, 1f);
+        row.anchorMax = new Vector2(1f, 1f);
+        row.pivot = new Vector2(0.5f, 1f);
+        row.anchoredPosition = new Vector2(0f, -fromTop);
+        row.sizeDelta = new Vector2(0f, height);
+        return row;
+    }
+
+    // A tick box (TogglePop), its middle "x" pixels from the row's left, "size" pixels square, ticked or not.
+    static void PanelToggle(RectTransform row, float x, float size, bool on)
+    {
+        GameObject go = NewUI("Toggle", row);
+        Place(go, new Vector2(0f, 0.5f), new Vector2(x, 0f), new Vector2(size, size));
+        Image box = AddBox(go);
+        box.color = KeyColor;
+        Image tick = AddImage(NewUI("Checkmark", go.transform), Builtin("Checkmark.psd"), Gold);
+        Stretch(tick.gameObject, 3f, 3f, 3f, 3f);
+        Toggle toggle = go.AddComponent<Toggle>();
+        toggle.targetGraphic = box;
+        toggle.graphic = tick;
+        toggle.isOn = on;
+        go.AddComponent<TogglePop>();
+    }
+
+    // A thin line (the branch joining the child setting to its parent), its middle at "at" from its parent's top left.
+    static void PanelLine(Transform parent, string objectName, Vector2 at, Vector2 size)
+    {
+        Image line = AddImage(NewUI(objectName, parent), null, new Color(Dim.r, Dim.g, Dim.b, 0.8f));
+        Place(line.gameObject, new Vector2(0f, 1f), at, size);
     }
 
     // Mouse sensitivity:  the name  [-] [====o====] [+] [5.0]   (SliderRow runs it).

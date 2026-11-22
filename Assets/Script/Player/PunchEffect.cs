@@ -22,9 +22,11 @@ Purpose: A grey burst of wind (dust clouds, wind lines, a shock ring and a few s
          (red), even from a tool. A punch that lands on a monster pushes it away (Knockback; a heavy punch harder, the
          Brawler perk farther: PerkEffects.KnockbackMultiplier). With the Vampire perk the player heals a share of the
          damage each hit really does (PerkEffects.WithVampire).
+         When the hit lands, the damage it really did pops up as a number there (DamageNumbers, if the player has damage
+         numbers on: DISPLAY page); a critical hit's number is big, orange-red and says CRITICAL.
          A swing that lands on a turtle hiding in its shell (ShellDefense.Blocks) bounces off: no damage, no wind burst,
          no push; the shell hurts the player instead, with sparks and "BLOCKED!" (ShellDefense.Deflect).
-Requirement: PunchEffect.cs x-> PlayerAnimator.cs, PunchCombo.cs, Knockback.cs
+Requirement: PunchEffect.cs x-> PlayerAnimator.cs, PunchCombo.cs, Knockback.cs, DamageNumbers.cs
              PunchEffect.cs o-> PerkEffects.cs, ShellDefense.cs
              PunchEffect.cs <-x PlayerAnimationSetup.cs, PlayerCombat.cs, PunchEffectBuilder.cs, TierToolBuilder.cs
 */
@@ -158,7 +160,9 @@ public class PunchEffect : MonoBehaviour
         }
         else
         {
+            float before = DamageNumbers.HealthOf(target, out bool creature);
             hurt?.Invoke();
+            DamageNumbers.ShowDealt(target, before, creature, hit.point, critical);   // the damage it did, as a number
         }
     }
 
@@ -222,7 +226,9 @@ public class PunchEffect : MonoBehaviour
         }
         if (target != null)
         {
+            float before = DamageNumbers.HealthOf(target, out bool creature);
             hurt?.Invoke();   // it lands: now it's hurt (a tree or stone may break right here)
+            DamageNumbers.ShowDealt(target, before, creature, point, critical);   // the damage it did, as a number
             if (PunchCombo.IsPunch(swing)) PushAway(target, swing);
         }
         if (burst > 0f) Spawn(point, normal, burst, critical);   // the wind bursts where it landed

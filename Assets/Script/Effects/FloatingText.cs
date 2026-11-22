@@ -2,12 +2,14 @@
 First Date: 21/11/2026
 Date: 21/11/2026
 Author: Tony
-Use by: Nothing to put on an object: FloatingText.Show(...) makes one by itself (e.g. the turtle's "BLOCKED!").
+Use by: Nothing to put on an object: FloatingText.Show(...) makes one by itself (e.g. the turtle's "BLOCKED!" and the
+        damage numbers, DamageNumbers).
 Unity Editor: Nothing to set. Testing: punch a turtle while it's in its shell (ShellDefense > ⋮ > Test: Hide In Shell).
 Purpose: A short word in the world that pops up, rises and fades away, always facing the camera and drawn over
          everything (a TextMeshPro text, overlay), e.g. "BLOCKED!" over a turtle whose shell a hit bounced off. It
          removes itself when it has faded.
 Requirement: FloatingText.cs x-> TextMeshPro (Unity)
+             FloatingText.cs <-x DamageNumbers.cs
              FloatingText.cs <-o ShellDefense.cs
 */
 
@@ -18,7 +20,6 @@ using UnityEngine;
 public class FloatingText : MonoBehaviour
 {
     // ===== Fields =====
-    const float Rise = 0.7f;          // meters it floats up while it fades
     const float PopSeconds = 0.12f;   // it starts bigger and shrinks to its size this fast: a little pop
     const float FadeFrom = 0.6f;      // it starts fading after this share of its time
 
@@ -27,6 +28,8 @@ public class FloatingText : MonoBehaviour
     float age;        // how long it has shown
     Color color;
     Vector3 start;
+    float pop = 1.6f;   // how much bigger it starts (1.6 = 60 % bigger)
+    float rise = 0.7f;  // meters it floats up while it fades
 
     // ===== Unity messages (Unity calls these) =====
 
@@ -41,8 +44,8 @@ public class FloatingText : MonoBehaviour
             return;
         }
 
-        transform.position = start + Vector3.up * (Rise * (1f - (1f - k) * (1f - k)));   // fast at first, then slower
-        transform.localScale = Vector3.one * (age < PopSeconds ? Mathf.Lerp(1.6f, 1f, age / PopSeconds) : 1f);
+        transform.position = start + Vector3.up * (rise * (1f - (1f - k) * (1f - k)));   // fast at first, then slower
+        transform.localScale = Vector3.one * (age < PopSeconds ? Mathf.Lerp(pop, 1f, age / PopSeconds) : 1f);
         Color c = color;
         c.a *= k < FadeFrom ? 1f : 1f - (k - FadeFrom) / (1f - FadeFrom);
         text.color = c;
@@ -51,8 +54,10 @@ public class FloatingText : MonoBehaviour
 
     // ===== My methods =====
 
-    // Shows "words" at "point" in the world for "seconds". size = the letters' size (3 = about a quarter of a meter).
-    public static void Show(Vector3 point, string words, Color color, float size = 3f, float seconds = 0.9f)
+    // Shows "words" at "point" in the world for "seconds". size = the letters' size (3 = about a quarter of a meter),
+    // pop = how much bigger it starts (a critical hit's number pops harder), rise = meters it floats up.
+    public static void Show(Vector3 point, string words, Color color, float size = 3f, float seconds = 0.9f,
+                            float pop = 1.6f, float rise = 0.7f)
     {
         if (string.IsNullOrEmpty(words)) return;
 
@@ -75,6 +80,8 @@ public class FloatingText : MonoBehaviour
         floating.seconds = seconds;
         floating.color = color;
         floating.start = point;
+        floating.pop = Mathf.Max(1f, pop);
+        floating.rise = rise;
         floating.FaceCamera();
     }
 

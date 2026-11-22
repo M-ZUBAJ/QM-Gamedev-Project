@@ -14,10 +14,11 @@ Purpose: One place to change every key in the game.
          (Project Settings → Player → Active Input Handling = "Input Manager (Old)" or "Both").
          The title screen's Settings > Key Bindings page (KeyBindingMenu) changes keys with SetSeveral and
          ResetToDefaults; the choices are saved, so they work in the game too.
+         Fullscreen (F11) switches fullscreen on / off (FullscreenKeys; Alt + Enter always does too).
          Grab (F) picks up an item lying on the ground (ItemGrabber); Interact (E) opens a chest and picks berries from
          a bush (Marko's PerkChest and Turki's ResourceNode read it since 21/11/2026: before, each had its own E, and
          Interact sat unused on the right mouse button, so the key page couldn't show or change E).
-Requirement: KeyBindings.cs <-x BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemGrabber.cs, KeyBindingMenu.cs, NewGameDefaultsSync.cs, ObjectLevitator.cs, PauseMenu.cs, PerkChest.cs, PlayerController.cs, PlayerGlide.cs, PlayerJump.cs, ResourceNode.cs, TitleSceneBuilder.cs
+Requirement: KeyBindings.cs <-x BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, FullscreenKeys.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemGrabber.cs, KeyBindingMenu.cs, NewGameDefaultsSync.cs, ObjectLevitator.cs, PauseMenu.cs, PerkChest.cs, PlayerController.cs, PlayerGlide.cs, PlayerJump.cs, ResourceNode.cs, TitleSceneBuilder.cs
 */
 
 using UnityEngine;
@@ -43,6 +44,7 @@ public enum KeyAction
     Consume,
     Build, Interact, PlaceBuilding, CancelBuilding, AutoPlace,
     Hotbar1, Hotbar2, Hotbar3, Hotbar4, Hotbar5, Hotbar6, Hotbar7, Hotbar8,   // keep them in order: HotbarKey() counts from Hotbar1
+    Fullscreen,
 }
 
 [DisallowMultipleComponent]   // only one KeyBindings per object
@@ -129,6 +131,10 @@ public class KeyBindings : MonoBehaviour
     [Tooltip("Hide the cursor again (start aiming). Mouse0 = left mouse button.")]
     [SerializeField] KeyCode lockCursor = KeyCode.Mouse0;
 
+    [Header("Screen (default keys)")]
+    [Tooltip("Switch fullscreen on / off (Alt + Enter always does too).")]
+    [SerializeField] KeyCode fullscreen = KeyCode.F11;
+
     [Header("Hotbar (default keys)")]
     [Tooltip("Select hotbar slot 1, 2, 3 ... (one key per slot, in order).")]
     [SerializeField] KeyCode[] hotbar =
@@ -179,6 +185,7 @@ public class KeyBindings : MonoBehaviour
     public static KeyCode ToggleView     => Get(KeyAction.ToggleView);
     public static KeyCode UnlockCursor   => Get(KeyAction.UnlockCursor);
     public static KeyCode LockCursor     => Get(KeyAction.LockCursor);
+    public static KeyCode Fullscreen     => Get(KeyAction.Fullscreen);
 
     // The key for hotbar slot i (0 = first slot). Wrong numbers give KeyCode.None.
     public static KeyCode HotbarKey(int i)
@@ -369,6 +376,7 @@ public class KeyBindings : MonoBehaviour
             case KeyAction.ToggleView:     return toggleView;
             case KeyAction.UnlockCursor:   return unlockCursor;
             case KeyAction.LockCursor:     return lockCursor;
+            case KeyAction.Fullscreen:     return fullscreen;
         }
 
         // Hotbar1 - Hotbar8 read from the hotbar list (Hotbar1 = hotbar[0]).

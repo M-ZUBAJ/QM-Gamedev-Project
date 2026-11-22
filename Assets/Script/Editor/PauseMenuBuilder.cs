@@ -11,9 +11,9 @@ Purpose: The Esc pause menu, in one click:
            PauseCanvas (Canvas, Sort Order 40: over the HUD, chest panels and the victory page, under the screen fader;
                         PauseMenu)
              > Pause (switched off until Esc): a dark backdrop, PAUSED, < RESUME (top left), MAIN MENU (top right),
-               the settings' KEY BINDINGS and CONTROLS tabs (made by the title screen's own builder,
-               TitleSceneBuilder.MakeSettingsTabs, so they look and work the same: KeyBindingMenu, ControlsMenu) and a
-               hint at the bottom.
+               the settings' KEY BINDINGS, CONTROLS and DISPLAY tabs (made by the title screen's own builder,
+               TitleSceneBuilder.MakeSettingsTabs, so they look and work the same: KeyBindingMenu, ControlsMenu,
+               DisplayMenu) and a hint at the bottom.
          An EventSystem is added to a scene that has none (the buttons need one).
 Requirement: PauseMenuBuilder.cs x-> PauseMenu.cs, TitleSceneBuilder.cs, UIBuildHelper.cs, MenuOrder.cs
 */
@@ -124,7 +124,7 @@ public static class PauseMenuBuilder
             Button menu = TitleSceneBuilder.MakeButton(content.transform, "MainMenuButton", "MAIN MENU", new Vector2(250f, 64f), 26f, 8, false, false);
             TitleSceneBuilder.Place(menu.gameObject, new Vector2(1f, 1f), new Vector2(-165f, -72f), new Vector2(250f, 64f));
 
-            TitleSceneBuilder.MakeSettingsTabs(content.transform, false);   // KEY BINDINGS and CONTROLS, like the title screen
+            TitleSceneBuilder.MakeSettingsTabs(content.transform, false);   // KEY BINDINGS, CONTROLS and DISPLAY, like the title screen
 
             TextMeshProUGUI hint = TitleSceneBuilder.MakeText(content.transform, "PauseHint", "Esc: back to the game",
                                                               22f, TitleSceneBuilder.Dim, TextAlignmentOptions.Center);

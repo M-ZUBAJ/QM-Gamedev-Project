@@ -4,10 +4,11 @@ The game now starts on a title screen, **UNKNOWN SURVIVAL**, with three buttons:
 
 - **PLAY** opens the **New Game** page. Every option there starts at the game *as it is now*. **START GAME** loads
   GameScene with the player's choices.
-- **SETTINGS** opens the **Settings** page with tabs. **Key Bindings** and **Controls** work (Controls since 21/11/2026:
-  **Mouse sensitivity** 1 - 10, 5 = the game's normal speed, on a slider with - / +, and **Invert mouse**); **Display**
-  and **Audio** show an animated "INCOMING..." message until they're made. The same KEY BINDINGS and CONTROLS are in the
-  Esc **pause menu** while playing (`Docs/Pause Menu Setup.md`), and both save to the computer, so they always match.
+- **SETTINGS** opens the **Settings** page with tabs. **Key Bindings**, **Controls** and **Display** work (since
+  21/11/2026: Controls = **Mouse sensitivity** 1 - 10, 5 = the game's normal speed, on a slider with - / +, and
+  **Invert mouse**; Display = **Fullscreen** and the **damage numbers**, `Docs/Display Settings Setup.md`); **Audio**
+  shows an animated "INCOMING..." message until it's made. The same KEY BINDINGS, CONTROLS and DISPLAY are in the Esc
+  **pause menu** while playing (`Docs/Pause Menu Setup.md`), and both save to the computer, so they always match.
 - **QUIT** closes the game. It's hidden in the WebGL build, because a web page can't close itself.
 
 ## Quick way: one click
@@ -94,6 +95,7 @@ panel has no room for another row.
   then had Interact on the right mouse button (where it did nothing): the game forgets that one once, so it's E.
 - **RESET ALL** puts every key back to its default (GameScene's KeyBindings).
 - **GAME > Pause menu** (21/11/2026) = Esc: in the game it opens the pause menu (it was "Free the mouse").
+- **GAME > Fullscreen (or Alt + Enter)** (21/11/2026) = F11: switches fullscreen anywhere, the title screen too.
 
 ## The Settings page: Controls
 
@@ -104,6 +106,16 @@ panel has no room for another row.
 
 The page is `ControlsPage` (ControlsMenu, a SliderRow named SensitivityRow, a Toggle in InvertRow). The values live in
 `MouseSettings` (PlayerPrefs), which the camera reads every frame.
+
+## The Settings page: Display
+
+- **Fullscreen** (also Alt + Enter or F11; in the browser Esc leaves it).
+- **DAMAGE NUMBERS**, one framed box: **Show damage numbers** and, indented under it and joined by a line, **Only
+  monsters and animals** (locked and faded while Show damage numbers is off), with a sample of a normal and a critical
+  number. **RESET:** numbers back on, for every hit.
+
+The page is `DisplayPage` (DisplayMenu). The values live in `DisplaySettings` (PlayerPrefs). Everything else:
+`Docs/Display Settings Setup.md`.
 
 The list is the **Rows** table at the top of `KeyBindingMenu.cs`. Add a line there for a new key.
 

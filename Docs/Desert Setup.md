@@ -5,8 +5,10 @@
   **harder to break**: 75 health, 2.5 times a normal stone rock (30). Bigger, too.
 - **Desert caves** (since 21/11/2026 the new world is endless: every 256 m square of desert gets 2 tries for one, each
   a 50 % chance, so about one per square): walk-in mounds of sandstone, wider and a little lower than the grassland's
-  rock caves, with a sandy floor. Inside: **2 - 3 gold rocks** (shiny gold, 2 - 4 **Gold** each) and the other spots
-  sandstone rocks. Gold rocks need an **Iron Pickaxe** or better ("Needs an Iron Pickaxe or better").
+  rock caves, with a sandy floor. Inside: **2 - 3 gold rocks** (shiny gold, 2 - 4 **Gold** each), **2 - 3 iron rocks**
+  and the other spots sandstone rocks. Gold rocks need an **Iron Pickaxe** or better ("Needs an Iron Pickaxe or
+  better"). **Lucky caves:** 1 desert cave in 20 (5 %) has **4 gold rocks** instead (since 21/11/2026; snow caves have
+  gold too, `Docs/Snow Setup.md`).
 - **Where:** the desert is never closer than 400 m to the start (usually about 450 - 500 m away), in the hot areas of
   the world's climate. Farther still (from 700 m) is the snow, with diamonds and even more chests (`Docs/Snow Setup.md`).
   Gold makes the gold tools (Iron tool + Gold) and the gold armor (Iron piece + Gold): `Docs/Tool Setup.md`,
@@ -43,7 +45,7 @@ Run it again any time: everything is refilled in place, and the new world keeps 
 
 | Part | What it does |
 |---|---|
-| **WorldGenerator** (World Generator) | **Desert Cave Prefabs**, **Desert Cave Chance** (0.5), **Gold Ore**, **Sandstone Ore**, **Gold Per Cave** (2 - 3): each new 256 m square of land gets 2 tries for a cave; a try that finds gentle ground that's all desert (90 % or more, away from the square's edges and its other cave) gets one with this chance. The ground is flattened, a desert cave placed and its OreSpots filled: gold first, the rest sandstone. The floor is painted sand and dirt (too little of either for the spawners' rocks to grow inside). |
+| **WorldGenerator** (World Generator) | **Desert Cave Prefabs**, **Desert Cave Chance** (0.5), **Gold Ore**, **Sandstone Ore**, **Gold Per Cave** (2 - 3), **Desert Iron Per Cave** (2 - 3, the grassland's Iron Ore), **Lucky Cave Chance** (0.05) / **Lucky Count** (4): each new 256 m square of land gets 2 tries for a cave; a try that finds gentle ground that's all desert (90 % or more, away from the square's edges and its other cave) gets one with this chance. The ground is flattened, a desert cave placed and its 7 OreSpots filled in a random order: gold first (4 in a lucky cave), then iron, the rest sandstone. The floor is painted sand and dirt (too little of either for the spawners' rocks to grow inside). |
 | **ObjectScatter** (Sanyam's, the new scene's copy) | A new rule **Sandstone Rocks**: 40 SandstoneNodes for every Rules Area (400,000 m²) of sand (min strength 0.6, max slope 30, spacing 16, size 1 - 1.6), about 6 per 256 m square. His Desert Rocks rule (plain stone) is still left out of the new world. The desert's chests: ChestsDesert 30, Rare 12, Epic 4, Legendary 2 (`Docs/Loot Chests Setup.md`). |
 | **Desert Monster Spawner** (DesertMonsterSpawner) | Not used since 21/11/2026 (Set Up Night Monsters removes it from the new world). It kept up to 5 turtles on the sand around the player in the day (see below). |
 | **EnemyAggro** (not on the turtle any more) | Gives Marko's EnemyMovement / EnemyAttack the player as target only while the player is near (Notice Range 14 m) or after being hit; takes it away beyond Give Up Range (32 m) or when the player dies, and stops the turtle. |
@@ -72,7 +74,8 @@ Run it again any time: everything is refilled in place, and the new world keeps 
 3. **Desert caves:** a rock cave prefab with the Sandstone material on every rock (or run the tool).
 4. **The turtle:** see `Docs/Night Monsters Setup.md` (it's a night monster now).
 5. **In ProceduralGenerateScene:** World Generator > drag the desert caves, GoldNode and SandstoneNode into Desert Cave
-   Prefabs, Gold Ore and Sandstone Ore. Add an ObjectScatter rule for SandstoneNode on the sand texture. Save.
+   Prefabs, Gold Ore and Sandstone Ore (the iron comes from Iron Ore; Desert Iron Per Cave says how many, Lucky Cave
+   Chance / Lucky Count the lucky caves). Add an ObjectScatter rule for SandstoneNode on the sand texture. Save.
 
 ## Testing
 
@@ -80,8 +83,9 @@ Run it again any time: everything is refilled in place, and the new world keeps 
    desert (or walk there: 450 - 500 m from the start, usually).
 2. Sandstone rocks on the sand; punch one: it takes about 2.5 times as long as a stone rock, and gives Stone.
 3. No turtles in the day (they come at night from night 2: `Docs/Night Monsters Setup.md`).
-4. Find a desert cave (a sandstone mound): inside, gold rocks shine. With a Stone Pickaxe: "Needs an Iron Pickaxe or
-   better"; with an Iron Pickaxe they break into Gold.
+4. Find a desert cave (a sandstone mound): inside, gold rocks shine next to iron rocks. With a Stone Pickaxe: the iron
+   breaks, the gold says "Needs an Iron Pickaxe or better"; with an Iron Pickaxe it breaks into Gold. (To see a lucky
+   cave at once, set Lucky Cave Chance to 1 on the World Generator before you play: every desert cave has 4 gold.)
 
 ## Problems
 

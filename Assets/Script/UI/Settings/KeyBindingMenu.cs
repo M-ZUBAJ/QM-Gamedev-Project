@@ -21,7 +21,7 @@ Purpose: The key binding list. Click a key box, then press the new key (Esc = ca
          KeyBindings' Unlock Cursor). The same list is in the Esc pause menu (PauseMenu), so keys change during play.
          RESET ALL puts every key back to its default, the boxes flipping over in a wave down the list.
 Requirement: KeyBindingMenu.cs x-> KeyBindings.cs, UITween.cs
-             KeyBindingMenu.cs <-x PauseMenu.cs, TitleSceneBuilder.cs
+             KeyBindingMenu.cs <-x FullscreenKeys.cs, PauseMenu.cs, TitleSceneBuilder.cs
              KeyBindingMenu.cs <-o TitleMenu.cs
 */
 
@@ -89,6 +89,7 @@ public class KeyBindingMenu : MonoBehaviour
         new Row("BUILDING", "Snap / Surface", When.Building, new[] { KeyAction.AutoPlace }),
         new Row("CAMERA", "Change view", When.Playing, new[] { KeyAction.ToggleView }),
         new Row("GAME", "Pause menu", When.Playing, new[] { KeyAction.UnlockCursor }),   // Esc: the pause menu (it frees the mouse)
+        new Row("GAME", "Fullscreen (or Alt + Enter)", When.Playing, new[] { KeyAction.Fullscreen }),   // F11 (FullscreenKeys)
         new Row("FIXED (can't change yet)", "Attack", When.Playing, null, null, "Left click"),
         new Row("FIXED (can't change yet)", "Fireball", When.Playing, null, null, "Q"),
     };

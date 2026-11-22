@@ -23,8 +23,9 @@ Purpose: Makes the new world while its scene loads, and then keeps making it, en
              the Snow Line), the sandy desert (only from Desert From on) and the snow (only from Snow From on: the
              farthest from the start, and the best place: more caves, diamonds and more and better chests);
            - each chunk: its ground's shape and painted textures (the old world's grass, sand, rock, snow, mud), grass
-             tufts, maybe a cave or two (grassland: Stone, Copper, Iron rocks; desert: Gold and Sandstone; snow: Diamond
-             and Stone), and its trees, bushes, rocks and chests from Sanyam's ObjectScatter rules (a rule's Count is how
+             tufts, maybe a cave or two (grassland: Iron, Copper, Stone rocks; desert: Gold, Iron, Sandstone; snow:
+             Diamond, Gold, Stone; 1 desert / snow cave in 20 is a lucky one with 4 gold / 4 diamond rocks), and its
+             trees, bushes, rocks and chests from Sanyam's ObjectScatter rules (a rule's Count is how
              many grow on Rules Area of ground painted with its texture, so each chunk gets its share; the rules on the
              snow texture, the snowy pines and the snow's chests, grow only in the snow biome, not on the hills' tops);
            - chunks within Load Distance are made ahead of the player, a few milliseconds of each frame (Frame Budget)
@@ -243,13 +244,16 @@ public class WorldGenerator : MonoBehaviour
     [Range(0f, 1f)]
     [SerializeField] float desertCaveChance = 0.5f;
 
-    [Tooltip("The rocks in a desert cave: Gold (its rock needs an Iron Pickaxe), the other spots Sandstone (a hard desert " +
-             "rock that gives Stone; empty = Stone Ore).")]
+    [Tooltip("The rocks in a desert cave: Gold (its rock needs an Iron Pickaxe) and iron (the Iron Ore above), the other " +
+             "spots Sandstone (a hard desert rock that gives Stone; empty = Stone Ore). Snow caves have gold too.")]
     [SerializeField] GameObject goldOre;
     [SerializeField] GameObject sandstoneOre;
 
-    [Tooltip("How many gold rocks a desert cave has (at least, at most). Each gives 2 - 4 gold.")]
+    [Tooltip("How many gold rocks a desert cave has (at least, at most; a lucky cave has Lucky Count). Each gives 2 - 4 gold.")]
     [SerializeField] Vector2Int goldPerCave = new Vector2Int(2, 3);
+
+    [Tooltip("How many iron rocks a desert cave has too (at least, at most). Its other spots get sandstone.")]
+    [SerializeField] Vector2Int desertIronPerCave = new Vector2Int(2, 3);
 
     [Header("Snow caves")]
     [Tooltip("The snow's caves (Tools > World > Build Snow Content makes them, of icy rock). Each has children named OreSpot " +
@@ -261,12 +265,27 @@ public class WorldGenerator : MonoBehaviour
     [Range(0f, 1f)]
     [SerializeField] float snowCaveChance = 0.7f;
 
-    [Tooltip("The diamond rock (Tools > World > Build Snow Content: it needs a Gold Pickaxe). A snow cave's other spots get " +
-             "Stone Ore.")]
+    [Tooltip("The diamond rock (Tools > World > Build Snow Content: it needs a Gold Pickaxe). A snow cave also has gold " +
+             "(the desert's Gold Ore); its other spots get Stone Ore.")]
     [SerializeField] GameObject diamondOre;
 
-    [Tooltip("How many diamond rocks a snow cave has (at least, at most). Each gives 1 - 3 diamonds.")]
+    [Tooltip("How many diamond rocks a snow cave has (at least, at most; a lucky cave has Lucky Count). Each gives 1 - 3 " +
+             "diamonds.")]
     [SerializeField] Vector2Int diamondPerCave = new Vector2Int(2, 3);
+
+    [Tooltip("How many gold rocks a snow cave has too (at least, at most). Its other spots get stone.")]
+    [SerializeField] Vector2Int snowGoldPerCave = new Vector2Int(2, 3);
+
+    [Header("Lucky caves")]
+    [Tooltip("The chance a desert cave is a lucky one with Lucky Count gold rocks, and a snow cave with Lucky Count " +
+             "diamond rocks, instead of Gold / Diamond Per Cave (0.05 = 1 cave in 20).")]
+    [Range(0f, 1f)]
+    [SerializeField] float luckyCaveChance = 0.05f;
+
+    [Tooltip("How many gold rocks (desert) or diamond rocks (snow) a lucky cave has. A cave has 7 ore spots: the best " +
+             "rocks get theirs first.")]
+    [Range(1, 7)]
+    [SerializeField] int luckyCount = 4;
 
     [Header("Trees, bushes, rocks and chests")]
     [Tooltip("Sanyam's ObjectScatter: its Rules say what grows where (on which painted texture). Every chunk gets its " +
@@ -839,8 +858,9 @@ public class WorldGenerator : MonoBehaviour
     }
 
     // Puts the rocks on a cave's ore spots (its children named OreSpot), in a random order: a grassland cave a few iron,
-    // a few copper, the rest stone; a desert cave a few gold, the rest sandstone; a snow cave a few diamond, the rest
-    // stone. They settle onto the floor by themselves (StandOnGround).
+    // a few copper, the rest stone; a desert cave a few gold, a few iron, the rest sandstone; a snow cave a few diamond,
+    // a few gold, the rest stone (1 desert / snow cave in 20 is lucky: 4 gold / 4 diamond). They settle onto the floor
+    // by themselves (StandOnGround).
     void FillOres(Transform cave, CaveKind kind, System.Random rng)
     {
         List<Transform> spots = new List<Transform>();
@@ -864,11 +884,13 @@ public class WorldGenerator : MonoBehaviour
                 second = Between(copperPerCave, rng); alsoRare = copperOre;
                 break;
             case CaveKind.Desert:
-                first = Between(goldPerCave, rng); rare = goldOre;
+                first = Lucky(goldPerCave, rng); rare = goldOre;
+                second = Between(desertIronPerCave, rng); alsoRare = ironOre;
                 if (sandstoneOre != null) common = sandstoneOre;
                 break;
             case CaveKind.Snow:
-                first = Between(diamondPerCave, rng); rare = diamondOre;
+                first = Lucky(diamondPerCave, rng); rare = diamondOre;
+                second = Between(snowGoldPerCave, rng); alsoRare = goldOre;
                 break;
         }
         for (int i = 0; i < spots.Count; i++)
@@ -880,6 +902,9 @@ public class WorldGenerator : MonoBehaviour
     }
 
     static int Between(Vector2Int range, System.Random rng) => rng.Next(Mathf.Min(range.x, range.y), Mathf.Max(range.x, range.y) + 1);
+
+    // How many of a cave's best rock: usually "range", but a lucky cave (Lucky Cave Chance, 1 in 20) gets Lucky Count.
+    int Lucky(Vector2Int range, System.Random rng) => rng.NextDouble() < luckyCaveChance ? luckyCount : Between(range, rng);
 
     // ----- Painting the ground -----
 

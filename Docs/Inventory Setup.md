@@ -326,3 +326,4 @@ SlotUI and HeldItemUI find their Icon, Count and ItemName by name, so keep those
 | Slots stay empty | Slot prefab has **SlotUI**? InventoryPage / Hotbar have **SlotGroup**? The Console says if the slot count doesn't match PlayerInventory. |
 | The held stack hides behind slots or the hotbar | HeldItemUI draws on its own Canvas on top of everything. If another canvas still covers it, raise HeldItemUI's **Sorting Order** above that canvas's. |
 | An item shows no picture | It had no icon when picked up (IconCapture couldn't photograph it), so only its amount shows (nothing for just 1). |
+| A list scrolls when I walk (W A S D) after clicking its scroll bar, or Space presses the last clicked button | Unity's EventSystem lets the keyboard work the menus. In the game Tony's `NoKeyNavigation` turns that off by itself (EventSystem > Send Navigation Events, unticked while playing in a scene with a player). If it still happens, the scene has no PlayerController. |

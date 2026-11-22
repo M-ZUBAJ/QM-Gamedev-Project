@@ -12,10 +12,12 @@
     92 m where nothing grows), the sandy **desert** (never closer than 400 m to the start, usually about 450 - 500 m
     away) and the **snow** (never closer than 700 m, usually about 750 - 800 m away).
   - **The desert** (guide `Docs/Desert Setup.md`): hard **sandstone rocks** (they give Stone but take 2.5 times as
-    long to break) and **sandstone caves** with **Gold** rocks (an Iron Pickaxe or better), and its chests.
+    long to break) and **sandstone caves** with **Gold** rocks (an Iron Pickaxe or better) and **Iron** rocks, and its
+    chests.
   - **The snow** (guide `Docs/Snow Setup.md`): the best place. Snowy pines and spruces, frosty rocks, **snow caves**
-    with **Diamond** rocks (a Gold Pickaxe or better; diamonds make the Diamond tools), more caves, and **more and
-    better chests** than the desert.
+    with **Diamond** rocks (a Gold Pickaxe or better; diamonds make the Diamond tools) and **Gold** rocks, more caves,
+    and **more and better chests** than the desert.
+  - **Lucky caves:** 1 desert cave in 20 has 4 gold rocks, 1 snow cave in 20 has 4 diamond rocks.
   - **Places you leave stay as you left them:** a chopped tree, a mined rock or an opened chest doesn't come back when
     you return. (Far squares are hidden, not thrown away.)
   - **A 100 m view distance:** the world fades into a mist 100 m away (orange at sunrise and sunset, dark blue at night),
@@ -128,8 +130,9 @@ The tool:
 | **Grass Texture**, **Grass Density**, **Grass Width / Height**, **Grass Bending**, **Grass Wind Speed**, **Grass Healthy / Dry**, **Grass Distance** | the grass tufts: picture (empty = no grass), tufts per 2 x 2 m (6), size (keep the width below the height, or the blades look squashed flat), wind (0.2 / 0.4), colors, how far they're drawn (80 m, never past the View Distance) |
 | **Cave Prefabs**, **Cave Chance**, **Cave Radius** | the grassland's caves, the chance of one per try (0.45), the flat ground made for each (13 m) |
 | **Stone / Copper / Iron Ore**, **Iron / Copper Per Cave** | the grassland caves' rocks: 2 - 3 iron, 2 - 3 copper, the rest stone |
-| **Desert Cave Prefabs**, **Desert Cave Chance**, **Gold Ore**, **Sandstone Ore**, **Gold Per Cave** | the desert's caves (0.5 a try): 2 - 3 gold, the rest sandstone (`Docs/Desert Setup.md`) |
-| **Snow Cave Prefabs**, **Snow Cave Chance**, **Diamond Ore**, **Diamond Per Cave** | the snow's caves (0.7 a try): 2 - 3 diamond rocks, the rest stone (`Docs/Snow Setup.md`) |
+| **Desert Cave Prefabs**, **Desert Cave Chance**, **Gold Ore**, **Sandstone Ore**, **Gold Per Cave**, **Desert Iron Per Cave** | the desert's caves (0.5 a try): 2 - 3 gold, 2 - 3 iron, the rest sandstone (`Docs/Desert Setup.md`) |
+| **Snow Cave Prefabs**, **Snow Cave Chance**, **Diamond Ore**, **Diamond Per Cave**, **Snow Gold Per Cave** | the snow's caves (0.7 a try): 2 - 3 diamond rocks, 2 - 3 gold, the rest stone (`Docs/Snow Setup.md`) |
+| **Lucky Cave Chance**, **Lucky Count** | 1 desert / snow cave in 20 (0.05) gets 4 gold / 4 diamond rocks instead of Gold / Diamond Per Cave (a cave has 7 ore spots: the best rocks are put first) |
 | **Scatter** | Sanyam's ObjectScatter (its Rules are used for every chunk) |
 | **Rules Area** | a rule's Count is how many grow on this much ground of its texture (400,000 m², about 630 x 630 m, as thick as the first new world's grassland). Smaller = more of everything |
 | **Player** | the player (found by itself if empty) |

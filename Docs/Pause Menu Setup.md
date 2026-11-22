@@ -1,4 +1,4 @@
-# Pause Menu Setup (Esc: key bindings and mouse settings while playing)
+# Pause Menu Setup (Esc: key bindings, mouse and display settings while playing)
 
 **What the player sees:**
 - **Esc** while playing opens the **pause menu**: the game stops (monsters, the sun, hunger, the player), the mouse is
@@ -11,9 +11,11 @@
     slider (it moves in tenths) or click - / + (half a step); the camera follows at once.
   - **Invert mouse (up / down):** moving the mouse up looks down.
   - **RESET:** back to 5, not inverted.
+- **DISPLAY** (21/11/2026): **Fullscreen** (Alt + Enter or F11 too) and the **damage numbers** (Show damage numbers,
+  and under it Only monsters and animals, locked while it's off): `Docs/Display Settings Setup.md`.
 - **< RESUME** (or **Esc** again) goes back to the game; **MAIN MENU** fades to the title screen.
 - Everything is saved on the computer (PlayerPrefs), so the title screen's Settings and the pause menu show the same
-  keys and mouse settings, and they're kept for next time.
+  keys, mouse and display settings, and they're kept for next time.
 - The pause menu doesn't open on top of another menu (inventory, crafting, build menu, a chest's panel, the death or
   victory page). Esc closes those first; press Esc again for the pause menu.
 
@@ -22,8 +24,8 @@
 1. Menu **Tools > UI > Build Pause Menu**, then **Build**. It saves your open scenes first.
 2. That's it: it makes `Assets/Prefabs/UI/Pause/PauseCanvas.prefab`, puts it in GameScene and ProceduralGenerateScene
    (every scene in File > Build Settings with a player) and saves them.
-3. For the title screen's Settings > CONTROLS page (the same mouse settings), rebuild the title screen once: **Tools >
-   UI > Build Main Title Scene** (your Version text is kept).
+3. For the title screen's Settings > CONTROLS and DISPLAY pages (the same settings), rebuild the title screen once:
+   **Tools > UI > Build Main Title Scene** (your Version text is kept).
 
 Run it again any time: the prefab is made again, each scene keeps one copy.
 
@@ -36,11 +38,13 @@ PauseCanvas            <- Canvas (Sort Order 40), Canvas Scaler (1920 x 1080), G
     PageTitle          <- "PAUSED"
     ResumeButton       <- "< RESUME"
     MainMenuButton     <- "MAIN MENU"
-    Tabs               <- KEY BINDINGS / CONTROLS (TabGroup + TabFX: the gold underline)
+    Tabs               <- KEY BINDINGS / CONTROLS / DISPLAY (TabGroup + TabFX: the gold underline)
     TabPages
       KeyBindingsPage  <- KeyBindingMenu (the key list, made from its Templates)
       ControlsPage     <- ControlsMenu: List > Content > MouseHeader, SensitivityRow (SliderRow: Minus, Slider, Plus,
                           ValueBox > Value), SensitivityNote, InvertRow (Toggle with TogglePop); Hint; ResetControlsButton
+      DisplayPage      <- DisplayMenu: FullscreenRow, DamagePanel > DamageRow, DamageCreaturesRow, DamagePreview; Hint;
+                          ResetDisplayButton (`Docs/Display Settings Setup.md`)
     PauseHint          <- "Esc: back to the game"
 ```
 
@@ -55,6 +59,7 @@ look and work the same in both places.
 | **MouseSettings** | (code only) | The saved mouse choices: `Sensitivity` (1 - 10, default 5), `Multiplier` (= Sensitivity / 5), `InvertY`, `Changed`. |
 | **CameraController** | Main Camera | Turns at its own **Sensitivity** x `MouseSettings.Multiplier`, inverted when its Invert Y or the player's Invert mouse is on. With a pause menu in the scene it leaves Esc to it. |
 | **ControlsMenu** | ControlsPage | Shows the saved choices, changes MouseSettings at once, writes them to the computer when the page closes, RESET. |
+| **DisplayMenu** | DisplayPage | Fullscreen and the damage numbers (DisplaySettings), the child setting locked while its parent is off (`Docs/Display Settings Setup.md`). |
 | **SliderRow** | SensitivityRow | A number on a slider with - / + buttons (Min 1, Max 10, Step 0.5, Decimals 1). |
 | **KeyBindingMenu** | KeyBindingsPage | The key list (`Docs/Main Title Setup.md`). |
 
@@ -74,7 +79,7 @@ look and work the same in both places.
 2. Inside it an empty full-screen object named `Pause` (add a CanvasGroup), with: an Image `Backdrop` (black, alpha
    0.78, covering the screen), a text "PAUSED", the Buttons `ResumeButton` and `MainMenuButton`, and the title screen's
    Settings tabs: copy `Tabs` and `TabPages` from MainTitleScene's TitleCanvas > Pages > SettingsPage (keep KEY
-   BINDINGS and CONTROLS, delete DISPLAY and AUDIO and their pages, and drop those two from the TabGroup's list).
+   BINDINGS, CONTROLS and DISPLAY, delete AUDIO and its page, and drop it from the TabGroup's list).
 3. Switch `Pause` off, save PauseCanvas as a prefab in `Assets/Prefabs/UI/Pause`, and put it in GameScene (and the new
    world, or rebuild that: Tools > World > Build New World Scene).
 
@@ -85,8 +90,9 @@ look and work the same in both places.
 3. Esc, **CONTROLS**: drag Mouse sensitivity to 10, close: the camera turns twice as fast. Tick Invert mouse: up looks
    down. RESET: back to normal.
 4. Open the inventory (Tab), press Esc: only the inventory closes. Esc again: the pause menu.
-5. Esc, **MAIN MENU**: the title screen; its Settings > CONTROLS shows your sensitivity.
-6. NEW GAME: untick **Pause menu (Esc) pauses the game**, START GAME, press Esc at night: the monsters keep coming while
+5. Esc, **DISPLAY**: untick Show damage numbers, close, punch a tree: no number. Tick it again: "3".
+6. Esc, **MAIN MENU**: the title screen; its Settings > CONTROLS shows your sensitivity, DISPLAY your choices.
+7. NEW GAME: untick **Pause menu (Esc) pauses the game**, START GAME, press Esc at night: the monsters keep coming while
    the menu is open.
 
 ## Problems
@@ -95,7 +101,8 @@ look and work the same in both places.
 |---|---|
 | Esc only frees the mouse | The scene has no PauseCanvas: run **Tools > UI > Build Pause Menu** (the new world copies GameScene, so it's in there too after Build New World Scene). |
 | The buttons can't be clicked | The scene needs an **EventSystem** (the tool adds one). |
-| The title screen's CONTROLS still says "INCOMING" | Rebuild it: **Tools > UI > Build Main Title Scene**. |
+| The title screen's CONTROLS or DISPLAY still says "INCOMING" | Rebuild it: **Tools > UI > Build Main Title Scene**. |
+| No DISPLAY tab in the pause menu | It was built before 21/11/2026: run **Tools > UI > Build Pause Menu** again. |
 | The camera is too slow even at 10 | Raise Main Camera > CameraController > **Sensitivity** (10 = twice it). |
 | In the web build, Esc closes the menu but the mouse stays free | Browsers only lock the mouse after a click: click in the game (or use RESUME). |
 | A fireball was cast while paused | Fixed: Marko's PlayerFireball now ignores Q while any menu is open (log `Docs/TonyEditMate/Marko/21-11-2026 No Fireball While A Menu Is Open.md`). |

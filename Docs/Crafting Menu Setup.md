@@ -109,6 +109,7 @@ Recipes** (it puts only the recipes on the existing tools).
 | A picture is missing | The item has no icon: its Item Data > Icon is Capture (photographed while playing) and needs a Prefab. |
 | A tool isn't in the list | It has no Recipe, or Crafted At isn't Crafting. Give it one, then run the tool again. |
 | The list doesn't scroll | Scroll needs **Scroll Rect** with Content = Rows, and Rows a **Content Size Fitter**. |
+| The list scrolled while walking, or Space crafted again | Fixed 22/11/2026: in the game, W A S D, the arrow keys, Space and Enter no longer work the menus (Tony's `NoKeyNavigation`); scroll with the mouse wheel or the scroll bar. |
 | No tabs over the list | Run the tool again (it adds them). The tabs need the scroll list (Panel > Scroll). |
 | The tabs are huge and the list short | Tabs > Layout Element > **Flexible Height** must be 0. Run the tool again (it builds the tabs again, 40 high). |
 | A tab shows the wrong items | The item's Item Data > **Item Type** decides its tab (Material, Consumable = Food, Tool, Armor). |

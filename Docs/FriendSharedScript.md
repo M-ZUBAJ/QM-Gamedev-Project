@@ -254,6 +254,7 @@ The inventory's **Crafting** tab (`InventoryCanvas > InventoryWindow > Pages > C
 | Read keys | `Input.GetKeyDown(KeyBindings.Swing)` (Swing = left mouse, free for attacking) |
 | Is the game paused (Esc menu) | `PauseMenu.IsOpen` (Tony's, 21/11/2026, guide `Docs/Pause Menu Setup.md`): time is stopped (`Time.timeScale = 0`) and `MenuState.AnyOpen` is true, so a script that already skips its input while a menu is open needs nothing more. Something timed with `Time.unscaledTime` keeps running while paused: use `Time.time` / `Time.deltaTime` for game things |
 | The player's mouse settings | `MouseSettings.Sensitivity` (1 - 10, 5 = normal), `MouseSettings.Multiplier` (= Sensitivity / 5), `MouseSettings.InvertY`, event `MouseSettings.Changed` (Tony's, saved in PlayerPrefs; set on Settings > CONTROLS, title screen or Esc menu). The camera already uses them |
+| Damage numbers on hits | Already done for every hit of the player (21/11/2026): your PlayerCombat's hits go through Tony's `PunchEffect.Hit`, the fireball and Thorns through `PerkEffects`, and they pop the damage the hit really did (white, or big orange "CRITICAL 24!"). Your files aren't changed for it. A new way of hurting something: `DamageNumbers.Show(point, damage, critical, creature)` (it checks the player's DISPLAY settings itself; see `DamageNumbers` in section 3) |
 | Your fireball in menus (changed) | One `[Tony] added` line in your `PlayerFireball.Update()`: no fireball while `MenuState.AnyOpen` (Q in the pause menu cast a fireball that hung in the stopped time). Log: `Docs/TonyEditMate/Marko/21-11-2026 No Fireball While A Menu Is Open.md` |
 | The interact key: chests and berry bushes (changed) | `KeyBindings.Interact` = **E** since 21/11/2026 (it was the right mouse button and unused). Marko's `PerkChest` (`InteractKey` returns it) and Turki's berry `ResourceNode` read it instead of their own `interactKey` / `collectKey` fields (commented out, `[Tony]` lines; logs `Docs/TonyEditMate/Marko/21-11-2026 Chest Key On The Key Bindings Page.md`, `Docs/TonyEditMate/Turki/21-11-2026 Berry Key On The Key Bindings Page.md`). Players change it on the title screen's Settings > Key Bindings ("Open chest / Pick berries"). Something new to use with E: `if (Input.GetKeyDown(KeyBindings.Interact)) ...`. **Grab** (F) stays the key for items lying on the ground |
 | Your enemy is now an animated slime | `Assets/Prefabs/Enemy/SlimeEnemy.prefab` (made by **Tools > Enemies > Build Monster Enemy**, guide `Docs/Enemy Setup.md`) uses your EnemyCombat / EnemyMovement / EnemyAttack plus Tony's `EnemyAnimator`, and the EnemySpawner now spawns it. Tony's `[Tony]` lines in your 4 enemy scripts: physics movement (walls stop it), spawning on the ground, attack animation, death animation before removal. Every change and how to undo it: `Docs/TonyEditMate/Marko/10-11-2026 Slime Enemy With Animations.md`. Your old `Enemy.prefab` still works |
@@ -437,6 +438,21 @@ and `Play` are static.
 
 Built by **Tools > Effects > Build Punch Wind Burst** (prefab `Assets/Prefabs/Effects/PunchWindBurst.prefab`). Guide:
 `Docs/Punch Effect Setup.md`.
+
+### DamageNumbers and DisplaySettings (nothing to find: static): numbers where a hit lands
+
+Since 21/11/2026 a hit of the player pops the damage it did: white ("12"), or for a critical hit bigger, orange-red,
+"CRITICAL" over it and "!" after it. PunchEffect (punches, tools, swords), the fireball and Thorns already do it. The
+player turns it on / off on Settings > DISPLAY (title screen or Esc menu), with a child setting "Only monsters and
+animals". Guide: `Docs/Display Settings Setup.md`.
+
+| Member | What it is |
+|---|---|
+| `DamageNumbers.Show(Vector3 point, float amount, bool critical, bool creature)` | pops "amount" at "point" (if the player's settings allow it). `creature` = a monster or an animal (Only monsters and animals hides the rest), `critical` = the big orange look. E.g. `DamageNumbers.Show(hit.point, 12f, false, true);` |
+| `DamageNumbers.HealthOf(target, out bool creature)` then `DamageNumbers.ShowDealt(target, before, creature, point, critical)` | measure the health before your hurt, hurt, then show the real difference (a dodge or a shell shows nothing). Works on EnemyCombat and ResourceNode |
+| `DamageNumbers.TopOf(target)` | a spot near the top of a target, for hits without a point |
+| `DisplaySettings.ShowDamage`, `DamageOnlyCreatures`, `ShowsDamageOn(creature)` | the player's choices (saved in PlayerPrefs), event `DisplaySettings.Changed` |
+| `DisplaySettings.Fullscreen`, `SetFullscreen(bool)`, `ToggleFullscreen()` | fullscreen (also Alt + Enter or F11: `KeyBindings.Fullscreen`) |
 
 ### InteractOutline (on anything you can use, e.g. the Chest): a glowing outline
 
@@ -817,4 +833,9 @@ Get them: BuildingData = a `public BuildingData wall;` field with the file dragg
 - **Before reacting to clicks / keys,** check `if (MenuState.AnyOpen) return;` so clicks inside a menu don't also attack or build.
 - **Keys** come from `KeyBindings` (e.g. `KeyBindings.Swing`, `KeyBindings.Interact`), so players can change them in one place.
   Need a new key? Ask Tony to add it.
+- **Menus in the game are for the mouse** (since 22/11/2026): in a scene with a player, Tony's `NoKeyNavigation` turns
+  off the EventSystem's keyboard navigation (**Send Navigation Events**), so W A S D, the arrow keys, Space and Enter
+  never scroll a list, move a slider or press the last clicked button while the player walks or jumps (the player can
+  walk with the inventory open). Your buttons, scroll bars and sliders work with the mouse as usual; don't build a
+  menu that needs the arrow keys or Enter. A key your menu needs: read it yourself (`Input.GetKeyDown(...)`).
 - **Don't edit** files in `Assets/Script/`. Ask Tony instead, so nothing breaks for the others.

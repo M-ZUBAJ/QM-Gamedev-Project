@@ -1284,6 +1284,7 @@ MonoBehaviour:
   goldOre: {fileID: 905641813461942899, guid: 7a8d2359a42d29145af7a809d9220c7a, type: 3}
   sandstoneOre: {fileID: 644092515104945314, guid: e9ed3e00707107f4c872daeff2235d66, type: 3}
   goldPerCave: {x: 2, y: 3}
+  desertIronPerCave: {x: 2, y: 3}
   snowCavePrefabs:
   - {fileID: 6919435933739057417, guid: 8bf2ee1c5bc3d9c4e83abbaa430bbbe0, type: 3}
   - {fileID: 26794712438816091, guid: cda314f304bb50247a6b5d6c410b078f, type: 3}
@@ -1291,6 +1292,9 @@ MonoBehaviour:
   snowCaveChance: 0.7
   diamondOre: {fileID: 1872389438602731840, guid: 3013b078704bdab4db23112c623cbef2, type: 3}
   diamondPerCave: {x: 2, y: 3}
+  snowGoldPerCave: {x: 2, y: 3}
+  luckyCaveChance: 0.05
+  luckyCount: 4
   scatter: {fileID: 408319591}
   rulesArea: 400000
   player: {fileID: 1576947588}
@@ -1825,6 +1829,7 @@ MonoBehaviour:
   toggleView: 286
   unlockCursor: 27
   lockCursor: 323
+  fullscreen: 292
   hotbar: 3100000032000000330000003400000035000000360000003700000038000000
 --- !u!4 &1068360020
 Transform:

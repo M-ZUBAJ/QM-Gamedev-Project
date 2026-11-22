@@ -9,8 +9,10 @@
   they give Stone like a normal stone rock).
 - **Snow caves:** walk-in mounds of frosty rock, a little taller than the grassland's caves. Every 256 m square of snow
   gets 2 tries for one, each a **70 %** chance (the grassland has 45 %, the desert 50 %), so more caves than anywhere
-  else. Inside: **2 - 3 diamond rocks** (shiny blue-white, harder: 50 health; **1 - 3 Diamonds** each) and the other
-  spots stone. Diamond rocks need a **Gold Pickaxe** or better ("Needs a Gold Pickaxe or better").
+  else. Inside: **2 - 3 diamond rocks** (shiny blue-white, harder: 50 health; **1 - 3 Diamonds** each), **2 - 3 gold
+  rocks** (2 - 4 Gold each, an Iron Pickaxe or better) and the other spots stone. Diamond rocks need a **Gold Pickaxe**
+  or better ("Needs a Gold Pickaxe or better"). **Lucky caves:** 1 snow cave in 20 (5 %) has **4 diamond rocks**
+  instead (since 21/11/2026).
 - **Diamonds** make the **Diamond Pickaxe, Axe and Sword**: the Gold one + 3 Plank + 6 Diamond (the sword 9 Diamond),
   the best tools (`Docs/Tool Setup.md`), and the **diamond armor**: each piece = its Gold piece + 2 - 6 Diamonds, 40 %
   for the whole set, +8 coins per monster killed and every chest 10 % cheaper (`Docs/Armor Setup.md`).
@@ -59,7 +61,7 @@ Run it again any time: everything is refilled in place, and the new world keeps 
 
 | Part | What it does |
 |---|---|
-| **WorldGenerator** (World Generator) | **Snow Cave Prefabs**, **Snow Cave Chance** (0.7), **Diamond Ore**, **Diamond Per Cave** (2 - 3): each new 256 m square of land gets 2 tries for a cave; a try that finds gentle ground that's all snow gets one with this chance. The ground is flattened, a snow cave placed and its OreSpots filled: diamonds first, the rest Stone Ore. The floor is painted snow and dirt (too little of either for the spawners' rocks, trees and chests to grow inside). The snow itself: **Snow From** (700 m), **Climate Size** (1100 m). |
+| **WorldGenerator** (World Generator) | **Snow Cave Prefabs**, **Snow Cave Chance** (0.7), **Diamond Ore**, **Diamond Per Cave** (2 - 3), **Snow Gold Per Cave** (2 - 3, the desert's Gold Ore), **Lucky Cave Chance** (0.05) / **Lucky Count** (4): each new 256 m square of land gets 2 tries for a cave; a try that finds gentle ground that's all snow gets one with this chance. The ground is flattened, a snow cave placed and its 7 OreSpots filled in a random order: diamonds first (4 in a lucky cave), then gold, the rest Stone Ore. The floor is painted snow and dirt (too little of either for the spawners' rocks, trees and chests to grow inside). The snow itself: **Snow From** (700 m), **Climate Size** (1100 m). |
 | **ObjectScatter** (Sanyam's, the new scene's copy) | The snow's rules, all on the snow texture (the World Generator grows them only in the snow biome): **ChestsSnow** 40, **Rare Chests Snow** 20, **Epic Chests Snow** 8, **Legendary Chests Snow** 4 (copies of the desert's chest rules, right after them in the list), **Trees: Snow Pine / Tall Snow Pine / Snow Spruce / Tall Snow Spruce** (120 each, min strength 0.7, max slope 25, spacing 9, one forest with the other trees, in patches), **Snow Rocks** (40 StoneNode Snow, spacing 14, size 0.8 - 1.5). A count is how many for every Rules Area (400,000 m²) of snow. |
 
 ## Doing it by hand
@@ -76,7 +78,7 @@ Run it again any time: everything is refilled in place, and the new world keeps 
    Renderer's material to the pack's **Cold**, scale it to about 10 m. Then **Tools > Effects > Build Tree Fall**.
 5. **Diamond tools:** **Tools > Items > Update Tool Recipes**.
 6. **In ProceduralGenerateScene:** World Generator > drag the snow caves into **Snow Cave Prefabs** and DiamondNode
-   into **Diamond Ore**. Add the snow's ObjectScatter rules (see `Docs/New World Setup.md`, "The new world by hand").
+   into **Diamond Ore** (the gold comes from Gold Ore; Snow Gold Per Cave says how many). Add the snow's ObjectScatter rules (see `Docs/New World Setup.md`, "The new world by hand").
    Save.
 
 ## Testing
@@ -85,8 +87,9 @@ Run it again any time: everything is refilled in place, and the new world keeps 
    (or walk there: 750 - 800 m from the start, usually).
 2. Snowy pines and spruces, frosty rocks and lots of chests stand around. Chop a pine: it falls and gives Wood. Mine a
    frosty rock: Stone.
-3. Find a snow cave (a frosty mound): inside, blue-white diamond rocks shine. With an Iron Pickaxe: "Needs a Gold
-   Pickaxe or better"; with a Gold Pickaxe they break into Diamonds.
+3. Find a snow cave (a frosty mound): inside, blue-white diamond rocks shine next to gold rocks. With an Iron
+   Pickaxe: the gold breaks, the diamonds say "Needs a Gold Pickaxe or better"; with a Gold Pickaxe they break into
+   Diamonds.
 4. Open the crafting page (Tab > Crafting > Tools): the Diamond Pickaxe, Axe and Sword are there (Gold tool + 3 Plank +
    6 / 9 Diamond).
 5. Turn on **Testing > All tools** on the NEW GAME page to try a Gold Pickaxe at once.
@@ -97,7 +100,7 @@ Run it again any time: everything is refilled in place, and the new world keeps 
 |---|---|
 | No snow anywhere near | It's at least 700 m from the start, and only in the cold areas: walk another way, or use **⋮ > Test: Go To The Snow**. |
 | No snow caves | The World Generator has no Snow Cave Prefabs (run Build New World Scene again). Each square of snow gets one 70 % of the time per try: walk on. |
-| Diamond rocks can't be mined | That's on purpose until you have a Gold Pickaxe (Diamond's Mined With = Gold). Gold is in the desert's caves. |
+| Diamond rocks can't be mined | That's on purpose until you have a Gold Pickaxe (Diamond's Mined With = Gold). Gold is in the desert's caves and in the snow caves themselves (an Iron Pickaxe mines it). |
 | No Diamond tools in the crafting list | Run **Tools > World > Build Snow Content** (or Tools > Items > Update Tool Recipes) after the Diamond item exists. |
 | No snowy pines | TreeNode isn't a low-poly tree yet: run **Tools > World > Use Low Poly Grassland Trees**, then Build Snow Content. |
 | Only common chests in the snow | The rare / epic / legendary rules are copied from the desert's: run **Tools > World > Build Loot Chests**, then Build New World Scene again. |

@@ -44,7 +44,7 @@ Purpose: Does what the loot boxes' new perks do. Marko's PerkManager hands every
            Long Reach       the attack reaches farther (+0.1 = 10 %)        Marko's PlayerCombat asks ReachMultiplier
          When the player dies every perk is lost: PlayerPerks calls ResetEffects, which undoes all of it.
          Describe(kind) is each perk's line on the HUD and the Info tab.
-Requirement: PerkEffects.cs x-> PerkData.cs, PlayerPerks.cs, ResourceNode.cs
+Requirement: PerkEffects.cs x-> PerkData.cs, PlayerPerks.cs, ResourceNode.cs, DamageNumbers.cs
              PerkEffects.cs o-> PlayerHealth.cs, PlayerStamina.cs, PlayerJump.cs, PlayerController.cs, PlayerGlide.cs, PlayerInventory.cs, NotificationFeed.cs, EnemyCombat.cs, DaylightCycle.cs, PlayerCombat.cs
              PerkEffects.cs <-x ChestTier.cs, EnemyAttack.cs, FireballProjectile.cs, LootChestBuilder.cs, PerkManager.cs, PlayerCombat.cs, ResourceNode.cs
              PerkEffects.cs <-o Crosshair.cs, ItemConsumer.cs, MonsterBounty.cs, PlayerHealth.cs, PlayerInfoPage.cs, PlayerPerks.cs, PunchEffect.cs
@@ -209,10 +209,14 @@ public class PerkEffects : MonoBehaviour
     // Hurts a target now (hurt, e.g. () => enemy.TakeDamage(10)). With the Vampire perk the player heals a share of the
     // damage it really did: a dodged hit heals nothing, a monster with 5 health left hit for 20 heals as for 5.
     // Marko's FireballProjectile uses it.
+    // The damage it did pops up as a number over the target (DamageNumbers, if the player has damage numbers on).
     public static void Hurt(Component target, System.Action hurt)
     {
         System.Action withHeal = WithVampire(target, hurt);
+        float before = DamageNumbers.HealthOf(target, out bool creature);
+        Vector3 top = DamageNumbers.TopOf(target);   // before the hurt: a target it kills may lose its collider
         withHeal?.Invoke();
+        DamageNumbers.ShowDealt(target, before, creature, top, false);
     }
 
     // The same hurt, wrapped so that running it (now or later) heals the player: PunchEffect runs it when the fist or
@@ -253,7 +257,10 @@ public class PerkEffects : MonoBehaviour
         if (current == null || current.thorns <= 0f || attacker == null || damage <= 0f) return;
         EnemyCombat enemy = attacker.GetComponentInParent<EnemyCombat>();
         if (enemy == null || enemy.currentHealth <= 0f) return;
+        float before = enemy.currentHealth;
+        Vector3 top = DamageNumbers.TopOf(enemy);
         enemy.TakeDamage(damage * current.thorns);
+        DamageNumbers.ShowDealt(enemy, before, true, top, false);   // the thorns' damage, as a number
     }
 
     // PlayerHealth asks this when a hit would kill the player. True = Last Stand saves them: it flashes, says so, and

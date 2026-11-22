@@ -917,7 +917,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7494012006072683705, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 465.19003
+      value: 465.19
       objectReference: {fileID: 0}
     - target: {fileID: 8070574319609505244, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
       propertyPath: m_Name
@@ -3358,6 +3358,7 @@ MonoBehaviour:
   toggleView: 286
   unlockCursor: 27
   lockCursor: 323
+  fullscreen: 292
   hotbar: 3100000032000000330000003400000035000000360000003700000038000000
 --- !u!4 &1068360020
 Transform:
