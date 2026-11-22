@@ -37,7 +37,12 @@ public enum ChestPerkType
     // Log: Docs/TonyEditMate/Marko/21-11-2026 Reroll Perk, Keen Eye And Long Reach.md
     Reroll,          // [Tony] added: unlocks the REROLL button at loot boxes
     KeenEye,         // [Tony] added: the crosshair turns yellow when the attack can reach what it points at
-    LongReach        // [Tony] added: melee attacks reach farther
+    LongReach,       // [Tony] added: melee attacks reach farther (22/11/2026: a comma added)
+    // [Tony] added (22/11/2026): Arrow Recovery (epic and legendary boxes): arrows stay in monsters and animals to be taken
+    // back, a dead one drops them, and missed arrows stay on the ground to be picked up (Tony's ArrowProjectile asks
+    // PerkEffects.ArrowRecovery). Your PerkManager hands it to Tony's PerkEffects like the others.
+    // To undo: delete these lines and the comma after LongReach. Log: Docs/TonyEditMate/Marko/22-11-2026 Arrow Recovery Perk.md
+    ArrowRecovery    // [Tony] added: your arrows can be picked up again
 }
 
 [CreateAssetMenu(

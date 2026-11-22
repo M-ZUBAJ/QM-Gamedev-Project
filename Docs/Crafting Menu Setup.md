@@ -7,14 +7,19 @@
 - A row you can craft says **CRAFT** on the right; a row with something missing is faded.
 - **An armor piece you already have** gets a **green tick** on its picture and "(owned)" after its name ("(worn)" while
   you wear it), so you don't craft the same piece twice by mistake. You still can: it's only a reminder.
+- **A weaker armor piece while you have a better one** for the same slot (22/11/2026; better = more Protection, worn
+  or in the inventory) gets a **blue up arrow** on its picture instead, and in blue after its name "(wearing Iron
+  Helmet)" or "(you have Iron Helmet)". E.g. wearing the Iron Helmet, the Copper Helmet's row has the arrow, so you see
+  at once there's no need to craft it. It can still be crafted.
 - Click a row to craft it (Turki's message line says what happened or what's missing). The amounts update at once.
 - **Crafted tools and food go to the hotbar first** (21/11/2026): onto a hotbar stack of the same item, else the
   leftmost empty hotbar slot, ready to use; only with no room on the hotbar do they go to the inventory. Materials
   (Plank...) and armor go to the inventory as before.
-- **Tabs** over the list: **All** (picked at the start), **Materials**, **Food**, **Tools**, **Armor**. A tab shows
-  only that kind (by the item's Item Type: Material, Consumable, Tool, Armor), from the top of the list. A tab with
-  nothing to craft is faded, and picking it says "Nothing to craft here yet." The picked tab stays picked when the
-  list is closed and opened again.
+- **Tabs** over the list: **All** (picked at the start), **Materials**, **Food**, **Tools**, **Ammo**, **Armor**. A
+  tab shows only that kind (by the item's Item Type: Material, Consumable, Tool, Ammo, Armor), from the top of the
+  list: **Ammo** (22/11/2026) = the arrows, so they're quick to find (they were under Tools before; the bow stays in
+  Tools). A tab with nothing to craft is faded, and picking it says "Nothing to craft here yet." The picked tab stays
+  picked when the list is closed and opened again.
 - **Armor set panels:** each armor set's pieces sit together in one box in the set's color (copper for Copper, steel
   grey for Iron), with a header: the set's name ("COPPER SET"), how much the whole set protects and what wearing all
   six gives ("10% protection - all 6: +1 coin for every monster killed"; Iron also says "counts as Copper"), and on the
@@ -33,8 +38,8 @@
      CraftingMenu > **Row Prefab** (his old `CraftRow.prefab` stays in the project, just unused);
    - makes Turki's **Panel** 960 x 640 and puts its **Rows** in a scroll list: Panel > **Scroll** (ScrollRect) >
      **Viewport** > Rows, with a **Scrollbar**;
-   - adds the tabs: Panel > **Tabs** (All, Materials, Food, Tools, Armor) above the list, Panel > Scroll > **Empty**
-     (the "nothing here" text), and Tony's **CraftingTabs** on the Panel (built again every run);
+   - adds the tabs: Panel > **Tabs** (All, Materials, Food, Tools, Ammo, Armor, each 136 wide) above the list, Panel >
+     Scroll > **Empty** (the "nothing here" text), and Tony's **CraftingTabs** on the Panel (built again every run);
    - adds the armor set panels: Panel > Scroll > **SetPanel** (switched off: the look of a set's box) and Tony's
      **CraftingSetPanels** on the Panel (built again every run);
    - sorts **Craftables**: the items that aren't tools stay first, in their order, then every tool that has a recipe
@@ -77,7 +82,9 @@ Recipes** (it puts only the recipes on the existing tools).
    **CraftingRow**. Children (CraftingRow finds them by name): **Icon** (Image, 58 x 58 on the left), **Name**
    (TextMeshPro, bold), **Ingredients** (Horizontal Layout Group, Spacing 22) with a switched-off **Ingredient**
    inside it (Horizontal Layout Group: an Image **Icon** 26 x 26 and a TextMeshPro **Amount**), and **Status**
-   (TextMeshPro on the right). Save it as a prefab and drag it into Turki's CraftingMenu > **Row Prefab**.
+   (TextMeshPro on the right). Inside **Icon**, two switched-off Images 26 x 26 anchored at its top right corner (Pos
+   -2, -2): **Owned** (`Assets/UI/Common/Tick.png`) and **Better** (`Assets/UI/Common/Better.png`; the tool draws both
+   pictures). Save it as a prefab and drag it into Turki's CraftingMenu > **Row Prefab**.
 2. **The scroll list:** in Turki's Panel, make an empty **Scroll** where Rows is (Layout Element: Flexible Height 1),
    in it a **Viewport** (stretched, a see-through Image + **Rect Mask 2D**), and move **Rows** into the Viewport
    (anchor top stretch, Pivot Y 1, Add Component > **Content Size Fitter**, Vertical Fit = Preferred Size). Add a
@@ -88,9 +95,9 @@ Recipes** (it puts only the recipes on the existing tools).
 4. **The tabs:** in the Panel, between the Title and Scroll, an empty **Tabs** (Layout Element: Min and Preferred
    Height 40, **Flexible Height 0** (left empty, the row takes half the panel's spare height and the tabs come out
    huge); Horizontal Layout Group: Spacing 8, Child Alignment Middle Center, Control Child Size both ticked, Child Force
-   Expand Height ticked, Width not). In it five UI > Buttons named exactly **All**, **Materials**, **Food**, **Tools**,
-   **Armor** (each a Layout Element: Min and Preferred Width 150, Flexible Width 0), each with its text child renamed
-   **Label** (font size 20).
+   Expand Height ticked, Width not). In it six UI > Buttons named exactly **All**, **Materials**, **Food**, **Tools**,
+   **Ammo**, **Armor** (each a Layout Element: Min and Preferred Width 136, Flexible Width 0), each with its text child
+   renamed **Label** (font size 20).
    In Scroll, a TextMeshPro **Empty** (stretched, "Nothing to craft here yet.", switched off). Then Add Component >
    **CraftingTabs** on the Panel. (The rows must be CraftingRow rows: they ask CraftingTabs whether to show.)
 5. **The armor set panels:** in Scroll (not in Rows: the list empties Rows every time it opens), a UI > Image named
@@ -112,11 +119,14 @@ Recipes** (it puts only the recipes on the existing tools).
 | The list scrolled while walking, or Space crafted again | Fixed 22/11/2026: in the game, W A S D, the arrow keys, Space and Enter no longer work the menus (Tony's `NoKeyNavigation`); scroll with the mouse wheel or the scroll bar. |
 | No tabs over the list | Run the tool again (it adds them). The tabs need the scroll list (Panel > Scroll). |
 | The tabs are huge and the list short | Tabs > Layout Element > **Flexible Height** must be 0. Run the tool again (it builds the tabs again, 40 high). |
-| A tab shows the wrong items | The item's Item Data > **Item Type** decides its tab (Material, Consumable = Food, Tool, Armor). |
-| Clicking a tab does nothing | The tabs must be named exactly All / Materials / Food / Tools / Armor inside Panel > Tabs, and CraftingTabs must be on the Panel. |
+| A tab shows the wrong items | The item's Item Data > **Item Type** decides its tab (Material, Consumable = Food, Tool, Ammo, Armor). |
+| No Ammo tab (the arrows are only under All) | The list was built before 22/11/2026: run **Tools > UI > Build Crafting Menu** again. |
+| Clicking a tab does nothing | The tabs must be named exactly All / Materials / Food / Tools / Ammo / Armor inside Panel > Tabs, and CraftingTabs must be on the Panel. |
+| "(wearing Iron Helmet)" shows but no blue arrow | The row was built before 22/11/2026: run **Tools > UI > Build Crafting Menu** again (it adds Icon > Better). |
 | The armor isn't in boxes | Run the tool again (it adds Scroll > SetPanel and CraftingSetPanels). A set's pieces must sit next to each other in Craftables (the tool sorts them so). |
 | A set's box is grey instead of its color | PlayerArmor > Set Bonuses has no line for that set (or no Color): run Tools > Items > Build Plate Armor with GameScene open. |
 | One set is split into two boxes | Something else sits between its pieces in Craftables: run the tool to sort the list again. |
 
 Turki's change logs: `Docs/TonyEditMate/Turki/19-11-2026 Crafting Menu Icons And Tier Tools.md`,
-`Docs/TonyEditMate/Turki/20-11-2026 Crafting Tabs.md`, `Docs/TonyEditMate/Turki/20-11-2026 Reinforced Iron Armor And Set Panels.md`.
+`Docs/TonyEditMate/Turki/20-11-2026 Crafting Tabs.md`, `Docs/TonyEditMate/Turki/20-11-2026 Reinforced Iron Armor And Set Panels.md`,
+`Docs/TonyEditMate/Turki/22-11-2026 Ammo Tab And Better Armor Arrow.md`.

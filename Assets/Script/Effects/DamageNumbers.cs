@@ -16,7 +16,7 @@ Purpose: Damage numbers, like many games: when a hit lands, the damage it really
          Only while DisplaySettings.ShowDamage is on, and only on monsters and animals while Only monsters and animals is
          on. A hit that does nothing (a dodge, a turtle's shell: "BLOCKED!") shows no number.
 Requirement: DamageNumbers.cs x-> FloatingText.cs, DisplaySettings.cs, EnemyCombat.cs, ResourceNode.cs
-             DamageNumbers.cs <-x PerkEffects.cs, PunchEffect.cs
+             DamageNumbers.cs <-x ArrowProjectile.cs, PerkEffects.cs, PunchEffect.cs
 */
 
 using System.Globalization;

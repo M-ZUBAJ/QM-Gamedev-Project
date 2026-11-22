@@ -1,6 +1,6 @@
 /*
 First Date: 19/11/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Menu Tools > UI > Build Crafting Menu. It asks first, because it changes Turki's CraftingCanvas prefab.
@@ -10,12 +10,13 @@ Unity Editor: Menu Tools > UI > Build Crafting Menu. It asks first, because it c
 Purpose: Gives Turki's crafting list pictures and the tier tools, in one click:
            - makes Assets/Prefabs/UI/Crafting/CraftingRow.prefab: a row with the item's picture and name and its recipe
              as pictures with "have / need" amounts (Tony's CraftingRow), and puts it in Turki's CraftingMenu > Row
-             Prefab (his old CraftRow prefab is kept, just not used); the picture has a switched-off "Owned" badge (a
-             green tick, IconArt.Tick) that shows while the player already has that armor piece;
+             Prefab (his old CraftRow prefab is kept, just not used); the picture has two switched-off badges: "Owned"
+             (a green tick, IconArt.Tick) shows while the player already has that armor piece, "Better" (a blue up
+             arrow, IconArt.Better) while they have a better piece for its slot (worn or in the inventory);
            - makes Turki's panel bigger (Panel Size) and puts its rows in a scroll list with a scroll bar, so any number
              of items fits (the mouse wheel scrolls it);
-           - tabs over the list (Panel > Tabs: All, Materials, Food, Tools, Armor; Tony's CraftingTabs on the panel)
-             and a "Nothing to craft here yet." text in the list (Scroll > Empty), built again every run;
+           - tabs over the list (Panel > Tabs: All, Materials, Food, Tools, Ammo, Armor; Tony's CraftingTabs on the
+             panel) and a "Nothing to craft here yet." text in the list (Scroll > Empty), built again every run;
            - armor set panels: the look of the box each armor set's rows are grouped in (Scroll > SetPanel, switched
              off: a rounded box with a Header of Stripe, Title, Info and Progress) and Tony's CraftingSetPanels on the
              panel, built again every run;
@@ -27,8 +28,8 @@ Purpose: Gives Turki's crafting list pictures and the tier tools, in one click:
          Turki's CraftingMenu script gets [Tony] lines (it calls CraftingRow.Show; upgraded tools keep their slot; a
          worn armor piece can be upgraded). Logs: Docs/TonyEditMate/Turki/19-11-2026 Crafting Menu Icons And Tier
          Tools.md, .../20-11-2026 Reinforced Iron Armor And Set Panels.md
-Requirement: CraftingMenuBuilder.cs x-> CraftingMenu.cs, CraftingRow.cs, CraftingTabs.cs, CraftingSetPanels.cs, ItemData.cs, ToolStats.cs, IconArt.cs, UIBuildHelper.cs, MenuOrder.cs
-             CraftingMenuBuilder.cs <-x ArmorBuilder.cs, TierToolBuilder.cs
+Requirement: CraftingMenuBuilder.cs x-> CraftingMenu.cs, CraftingRow.cs, CraftingTabs.cs, CraftingSetPanels.cs, ItemData.cs, ToolStats.cs, IconArt.cs, UIBuildHelper.cs, MenuOrder.cs, AmmoStats.cs
+             CraftingMenuBuilder.cs <-x ArmorBuilder.cs, BowBuilder.cs, TierToolBuilder.cs
 */
 
 using System.Collections.Generic;
@@ -52,9 +53,9 @@ public static class CraftingMenuBuilder
     const float IconSize = 58f;
     const float TextLeft = 92f;      // where the name and the recipe start, after the picture
     const float StatusWidth = 150f;  // the CRAFT text on the right
-    const float OwnedSize = 26f;     // the green tick on the picture's corner (an armor piece the player has)
+    const float OwnedSize = 26f;     // the green tick / blue arrow on the picture's corner (armor the player has)
     const float TabHeight = 40f;     // the tabs over the list
-    const float TabWidth = 150f;     // each tab (the five sit in the middle, not stretched across the panel)
+    const float TabWidth = 136f;     // each tab (the six sit in the middle, not stretched across the panel; 150 with five)
     const string SetPanelName = "SetPanel";   // Scroll > SetPanel: the look of an armor set's box (CraftingSetPanels)
     const float SetHeaderHeight = 58f;        // its header: the set's name over a line of what it gives
 
@@ -85,9 +86,9 @@ public static class CraftingMenuBuilder
         if (!EditorUtility.DisplayDialog(ToolName,
                 "This changes Turki's CraftingCanvas prefab:\n\n" +
                 "- rows with pictures (the item and its recipe, green / red for enough / missing; a green tick on armor " +
-                "you already have)\n" +
+                "you already have, a blue arrow on armor you have a better piece for)\n" +
                 "- a bigger panel with a scroll list\n" +
-                "- tabs over the list: All, Materials, Food, Tools, Armor\n" +
+                "- tabs over the list: All, Materials, Food, Tools, Ammo, Armor\n" +
                 "- each armor set's pieces grouped in one panel (Copper, Iron)\n" +
                 "- the list sorted, with every Wooden, Stone and Iron tool that has a recipe\n\n" +
                 "The inventory's Crafting page and the C menu both follow. Continue?", "Build", "Cancel"))
@@ -133,6 +134,17 @@ public static class CraftingMenuBuilder
         o.anchoredPosition = new Vector2(-2f, -2f);   // its middle a little inside the corner
         o.sizeDelta = new Vector2(OwnedSize, OwnedSize);
         owned.gameObject.SetActive(false);
+
+        // A blue up arrow in the same corner: CraftingRow shows it (instead of the tick) while the player has a better
+        // piece for that slot, worn or in the inventory, so a weaker one isn't crafted for nothing.
+        Image better = NewUI("Better", icon.transform).AddComponent<Image>();
+        better.sprite = IconArt.Better();
+        better.raycastTarget = false;
+        RectTransform b = better.rectTransform;
+        b.anchorMin = b.anchorMax = new Vector2(1f, 1f);
+        b.anchoredPosition = new Vector2(-2f, -2f);
+        b.sizeDelta = new Vector2(OwnedSize, OwnedSize);
+        better.gameObject.SetActive(false);
 
         TextMeshProUGUI name = AddText(NewUI("Name", row.transform), "Item", 26f, TextAlignmentOptions.MidlineLeft);
         name.color = NameColor;
@@ -224,7 +236,7 @@ public static class CraftingMenuBuilder
             PrefabUtility.SaveAsPrefabAsset(root, path);
             return path + ": rows with pictures, panel " + PanelSize.x + " x " + PanelSize.y +
                    (scroll ? ", rows in a new scroll list" : ", scroll list already there") +
-                   (tabs ? ", tabs All / Materials / Food / Tools / Armor" : ", no tabs (no scroll list)") +
+                   (tabs ? ", tabs All / Materials / Food / Tools / Ammo / Armor" : ", no tabs (no scroll list)") +
                    (sets ? ", armor grouped by set" : "") +
                    ", " + tools + " tools in the list (Wooden > Stone > Iron).";
         }
@@ -485,8 +497,9 @@ public static class CraftingMenuBuilder
         }
     }
 
-    // Sorts Craftables: everything that isn't a tool or armor first (in its order), then every tool with a recipe made
-    // at the Crafting page, weakest tier first (Wooden > Stone > Iron), each Pickaxe, Axe, Sword, then every armor piece
+    // Sorts Craftables: everything that isn't a tool, an arrow or armor first (in its order), then every tool with a recipe
+    // made at the Crafting page, weakest tier first (Wooden > Stone > Iron), each Pickaxe, Axe, Sword, Bow, then every
+    // arrow made there (the weakest first: its Ammo Damage; Tools > Items > Build Bow And Arrows), then every armor piece
     // with a recipe made there, set by set (the weakest set first: all its pieces' Protection added up, Copper 10 %
     // before Iron 16 %), each helmet to boots, so each set's rows are together for its panel. Returns how many tools.
     static int SortCraftables(SerializedProperty list)
@@ -495,18 +508,25 @@ public static class CraftingMenuBuilder
         for (int i = 0; i < list.arraySize; i++)
         {
             ItemData item = list.GetArrayElementAtIndex(i).objectReferenceValue as ItemData;
-            if (item != null && !item.IsTool && !item.IsArmor && !others.Contains(item)) others.Add(item);
+            if (item != null && !item.IsTool && !item.IsArmor && !item.IsAmmo && !others.Contains(item)) others.Add(item);
         }
 
         List<ItemData> tools = new List<ItemData>();
+        List<ItemData> arrows = new List<ItemData>();
         List<ItemData> armor = new List<ItemData>();
         foreach (string guid in AssetDatabase.FindAssets("t:ItemData"))
         {
             ItemData item = AssetDatabase.LoadAssetAtPath<ItemData>(AssetDatabase.GUIDToAssetPath(guid));
             if (item == null || !item.IsCraftable || item.CraftedAt != CraftStation.Crafting) continue;
             if (item.IsTool) tools.Add(item);
+            else if (item.IsAmmo) arrows.Add(item);
             else if (item.IsArmor) armor.Add(item);
         }
+        arrows.Sort((a, b) =>
+        {
+            int byDamage = a.Ammo.damage.CompareTo(b.Ammo.damage);
+            return byDamage != 0 ? byDamage : string.CompareOrdinal(a.Id, b.Id);
+        });
         tools.Sort((a, b) =>
         {
             int byTier = ((int)a.Tool.tier).CompareTo((int)b.Tool.tier);
@@ -530,6 +550,7 @@ public static class CraftingMenuBuilder
 
         List<ItemData> sorted = new List<ItemData>(others);
         sorted.AddRange(tools);
+        sorted.AddRange(arrows);
         sorted.AddRange(armor);
         list.arraySize = sorted.Count;
         for (int i = 0; i < sorted.Count; i++) list.GetArrayElementAtIndex(i).objectReferenceValue = sorted[i];

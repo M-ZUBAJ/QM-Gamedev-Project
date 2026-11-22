@@ -3,8 +3,10 @@
 When the player's health reaches 0, the **GAME OVER** page shows:
 - **How long they survived** (21/11/2026), in gold under the title: "YOU SURVIVED 2 DAYS", and smaller "and 6 hours ·
   died on Day 3 at 14:30" (game time, from the start of that life). Under a day: "YOU SURVIVED 6 HOURS".
-- **What they did in that life:** distance walked / run, jumps, stamina used, health lost / healed, food lost / eaten,
-  items eaten, buildings built.
+- **What they did in that life:** monsters killed, coins earned / spent, distance walked / run, jumps, stamina used,
+  health lost / healed, food lost / eaten, items eaten, buildings built (the victory page shows the same; see
+  `Docs/Game End Setup.md` for what was fixed and added on 22/11/2026). Coins spent = paid for chests and rerolls; the
+  coins lost by dying (they go back to the start) aren't counted.
 - **SHOW ALL STATS / MINIMISE** (21/11/2026): a button under the numbers. SHOW ALL STATS swaps them for a big panel
   with everything about the character **at the moment they died**, like the inventory's **Info** tab (Tab):
   - THIS LIFE: the numbers above;
@@ -46,7 +48,9 @@ It needs the death page made by hand first (sections 1 and 2 below). The tool:
   ("Main Menu"), so both keep your button's look.
 
 Run it again any time: its own parts are made again; your title, stats box and Respawn button keep their look (only
-their places are set).
+their places are set). The victory page (Tools > UI > Build Game End Screen) makes its stats panel and pill with this
+tool's code, so both pages look alike. Since 22/11/2026 a long line in THIS LIFE shrinks to fit instead of breaking in
+two (run the tool again to get that on the death page).
 
 ## 1. The Player
 
@@ -55,7 +59,7 @@ Select the **Player** and Add Component (if it isn't there yet):
 | Script | What it does |
 |---|---|
 | **PlayerRespawn** | Brings the player back. **Respawn Point** = where (default 0, 0.5, 0). |
-| **PlayerStats** | Counts this life: distance walked / run, jumps, stamina used, health lost / healed, food lost / eaten, items eaten, buildings built. |
+| **PlayerStats** | Counts this life: monsters killed, coins earned / spent, distance walked / run, jumps, stamina used, health lost / healed, food lost / eaten, items eaten, buildings built. |
 
 ## 2. The page (DeadCanvas)
 

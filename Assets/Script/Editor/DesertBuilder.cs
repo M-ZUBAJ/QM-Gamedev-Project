@@ -27,7 +27,7 @@ Purpose: Everything the new world's desert needs, in one click:
          StoneNode Snow); MakeGold with ArmorBuilder (the gold armor's recipes need the Gold item). Since 21/11/2026 an ore item copied from Iron also gets its own Mined With when it still has
          the one the copy brought from Iron (Stone): Gold had kept it, so a Stone Pickaxe mined gold.
 Requirement: DesertBuilder.cs x-> ItemData.cs, ToolStats.cs, ItemPickup.cs, ShapeColor.cs, ResourceNode.cs, NightMonsterBuilder.cs, RockCaveBuilder.cs, RockBreakBuilder.cs, UIBuildHelper.cs, MenuOrder.cs
-             DesertBuilder.cs <-x ArmorBuilder.cs, NewWorldBuilder.cs, SnowBuilder.cs
+             DesertBuilder.cs <-x ArmorBuilder.cs, BowBuilder.cs, NewWorldBuilder.cs, SnowBuilder.cs
 */
 
 using System.Collections.Generic;

@@ -1,6 +1,6 @@
 /*
 First Date: 19/11/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Not used directly. Tools > UI > Build HUD and Tools > UI > Build Perk Panel use it for their pictures.
@@ -12,6 +12,8 @@ Purpose: Draws the small game pictures in code and saves them as PNG sprites, so
            Assets/UI/Common/Glow.png          a soft round glow (behind the perk icons)
            Assets/UI/Common/Tick.png          a green round badge with a white tick (an armor piece you already have,
                                               on its crafting row)
+           Assets/UI/Common/Better.png        a blue round badge with a white up arrow (you already have a better
+                                              piece for that slot, on a weaker armor piece's crafting row)
            Assets/UI/Perks/PerkHealth.png     a red heart          (Max Health)
            Assets/UI/Perks/PerkStamina.png    a yellow lightning   (Max Stamina)
            Assets/UI/Perks/PerkSpeed.png      blue double arrows   (Move Speed)
@@ -25,17 +27,24 @@ Purpose: Draws the small game pictures in code and saves them as PNG sprites, so
                                               blood drop with a green plus (Vampire), a thorny green ball (Thorns),
                                               a crescent moon with a star (Night Power), two gold arrows round a die
                                               (Reroll), an eye in a yellow ring (Keen Eye), a spear with a green
-                                              plus (Long Reach)
+                                              plus (Long Reach), an arrow over a green arrow going round (Arrow
+                                              Recovery)
            Assets/UI/Stats/Hunger.png         a drumstick          (the inventory's Info tab: hunger)
            Assets/UI/Stats/Jump.png           a green up arrow     (the inventory's Info tab: jump height)
            Assets/UI/Stats/Armor.png          a steel breastplate  (the inventory's Info tab: armor)
            Assets/UI/Armor/<Slot>.png         a white outline of each armor piece (helmet, shoulders, chestplate, gloves,
                                               leggings, boots): shown faintly in an empty slot on the Gear page
+           Assets/UI/Bow/DrawRing.png         a thin white ring (around the crosshair while a bow is drawn; BowHUD fills
+                                              it round as an Image set to Filled)
+           Assets/UI/GameEnd/Trophy.png       a gold trophy cup with a star, on a wooden base with a gold plate (the
+                                              victory page; drawn 256 pixels big because it's shown big)
+           Assets/UI/GameEnd/Rays.png         soft white light rays from the middle (behind the trophy, tinted gold; the
+                                              victory page turns them slowly)
          Each pixel is the average of 4 x 4 points, so the edges come out smooth, not jagged.
          GivePerkIcons puts the perk pictures in the player's PlayerPerks (its Icons list), for the HUD's perk icons
          and the Info tab. ForPerk gives each perk kind (Marko's ChestPerkType) its picture.
 Requirement: IconArt.cs x-> UIBuildHelper.cs, UIFXSprites.cs, PlayerPerks.cs, ArmorStats.cs, PerkData.cs
-             IconArt.cs <-x CraftingMenuBuilder.cs, DeathScreenBuilder.cs, GearPageBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, LootChestBuilder.cs, PerkPanelBuilder.cs, PerkRollBuilder.cs
+             IconArt.cs <-x BowBuilder.cs, CraftingMenuBuilder.cs, DeathScreenBuilder.cs, GameEndUIBuilder.cs, GearPageBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, LootChestBuilder.cs, PerkPanelBuilder.cs, PerkRollBuilder.cs
 */
 
 using System.IO;
@@ -50,8 +59,11 @@ public static class IconArt
     public const string PerkFolder = "Assets/UI/Perks";
     public const string StatFolder = "Assets/UI/Stats";
     public const string ArmorFolder = "Assets/UI/Armor";
+    public const string BowFolder = "Assets/UI/Bow";
+    public const string GameEndFolder = "Assets/UI/GameEnd";
 
     const int IconSize = 128;    // pixels: sharp up to about 128 pixels on screen
+    const int BigSize = 256;     // the victory page's trophy and rays: shown big
     const int BoxSize = 64;      // the round box is small: 9-slicing stretches it to any size
     const int BoxRadius = 20;    // its corners, in pixels
     const int Samples = 4;       // 4 x 4 points per pixel
@@ -113,6 +125,9 @@ public static class IconArt
     };
     static readonly Vector2[] RerollHeadTop = ArrowHead(150f);      // the top arrow's head (it turns to the left)
     static readonly Vector2[] RerollHeadBottom = ArrowHead(330f);   // the bottom arrow's head (to the right)
+    static readonly Vector2[] RecoveryHead = ArrowHead(305f);       // Arrow Recovery's green arrow head, turning toward the shot
+    static readonly Vector2[] CupStar = StarPoints(5, 0.2f, 0.085f);  // the star on the trophy's cup
+    const int RayCount = 12;                                          // the light rays behind the trophy
 
     // ===== My methods =====
 
@@ -120,6 +135,7 @@ public static class IconArt
     public static Sprite RoundedBox() => Save(CommonFolder + "/RoundedBox.png", () => Draw(BoxSize, BoxPaint), Vector4.one * (BoxRadius + 4));
     public static Sprite Glow() => Save(CommonFolder + "/Glow.png", () => UIFXSprites.Draw(UIFXSprites.Shape.SoftDot), Vector4.zero);
     public static Sprite Tick() => Save(CommonFolder + "/Tick.png", () => Draw(IconSize, TickPaint), Vector4.zero);
+    public static Sprite Better() => Save(CommonFolder + "/Better.png", () => Draw(IconSize, BetterPaint), Vector4.zero);
     public static Sprite PerkHealth() => Save(PerkFolder + "/PerkHealth.png", () => Draw(IconSize, HeartPaint), Vector4.zero);
     public static Sprite PerkStamina() => Save(PerkFolder + "/PerkStamina.png", () => Draw(IconSize, BoltPaint), Vector4.zero);
     public static Sprite PerkSpeed() => Save(PerkFolder + "/PerkSpeed.png", () => Draw(IconSize, SpeedPaint), Vector4.zero);
@@ -146,6 +162,10 @@ public static class IconArt
     public static Sprite PerkReroll() => Save(PerkFolder + "/PerkReroll.png", () => Draw(IconSize, RerollPaint), Vector4.zero);
     public static Sprite PerkKeenEye() => Save(PerkFolder + "/PerkKeenEye.png", () => Draw(IconSize, EyePaint), Vector4.zero);
     public static Sprite PerkLongReach() => Save(PerkFolder + "/PerkLongReach.png", () => Draw(IconSize, SpearPaint), Vector4.zero);
+    public static Sprite PerkArrowRecovery() => Save(PerkFolder + "/PerkArrowRecovery.png", () => Draw(IconSize, RecoveryPaint), Vector4.zero);
+    public static Sprite DrawRing() => Save(BowFolder + "/DrawRing.png", () => Draw(IconSize, RingPaint), Vector4.zero);
+    public static Sprite Trophy() => Save(GameEndFolder + "/Trophy.png", () => Draw(BigSize, TrophyPaint), Vector4.zero);
+    public static Sprite Rays() => Save(GameEndFolder + "/Rays.png", () => Draw(BigSize, RaysPaint), Vector4.zero);
 
     // A white outline of an armor piece, shown faintly in an empty slot on the Gear page (tinted by the slot).
     public static Sprite ArmorSlotIcon(ArmorSlot slot) =>
@@ -179,6 +199,7 @@ public static class IconArt
             case ChestPerkType.Reroll:         return PerkReroll();
             case ChestPerkType.KeenEye:        return PerkKeenEye();
             case ChestPerkType.LongReach:      return PerkLongReach();
+            case ChestPerkType.ArrowRecovery:  return PerkArrowRecovery();
             default:                           return null;
         }
     }
@@ -227,12 +248,27 @@ public static class IconArt
         return c;
     }
 
+    // A thin white ring, the whole picture wide (the bow's draw ring around the crosshair).
+    static Color RingPaint(float x, float y)
+    {
+        float r = Mathf.Sqrt(x * x + y * y);
+        return r >= 0.8f && r <= 0.95f ? Color.white : Color.clear;
+    }
+
     // A green round badge with a white tick: "you have this" (on a crafting row's picture).
     static Color TickPaint(float x, float y)
     {
         Color c = Icon(x, y, (px, py) => Circle(px, py, 0.8f), new Color(0.1f, 0.55f, 0.25f), new Color(0.35f, 0.82f, 0.45f), new Color(0.04f, 0.28f, 0.1f));
         bool tick = Segment(x, y, -0.42f, 0.04f, -0.12f, -0.28f, 0.12f) || Segment(x, y, -0.12f, -0.28f, 0.44f, 0.34f, 0.12f);
         return tick ? Over(c, Color.white) : c;
+    }
+
+    // A blue round badge with a white up arrow: "you have a better one" (on a weaker armor piece's crafting row).
+    static Color BetterPaint(float x, float y)
+    {
+        Color c = Icon(x, y, (px, py) => Circle(px, py, 0.8f), new Color(0.12f, 0.36f, 0.78f), new Color(0.42f, 0.7f, 1f), new Color(0.04f, 0.14f, 0.38f));
+        bool arrow = InPolygon(x / 0.6f, (y + 0.02f) / 0.6f, UpArrow);   // the Jump arrow, smaller, in the middle
+        return arrow ? Over(c, Color.white) : c;
     }
 
     // White inside a box with round corners (the whole picture), clear outside the corners.
@@ -424,9 +460,79 @@ public static class IconArt
         return Over(c, Icon(x, y, (px, py) => InPlus(-px, py), new Color(0.15f, 0.6f, 0.2f), new Color(0.55f, 0.95f, 0.45f), new Color(0.05f, 0.28f, 0.08f)));
     }
 
+    // An arrow flying up right (wooden shaft, steel head, red feathers) over a green arrow going round: arrows come back.
+    static Color RecoveryPaint(float x, float y)
+    {
+        Color c = Icon(x, y, InRecoveryRing, new Color(0.15f, 0.6f, 0.2f), new Color(0.55f, 0.95f, 0.45f), new Color(0.05f, 0.28f, 0.08f));
+        c = Over(c, Icon(x, y, InArrowShaft, new Color(0.45f, 0.28f, 0.12f), new Color(0.72f, 0.5f, 0.27f), new Color(0.22f, 0.12f, 0.04f)));
+        c = Over(c, Icon(x, y, InArrowFeathers, new Color(0.72f, 0.12f, 0.1f), new Color(1f, 0.42f, 0.32f), new Color(0.32f, 0.04f, 0.03f)));
+        return Over(c, Icon(x, y, InArrowTip, new Color(0.55f, 0.6f, 0.68f), new Color(0.96f, 0.97f, 1f), new Color(0.2f, 0.22f, 0.28f)));
+    }
+
     // A white feather, tilted.
     static Color FeatherPaint(float x, float y) =>
         Icon(x, y, InFeather, new Color(0.7f, 0.82f, 1f), new Color(1f, 1f, 1f), new Color(0.25f, 0.35f, 0.55f));
+
+    // ----- The victory page -----
+
+    // A gold trophy: a cup with two ring handles and a star, on a stem with a knot and a foot, standing on a wooden base
+    // with a gold plate.
+    static Color TrophyPaint(float x, float y)
+    {
+        Color c = Color.clear;
+        if (InTrophy(x - 0.05f, y + 0.06f) || InTrophyBase(x - 0.05f, y + 0.06f)) c = Over(c, Shadow);   // a soft shadow, down right
+        if (Grown(InTrophyBase, x, y, 0.035f)) c = Over(c, new Color(0.14f, 0.07f, 0.03f));              // the base's dark edge
+        if (InTrophyBase(x, y)) c = Over(c, Color.Lerp(new Color(0.3f, 0.16f, 0.08f), new Color(0.5f, 0.29f, 0.15f), (y + 0.92f) / 0.32f));   // wood, lighter at the top
+        if (InTrophyPlate(x, y)) c = Over(c, Color.Lerp(new Color(0.85f, 0.6f, 0.15f), new Color(1f, 0.88f, 0.45f), (y + 0.84f) / 0.16f));    // the gold plate
+        if (Grown(InTrophy, x, y, 0.035f)) c = Over(c, new Color(0.45f, 0.26f, 0.02f));                  // the gold's dark edge
+        if (InTrophy(x, y)) c = Over(c, TrophyGold(x, y));
+        if (InPolygon(x, y - 0.5f, CupStar)) c = Over(c, new Color(1f, 0.98f, 0.82f));                   // the star on the cup
+        return c;
+    }
+
+    // The trophy's gold: darker at the bottom, lighter at the top, with a bright streak down the left (light on a
+    // round cup) and the right side a little darker.
+    static Color TrophyGold(float x, float y)
+    {
+        Color gold = Color.Lerp(new Color(0.8f, 0.48f, 0.05f), new Color(1f, 0.84f, 0.3f), (y + 0.6f) / 1.5f);
+        float streak = Mathf.Clamp01(1f - Mathf.Abs(x + 0.2f) / 0.13f);   // 1 in the middle of the streak
+        gold = Color.Lerp(gold, new Color(1f, 0.98f, 0.85f), streak * 0.6f);
+        if (x > 0.12f) gold = Color.Lerp(gold, new Color(0.62f, 0.34f, 0.03f), Mathf.Clamp01((x - 0.12f) / 0.5f) * 0.55f);
+        return gold;
+    }
+
+    // Soft white light rays from the middle, fading out toward the edge and in the very middle (behind the trophy,
+    // tinted gold).
+    static Color RaysPaint(float x, float y)
+    {
+        float r = Mathf.Sqrt(x * x + y * y);
+        if (r >= 1f) return Color.clear;
+        float ray = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.25f, 0.85f, Mathf.Cos(Mathf.Atan2(y, x) * RayCount)));   // soft sides
+        float fade = Mathf.Pow(1f - r, 1.3f) * Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.04f, 0.22f, r));
+        return new Color(1f, 1f, 1f, ray * fade);
+    }
+
+    // The trophy's gold parts: the cup (the lower half of an oval), its rim, the stem with a knot, the foot, and a ring
+    // handle on each side (the cup covers the rings' inner halves, so they look like loops coming out of it).
+    static bool InTrophy(float x, float y)
+    {
+        float ox = x / 0.5f, oy = (y - 0.84f) / 0.68f;
+        bool cup = y <= 0.84f && ox * ox + oy * oy <= 1f;
+        bool rim = Mathf.Abs(x) <= 0.56f && y >= 0.78f && y <= 0.9f;
+        bool stem = Mathf.Abs(x) <= 0.075f && y >= -0.42f && y <= 0.22f;
+        bool knot = Circle(x, y + 0.1f, 0.12f);
+        bool foot = y >= -0.6f && y <= -0.38f && Mathf.Abs(x) <= Mathf.Lerp(0.36f, 0.18f, (y + 0.6f) / 0.22f);
+        return cup || rim || stem || knot || foot || InTrophyHandle(x - 0.5f, y - 0.52f) || InTrophyHandle(x + 0.5f, y - 0.52f);
+    }
+
+    // A ring, where dx / dy = how far the point is from its middle.
+    static bool InTrophyHandle(float dx, float dy)
+    {
+        float d = dx * dx + dy * dy;
+        return d <= 0.21f * 0.21f && d >= 0.12f * 0.12f;
+    }
+    static bool InTrophyBase(float x, float y) => Mathf.Abs(x) <= 0.5f && y >= -0.92f && y <= -0.6f;
+    static bool InTrophyPlate(float x, float y) => Mathf.Abs(x) <= 0.27f && y >= -0.84f && y <= -0.68f;
 
     // A shape with a shadow (down right), a darker edge around it, and a fill that is lighter at the top.
     static Color Icon(float x, float y, System.Func<float, float, bool> shape, Color bottom, Color top, Color edge)
@@ -591,6 +697,37 @@ public static class IconArt
         if (along < 0.5f || along > 1.2f) return false;
         float width = along < 0.72f ? (along - 0.5f) / 0.22f : (1.2f - along) / 0.48f;
         return Mathf.Abs(across) <= 0.18f * width;
+    }
+
+    // A thick ring round the left and the bottom (from the top, turning left, to the lower right) ending in an arrowhead.
+    static bool InRecoveryRing(float x, float y)
+    {
+        float d = Mathf.Sqrt(x * x + y * y);
+        float angle = Mathf.Atan2(y, x) * Mathf.Rad2Deg;   // 0 = right, 90 = up
+        if (angle < 0f) angle += 360f;
+        return (d >= 0.48f && d <= 0.66f && angle >= 80f && angle <= 305f) || InPolygon(x, y, RecoveryHead);
+    }
+
+    // The arrow's wooden shaft, from the lower left up right ("along" and "across" the arrow, like the spear).
+    static bool InArrowShaft(float x, float y)
+    {
+        float along = (x + y) * 0.7071f, across = (x - y) * 0.7071f;
+        return Mathf.Abs(across) <= 0.045f && along >= -0.95f && along <= 0.6f;
+    }
+
+    // Its steel head: a triangle at the upper right.
+    static bool InArrowTip(float x, float y)
+    {
+        float along = (x + y) * 0.7071f, across = (x - y) * 0.7071f;
+        return along >= 0.52f && along <= 1f && Mathf.Abs(across) <= 0.17f * (1f - along) / 0.48f;
+    }
+
+    // Its feathers at the lower left: wide at the back, narrowing toward the shaft.
+    static bool InArrowFeathers(float x, float y)
+    {
+        float along = (x + y) * 0.7071f, across = (x - y) * 0.7071f;
+        if (along < -0.98f || along > -0.56f) return false;
+        return Mathf.Abs(across) <= 0.05f + 0.13f * Mathf.Clamp01((-0.56f - along) / 0.22f);
     }
     static bool InLogEnd(float x, float y) => Circle(x - 0.36f, y + 0.08f, 0.36f);
 

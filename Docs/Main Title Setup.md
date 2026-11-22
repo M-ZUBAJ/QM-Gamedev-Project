@@ -64,6 +64,7 @@ today's game. These values are read from GameScene and kept in `NewGameDefaults.
 | **Day length** | the sun's Day Length Minutes: Short = half, Normal = as now, Long = double | Normal |
 | **Start time** | the time of day the first day starts (and where dying brings you back to) | from GameScene ("Now (hh:mm)" if it isn't one of the listed times) |
 | **Difficulty** | Peaceful = no enemies; Easy = half the enemies, slower hunger; **Normal = as now**; Hard = 1.5x enemies, faster hunger | Normal |
+| **Starting coins** (DIFFICULTY, 22/11/2026) | the coins the player starts with (Marko's PlayerCoins > Starting Coins), and what dying puts them back to. **-** / **+** change it by 10; or click the number, type one (0 - 9999) and press Enter or click somewhere else (Esc puts the old number back) | 20 (from GameScene) |
 | **When I die** | Keep items / Drop items / Lose items (GameRules Keep Inventory / Clear Item On Dead) | from GameScene |
 | **Pick up dropped items by walking over them** | GameRules Auto Pickup Drops | from GameScene |
 | **Show "+3 Wood" messages** (RULES, left) | GameRules Show Notifications | from GameScene |
@@ -81,6 +82,10 @@ after START GAME. **Play Again** on the victory screen keeps them.
 The **TESTING** section is new (19/11/2026; the armor tick box 20/11/2026, Old / New chests 21/11/2026): run the tool
 again to get it. An older title scene without it still works. Its three parts share one row (`TestingRow`), because the
 panel has no room for another row.
+
+**Starting coins** is new too (22/11/2026): run the tool again to get it. To make room for it, **Days to win** and **Win
+at** now share one row (`GoalPairRow`). An older title scene without it still works (the game keeps PlayerCoins'
+Starting Coins). While you type the number, Esc only stops the typing; it doesn't leave the page.
 
 ## The Settings page: Key Bindings
 
@@ -157,7 +162,10 @@ keep these **names**: the scripts find their parts by name.
   `Subtitle`, `Buttons`, `Footer`, `Version`, `PlayButton`, `SettingsButton`, `QuitButton`, a `BackButton` in each sub
   page, `StartButton` (with a `Flash` child), `Shockwave`, `IntroBlack`.
 - **NewGamePanel** (on NewGamePage) looks for: `DaysRow` (StepperRow with `Minus`, `Plus`, `Value`), `WinAtRow` and
-  `StartTimeRow` (each with a TextMeshPro `Dropdown`), `DayLengthRow`, `DifficultyRow`, `DeathRow` (ChoiceRows with an
+  `StartTimeRow` (each with a TextMeshPro `Dropdown`; DaysRow and WinAtRow sit side by side in `GoalPairRow`, a
+  Horizontal Layout Group like `TestingRow`), the optional `CoinsRow` (a StepperRow with `Minus`, `Plus` and a
+  TextMeshPro **Input Field** instead of `Value`, so the number can be typed; its Step is 10), `DayLengthRow`,
+  `DifficultyRow`, `DeathRow` (ChoiceRows with an
   `Options` holder and a `Highlight`), `PickupRow`, `MessagesRow`, `AllToolsRow` and `ArmorTestRow` (each with a
   `Toggle`) and `ChestRow` (a ChoiceRow: Old chests / New chests, no label); the last three are optional and sit side by
   side in `TestingRow`, a Horizontal Layout Group with Control Child Size and Child Force Expand ticked; the optional
@@ -184,6 +192,9 @@ keep these **names**: the scripts find their parts by name.
    Iron) are in the inventory; Tab > Gear to put them on.
 8. **PLAY**, pick **Old chests** (a gold dot), START GAME: every chest lets you choose 1 of 3. New chests (the default):
    common chests roll a random perk.
+9. **PLAY**, click the **Starting coins** number, type 500 and press Enter (a gold dot appears), START GAME: the HUD
+   shows 500 coins, and dying puts them back to 500. Click **+** / **-**: it changes by 10. Type something and press
+   Esc: the old number comes back and the page stays.
 
 | Problem | Fix |
 |---|---|
@@ -191,5 +202,7 @@ keep these **names**: the scripts find their parts by name.
 | START GAME stays on black | GameScene must be in File > Build Settings (the tool adds it), and the scene name must match TitleMenu's **Game Scene**. |
 | Map: New world starts the old world | ProceduralGenerateScene isn't in Build Settings: run **Tools > World > Build New World Scene** (the Console says so). |
 | The defaults don't match GameScene | Save GameScene once (they're read on save), or run the tool again. |
+| No Starting coins row | Run the tool again (22/11/2026). |
+| A typed number doesn't stay | It's kept when you press Enter or click somewhere else; an empty box gets its number back, and it's kept between 0 and 9999. |
 | No embers | Select **Embers**: its Renderer needs a material (Default-ParticleSystem). |
 | The game doesn't start on the title screen in a build | MainTitleScene must be scene **0** in File > Build Settings (the tool puts it there). |

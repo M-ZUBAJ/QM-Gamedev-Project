@@ -1,6 +1,6 @@
 /*
 First Date: 7/11/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Nothing to click. Every time GameScene is saved, the New Game page's defaults
@@ -8,10 +8,11 @@ Unity Editor: Nothing to click. Every time GameScene is saved, the New Game page
               something changed. Tools > UI > Build Main Title Scene also uses it to make that asset.
 Purpose: Keeps "the game as it is now" up to date for the New Game page: copies from GameScene the days to win and
          win time (VictoryScreen), day length, start time and parts of the day (DaylightCycle), enemies per night
-         (EnemySpawner), hunger speed (PlayerHunger) and the rules (GameRules) into NewGameDefaults.
+         (EnemySpawner), hunger speed (PlayerHunger), starting coins (PlayerCoins) and the rules (GameRules) into
+         NewGameDefaults.
          Also, after each compile, fills an EMPTY Defaults on the New Game page (TitleCanvas.prefab > NewGamePanel)
          with that asset: without it the page can't start and shows "Option A". It only saves the prefab then.
-Requirement: NewGameDefaultsSync.cs x-> NewGameDefaults.cs, NewGamePanel.cs, VictoryScreen.cs, DaylightCycle.cs, EnemySpawner.cs, PlayerHunger.cs, GameRules.cs, KeyBindings.cs
+Requirement: NewGameDefaultsSync.cs x-> NewGameDefaults.cs, NewGamePanel.cs, VictoryScreen.cs, DaylightCycle.cs, EnemySpawner.cs, PlayerHunger.cs, PlayerCoins.cs, GameRules.cs, KeyBindings.cs
              NewGameDefaultsSync.cs <-x TitleSceneBuilder.cs
 */
 
@@ -97,6 +98,7 @@ public static class NewGameDefaultsSync
         CopyAs(sun, "timeOfDay", d, "startTime");
         Copy(Find<EnemySpawner>(scene), d, "spawnAtNight", "enemiesPerNight");
         CopyAs(Find<PlayerHunger>(scene), "drainPerSecond", d, "hungerDrainPerSecond");
+        CopyAs(Find<PlayerCoins>(scene), "startingCoins", d, "startCoins");
         Copy(Find<GameRules>(scene), d, "keepInventory", "clearItemOnDead", "autoPickupDrops", "showNotifications", "toolTest",
              "armorTest", "newChests", "pauseGame");
 

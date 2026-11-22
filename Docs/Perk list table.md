@@ -37,8 +37,10 @@ the perk's Perk Data in `Assets/Config/Perks`, so change it there (and here). Ho
 | Night Power | +10% max health, max stamina, speed and melee damage (not the fireball), **stackable**, **night only** | - | Epic | Epic, Legendary |
 | Reroll | unlocks the REROLL button at loot boxes, **always active (one at a time)** | - | Epic | Epic, Legendary |
 | Keen Eye | the crosshair turns yellow when your attack will hit what you aim at, **always active (one at a time)** | - | Epic | Epic, Legendary |
+| Arrow Recovery | your arrows can be had back: they stay in monsters and animals (walk within 2.5 m to take them back), a dead one drops them, missed arrows stay on the ground (walk within 1.6 m). Without it an arrow that hits a creature is used up. **Always active (one at a time)** | - | Epic | Epic, Legendary |
 
-23 perks: Vitality, Stamina, Agility and Fireball are Marko's; the other 19 come with the loot boxes.
+24 perks: Vitality, Stamina, Agility and Fireball are Marko's; the other 20 come with the loot boxes (Arrow Recovery
+since 22/11/2026).
 
 ## The boxes
 
@@ -46,7 +48,7 @@ the perk's Perk Data in `Assets/Config/Perks`, so change it there (and here). Ho
 |---|---|---|---|---|
 | Common | grassland (20), desert (30), snow (40) | 2, then +1 each | choose 1 of 3 from its 7 perks | **one random perk** from the 15 common + rare perks |
 | Rare | grassland (6), desert (12), snow (20) | 10, then x1.5 each | choose 1 of 3 from its 8 perks | choose 1 of 3 from the same 15 |
-| Epic | desert (4), snow (8) | 100, then x2 each | choose 1 of 3 from its 8 perks, REROLL | **one random perk** from its 8 perks |
+| Epic | desert (4), snow (8) | 100, then x2 each | choose 1 of 3 from its 9 perks, REROLL | **one random perk** from its 9 perks |
 | Legendary | desert (2), snow (4) | 150, then x2 each | not in the old system | choose 1 of 3 from the epic perks |
 
 - **Where:** the spawn rules' counts. The snow is only in the new world (where a count is for every 400,000 m² of

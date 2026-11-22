@@ -18,7 +18,7 @@ Purpose: One place to change every key in the game.
          Grab (F) picks up an item lying on the ground (ItemGrabber); Interact (E) opens a chest and picks berries from
          a bush (Marko's PerkChest and Turki's ResourceNode read it since 21/11/2026: before, each had its own E, and
          Interact sat unused on the right mouse button, so the key page couldn't show or change E).
-Requirement: KeyBindings.cs <-x BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, FullscreenKeys.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemGrabber.cs, KeyBindingMenu.cs, NewGameDefaultsSync.cs, ObjectLevitator.cs, PauseMenu.cs, PerkChest.cs, PlayerController.cs, PlayerGlide.cs, PlayerJump.cs, ResourceNode.cs, TitleSceneBuilder.cs
+Requirement: KeyBindings.cs <-x BlueprintPlacer.cs, BowShooter.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, FullscreenKeys.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemGrabber.cs, KeyBindingMenu.cs, NewGameDefaultsSync.cs, ObjectLevitator.cs, PauseMenu.cs, PerkChest.cs, PlayerController.cs, PlayerGlide.cs, PlayerJump.cs, ResourceNode.cs, TitleSceneBuilder.cs
 */
 
 using UnityEngine;

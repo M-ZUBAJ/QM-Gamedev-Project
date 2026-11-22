@@ -1,6 +1,6 @@
 /*
 First Date: 7/11/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Put this on the New Game page (Tools > UI > Build Main Title Scene does it: TitleCanvas > Pages > NewGamePage).
 Unity Editor: Defaults = Assets/Config/NewGame/NewGameDefaults.asset (the game as it is now; the tool fills it in).
@@ -11,7 +11,9 @@ Unity Editor: Defaults = Assets/Config/NewGame/NewGameDefaults.asset (the game a
               older title scene without them still works. So is PauseRow (a "Toggle", beside MessagesRow).
               WorldRow (a ChoiceRow: Old world / New world, with an "Info" text) is optional too: without it the game
               always starts in the old world. So is ChestRow (a ChoiceRow: Old chests / New chests, in the Testing
-              section): without it the game keeps GameScene's GameRules > New Chests.
+              section): without it the game keeps GameScene's GameRules > New Chests. So is CoinsRow (a StepperRow whose
+              number is an Input Field you can type in, under Difficulty): without it the game keeps PlayerCoins >
+              Starting Coins.
               Each row can have a small "Dot" picture: it pops up when that option differs from the game as it is now.
               Testing: Play, click PLAY, change the options; DEFAULTS puts them all back.
 Purpose: The New Game options. Every option starts at the game as it is now (the defaults). Changed options get a dot,
@@ -23,6 +25,8 @@ Purpose: The New Game options. Every option starts at the game as it is now (the
            Day length               = Short / Normal / Long (half / as now / double the day length)
            Start time               = when the first day starts
            Difficulty               = Peaceful (no enemies), Easy, Normal (as now), Hard: enemies per night and hunger
+           Starting coins           = the coins the player starts with, and goes back to after dying (PlayerCoins),
+                                      0 - 9999: - / + change it by 10, or click the number and type one (default 20)
            When I die               = Keep items, Drop items or Lose items
            Pickups / messages       = GameRules Auto Pickup Drops / Show Notifications
            Pause menu pauses        = GameRules Pause Game: the Esc pause menu stops the game (on by default)
@@ -76,7 +80,7 @@ public class NewGamePanel : MonoBehaviour
     // The row names it looks for. If you rename them in the Hierarchy, rename them here too.
     static readonly string[] RowNames =
         { "DaysRow", "WinAtRow", "DayLengthRow", "StartTimeRow", "DifficultyRow", "DeathRow", "PickupRow", "MessagesRow",
-          "AllToolsRow", "WorldRow", "ArmorTestRow", "ChestRow", "PauseRow" };   // the same order as Refresh's "changed"
+          "AllToolsRow", "WorldRow", "ArmorTestRow", "ChestRow", "PauseRow", "CoinsRow" };   // the same order as Refresh's "changed"
     const int NormalDay = 1;   // Short, Normal, Long
     const int OldWorld = 0;    // Map: Old world (as now), New world
     const int NewWorld = 1;
@@ -93,6 +97,7 @@ public class NewGamePanel : MonoBehaviour
     ChoiceRow world;           // Map: Old world / New world (null in an older title scene without the row)
     ChoiceRow chests;          // Testing: Old chests / New chests (null in an older title scene without the row)
     Toggle pauseGame;          // Rules: the pause menu pauses the game (null in an older title scene without the row)
+    StepperRow coins;          // Difficulty: starting coins (null in an older title scene without the row)
     TMP_Text dayLengthInfo, difficultyInfo, summary, worldInfo;
     Button defaultsButton;
     readonly Dictionary<string, RectTransform> dots = new Dictionary<string, RectTransform>();   // row name -> its Dot
@@ -142,6 +147,7 @@ public class NewGamePanel : MonoBehaviour
         if (world != null) world.Pick(OldWorld, false);
         if (chests != null) chests.Pick(defaults.NewChests ? NewChests : OldChests, false);
         if (pauseGame != null) pauseGame.isOn = defaults.PauseGame;
+        if (coins != null) coins.SetValue(defaults.StartCoins, false);
         Refresh(true);
     }
 
@@ -173,6 +179,7 @@ public class NewGamePanel : MonoBehaviour
         if (world != null && world.Picked == NewWorld) GameSetup.NewWorld = true;
         if (chests != null && (chests.Picked == NewChests) != defaults.NewChests) GameSetup.NewChests = chests.Picked == NewChests;
         if (pauseGame != null && pauseGame.isOn != defaults.PauseGame) GameSetup.PauseGame = pauseGame.isOn;
+        if (coins != null && coins.Value != defaults.StartCoins) GameSetup.StartCoins = coins.Value;
     }
 
     void FindRows()
@@ -191,6 +198,7 @@ public class NewGamePanel : MonoBehaviour
         worldInfo = FindDeep(FindDeep(transform, "WorldRow"), "Info")?.GetComponent<TMP_Text>();
         chests = FindDeep(transform, "ChestRow")?.GetComponent<ChoiceRow>();
         pauseGame = FindDeep(FindDeep(transform, "PauseRow"), "Toggle")?.GetComponent<Toggle>();
+        coins = FindDeep(transform, "CoinsRow")?.GetComponent<StepperRow>();
         dayLengthInfo = FindDeep(FindDeep(transform, "DayLengthRow"), "Info")?.GetComponent<TMP_Text>();
         difficultyInfo = FindDeep(transform, "DifficultyInfo")?.GetComponent<TMP_Text>();
         summary = FindDeep(transform, "Summary")?.GetComponent<TMP_Text>();
@@ -264,6 +272,7 @@ public class NewGamePanel : MonoBehaviour
         if (world != null) world.Pick(GameSetup.NewWorld == true ? NewWorld : OldWorld, false);
         if (chests != null) chests.Pick((GameSetup.NewChests ?? defaults.NewChests) ? NewChests : OldChests, false);
         if (pauseGame != null) pauseGame.SetIsOnWithoutNotify(GameSetup.PauseGame ?? defaults.PauseGame);
+        if (coins != null) coins.SetValue(GameSetup.StartCoins ?? defaults.StartCoins, false, false);
     }
 
     void Listen()
@@ -283,6 +292,7 @@ public class NewGamePanel : MonoBehaviour
         if (world != null) world.Changed += _ => Refresh(true);
         if (chests != null) chests.Changed += _ => Refresh(true);
         if (pauseGame != null) pauseGame.onValueChanged.AddListener(_ => Refresh(true));
+        if (coins != null) coins.Changed += _ => Refresh(true);
         if (defaultsButton != null) defaultsButton.onClick.AddListener(SetDefaults);
     }
 
@@ -306,6 +316,7 @@ public class NewGamePanel : MonoBehaviour
             allArmor != null && allArmor.isOn != defaults.ArmorTest,
             chests != null && (chests.Picked == NewChests) != defaults.NewChests,
             pauseGame != null && pauseGame.isOn != defaults.PauseGame,
+            coins != null && coins.Value != defaults.StartCoins,
         };
 
         bool any = false;

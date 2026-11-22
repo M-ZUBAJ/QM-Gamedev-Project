@@ -1,6 +1,6 @@
 /*
 First Date: 7/11/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Menu Tools > UI > Build Main Title Scene. It asks to save the open scene first, and asks before replacing
@@ -22,6 +22,9 @@ Purpose: Builds the whole title screen in one click:
          a new random world every game: Tools > World > Build New World Scene makes it).
          Its TESTING section: Start with all tools, Start with all armor, and Old chests / New chests (the two loot
          box systems, GameRules > New Chests; New is the default).
+         Its GOAL section has Days to win and Win at side by side in one row (GoalPairRow, since 22/11/2026), which
+         leaves room for Starting coins under DIFFICULTY (CoinsRow: - / + change it by 10, or click the number and type
+         one; 0 - 9999, the default read from GameScene's PlayerCoins > Starting Coins, 20).
          Settings: KEY BINDINGS (KeyBindingMenu), CONTROLS (ControlsMenu: Mouse sensitivity 1 - 10 on a SliderRow,
          Invert mouse) and DISPLAY (DisplayMenu: Fullscreen, and a Damage numbers panel: Show damage numbers with its
          child Only monsters and animals, locked while it's off, and sample numbers); since 21/11/2026, before they
@@ -74,6 +77,10 @@ public static class TitleSceneBuilder
     const float RowLabelX = 40f;       // where row names start (the changed-dot sits left of them)
     const float ControlX = 380f;       // where the row's buttons / dropdowns start
     const float RowHeight = 50f;
+    const float HalfControlX = 230f;   // Days to win's - button, in the GOAL row's left half
+    const float WinAtControlX = 150f;  // Win at's dropdown, in the GOAL row's right half
+    const int MaxStartCoins = 9999;    // Starting coins: 0 - 9999 (four digits to type)
+    const int CoinStep = 10;           // - and + change Starting coins by 10
 
     // The art for this build (made or loaded in MakeArt).
     static Sprite gradientSprite, vignetteSprite, glowSprite, ringSprite;
@@ -443,8 +450,7 @@ public static class TitleSceneBuilder
         SetCascade(rows.AddComponent<CascadeIn>(), new Vector2(50f, 0f), 0.035f, 0.4f, UITween.Ease.OutCubic);
 
         Section(rows.transform, "GOAL");
-        MakeStepperRow(rows.transform, "DaysRow", "Days to win", d.DaysToWin);
-        MakeDropdownRow(rows.transform, "WinAtRow", "Win at");
+        MakeGoalPairRow(rows.transform, d.DaysToWin);   // Days to win | Win at: one row, so Starting coins fits below
         Section(rows.transform, "WORLD");
         MakeChoiceRow(rows.transform, "WorldRow", "Map", new[] { "Old world", "New world" }, 190f, null, true);
         WidenInfo(rows.transform.Find("WorldRow"), 260f);   // room for "new random map"
@@ -454,6 +460,8 @@ public static class TitleSceneBuilder
         MakeChoiceRow(rows.transform, "DifficultyRow", null, new[] { "Peaceful", "Easy", "Normal", "Hard" }, 170f,
                       DifficultyColors, false);
         MakeInfoRow(rows.transform, "DifficultyInfo", "");
+        MakeStepperRow(rows.transform, "CoinsRow", "Starting coins", d.StartCoins, 0, MaxStartCoins, CoinStep, true);
+        AddRowHint(rows.transform.Find("CoinsRow"), ControlX + 252f, "or click the number and type one");
         Section(rows.transform, "RULES");
         MakeChoiceRow(rows.transform, "DeathRow", "When I die", new[] { "Keep items", "Drop items", "Lose items" }, 190f,
                       null, false);
@@ -993,8 +1001,10 @@ public static class TitleSceneBuilder
         return button;
     }
 
-    // A row in the New Game list: the gold changed-dot, the row's name, and room for its control at ControlX.
-    static RectTransform MakeRow(Transform parent, string objectName, string label, float height = RowHeight)
+    // A row in the New Game list: the gold changed-dot, the row's name (labelWidth pixels of room), and room for its
+    // control at ControlX.
+    static RectTransform MakeRow(Transform parent, string objectName, string label, float height = RowHeight,
+                                 float labelWidth = 330f)
     {
         GameObject row = NewUI(objectName, parent);
         LayoutElement le = row.AddComponent<LayoutElement>();
@@ -1006,7 +1016,7 @@ public static class TitleSceneBuilder
         if (label != null)
         {
             TextMeshProUGUI name = MakeText(row.transform, "Label", label, 26f, Color.white, TextAlignmentOptions.Left);
-            Place(name.gameObject, new Vector2(0f, 0.5f), new Vector2(RowLabelX + 165f, 0f), new Vector2(330f, height));
+            Place(name.gameObject, new Vector2(0f, 0.5f), new Vector2(RowLabelX + labelWidth / 2f, 0f), new Vector2(labelWidth, height));
         }
         return (RectTransform)row.transform;
     }
@@ -1022,35 +1032,122 @@ public static class TitleSceneBuilder
         text.characterSpacing = 6f;
     }
 
-    // Days to win: [ - ]  5  [ + ]
-    static void MakeStepperRow(Transform parent, string objectName, string label, int value)
+    // Days to win: [ - ]  5  [ + ]. min / max = the numbers allowed, step = how much - and + change it. typing = the
+    // number is a box the player can also click and type into (Starting coins). controlX = where the - button starts,
+    // labelWidth = the room for the row's name (both smaller in a half row).
+    static void MakeStepperRow(Transform parent, string objectName, string label, int value, int min = 1, int max = 30,
+                               int step = 1, bool typing = false, float controlX = ControlX, float labelWidth = 330f)
     {
-        RectTransform row = MakeRow(parent, objectName, label);
+        RectTransform row = MakeRow(parent, objectName, label, RowHeight, labelWidth);
 
         Button minus = MakeButton(row, "Minus", "-", new Vector2(56f, 44f), 34f, 6, false, false);
-        Place(minus.gameObject, new Vector2(0f, 0.5f), new Vector2(ControlX + 28f, 0f), new Vector2(56f, 44f));
+        Place(minus.gameObject, new Vector2(0f, 0.5f), new Vector2(controlX + 28f, 0f), new Vector2(56f, 44f));
 
-        GameObject box = NewUI("ValueBox", row);
-        Place(box, new Vector2(0f, 0.5f), new Vector2(ControlX + 116f, 0f), new Vector2(100f, 44f));
-        AddBox(box).color = KeyColor;
-        box.AddComponent<RectMask2D>();   // the rolling numbers stay inside
-        TextMeshProUGUI number = MakeText(box.transform, "Value", value.ToString(), 32f, Gold, TextAlignmentOptions.Center);
-        Stretch(number.gameObject, 0f, 0f, 0f, 0f);
-        number.fontStyle = FontStyles.Bold;
+        if (typing) MakeNumberBox(row, new Vector2(controlX + 116f, 0f), value, max);
+        else
+        {
+            GameObject box = NewUI("ValueBox", row);
+            Place(box, new Vector2(0f, 0.5f), new Vector2(controlX + 116f, 0f), new Vector2(100f, 44f));
+            AddBox(box).color = KeyColor;
+            box.AddComponent<RectMask2D>();   // the rolling numbers stay inside
+            TextMeshProUGUI number = MakeText(box.transform, "Value", value.ToString(), 32f, Gold, TextAlignmentOptions.Center);
+            Stretch(number.gameObject, 0f, 0f, 0f, 0f);
+            number.fontStyle = FontStyles.Bold;
+        }
 
         Button plus = MakeButton(row, "Plus", "+", new Vector2(56f, 44f), 34f, 6, false, false);
-        Place(plus.gameObject, new Vector2(0f, 0.5f), new Vector2(ControlX + 204f, 0f), new Vector2(56f, 44f));
+        Place(plus.gameObject, new Vector2(0f, 0.5f), new Vector2(controlX + 204f, 0f), new Vector2(56f, 44f));
 
         StepperRow stepper = row.gameObject.AddComponent<StepperRow>();
-        Set(stepper, "min", 1);
-        Set(stepper, "max", 30);
+        Set(stepper, "min", min);
+        Set(stepper, "max", max);
+        Set(stepper, "step", step);
         Set(stepper, "value", value);
     }
 
-    // Win at / Start time: a TextMeshPro dropdown (NewGamePanel fills in its options).
-    static void MakeDropdownRow(Transform parent, string objectName, string label)
+    // The number as a box the player can click and type into: a TextMeshPro Input Field, whole numbers only, at most as
+    // many digits as "max" has. It looks like the other number boxes (dark, gold number) and lights up under the mouse.
+    // StepperRow finds it by itself and keeps a typed number between its Min and Max.
+    static void MakeNumberBox(RectTransform row, Vector2 at, int value, int max)
     {
-        RectTransform row = MakeRow(parent, objectName, label);
+        TMP_DefaultControls.Resources res = new TMP_DefaultControls.Resources
+        {
+            standard = Builtin("UISprite.psd"),
+            inputField = Builtin("InputFieldBackground.psd"),
+        };
+        GameObject go = TMP_DefaultControls.CreateInputField(res);
+        go.name = "ValueBox";
+        go.transform.SetParent(row, false);
+        SetLayer(go);
+        Place(go, new Vector2(0f, 0.5f), at, new Vector2(100f, 44f));
+
+        Image box = go.GetComponent<Image>();
+        box.sprite = Builtin("UISprite.psd");   // the same box as the other numbers, not the white text box picture
+        box.type = Image.Type.Sliced;
+        box.color = KeyColor;
+
+        TMP_InputField input = go.GetComponent<TMP_InputField>();
+        input.contentType = TMP_InputField.ContentType.IntegerNumber;
+        input.characterLimit = max.ToString().Length;
+        input.onFocusSelectAll = true;   // a click selects the number, so typing replaces it
+        input.customCaretColor = true;
+        input.caretColor = Gold;
+        input.caretWidth = 2;
+        input.selectionColor = new Color(Gold.r, Gold.g, Gold.b, 0.4f);
+        ColorBlock colors = input.colors;   // x1.5 = the box's own color; under the mouse / typing: half as bright again
+        colors.normalColor = new Color(0.67f, 0.67f, 0.67f, 1f);
+        colors.highlightedColor = Color.white;
+        colors.selectedColor = Color.white;
+        colors.pressedColor = new Color(0.8f, 0.8f, 0.8f, 1f);
+        colors.colorMultiplier = 1.5f;
+        input.colors = colors;
+
+        RectTransform area = go.transform.Find("Text Area") as RectTransform;
+        if (area != null)   // the whole box's height, so a 32 px number fits
+        {
+            area.offsetMin = new Vector2(6f, 0f);
+            area.offsetMax = new Vector2(-6f, 0f);
+        }
+        TMP_Text text = input.textComponent;
+        text.fontSize = 32f;
+        text.fontStyle = FontStyles.Bold;
+        text.color = Gold;
+        text.alignment = TextAlignmentOptions.Center;
+        text.enableWordWrapping = false;
+        if (input.placeholder is TMP_Text placeholder) placeholder.text = "";   // an empty box gets its number back when typing ends
+        input.text = value.ToString();
+    }
+
+    // A small grey line right of a row's controls ("x" = where it starts), e.g. "or click the number and type one".
+    static void AddRowHint(Transform row, float x, string words)
+    {
+        if (row == null) return;
+        TextMeshProUGUI hint = MakeText(row, "Hint", words, 22f, Dim, TextAlignmentOptions.Left);
+        hint.fontStyle = FontStyles.Italic;
+        Place(hint.gameObject, new Vector2(0f, 0.5f), new Vector2(x + 240f, 0f), new Vector2(480f, 44f));
+    }
+
+    // GOAL: Days to win and Win at side by side, two halves of one row (like the RULES pair), so the panel has room for
+    // Starting coins. NewGamePanel finds DaysRow and WinAtRow by name wherever they are.
+    static void MakeGoalPairRow(Transform parent, int daysToWin)
+    {
+        GameObject pair = NewUI("GoalPairRow", parent);
+        LayoutElement size = pair.AddComponent<LayoutElement>();
+        size.preferredHeight = size.minHeight = RowHeight;
+        HorizontalLayoutGroup h = pair.AddComponent<HorizontalLayoutGroup>();
+        h.spacing = 10f;
+        h.childControlWidth = h.childControlHeight = true;
+        h.childForceExpandWidth = h.childForceExpandHeight = true;   // two equal halves
+        MakeStepperRow(pair.transform, "DaysRow", "Days to win", daysToWin, controlX: HalfControlX,
+                       labelWidth: HalfControlX - RowLabelX - 10f);
+        MakeDropdownRow(pair.transform, "WinAtRow", "Win at", WinAtControlX, 380f, WinAtControlX - RowLabelX - 10f);
+    }
+
+    // Win at / Start time: a TextMeshPro dropdown (NewGamePanel fills in its options), "width" wide from controlX.
+    static void MakeDropdownRow(Transform parent, string objectName, string label, float controlX = ControlX,
+                                float width = 440f, float labelWidth = 330f)
+    {
+        RectTransform row = MakeRow(parent, objectName, label, RowHeight, labelWidth);
 
         TMP_DefaultControls.Resources res = new TMP_DefaultControls.Resources
         {
@@ -1066,7 +1163,7 @@ public static class TitleSceneBuilder
         go.name = "Dropdown";
         go.transform.SetParent(row, false);
         SetLayer(go);
-        Place(go, new Vector2(0f, 0.5f), new Vector2(ControlX + 220f, 0f), new Vector2(440f, 44f));
+        Place(go, new Vector2(0f, 0.5f), new Vector2(controlX + width / 2f, 0f), new Vector2(width, 44f));
 
         TMP_Dropdown dropdown = go.GetComponent<TMP_Dropdown>();
         go.GetComponent<Image>().color = KeyColor;

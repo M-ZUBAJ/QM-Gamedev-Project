@@ -1,6 +1,6 @@
 /*
 First Date: 7/11/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: This is an ASSET (Assets/Config/NewGame/NewGameDefaults.asset), not a script you put on an object.
         Tools > UI > Build Main Title Scene makes it; the New Game page (NewGamePanel) reads it.
@@ -9,8 +9,8 @@ Unity Editor: Don't type in it: it's a copy of how GameScene is set up right now
               defaults follow. "Read From" says when it was last read.
 Purpose: The game as it is right now = the New Game page's defaults: days to win, win time (VictoryScreen),
          day length, start time and the parts of the day (DaylightCycle), enemies per night (EnemySpawner),
-         hunger speed (PlayerHunger), the death / pickup / message rules and the Tool Test, Armor Test and New
-         Chests rules (GameRules).
+         hunger speed (PlayerHunger), starting coins (PlayerCoins), the death / pickup / message rules and the Tool
+         Test, Armor Test and New Chests rules (GameRules).
          Keeping them in an asset lets the title scene show them without loading GameScene.
 Requirement: NewGameDefaults.cs x-> VictoryScreen.cs, GameSetup.cs
              NewGameDefaults.cs <-x NewGameDefaultsSync.cs, NewGamePanel.cs, TitleSceneBuilder.cs
@@ -41,6 +41,10 @@ public class NewGameDefaults : ScriptableObject
     [SerializeField] int enemiesPerNight = 3;
     [Tooltip("Hunger lost per second.")]
     [SerializeField] float hungerDrainPerSecond = 0.1f;
+
+    [Header("Player (PlayerCoins)")]
+    [Tooltip("Coins the player starts with (PlayerCoins > Starting Coins).")]
+    [SerializeField] int startCoins = 20;
 
     [Header("Rules (GameRules)")]
     [SerializeField] bool keepInventory = false;
@@ -74,6 +78,7 @@ public class NewGameDefaults : ScriptableObject
     public bool SpawnAtNight => spawnAtNight;
     public int EnemiesPerNight => enemiesPerNight;
     public float HungerDrainPerSecond => hungerDrainPerSecond;
+    public int StartCoins => startCoins;
     public bool KeepInventory => keepInventory;
     public bool ClearItemOnDead => clearItemOnDead;
     public bool AutoPickupDrops => autoPickupDrops;

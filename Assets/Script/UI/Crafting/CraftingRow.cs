@@ -1,13 +1,14 @@
 /*
 First Date: 19/11/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: The crafting list's row prefab (Assets/Prefabs/UI/Crafting/CraftingRow.prefab, made by Tools > UI > Build Crafting
         Menu). Turki's CraftingMenu copies it for every item in its list and calls Show(item) (a [Tony] line).
 Unity Editor: Nothing to connect: it finds its parts by NAME: "Icon" (Image), "Name" (text), "Ingredients" (a row with a
-              switched-off "Ingredient" template inside: an "Icon" image and an "Amount" text), "Status" (text) and
-              "Owned" (the green tick inside Icon; a row built before 21/11/2026 has none: run Tools > UI > Build
-              Crafting Menu).
+              switched-off "Ingredient" template inside: an "Icon" image and an "Amount" text), "Status" (text),
+              "Owned" (the green tick inside Icon; a row built before 21/11/2026 has none) and "Better" (the blue up
+              arrow inside Icon; a row built before 22/11/2026 has none, but still gets the words): run Tools > UI >
+              Build Crafting Menu to get them.
               Testing: Play, open the inventory's Crafting tab (or press C): each item shows its picture and its recipe
               as pictures with amounts, green when you have enough and red when not. Craft something: they update.
 Purpose: One row of the crafting list, with pictures: the item's icon and name ("x2" when one craft makes two), and each
@@ -20,6 +21,9 @@ Purpose: One row of the crafting list, with pictures: the item's icon and name (
          off and puts the new piece on in its place (PlayerArmor).
          An armor piece the player already has gets a green tick on its picture and "(owned)" after its name ("(worn)"
          while it's worn), so it isn't crafted twice by mistake; it can still be crafted.
+         A weaker armor piece, while the player has a better one for the same slot (more Protection, worn or in the
+         inventory: PlayerArmor.BetterOwned), gets a blue up arrow on its picture instead and, in blue, "(wearing Iron
+         Helmet)" or "(you have Iron Helmet)" after its name; it can still be crafted too.
 Requirement: CraftingRow.cs x-> ItemData.cs, Recipe.cs, PlayerInventory.cs
              CraftingRow.cs o-> CraftingTabs.cs, CraftingSetPanels.cs, PlayerArmor.cs
              CraftingRow.cs <-x CraftingMenu.cs, CraftingMenuBuilder.cs, CraftingSetPanels.cs, CraftingTabs.cs
@@ -53,6 +57,17 @@ public class CraftingRow : MonoBehaviour
     [Tooltip("After an armor piece's name while the player wears it (with the green tick).")]
     [SerializeField] string wornText = "(worn)";
 
+    [Tooltip("After a weaker armor piece's name while the player wears a better one for that slot (with the blue arrow). " +
+             "{0} = the better piece's name.")]
+    [SerializeField] string betterWornText = "(wearing {0})";
+
+    [Tooltip("After a weaker armor piece's name while the inventory has a better one for that slot (with the blue arrow). " +
+             "{0} = the better piece's name.")]
+    [SerializeField] string betterOwnedText = "(you have {0})";
+
+    [Tooltip("The color of those words (the blue arrow's blue).")]
+    [SerializeField] Color betterColor = new Color(0.14f, 0.4f, 0.82f);
+
     ItemData item;               // what this row makes (null = nothing yet)
     Image icon;
     TMP_Text nameText;
@@ -60,6 +75,7 @@ public class CraftingRow : MonoBehaviour
     GameObject template;         // the switched-off "Ingredient" copied for each ingredient
     TMP_Text status;
     GameObject ownedMark;        // the green tick on the picture (an armor piece the player has)
+    GameObject betterMark;       // the blue up arrow on the picture (the player has a better piece for that slot)
     string nameWords = "";       // the item's name (and "x2"), before "(owned)"
     CanvasGroup group;
     bool partsFound;
@@ -179,16 +195,31 @@ public class CraftingRow : MonoBehaviour
     }
 
     // An armor piece the player already has, in the inventory or worn: the green tick, and "(owned)" / "(worn)" after
-    // its name, in green. Anything else: no tick, just the name.
+    // its name, in green. A weaker piece while the player has a better one for its slot: the blue arrow (instead of the
+    // tick: it's the more useful thing to know) and "(wearing Iron Helmet)" / "(you have Iron Helmet)" in blue.
+    // Anything else: no mark, just the name.
     void ShowOwned(PlayerInventory inventory, PlayerArmor armor)
     {
         bool worn = item.IsArmor && armor != null && armor.IsWorn(item.Id);
         bool owned = item.IsArmor && (worn || (inventory != null && inventory.Count(item.Id) > 0));
-        if (ownedMark != null) ownedMark.SetActive(owned);
+        bool betterWorn = false;
+        ItemData better = item.IsArmor && armor != null ? armor.BetterOwned(item, out betterWorn) : null;
+
+        if (betterMark != null) betterMark.SetActive(better != null);
+        if (ownedMark != null) ownedMark.SetActive(owned && (better == null || betterMark == null));
         if (nameText == null) return;
-        string words = worn ? wornText : ownedText;
-        nameText.text = owned && !string.IsNullOrEmpty(words)
-            ? nameWords + "  <size=75%><color=#" + ColorUtility.ToHtmlStringRGB(haveColor) + ">" + words + "</color></size>"
+
+        string words = "";
+        Color color = haveColor;
+        if (better != null)
+        {
+            words = (betterWorn ? betterWornText : betterOwnedText).Replace("{0}", better.DisplayName);
+            color = betterColor;
+        }
+        else if (owned) words = worn ? wornText : ownedText;
+
+        nameText.text = !string.IsNullOrEmpty(words)
+            ? nameWords + "  <size=75%><color=#" + ColorUtility.ToHtmlStringRGB(color) + ">" + words + "</color></size>"
             : nameWords;
     }
 
@@ -208,6 +239,10 @@ public class CraftingRow : MonoBehaviour
         if (part == null) part = transform.Find("Owned");
         ownedMark = part != null ? part.gameObject : null;
         if (ownedMark != null) ownedMark.SetActive(false);
+        part = icon != null ? icon.transform.Find("Better") : null;
+        if (part == null) part = transform.Find("Better");
+        betterMark = part != null ? part.gameObject : null;
+        if (betterMark != null) betterMark.SetActive(false);
         ingredients = transform.Find("Ingredients");
         Transform templatePart = ingredients != null ? ingredients.Find("Ingredient") : null;
         template = templatePart != null ? templatePart.gameObject : null;

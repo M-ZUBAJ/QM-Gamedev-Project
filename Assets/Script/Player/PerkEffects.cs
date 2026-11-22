@@ -1,6 +1,6 @@
 /*
 First Date: 21/11/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: The Player (next to PlayerPerks). Tools > World > Build Loot Chests puts it there. If the Player has none (e.g.
         the scene wasn't saved after that tool), one is added to it the first time a perk needs it.
@@ -42,12 +42,16 @@ Purpose: Does what the loot boxes' new perks do. Marko's PerkManager hands every
            Keen Eye         the crosshair turns yellow when the attack can  Crosshair asks KeenEye
                             reach what it points at (one at a time)
            Long Reach       the attack reaches farther (+0.1 = 10 %)        Marko's PlayerCombat asks ReachMultiplier
+           Arrow Recovery   arrows stay in monsters and animals to be taken ArrowProjectile asks ArrowRecovery
+                            back, a dead one drops them, and missed arrows
+                            stay on the ground to be picked up (one at a
+                            time)
          When the player dies every perk is lost: PlayerPerks calls ResetEffects, which undoes all of it.
          Describe(kind) is each perk's line on the HUD and the Info tab.
 Requirement: PerkEffects.cs x-> PerkData.cs, PlayerPerks.cs, ResourceNode.cs, DamageNumbers.cs
              PerkEffects.cs o-> PlayerHealth.cs, PlayerStamina.cs, PlayerJump.cs, PlayerController.cs, PlayerGlide.cs, PlayerInventory.cs, NotificationFeed.cs, EnemyCombat.cs, DaylightCycle.cs, PlayerCombat.cs
-             PerkEffects.cs <-x ChestTier.cs, EnemyAttack.cs, FireballProjectile.cs, LootChestBuilder.cs, PerkManager.cs, PlayerCombat.cs, ResourceNode.cs
-             PerkEffects.cs <-o Crosshair.cs, ItemConsumer.cs, MonsterBounty.cs, PlayerHealth.cs, PlayerInfoPage.cs, PlayerPerks.cs, PunchEffect.cs
+             PerkEffects.cs <-x ArrowProjectile.cs, ChestTier.cs, EnemyAttack.cs, FireballProjectile.cs, LootChestBuilder.cs, PerkManager.cs, PlayerCombat.cs, ResourceNode.cs
+             PerkEffects.cs <-o BowShooter.cs, Crosshair.cs, ItemConsumer.cs, MonsterBounty.cs, PlayerHealth.cs, PlayerInfoPage.cs, PlayerPerks.cs, PunchEffect.cs
 */
 
 using System.Collections;
@@ -107,6 +111,7 @@ public class PerkEffects : MonoBehaviour
     bool rerollUnlocked;   // Reroll picked: the REROLL button works at loot boxes
     bool keenEye;          // Keen Eye picked: the crosshair turns yellow when the attack can reach
     float longReach;       // 0.1 = the attack reaches 10 % farther
+    bool arrowRecovery;    // Arrow Recovery picked: arrows can be had back (ArrowProjectile)
 
     static PerkEffects current;
 
@@ -145,6 +150,7 @@ public class PerkEffects : MonoBehaviour
     public static bool RerollUnlocked => current != null && current.rerollUnlocked;         // Reroll: ChestTier lets REROLL work
     public static bool KeenEye => current != null && current.keenEye;                       // Keen Eye: the crosshair shows the reach
     public static float ReachMultiplier => current != null ? 1f + current.longReach : 1f;   // Long Reach: 1.1 = 10 % farther
+    public static bool ArrowRecovery => current != null && current.arrowRecovery;           // Arrow Recovery: arrows can be had back
 
     // ===== Unity messages (Unity calls these) =====
 
@@ -285,7 +291,7 @@ public class PerkEffects : MonoBehaviour
         secondWind = critChance = springLegs = gourmet = sprinter = brawler = attackSpeed = shieldSeconds = 0f;
         vampire = thorns = nightPower = longReach = 0f;
         sprinterPicks = bountyCoins = lumberjack = prospector = lastStands = 0;
-        glide = rerollUnlocked = keenEye = false;
+        glide = rerollUnlocked = keenEye = arrowRecovery = false;
         nightActive = false;   // switched off here, so no "Dawn" message for a perk that was lost
         Push();
     }
@@ -317,6 +323,7 @@ public class PerkEffects : MonoBehaviour
             case ChestPerkType.Reroll:         rerollUnlocked = true; break;
             case ChestPerkType.KeenEye:        keenEye = true; break;
             case ChestPerkType.LongReach:      longReach += value; break;
+            case ChestPerkType.ArrowRecovery:  arrowRecovery = true; break;
             default:
                 Debug.LogWarning("PerkEffects doesn't know the perk kind " + perk.perkType + " (" + perk.displayName + ").");
                 return;
@@ -394,6 +401,7 @@ public class PerkEffects : MonoBehaviour
             case ChestPerkType.LongReach:
                 return "+" + Percent(longReach) + " attack reach" +
                        (combat != null ? "\nReach " + combat.AttackReach.ToString("0.0#", CultureInfo.InvariantCulture) + " m" : "");
+            case ChestPerkType.ArrowRecovery:  return "Arrows stay to be\npicked up again";
             default:                           return "";
         }
     }

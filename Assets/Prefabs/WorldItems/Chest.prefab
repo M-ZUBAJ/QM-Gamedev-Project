@@ -72,7 +72,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   minCost: 1
   maxCost: 2
-  interactKey: 101
   interactionRange: 3
   despawnAfterOpened: 1
   despawnDelay: 0

@@ -63,6 +63,11 @@ public class PlayerCombat : MonoBehaviour
         if (Cursor.lockState != CursorLockMode.Locked && EventSystem.current != null &&                       // [Tony] added
             EventSystem.current.IsPointerOverGameObject()) return;                                            // [Tony] added
 
+        // [Tony] added (22/11/2026): a bow in the hand doesn't punch or swing: Tony's BowShooter shoots it instead (hold
+        // the left mouse button to draw, let go to shoot an arrow; the arrow hurts where it lands, not this ray).
+        // To undo: delete this line. Log: Docs/TonyEditMate/Marko/22-11-2026 Bow Shoots Instead Of Punching.md
+        if (ToolRules.BowInHand) return;                                                                      // [Tony] added
+
         // [Tony] added (13/11/2026): with no tool in the hand, Tony's PunchCombo decides the punches: left click = a jab
         // (left, right, left...), right click = a heavy punch (left hook, heavy right, left hook...: more damage and stamina).
         // Tools still attack with left click, below. Without PunchCombo nothing changes.

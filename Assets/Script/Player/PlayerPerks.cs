@@ -1,6 +1,6 @@
 /*
 First Date: 21/10/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerHealth, PlayerStamina, PlayerController, PlayerFireball).
 Unity Editor: Nothing to connect. Perk chests (Marko's PerkManager) tell it which perk the player got.
@@ -247,6 +247,7 @@ public class PlayerPerks : MonoBehaviour
             case ChestPerkType.Reroll:         return "Reroll";
             case ChestPerkType.KeenEye:        return "Keen Eye";
             case ChestPerkType.LongReach:      return "Long Reach";
+            case ChestPerkType.ArrowRecovery:  return "Arrow Recovery";
             default:                           return type.ToString();
         }
     }

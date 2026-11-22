@@ -1,6 +1,6 @@
 /*
 First Date: 21/11/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Menu Tools > UI > Upgrade Death Screen (it asks first). It changes Assets/Prefabs/UI/Dead/DeadCanvas.prefab,
@@ -20,7 +20,10 @@ Purpose: Adds to the GAME OVER page (the death page made by hand, DeathScreen on
            - MainMenuButton: a copy of RespawnButton beside it, "Main Menu" (back to the title screen).
          So that it all fits a 1920 x 1080 screen, the stats box (Status) now hangs down from under the days (it grows
          with its text), and the two buttons sit side by side a little lower.
+         The victory page (Tools > UI > Build Game End Screen, GameEndUIBuilder) makes its stats panel and pill with this
+         tool's MakeStatsPanel and MakeStatsToggle, so the two pages look alike.
 Requirement: DeathScreenBuilder.cs x-> DeathScreen.cs, PlayerInfoPage.cs, InventoryUIBuilder.cs, IconArt.cs, ButtonFX.cs, UIBuildHelper.cs, MenuOrder.cs
+             DeathScreenBuilder.cs <-x GameEndUIBuilder.cs
 */
 
 using TMPro;
@@ -126,8 +129,8 @@ public static class DeathScreenBuilder
         MakeDays(page, title != null ? title.transform.GetSiblingIndex() + 1 : page.childCount, font, middleX);
         Transform box = MoveStatus(root.transform);
         int afterBox = box != null && box.parent == page ? box.GetSiblingIndex() + 1 : page.childCount;
-        MakePanel(page, afterBox);
-        MakeToggle(page, afterBox + 1, font);
+        MakeStatsPanel(page, afterBox, ContentTop, PanelScale, true, "No perks this life.");
+        MakeStatsToggle(page, afterBox + 1, font, new Vector2(0f, ToggleY), new Vector2(0.5f, 0.5f), ToggleSize);
         string buttons = MakeMainMenu(root.transform);
         return "days, SHOW ALL STATS panel, " + (box != null ? "stats box moved, " : "no stats box found, ") + buttons;
     }
@@ -160,18 +163,22 @@ public static class DeathScreenBuilder
         return box;
     }
 
-    // SHOW ALL STATS' panel: a light box like the inventory window with THIS LIFE on the left and the Info tab's STATUS
-    // and PERKS (InventoryUIBuilder.FillInfoPage, PlayerInfoPage set to Last Life). Hidden until the toggle shows it.
-    static void MakePanel(Transform page, int index)
+    // SHOW ALL STATS' panel, its top edge "top" up from the middle of the page, drawn at "scale" (1530 x 700 at 1): a
+    // light box like the inventory window with THIS LIFE on the left and the Info tab's STATUS and PERKS
+    // (InventoryUIBuilder.FillInfoPage). lastLife on = its PlayerInfoPage keeps the moment of death (the death page);
+    // off = it follows the player (the victory page, where the game is frozen anyway). noPerksText = what the PERKS
+    // column says without a perk. Saved switched off: the toggle shows it. The victory page (GameEndUIBuilder) makes its
+    // panel with this too.
+    public static GameObject MakeStatsPanel(Transform page, int index, float top, float scale, bool lastLife, string noPerksText)
     {
         GameObject panel = NewUI(PanelName, page);
         panel.transform.SetSiblingIndex(Mathf.Min(index, page.childCount - 1));
-        Place(panel, new Vector2(0f, ContentTop), PanelSize, new Vector2(0.5f, 1f));
-        panel.transform.localScale = Vector3.one * PanelScale;
+        Place(panel, new Vector2(0f, top), PanelSize, new Vector2(0.5f, 1f));
+        panel.transform.localScale = Vector3.one * scale;
         Rounded(panel, PanelColor);
-        panel.AddComponent<CanvasGroup>();   // DeathScreen fades it in
+        panel.AddComponent<CanvasGroup>();   // DeathScreen / VictoryScreen fade it in
 
-        // THIS LIFE: what the player did (DeathScreen writes PlayerStats' numbers into LifeText).
+        // THIS LIFE: what the player did (DeathScreen / VictoryScreen write PlayerStats' numbers into LifeText).
         GameObject life = NewUI("LifeColumn", panel.transform);
         RectTransform lifeRect = (RectTransform)life.transform;
         lifeRect.anchorMin = Vector2.zero;
@@ -192,23 +199,25 @@ public static class DeathScreenBuilder
         Stretch(lifeText.gameObject, 18f, 16f, 14f, 16f);
         lifeText.color = DarkText;
         lifeText.lineSpacing = 18f;
-        lifeText.enableAutoSizing = true;   // a long line shrinks to fit the column
+        lifeText.enableAutoSizing = true;   // a long line shrinks to fit the column...
+        lifeText.enableWordWrapping = false;   // ...instead of breaking in two ("Coins earned: 120   spent: 95")
         lifeText.fontSizeMin = 14f;
         lifeText.fontSizeMax = 24f;
 
-        // STATUS and PERKS: the Info tab's own, its script kept at the moment of death (Last Life).
+        // STATUS and PERKS: the Info tab's own (with Last Life its script keeps the moment of death).
         GameObject info = NewUI("Info", panel.transform);
         Stretch(info, Gap + LifeWidth + Gap, Gap, Gap, Gap);
         PlayerInfoPage stats = InventoryUIBuilder.FillInfoPage(info.transform);
         SerializedObject so = new SerializedObject(stats);   // the name in quotes must match PlayerInfoPage's field
-        so.FindProperty("lastLife").boolValue = true;
+        so.FindProperty("lastLife").boolValue = lastLife;
         so.ApplyModifiedPropertiesWithoutUndo();
         Transform none = info.transform.Find("PerkList/NoPerks");
         TMP_Text noneText = none != null ? none.GetComponent<TMP_Text>() : null;
-        if (noneText != null) noneText.text = "No perks this life.";
+        if (noneText != null) noneText.text = noPerksText;
         ScrollPerks(info.transform);
 
         panel.SetActive(false);   // SHOW ALL STATS shows it
+        return panel;
     }
 
     // The PERKS column inside a scroll view (the mouse wheel scrolls it), so a long life's many perks stay inside the
@@ -245,12 +254,14 @@ public static class DeathScreenBuilder
         scroll.scrollSensitivity = 40f;
     }
 
-    // The pill under the stats: SHOW ALL STATS / MINIMISE (DeathScreen changes the words), gold under the mouse.
-    static void MakeToggle(Transform page, int index, TMP_FontAsset font)
+    // The pill: SHOW ALL STATS / MINIMISE (DeathScreen / VictoryScreen change the words), gold under the mouse. Its pivot
+    // goes "at" from the middle of the page. font = the page's letters (null = TextMeshPro's default). The victory page
+    // (GameEndUIBuilder) makes its pill with this too.
+    public static Button MakeStatsToggle(Transform page, int index, TMP_FontAsset font, Vector2 at, Vector2 pivot, Vector2 size)
     {
         GameObject toggle = NewUI(ToggleName, page);
         toggle.transform.SetSiblingIndex(Mathf.Min(index, page.childCount - 1));
-        Place(toggle, new Vector2(0f, ToggleY), ToggleSize, new Vector2(0.5f, 0.5f));
+        Place(toggle, at, size, pivot);
         Image back = Rounded(toggle, ToggleColor);
         back.raycastTarget = true;   // it's clicked
         Button button = toggle.AddComponent<Button>();
@@ -269,6 +280,7 @@ public static class DeathScreenBuilder
         so.FindProperty("dimOthers").boolValue = false;   // the rest of the page stays as it is
         so.FindProperty("sparks").intValue = 8;
         so.ApplyModifiedPropertiesWithoutUndo();
+        return button;
     }
 
     // Main Menu: a copy of RespawnButton (its look, its size), beside it; the two sit side by side near the bottom.
@@ -310,8 +322,8 @@ public static class DeathScreenBuilder
         text.characterSpacing = 6f;
     }
 
-    // Puts a UI object with its pivot at "at" from the middle of its parent, this big.
-    static void Place(GameObject go, Vector2 at, Vector2 size, Vector2 pivot)
+    // Puts a UI object with its pivot at "at" from the middle of its parent, this big. (GameEndUIBuilder uses it too.)
+    internal static void Place(GameObject go, Vector2 at, Vector2 size, Vector2 pivot)
     {
         RectTransform rt = (RectTransform)go.transform;
         rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
@@ -320,8 +332,8 @@ public static class DeathScreenBuilder
         rt.sizeDelta = size;
     }
 
-    // A box with round corners (IconArt's 9-sliced picture), in this color.
-    static Image Rounded(GameObject go, Color color)
+    // A box with round corners (IconArt's 9-sliced picture), in this color. (GameEndUIBuilder uses it too.)
+    internal static Image Rounded(GameObject go, Color color)
     {
         Image image = go.AddComponent<Image>();
         image.sprite = IconArt.RoundedBox();

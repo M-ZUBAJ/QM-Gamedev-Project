@@ -13,7 +13,7 @@ Purpose: Move the mouse to turn the camera.
 Requirement: CameraController.cs x-> KeyBindings.cs, MenuState.cs, MouseSettings.cs
              CameraController.cs o-> PauseMenu.cs
              CameraController.cs <-x FirstPersonHandsBuilder.cs
-             CameraController.cs <-o FirstPersonHands.cs, HeldItemView.cs, PlayerAnimator.cs, ToolInHand.cs
+             CameraController.cs <-o BowShooter.cs, FirstPersonHands.cs, HeldItemView.cs, PlayerAnimator.cs, ToolInHand.cs
 */
  
 using UnityEngine;

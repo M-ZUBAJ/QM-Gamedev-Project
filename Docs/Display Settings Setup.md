@@ -7,8 +7,9 @@
   - A **critical hit** (the epic box's **Critical Strike** perk, and Precision): **bigger and orange-red**, with
     **CRITICAL** over the number and a **"!"** after it ("24!"). It pops harder and stays longer, so you can tell at a
     glance.
-  - Every hit counts: punches, tools and swords on trees, rocks, ores, animals and monsters, the **fireball**, and
-    **Thorns** (the damage a monster takes back when it hits you). A hit that does nothing (a turtle in its shell:
+  - Every hit counts: punches, tools and swords on trees, rocks, ores, animals and monsters, the **fireball**, the
+    bow's **arrows** (since 22/11/2026, at the spot they hit; a critical only on a fully drawn shot), and **Thorns**
+    (the damage a monster takes back when it hits you). A hit that does nothing (a turtle in its shell:
     "BLOCKED!", a dodge) shows no number.
 - **Settings > DISPLAY** (the title screen) and the **DISPLAY** tab of the **Esc pause menu**:
   - **SCREEN > Fullscreen:** the game fills the monitor. **Alt + Enter** or **F11** switch it anywhere in the game

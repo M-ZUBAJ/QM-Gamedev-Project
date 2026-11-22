@@ -1,6 +1,6 @@
 /*
 First Date: 29/9/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Drag this script onto the player shape (any shape: Capsule, Cube, Sphere...). A Rigidbody is added automatically.
 Unity Editor: The shape needs a Collider (3D Objects come with one).
@@ -29,7 +29,7 @@ Purpose: Move the player with W A S D (or the arrow keys, both set in KeyBinding
 Requirement: PlayerController.cs x-> KeyBindings.cs, MenuState.cs, Rigidbody (Unity)
              PlayerController.cs o-> PlayerStamina.cs, PlayerJump.cs
              PlayerController.cs <-x NewWorldBuilder.cs, PerkChest.cs, PerkManager.cs, PlayerCharacterBuilder.cs, ResourceNode.cs
-             PlayerController.cs <-o EnemyAggro.cs, FirstPersonHands.cs, InteractOutline.cs, NoKeyNavigation.cs, PerkEffects.cs, PlayerAnimator.cs, PlayerGlide.cs, PlayerHunger.cs, PlayerInfoPage.cs, PlayerJump.cs, PlayerPerks.cs, PlayerStats.cs, TreeFall.cs, WildAnimal.cs, WorldBarrier.cs, WorldGenerator.cs
+             PlayerController.cs <-o ArrowProjectile.cs, BowShooter.cs, EnemyAggro.cs, FirstPersonHands.cs, InteractOutline.cs, NoKeyNavigation.cs, PerkEffects.cs, PlayerAnimator.cs, PlayerGlide.cs, PlayerHunger.cs, PlayerInfoPage.cs, PlayerJump.cs, PlayerPerks.cs, PlayerStats.cs, TreeFall.cs, WildAnimal.cs, WorldBarrier.cs, WorldGenerator.cs
 */
 
 using UnityEngine;
@@ -112,6 +112,7 @@ public class PlayerController : MonoBehaviour
     bool wasGrounded;      // grounded in the step before (for sticking over hill tops)
     bool jumpedSinceGrounded;   // in the air because of a jump (then going up is allowed)
     float lastJumpTime = -10f;
+    bool sprintedLastStep;      // the last physics step moved the player at sprint speed (SprintedLastStep)
 
     // True while the player is pressing a move key (PlayerHunger uses it: walking burns more food).
     public bool IsMoving => moveInput.sqrMagnitude > 0f;
@@ -139,6 +140,12 @@ public class PlayerController : MonoBehaviour
     // is on the ground (no sprinting in the air) and isn't too tired (only if there's a PlayerStamina).
     public bool IsSprinting => sprintHeld && IsMoving && IsGrounded && (!sprintForwardOnly || moveInput.y > 0f)
                                && (stamina == null || stamina.CanSprint);
+
+    // True when the last physics step moved the player at sprint speed on the ground. Read this one, not IsSprinting, in
+    // another script's FixedUpdate: the ground info IsSprinting needs is cleared at the end of this script's FixedUpdate
+    // (the physics step fills it in again), so in a FixedUpdate that runs after this one IsSprinting says false even
+    // while the player runs. PlayerStats counted no running at all because of that, until 22/11/2026.
+    public bool SprintedLastStep => sprintedLastStep;
 
     // ===== Unity messages (Unity calls these) =====
 
@@ -221,8 +228,10 @@ public class PlayerController : MonoBehaviour
         bool sprinting = IsSprinting;
         if (sprinting && stamina != null) stamina.SpendSprint(Time.fixedDeltaTime);   // per second, not per step
 
-        if (grounded && !justJumped) MoveOnGround(wish, sprinting);
+        bool onGround = grounded && !justJumped;
+        if (onGround) MoveOnGround(wish, sprinting);
         else MoveInAir(wish);
+        sprintedLastStep = onGround && sprinting;   // read by PlayerStats (SprintedLastStep)
 
         // Start fresh: the collision messages after this physics step fill these in again.
         wasGrounded = grounded;

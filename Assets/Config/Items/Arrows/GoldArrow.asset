@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a7f3d5fd2bbcd4dab390231f45945a, type: 3}
+  m_Name: GoldArrow
+  m_EditorClassIdentifier: 
+  displayName: Gold Arrow
+  prefab: {fileID: 5990441211543166028, guid: cdedc047cb0564c42aa36375e1a3d0ce, type: 3}
+  pickup: 0
+  icon:
+    mode: 0
+    image: {fileID: 0}
+    aseprite: {fileID: 0}
+    asepriteTag: 
+    frames: []
+    durations: []
+  itemType: 4
+  consumable:
+    health: 0
+    hunger: 0
+    stamina: 0
+  tool:
+    kind: 0
+    tier: 1
+  armor:
+    slot: 2
+    protection: 1.5
+    set: 
+    piece: 
+    hides: []
+    look: {fileID: 0}
+  ammo:
+    damage: 40
+    head: {fileID: 2100000, guid: 5abbd72b5f5d4a54d92e451139c25381, type: 2}
+  minedWith: 0
+  recipe:
+  - item: {fileID: 11400000, guid: 1eaeb84850354654aafd5a3416d88836, type: 2}
+    amount: 4
+  - item: {fileID: 11400000, guid: 1dc3de7e035a23447890aa185f8a557a, type: 2}
+    amount: 1
+  craftAmount: 4
+  craftedAt: 0

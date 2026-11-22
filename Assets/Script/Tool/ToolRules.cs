@@ -1,6 +1,6 @@
 /*
 First Date: 12/11/2026
-Date: 13/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Nothing to set up: a set of rules other scripts ask (it isn't put on an object).
 Unity Editor: Nothing to click. The numbers live in three places:
@@ -14,9 +14,11 @@ Purpose: How tools work, in one place. Marko's PlayerCombat asks it on every att
          - Which rocks a tool can mine: copper and iron need a Stone pickaxe, gold an Iron one, diamond a Gold one
            (the ore's Mined With). Hands, axes and swords only break rock that needs nothing (Stone).
          - The tier bonus: a tool hits 25 % harder per tier at its own job (sword: enemies and animals, axe: trees,
-           pickaxe: rock and ores): Wood = Marko's number, Stone x1.25, Iron x1.56, Gold x1.95, Diamond x2.44.
+           pickaxe: rock and ores, bow: its arrows): Wood = Marko's number, Stone x1.25, Iron x1.56, Gold x1.95,
+           Diamond x2.44.
+         - A bow (IsBow, BowInHand): BowShooter shoots it; Marko's PlayerCombat doesn't hit with it.
 Requirement: ToolRules.cs x-> ToolStats.cs, ItemData.cs, PlayerInventory.cs, ResourceNode.cs, PlayerAnimator.cs, NotificationFeed.cs
-             ToolRules.cs <-x PlayerCombat.cs, PlayerFireball.cs, PunchCombo.cs, TierToolBuilder.cs
+             ToolRules.cs <-x BowShooter.cs, Crosshair.cs, FirstPersonHands.cs, PlayerCombat.cs, PlayerFireball.cs, PunchCombo.cs, TierToolBuilder.cs
 */
 
 using UnityEngine;
@@ -52,6 +54,16 @@ public static class ToolRules
         return tool != null && tool.kind == ToolKind.Sword;
     }
 
+    // True if the slot holds a bow of any tier (BowShooter shoots it; Marko's PlayerCombat doesn't hit with it).
+    public static bool IsBow(PlayerInventory.Slot slot)
+    {
+        ToolStats tool = ToolIn(slot);
+        return tool != null && tool.kind == ToolKind.Bow;
+    }
+
+    // True while the selected hotbar slot holds a bow.
+    public static bool BowInHand => PlayerInventory.Instance != null && IsBow(PlayerInventory.Instance.ActiveItem);
+
     // The animation a click plays: Punch (no tool), Mine (pickaxe) or Attack (sword, axe). Mine and Attack both show
     // Mixamo's BotAxeAttackDownward; they stay two actions so each can have its own clip and hit timing later.
     public static PlayerAction SwingFor(ToolStats tool)
@@ -68,6 +80,7 @@ public static class ToolRules
         {
             case ToolKind.Sword: return "Sword";
             case ToolKind.Axe: return "Axe";
+            case ToolKind.Bow: return "Bow";   // (PlayerCombat doesn't attack with a bow: BowShooter shoots it)
             default: return "PickAxe";
         }
     }

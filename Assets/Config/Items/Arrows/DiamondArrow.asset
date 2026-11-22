@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a7f3d5fd2bbcd4dab390231f45945a, type: 3}
+  m_Name: DiamondArrow
+  m_EditorClassIdentifier: 
+  displayName: Diamond Arrow
+  prefab: {fileID: 3532090640176258347, guid: aa6b0f70620e63c4b860864f679fcbcc, type: 3}
+  pickup: 0
+  icon:
+    mode: 0
+    image: {fileID: 0}
+    aseprite: {fileID: 0}
+    asepriteTag: 
+    frames: []
+    durations: []
+  itemType: 4
+  consumable:
+    health: 0
+    hunger: 0
+    stamina: 0
+  tool:
+    kind: 0
+    tier: 1
+  armor:
+    slot: 2
+    protection: 1.5
+    set: 
+    piece: 
+    hides: []
+    look: {fileID: 0}
+  ammo:
+    damage: 50
+    head: {fileID: 2100000, guid: 2228f9be0e7b44449ab96bd3d027276c, type: 2}
+  minedWith: 0
+  recipe:
+  - item: {fileID: 11400000, guid: 253912b102060714e9a20996e5c09674, type: 2}
+    amount: 4
+  - item: {fileID: 11400000, guid: c483f8b20e5357a418124f1e769fdcb4, type: 2}
+    amount: 1
+  craftAmount: 4
+  craftedAt: 0

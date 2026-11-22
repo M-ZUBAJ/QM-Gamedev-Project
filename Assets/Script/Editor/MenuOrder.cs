@@ -1,6 +1,6 @@
 /*
 First Date: 8/10/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: To reorder the Tools menu, change the numbers below and save. Unity updates the menu after it compiles
@@ -11,7 +11,7 @@ Purpose: The order of every item in our Tools menu, in ONE place.
          - Numbers more than 10 apart = a separator line between them (a new group).
          - A submenu (UI, Building, Items...) sits where its smallest number is.
          Each tool's [MenuItem] uses one of these numbers, e.g. [MenuItem("Tools/UI/Build Inventory UI", false, MenuOrder.BuildInventoryUI)].
-Requirement: MenuOrder.cs <-x ArmorBuilder.cs, BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, ChestSetup.cs, CraftingMenuBuilder.cs, DeathEffectBuilder.cs, DeathScreenBuilder.cs, DesertBuilder.cs, EnemyBuilder.cs, FirstPersonHandsBuilder.cs, GameEndUIBuilder.cs, GearPageBuilder.cs, GrasslandTreeBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, LootChestBuilder.cs, NewWorldBuilder.cs, NightMonsterBuilder.cs, NotificationUIBuilder.cs, PauseMenuBuilder.cs, PerkPanelBuilder.cs, PerkRollBuilder.cs, PlayerAnimationSetup.cs, PlayerCharacterBuilder.cs, PunchEffectBuilder.cs, RockBreakBuilder.cs, RockBuilder.cs, RockCaveBuilder.cs, ScriptMapTool.cs, SkyLightingSetup.cs, SnowBuilder.cs, TierToolBuilder.cs, TitleSceneBuilder.cs, TreeFallBuilder.cs, WildAnimalBuilder.cs, WorldBarrierBuilder.cs, WorldSpawnSetup.cs
+Requirement: MenuOrder.cs <-x ArmorBuilder.cs, BowBuilder.cs, BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, ChestSetup.cs, CraftingMenuBuilder.cs, DeathEffectBuilder.cs, DeathScreenBuilder.cs, DesertBuilder.cs, EnemyBuilder.cs, FirstPersonHandsBuilder.cs, GameEndUIBuilder.cs, GearPageBuilder.cs, GrasslandTreeBuilder.cs, HUDBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, LootChestBuilder.cs, NewWorldBuilder.cs, NightMonsterBuilder.cs, NotificationUIBuilder.cs, PauseMenuBuilder.cs, PerkPanelBuilder.cs, PerkRollBuilder.cs, PlayerAnimationSetup.cs, PlayerCharacterBuilder.cs, PunchEffectBuilder.cs, RockBreakBuilder.cs, RockBuilder.cs, RockCaveBuilder.cs, ScriptMapTool.cs, SkyLightingSetup.cs, SnowBuilder.cs, TierToolBuilder.cs, TitleSceneBuilder.cs, TreeFallBuilder.cs, WildAnimalBuilder.cs, WorldBarrierBuilder.cs, WorldSpawnSetup.cs
 */
 
 public static class MenuOrder
@@ -37,7 +37,7 @@ public static class MenuOrder
     public const int BuildPerkRollPopup = 163;  // the new chest system's slot-machine pop-up (PerkRollUI: BUY / REROLL)
     // --- line ---
     // Game end (victory screen, death page), pause menu
-    public const int BuildGameEndUI = 180;
+    public const int BuildGameEndUI = 180;      // the victory page: a trophy, coins left / earned / spent, all stats like the Info tab (MINIMISE), MAIN MENU
     public const int UpgradeDeathScreen = 181;  // the GAME OVER page: days survived, SHOW ALL STATS (like the Info tab), MAIN MENU
     public const int BuildPauseMenu = 182;      // the Esc pause menu: key bindings, mouse sensitivity / invert, resume, main menu
     // --- line ---
@@ -84,6 +84,7 @@ public static class MenuOrder
     public const int RebuildToolModels = 302;   // only the 15 tool prefabs again (handle length, materials); Item Data untouched
     public const int UpdateToolRecipes = 303;   // only the tools' recipes again (the crafting chain Wooden > Stone > Iron)
     public const int BuildPlateArmor = 304;     // Blink's plate armor as 6 items to craft and wear (+ the Gear page)
+    public const int BuildBowAndArrows = 305;   // GameLair's bow as the Wooden Bow, 5 tiers of arrows, the flying arrow, the draw ring
     // --- line ---
     public const int ConvertTaggedObjectsToItems = 320;   // one-time move from tags, rarely needed
 

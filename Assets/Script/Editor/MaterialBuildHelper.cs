@@ -12,7 +12,7 @@ Purpose: Many free packs ship materials made for URP (the Universal Render Pipel
          withMaps (the loot boxes) also copies the glow (emission map and color), the metal / shine map and the
          ambient occlusion map, so glowing edges keep glowing.
 Requirement: MaterialBuildHelper.cs x-> UIBuildHelper.cs
-             MaterialBuildHelper.cs <-x LootChestBuilder.cs, TierToolBuilder.cs, WildAnimalBuilder.cs
+             MaterialBuildHelper.cs <-x BowBuilder.cs, LootChestBuilder.cs, TierToolBuilder.cs, WildAnimalBuilder.cs
 */
 
 using UnityEditor;

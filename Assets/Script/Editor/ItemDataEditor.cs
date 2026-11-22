@@ -1,6 +1,6 @@
 /*
 First Date: 11/10/2026
-Date: 20/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Nothing to click. Every Item Data file's Inspector is drawn by it.
@@ -9,6 +9,7 @@ Purpose: Shows Item Data's fields as usual, but each type's own section only for
          - Consumable section (Health / Hunger / Stamina): Item Type = Consumable;
          - Tool section (Kind / Tier): Item Type = Tool;
          - Armor section (Slot / Protection / Set / Piece / Hides): Item Type = Armor;
+         - Ammo section (Damage / Head): Item Type = Ammo (an arrow);
          - Mined With (which pickaxe a rock dropping it needs): Item Type = Material.
 Requirement: ItemDataEditor.cs x-> ItemData.cs
 */
@@ -26,6 +27,7 @@ public class ItemDataEditor : Editor
     const string ConsumableField = "consumable";
     const string ToolField = "tool";
     const string ArmorField = "armor";
+    const string AmmoField = "ammo";
     const string MinedWithField = "minedWith";
 
     // ===== Unity messages (Unity calls these) =====
@@ -40,6 +42,7 @@ public class ItemDataEditor : Editor
                               || type.enumValueIndex == (int)ItemType.Consumable;
         bool showTool = type == null || type.hasMultipleDifferentValues || type.enumValueIndex == (int)ItemType.Tool;
         bool showArmor = type == null || type.hasMultipleDifferentValues || type.enumValueIndex == (int)ItemType.Armor;
+        bool showAmmo = type == null || type.hasMultipleDifferentValues || type.enumValueIndex == (int)ItemType.Ammo;
         bool showMining = type == null || type.hasMultipleDifferentValues || type.enumValueIndex == (int)ItemType.Material;
 
         // Walk through every field in order, the same way Unity's normal Inspector does.
@@ -62,6 +65,11 @@ public class ItemDataEditor : Editor
             if (field.name == ArmorField)
             {
                 if (!showArmor) continue;        // not armor: hide Slot / Protection / Set / Piece / Hides
+                field.isExpanded = true;
+            }
+            if (field.name == AmmoField)
+            {
+                if (!showAmmo) continue;         // not an arrow: hide Damage / Head
                 field.isExpanded = true;
             }
             if (field.name == MinedWithField && !showMining) continue;   // only materials come out of rocks

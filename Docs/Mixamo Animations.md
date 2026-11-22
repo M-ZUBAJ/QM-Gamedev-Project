@@ -1,4 +1,4 @@
-# Mixamo Animations (punch combo, flinch, tool swing)
+# Mixamo Animations (punch combo, flinch, tool swing, bow)
 
 **What the player sees** with nothing in the hand (or wood, food, anything that isn't a tool):
 - **Left click:** a **left jab**. Left click again: a **right jab**, then left, right...
@@ -17,6 +17,21 @@
 - **Left click:** every tool (sword, axe, pickaxe) swings with Mixamo's **Axe Attack Downward**, a chop from above.
 - **Selecting a tool** shows it in the fist at once, with no animation. The Unarmed Equip clips were tried and dropped
   on 13/11/2026; Set Up Player Animations removes their states.
+
+**With a bow in the hand** (22/11/2026, `Docs/Bow Setup.md`): holding left click plays Mixamo's **Shooting Arrow**
+(`BotShootingArrow.fbx`, 5 s: reach to the quiver, nock, draw, aim, shoot, lower), cut into clips:
+- **BowDraw:** from the arrow nocked at the hip to full draw, made to last BowShooter's Draw Seconds (1 s);
+- **BowAim:** one frame of full draw, held as long as the button is (only when there's no Aim Idle file);
+- **BowRelease:** the shot and the arms coming down (1.5x speed);
+- **BowReady** / **BowReadyDraw** (first-person hands only): the bow up in front, ready, while it's only held (so it
+  shows), and the draw from there (no dip to the hip).
+
+Two more Mixamo files make the hold better (optional): **Standing Aim Idle 01** (`BotStandingAimIdle01.fbx`, a 3.8 s
+loop of holding the drawn bow, breathing) is the hold instead of the frozen frame, and the draw ends where its hands
+are, so it flows straight in; **Standing Aim Overdraw** (`BotStandingAimOverdraw.fbx`: the string pulled 12 cm further
+back over 3.8 s) follows after holding 2.5 s. Both are full-draw poses (the string at the cheek), which is why they're
+the hold, not the pose for just carrying the bow. Letting go early jumps straight to BowRelease; switching the slot or
+opening a menu lowers the bow (BowCancel).
 
 All the animations come from **Mixamo** (free, mixamo.com). They play on Blink's character because both are Humanoid.
 
@@ -50,6 +65,10 @@ All the animations come from **Mixamo** (free, mixamo.com). They play on Blink's
 One file can play several actions (AxeAttack plays both Attack and Mine). A file made for one tool comes earlier in
 the tool's table, so adding e.g. a mining file later gives the pickaxe its own swing and leaves the others as they are.
 
+Only files from Mixamo are used: Mixamo calls the animation in every file it gives you "mixamo.com", and the tool
+checks for that. Other packs' animation files with the same words in their names (Blink's `GetHit` and `MiningLoop`,
+which are in `Assets/Imported3D` too) are never changed.
+
 ## 2. One click
 
 1. Open `Assets/Scenes/GameScene.unity`.
@@ -60,7 +79,14 @@ the tool's table, so adding e.g. a mining file later gives the pickaxe its own s
    - puts the clip into the body's controller (`PlayerCharacter`, Actions layer) and the first-person hands'
      (`FirstPersonHands`). New actions get their state, trigger and arrows.
    - gives every action in both controllers the same timing, so your shadow punches together with the hands;
-   - cuts the first-person arms at the elbow and draws them from both sides (no open shoulder, no holes).
+   - cuts the first-person arms at the elbow and draws them from both sides (no open shoulder, no holes);
+   - the bow file (a name with **ShootingArrow**): plays it on a hidden copy of the character to find where to cut
+     (the aim: bow hand up at the head, string hand at the face; full draw: as far apart as the Aim Idle file's hands,
+     else the hands furthest apart; the shot: the end of the aim; the start: the bow hand lowest before it; ready: the
+     bow hand 60 % of the way up), cuts BowDraw / BowAim / BowRelease / BowReady / BowReadyDraw, and gives both
+     controllers the bow states and the BowDraw / BowRelease / BowCancel triggers (the hands also BowIdle and BowHeld).
+     It measures on every run and only cuts the file again when the result changes (e.g. after adding the Aim Idle
+     file); the Aim Idle file is set to loop, the Overdraw file to play once.
 3. On the Player it also:
    - adds **PunchCombo**, and takes off components whose script was deleted (e.g. the old ToolEquip);
    - measures when each fist lands from the clips, and writes it into **PunchEffect** (Impact / Left Jab / Left Hook /
@@ -123,3 +149,4 @@ On **PunchEffect**:
 | Right click doesn't punch | While food is in the hand, right click eats it. Something levitating also keeps right click for itself. |
 | The burst comes before / after the fist | Change that punch's delay on PunchEffect, or run the tool again to measure it. |
 | The shadow punches late | Run **Tools > Player > Set Up Player Animations** again. |
+| A pickaxe swing or the flinch shows a T-pose | Before 22/11/2026 the tool also took Blink's `GetHit` and `MiningLoop` for Mixamo files and cut them down to their one-frame T-pose (it happened the first time Build Bow And Arrows ran). Put the two files' import settings back (in GitHub Desktop: discard the changes to `GetHit.fbx.meta` and `MiningLoop.fbx.meta`), then run the tool again: it only uses Mixamo files now. |

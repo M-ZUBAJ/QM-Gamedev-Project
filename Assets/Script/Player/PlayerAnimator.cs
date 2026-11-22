@@ -1,6 +1,6 @@
 /*
 First Date: 10/11/2026
-Date: 13/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: The character model under the Player. Tools > Player > Add Character Model puts it there, already set up.
         By hand: put a Humanoid character on the Player as a child, give its Animator the PlayerCharacter controller
@@ -18,10 +18,13 @@ Purpose: Makes the player's character move like the player: it stands, runs (for
          Any script can play one with one line, e.g. PlayerAnimator.Play(PlayerAction.Attack);
          Play() also fires ActionPlayed, so the first-person hands (FirstPersonHands) play the same action, at the same
          speed (ActionSpeed, used by both controllers), so in first person the hands and the body's shadow move together.
+         The bow (BowShooter) plays three: BowDraw (draw, then hold at full draw: the BowAim state), BowRelease (shoot)
+         and BowCancel (lower it without shooting); each takes back the other two's waiting triggers (TakesBack), so an
+         old one can't play later. No flinch while the bow is drawn (it would drop the pose).
 Requirement: PlayerAnimator.cs x-> Animator (Unity)
-             PlayerAnimator.cs o-> PlayerController.cs, PlayerJump.cs, PlayerHealth.cs, CameraController.cs, Rigidbody (Unity)
+             PlayerAnimator.cs o-> PlayerController.cs, PlayerJump.cs, PlayerHealth.cs, CameraController.cs, BowShooter.cs, Rigidbody (Unity)
              PlayerAnimator.cs <-x FirstPersonHandsBuilder.cs, PlayerAnimationSetup.cs, PlayerCharacterBuilder.cs, PlayerCombat.cs, PunchCombo.cs, PunchEffect.cs, PunchEffectBuilder.cs, TierToolBuilder.cs, ToolRules.cs
-             PlayerAnimator.cs <-o FirstPersonHands.cs, GearPreview.cs
+             PlayerAnimator.cs <-o BowShooter.cs, FirstPersonHands.cs, GearPreview.cs
 */
 
 using System.Collections.Generic;
@@ -32,7 +35,9 @@ using UnityEngine.Rendering;   // ShadowCastingMode
 // Controller (Tools > Player > Add Character Model makes one per name and picks its animation).
 // Punch = the right jab. PunchLeft, HeavyHook (left) and HeavyPunch (right) are PunchCombo's (Mixamo clips).
 // Attack (sword, axe) and Mine (pickaxe) both play Mixamo's BotAxeAttackDownward.
-public enum PlayerAction { Hit, Punch, Attack, Mine, Gather, Cast, PunchLeft, HeavyHook, HeavyPunch }
+// BowDraw, BowRelease and BowCancel are the bow's (BowShooter; Mixamo's BotShootingArrow cut in three by Tools > Player >
+// Set Up Player Animations). New actions go at the end (the controllers' triggers are found by name).
+public enum PlayerAction { Hit, Punch, Attack, Mine, Gather, Cast, PunchLeft, HeavyHook, HeavyPunch, BowDraw, BowRelease, BowCancel }
 
 [RequireComponent(typeof(Animator))]
 [DisallowMultipleComponent]
@@ -61,6 +66,20 @@ public class PlayerAnimator : MonoBehaviour
     // feel snappy. After changing these, run Tools > Player > Set Up Player Animations (it updates both controllers).
     public const float ActionSpeed = 2f;
     public const float ActionBlendSeconds = 0.05f;   // how quickly an action takes over from what was playing
+
+    // The bow's states (Set Up Player Animations makes them in both controllers): BowDraw takes over in BowDrawBlendSeconds
+    // (from walking arms to the arrow nocked at the hip), then holds in BowAim (a Mixamo "Aim Idle" file: breathing while
+    // it aims; without one, one frame of full draw) until BowRelease, which plays at BowReleaseSpeed so the arms come down
+    // quickly after the shot. Held longer than BowOverdrawAfter seconds, BowAim goes on to BowOverdraw (a Mixamo
+    // "Overdraw" file: the string pulled further back), if that file is there. The first-person hands also have BowIdle:
+    // the bow held up in front, ready, while it's only held (their bool BowHeldName; FirstPersonHands sets it).
+    public const string BowAimStateName = "BowAim";
+    public const string BowOverdrawStateName = "BowOverdraw";
+    public const string BowIdleStateName = "BowIdle";
+    public const string BowHeldName = "BowHeld";
+    public const float BowDrawBlendSeconds = 0.12f;
+    public const float BowReleaseSpeed = 1.5f;
+    public const float BowOverdrawAfter = 2.5f;
 
     // ===== Fields =====
     [Header("Turning")]
@@ -214,7 +233,8 @@ public class PlayerAnimator : MonoBehaviour
         // Hurt: health dropped by enough since the last frame (e.g. an enemy's hit).
         if (health != null)
         {
-            if (flinchWhenHurt && !dead && lastHealth - health.Health >= flinchMinDamage) PlayAction(PlayerAction.Hit);
+            if (flinchWhenHurt && !dead && lastHealth - health.Health >= flinchMinDamage && !BowShooter.Drawing)   // a flinch would drop the bow's pose
+                PlayAction(PlayerAction.Hit);
             lastHealth = health.Health;
         }
 
@@ -249,10 +269,38 @@ public class PlayerAnimator : MonoBehaviour
         return ActionSpeed;
     }
 
+    // The bow's actions take each other's waiting triggers back: a release or cancel left over from the last shot (it
+    // came while no bow state was playing, e.g. after a flinch) mustn't fire the moment the bow is drawn again, and a
+    // draw that hasn't started mustn't start after the release. Other actions take nothing back.
+    static readonly PlayerAction[] AfterDraw = { PlayerAction.BowRelease, PlayerAction.BowCancel };
+    static readonly PlayerAction[] AfterRelease = { PlayerAction.BowDraw, PlayerAction.BowCancel };
+    static readonly PlayerAction[] AfterCancel = { PlayerAction.BowDraw, PlayerAction.BowRelease };
+    public static PlayerAction[] TakesBack(PlayerAction action)
+    {
+        switch (action)
+        {
+            case PlayerAction.BowDraw: return AfterDraw;
+            case PlayerAction.BowRelease: return AfterRelease;
+            case PlayerAction.BowCancel: return AfterCancel;
+            default: return System.Array.Empty<PlayerAction>();
+        }
+    }
+
+    // True for the bow's actions (their states have their own speeds: Set Up Player Animations leaves them alone when it
+    // gives every other action the shared timing).
+    public static bool IsBowAction(PlayerAction action)
+    {
+        return action == PlayerAction.BowDraw || action == PlayerAction.BowRelease || action == PlayerAction.BowCancel;
+    }
+
     // The same, for this character.
     public void PlayAction(PlayerAction action)
     {
         if (health != null && health.IsDead) return;   // no attacking while lying dead
+        foreach (PlayerAction old in TakesBack(action))
+        {
+            if (parameters.Contains(Actions[(int)old])) animator.ResetTrigger(Actions[(int)old]);
+        }
         SetTrigger(Actions[(int)action]);
     }
 

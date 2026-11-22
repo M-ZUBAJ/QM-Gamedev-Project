@@ -13,7 +13,7 @@ Purpose: Holds the player's stamina. Sprinting (PlayerController) and jumping (P
          sprinting cheaper (SetSprintCost: the Sprinter perk). The Night Power perk raises max stamina at night
          (SetMaxBoost); stamina keeps its share of the bar.
 Requirement: PlayerStamina.cs <-x PerkChest.cs, PerkManager.cs, PlayerCombat.cs
-             PlayerStamina.cs <-o ItemConsumer.cs, PerkEffects.cs, PlayerController.cs, PlayerInfoPage.cs, PlayerJump.cs, PlayerPerks.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
+             PlayerStamina.cs <-o BowShooter.cs, ItemConsumer.cs, PerkEffects.cs, PlayerController.cs, PlayerInfoPage.cs, PlayerJump.cs, PlayerPerks.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
 */
 
 using UnityEngine;

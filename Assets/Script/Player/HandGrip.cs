@@ -1,9 +1,9 @@
 /*
 First Date: 19/11/2026
-Date: 19/11/2026
+Date: 22/11/2026
 Author: Tony
-Use by: Nothing to set up (code only, no component). ToolInHand (tools) and HeldItemView (every other item) ask it
-        where a character's right fist holds things.
+Use by: Nothing to set up (code only, no component). ToolInHand (tools, and a bow in the left fist) and HeldItemView
+        (every other item) ask it where a character's fist holds things.
 Purpose: Works out where a Humanoid character's right fist holds something, from the hand's own bones (the wrist, the
          knuckles, the index and little fingers), so a held tool or item fits any Humanoid character:
            Center    = inside the closed fist
@@ -12,6 +12,9 @@ Purpose: Works out where a Humanoid character's right fist holds something, from
                        and its z out of the palm
          All three are in the hand bone's own space. The knuckles don't move in that space whatever the pose (only the
          fingers turn), so measuring once is enough.
+         The left fist (Measure with left = true, for a bow) works the same; its Rotation still turns y to the thumb
+         side and x along the fingers (a bow shoots the way the fingers point), which puts z out of the BACK of the
+         left hand (it's the right hand's mirror image).
 Requirement: HandGrip.cs <-x HeldItemView.cs, ToolInHand.cs
 */
 
@@ -38,14 +41,20 @@ public struct HandGrip
         return true;
     }
 
-    // The fist's directions in the hand's own space, from where the knuckles and fingers are.
+    // The right fist's directions in the hand's own space, from where the knuckles and fingers are.
     public static HandGrip Measure(Animator animator, Transform hand)
     {
-        Transform middle = animator.GetBoneTransform(HumanBodyBones.RightMiddleProximal);
-        Transform index = animator.GetBoneTransform(HumanBodyBones.RightIndexProximal);
-        Transform little = animator.GetBoneTransform(HumanBodyBones.RightLittleProximal);
-        Transform thumb = animator.GetBoneTransform(HumanBodyBones.RightThumbProximal);
-        Transform elbow = animator.GetBoneTransform(HumanBodyBones.RightLowerArm);
+        return Measure(animator, hand, false);
+    }
+
+    // The same for either fist: left = true reads the left hand's fingers ("hand" = that hand's bone).
+    public static HandGrip Measure(Animator animator, Transform hand, bool left)
+    {
+        Transform middle = animator.GetBoneTransform(left ? HumanBodyBones.LeftMiddleProximal : HumanBodyBones.RightMiddleProximal);
+        Transform index = animator.GetBoneTransform(left ? HumanBodyBones.LeftIndexProximal : HumanBodyBones.RightIndexProximal);
+        Transform little = animator.GetBoneTransform(left ? HumanBodyBones.LeftLittleProximal : HumanBodyBones.RightLittleProximal);
+        Transform thumb = animator.GetBoneTransform(left ? HumanBodyBones.LeftThumbProximal : HumanBodyBones.RightThumbProximal);
+        Transform elbow = animator.GetBoneTransform(left ? HumanBodyBones.LeftLowerArm : HumanBodyBones.RightLowerArm);
         float defaultLength = 0.09f / Mathf.Max(0.0001f, hand.lossyScale.x);   // about a hand, if there are no finger bones
 
         // Fingers: from the wrist to the knuckles (no finger bones: straight on from the forearm).
@@ -62,11 +71,12 @@ public struct HandGrip
         Vector3 thumbSide = Vector3.ProjectOnPlane(side, fingers).normalized;
         if (thumbSide.sqrMagnitude < 0.5f) thumbSide = Vector3.Cross(fingers, Vector3.up).normalized;   // an odd rig
         Vector3 palm = Vector3.Cross(fingers, thumbSide);   // the side the fingers close toward (right hand)
+        Vector3 inward = left ? -palm : palm;               // the same for either hand (the left one is a mirror image)
 
         return new HandGrip
         {
             hand = hand,
-            center = fingers * (length * 0.55f) + palm * (length * 0.3f),   // inside the closed fist
+            center = fingers * (length * 0.55f) + inward * (length * 0.3f),   // inside the closed fist
             thumbSide = thumbSide,
             rotation = Quaternion.LookRotation(palm, thumbSide),            // z -> palm, y (handle) -> thumb side, x -> fingers
         };

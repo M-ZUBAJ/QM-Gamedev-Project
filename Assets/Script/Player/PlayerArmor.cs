@@ -1,6 +1,6 @@
 /*
 First Date: 20/11/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: The Player (next to PlayerInventory and PlayerHealth). Tools > Items > Build Plate Armor puts it there. If the
         Player has none (e.g. GameScene wasn't saved after that tool), one is added to it the first time it's needed.
@@ -36,6 +36,9 @@ Purpose: The armor the player wears: one piece per slot (Helmet, Shoulders, Ches
          today's when the game starts (UpdateOldBonuses).
          Changed tells everyone when the armor changes: ArmorLook shows the pieces on the character (the body, the
          first-person hands and the Gear page's preview) and the Gear page updates its slots.
+         BetterOwned finds a piece the player has (worn or in the inventory) that protects more than a given one in the
+         same slot: the crafting list marks weaker pieces with it (CraftingRow), so nobody crafts a Copper Helmet while
+         wearing an Iron one by mistake.
          When the player dies, ItemDropper takes the armor off with the items (GameRules Keep Inventory off).
 Requirement: PlayerArmor.cs x-> PlayerInventory.cs, ItemData.cs, ArmorStats.cs
              PlayerArmor.cs <-x ArmorBuilder.cs, ArmorLook.cs, ArmorPicker.cs, ArmorSlotUI.cs, CraftingMenu.cs, CraftingSetPanels.cs, GearPage.cs, LootChestBuilder.cs
@@ -465,6 +468,34 @@ public class PlayerArmor : MonoBehaviour
         }
         if (pieces.Count > 0) Announce();
         return pieces;
+    }
+
+    // A piece the player has for the same slot as "piece" that protects more (a bigger Protection): the one worn there,
+    // or one in the inventory (the best of them; the worn one wins a tie). isWorn = it's the worn one. Null = none, or
+    // "piece" isn't armor. The crafting list marks a weaker piece's row with it (CraftingRow): e.g. a Copper Helmet's
+    // row says "(wearing Iron Helmet)".
+    public ItemData BetterOwned(ItemData piece, out bool isWorn)
+    {
+        isWorn = false;
+        if (piece == null || !piece.IsArmor) return null;
+
+        ArmorSlot slot = piece.Armor.slot;
+        float beat = piece.Armor.protection + 0.001f;   // must protect more than this (0.001: rounding)
+        ItemData best = null;
+        ItemData wornThere = WornIn(slot);
+        if (wornThere != null && wornThere.IsArmor && wornThere.Armor.protection > beat)
+        {
+            best = wornThere;
+            isWorn = true;
+        }
+        foreach ((ItemData item, int count) entry in InInventory(slot))
+        {
+            float needed = best != null ? best.Armor.protection + 0.001f : beat;
+            if (entry.count <= 0 || entry.item.Armor.protection <= needed) continue;
+            best = entry.item;
+            isWorn = false;
+        }
+        return best;
     }
 
     // The armor in the inventory (and hotbar) that fits a slot: each kind once, with how many there are.

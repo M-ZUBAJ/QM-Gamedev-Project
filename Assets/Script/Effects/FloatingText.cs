@@ -1,13 +1,14 @@
 /*
 First Date: 21/11/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Nothing to put on an object: FloatingText.Show(...) makes one by itself (e.g. the turtle's "BLOCKED!" and the
         damage numbers, DamageNumbers).
 Unity Editor: Nothing to set. Testing: punch a turtle while it's in its shell (ShellDefense > ⋮ > Test: Hide In Shell).
 Purpose: A short word in the world that pops up, rises and fades away, always facing the camera and drawn over
          everything (a TextMeshPro text, overlay), e.g. "BLOCKED!" over a turtle whose shell a hit bounced off. It
-         removes itself when it has faded.
+         removes itself when it has faded. It runs on real time, so one shown just before the game freezes (the
+         victory page, the pause menu) still fades away instead of hanging in the middle of the screen.
 Requirement: FloatingText.cs x-> TextMeshPro (Unity)
              FloatingText.cs <-x DamageNumbers.cs
              FloatingText.cs <-o ShellDefense.cs
@@ -36,7 +37,7 @@ public class FloatingText : MonoBehaviour
     // LateUpdate: after the camera has moved this frame, so it faces the camera exactly.
     void LateUpdate()
     {
-        age += Time.deltaTime;
+        age += Time.unscaledDeltaTime;   // real time: it still fades while the game is frozen (Time Scale 0)
         float k = seconds > 0f ? age / seconds : 1f;
         if (k >= 1f || text == null)
         {

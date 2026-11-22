@@ -1,6 +1,6 @@
 /*
 First Date: 7/10/2026
-Date: 20/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: This is an ASSET (a config file in the Project window, kept in Assets/Config/Items), not a script you put on an object.
 Unity Editor: Easiest: select an item object (in the scene or a prefab) > menu Tools > Items > Make Item From Selection.
@@ -8,8 +8,10 @@ Unity Editor: Easiest: select an item object (in the scene or a prefab) > menu T
               drag the item's prefab into Prefab, choose Pickup. Then put ItemPickup on the prefab and drag this file into its "Data".
               Icon: choose ONE: Capture (a photo of the prefab), Static (a PNG sprite) or Animated (an .aseprite file).
               Item Type: Material (Wood, Stone: can't be eaten), Consumable (food / drink: right click to eat) or Tool
-              (a pickaxe, axe or sword: held in the hand, left click swings it) or Armor (worn from the inventory's
-              Gear tab; its Armor section, see ArmorStats.cs, says where it's worn and how much it protects).
+              (a pickaxe, axe or sword: held in the hand, left click swings it; a bow: hold left click, let go to shoot)
+              or Armor (worn from the inventory's Gear tab; its Armor section, see ArmorStats.cs, says where it's worn
+              and how much it protects) or Ammo (an arrow: a bow shoots it; its Ammo section, see AmmoStats.cs, says how
+              hard it hits).
               Choosing Consumable shows its Health / Hunger / Stamina fields (see Consumable.cs), Tool shows its Kind
               and Tier (see ToolStats.cs), Material shows Mined With (which pickaxe a rock dropping it needs).
               Both types can be used in crafting and building recipes.
@@ -24,8 +26,8 @@ Purpose: One kind of item (a material like Wood or Stone, or food like an Apple)
          so is armor whose recipe uses up a piece for the same slot (an Iron Helmet of a Copper Helmet).
          Armor is worn, one piece per slot (PlayerArmor), from the inventory's Gear tab.
 Requirement: ItemData.cs <-> Recipe.cs
-             ItemData.cs x-> Consumable.cs, ToolStats.cs, ArmorStats.cs, IconCapture.cs, IconSource.cs, PlayerInventory.cs
-             ItemData.cs <-x ArmorBuilder.cs, ArmorLook.cs, ArmorPicker.cs, ArmorSlotUI.cs, ArmorTestKit.cs, AutoCollector.cs, CraftingMenu.cs, CraftingMenuBuilder.cs, CraftingRow.cs, CraftingSetPanels.cs, CraftingTabs.cs, Crosshair.cs, DesertBuilder.cs, HeldItemView.cs, ItemConsumer.cs, ItemDataEditor.cs, ItemIconRules.cs, ItemPickup.cs, ItemTools.cs, PlayerArmor.cs, PlayerInventory.cs, PlayerStats.cs, ResourceNode.cs, SnowBuilder.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs
+             ItemData.cs x-> Consumable.cs, ToolStats.cs, ArmorStats.cs, AmmoStats.cs, IconCapture.cs, IconSource.cs, PlayerInventory.cs
+             ItemData.cs <-x ArmorBuilder.cs, ArmorLook.cs, ArmorPicker.cs, ArmorSlotUI.cs, ArmorTestKit.cs, ArrowProjectile.cs, AutoCollector.cs, BowBuilder.cs, BowHUD.cs, BowShooter.cs, CraftingMenu.cs, CraftingMenuBuilder.cs, CraftingRow.cs, CraftingSetPanels.cs, CraftingTabs.cs, Crosshair.cs, DesertBuilder.cs, HeldItemView.cs, ItemConsumer.cs, ItemDataEditor.cs, ItemIconRules.cs, ItemPickup.cs, ItemTools.cs, PlayerArmor.cs, PlayerInventory.cs, PlayerStats.cs, ResourceNode.cs, SnowBuilder.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs
 */
 
 using System.Collections.Generic;
@@ -46,6 +48,7 @@ public enum ItemType
     Consumable,   // food / drink: right click to eat, changes the player's stats (Apple, Bread)
     Tool,         // a pickaxe, axe or sword: held in the hand, left click swings it (see its Tool section)
     Armor,        // worn on the body (helmet, chestplate...): put on from the inventory's Gear tab (see its Armor section)
+    Ammo,         // an arrow: a bow in the hand shoots it (see its Ammo section); the strongest one carried goes first
 }
 
 // Where an item is made. New places (an anvil, a cooking pot...) get a new line here, and then show in the dropdown.
@@ -74,7 +77,8 @@ public class ItemData : ScriptableObject
     [SerializeField] IconSource icon = new IconSource();
 
     [Tooltip("Material = used to make things, can't be eaten. Consumable = food / drink, right click to eat. " +
-             "Tool = held and swung. Armor = worn (the Gear tab). Every type can be used in recipes.")]
+             "Tool = held and swung (a bow shoots). Armor = worn (the Gear tab). Ammo = an arrow (a bow shoots it). " +
+             "Every type can be used in recipes.")]
     [SerializeField] ItemType itemType = ItemType.Material;
 
     // Only shown when Item Type = Consumable (Editor/ItemDataEditor.cs hides it otherwise).
@@ -91,6 +95,11 @@ public class ItemData : ScriptableObject
     [Header("Armor (helmet, chestplate...)")]
     [Tooltip("Where it's worn, how much it protects, and which part of the character it shows (see ArmorStats.cs).")]
     [SerializeField] ArmorStats armor = new ArmorStats();
+
+    // Only shown when Item Type = Ammo (Editor/ItemDataEditor.cs hides it otherwise).
+    [Header("Ammo (arrows)")]
+    [Tooltip("How hard it hits and how its head looks (see AmmoStats.cs). A bow in the hand shoots it.")]
+    [SerializeField] AmmoStats ammo = new AmmoStats();
 
     // Only shown when Item Type = Material.
     [Header("Mining")]
@@ -124,6 +133,8 @@ public class ItemData : ScriptableObject
     public ToolStats Tool => tool;               // its kind and tier (only means something when IsTool)
     public bool IsArmor => itemType == ItemType.Armor && armor != null;   // worn on the body (PlayerArmor, the Gear tab)
     public ArmorStats Armor => armor;            // its slot, defense and look (only means something when IsArmor)
+    public bool IsAmmo => itemType == ItemType.Ammo && ammo != null;   // an arrow: a bow shoots it (BowShooter)
+    public AmmoStats Ammo => ammo;               // its damage and head look (only means something when IsAmmo)
     public ToolTier MinedWith => minedWith;      // the weakest pickaxe for a rock that drops it (None = anything)
     public IReadOnlyList<Ingredient> Recipe => recipe;
     public int CraftAmount => craftAmount;
@@ -153,6 +164,7 @@ public class ItemData : ScriptableObject
         if (consumable == null) consumable = new Consumable();
         if (tool == null) tool = new ToolStats();
         if (armor == null) armor = new ArmorStats();
+        if (ammo == null) ammo = new AmmoStats();
         icon.EditorRefresh(this);
 #endif
     }

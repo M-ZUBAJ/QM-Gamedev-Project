@@ -1,6 +1,6 @@
 /*
 First Date: 21/11/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Menu Tools > World > Build Loot Chests. It asks first, saves your open scenes, changes both game scenes and
@@ -11,8 +11,8 @@ Purpose: Four kinds of loot box and both chest systems (GameRules > New Chests, 
                common: Second Wind, Precision (needs Critical Strike), Spring Legs (needs Glide)
                rare:   Bounty Hunter, Gourmet, Lumberjack, Prospector, Sprinter, Brawler, Attack Speed, Long Reach
                        (needs Keen Eye)
-               epic:   Last Stand, Critical Strike, Glide, Reroll, Keen Eye (each one at a time), Vampire, Thorns,
-                       Night Power (also the legendary box's)
+               epic:   Last Stand, Critical Strike, Glide, Reroll, Keen Eye, Arrow Recovery (each one at a time),
+                       Vampire, Thorns, Night Power (also the legendary box's)
            - the common box = Marko's Chest prefab: Tony's ChestTier (2 coins, +1 for every perk bought, gold) and the 3
              new common perks added to its list (his 4 stay);
            - Assets/Prefabs/WorldItems/Rare Chest.prefab (DuNguyn's blue loot box, 10 coins, x1.5), Epic Chest.prefab
@@ -134,6 +134,9 @@ public static class LootChestBuilder
                        kind = ChestPerkType.Reroll, value = 0f, maxPicks = 1, icon = IconArt.PerkReroll },
         new PerkSpec { file = "Perk_KeenEye", name = "Keen Eye", description = "Your crosshair turns yellow when your attack will reach what you aim at. Boxes then offer Long Reach.",
                        kind = ChestPerkType.KeenEye, value = 0f, maxPicks = 1, icon = IconArt.PerkKeenEye },
+        new PerkSpec { file = "Perk_ArrowRecovery", name = "Arrow Recovery",
+                       description = "Your arrows stay in monsters and animals: walk up close to take them back. A dead one drops them, and missed arrows stay on the ground for you to pick up.",
+                       kind = ChestPerkType.ArrowRecovery, value = 0f, maxPicks = 1, icon = IconArt.PerkArrowRecovery },
         new PerkSpec { file = "Perk_Vampire", name = "Vampire", description = "Heal 5% of the damage you do to monsters and animals.",
                        kind = ChestPerkType.Vampire, value = 0.05f, icon = IconArt.PerkVampire },
         new PerkSpec { file = "Perk_Thorns", name = "Thorns", description = "A monster that hits you takes 10% of that hit back.",
@@ -149,7 +152,7 @@ public static class LootChestBuilder
           "Perk_LongReach" };
     static readonly string[] EpicPerks =
         { "Perk_LastStand", "Perk_CriticalStrike", "Perk_Glide", "Perk_Vampire", "Perk_Thorns", "Perk_NightPower", "Perk_Reroll",
-          "Perk_KeenEye" };
+          "Perk_KeenEye", "Perk_ArrowRecovery" };
 
     // Marko's chest (its model and perks are his; only ChestTier comes from here).
     static readonly ChestSpec CommonSpec = new ChestSpec

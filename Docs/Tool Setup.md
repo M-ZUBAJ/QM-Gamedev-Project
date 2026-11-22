@@ -17,6 +17,11 @@
   - a sword hits enemies and animals hard;
   - each tier is 25 % stronger at that job than the one before.
 
+**The bow** (22/11/2026) is a tool too: the **Wooden Bow** (Kind **Bow**, Tier Wood; 10 Wood + 10 Plank), held in the
+left hand; hold left click to draw, let go to shoot arrows (Stone, Copper, Iron, Gold, Diamond). It doesn't swing or
+punch, and a higher-tier bow would shoot 25 % harder per tier. It has its own tool and guide: **Tools > Items > Build
+Bow And Arrows**, `Docs/Bow Setup.md`.
+
 They replaced Marko's three placeholder tools (Sword, Axe, PickAxe). Change logs:
 `Docs/TonyEditMate/Marko/12-11-2026 Tier Tools.md` and `Docs/TonyEditMate/Turki/12-11-2026 Tier Tools.md`.
 

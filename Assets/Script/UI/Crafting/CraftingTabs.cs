@@ -1,19 +1,21 @@
 /*
 First Date: 20/11/2026
-Date: 20/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: The crafting list's Panel (Turki's CraftingCanvas > Panel), with its tab buttons in its child "Tabs".
         Tools > UI > Build Crafting Menu makes the tabs and puts this there.
-Unity Editor: Nothing to connect: it finds its tabs by NAME in Panel > Tabs (All, Materials, Food, Tools, Armor, each a
-              Button with a "Label" text) and the "nothing here" text in Scroll > Empty. Both crafting lists have it (the
-              inventory's Crafting tab and the C menu are the same prefab).
+Unity Editor: Nothing to connect: it finds its tabs by NAME in Panel > Tabs (All, Materials, Food, Tools, Ammo, Armor,
+              each a Button with a "Label" text) and the "nothing here" text in Scroll > Empty. Both crafting lists have it
+              (the inventory's Crafting tab and the C menu are the same prefab). A list built before 22/11/2026 has no
+              Ammo tab (its arrows then show only under All): run Tools > UI > Build Crafting Menu once.
               Testing: Play, Tab > Crafting (or press C), click Tools: only the tools are left, scrolled to the top. All
               shows everything again. Close and open the list: the tab picked stays picked.
 Purpose: Tabs on top of the crafting list, so a long list is quick to look through:
            All        everything (picked at the start)
            Materials  Item Type Material, e.g. Plank
            Food       Item Type Consumable, e.g. Stew
-           Tools      pickaxes, axes and swords
+           Tools      pickaxes, axes, swords and the bow
+           Ammo       arrows (Item Type Ammo), so they're quick to find
            Armor      helmet to boots
          Picking a tab hides the rows of the other kinds (the list closes up around the rest) and scrolls to the top.
          A tab with nothing to craft in it is faded, and picking it says "Nothing to craft here yet."
@@ -33,7 +35,8 @@ using UnityEngine.UI;
 public class CraftingTabs : MonoBehaviour
 {
     // The tabs, left to right (their objects in Panel > Tabs have these names).
-    public enum Kind { All, Materials, Food, Tools, Armor }
+    // (Not saved anywhere, so a new tab can go in anywhere: Ammo went in before Armor on 22/11/2026.)
+    public enum Kind { All, Materials, Food, Tools, Ammo, Armor }
 
     // ===== Fields =====
     [Tooltip("The picked tab's color (gold, like the inventory's own tabs).")]
@@ -133,6 +136,7 @@ public class CraftingTabs : MonoBehaviour
         {
             case ItemType.Consumable: return Kind.Food;
             case ItemType.Tool: return Kind.Tools;
+            case ItemType.Ammo: return Kind.Ammo;    // arrows (they sat under Tools before 22/11/2026)
             case ItemType.Armor: return Kind.Armor;
             default: return Kind.Materials;
         }

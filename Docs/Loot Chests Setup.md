@@ -9,7 +9,7 @@ In the game it's the GameRules tick box **New Chests** (on = new). Every perk in
 |---|---|---|---|---|---|---|
 | **Common** | Marko's wooden chest, yellow outline | grassland (20), desert (30), snow (40) | 2 coins | +1 (2, 3, 4...) | choose 1 of 3 | Vitality, Stamina, Agility, Fireball, Second Wind, Precision*, Spring Legs* |
 | **Rare** | blue loot box, blue outline | grassland (6), desert (12), snow (20) | 10 coins | x1.5 (10, 15, 23...) | choose 1 of 3 | Bounty Hunter, Gourmet, Lumberjack, Prospector, Sprinter, Brawler, Attack Speed, Long Reach* |
-| **Epic** | purple loot box, purple outline | desert (4) and snow (8) only | 100 coins | x2 (100, 200, 400...) | choose 1 of 3, REROLL** | Last Stand, Critical Strike, Glide, Vampire, Thorns, Night Power, **Reroll**, **Keen Eye** |
+| **Epic** | purple loot box, purple outline | desert (4) and snow (8) only | 100 coins | x2 (100, 200, 400...) | choose 1 of 3, REROLL** | Last Stand, Critical Strike, Glide, Vampire, Thorns, Night Power, **Reroll**, **Keen Eye**, **Arrow Recovery** |
 
 **New chests** (the default):
 
@@ -17,8 +17,8 @@ In the game it's the GameRules tick box **New Chests** (on = new). Every perk in
 |---|---|---|---|---|---|
 | **Common** | grassland (20), desert (30), snow (40) | 2 coins | +1 | **a random one** (a slot-machine roll), REROLL** | the old common **and** rare perks together (15) |
 | **Rare** | grassland (6), desert (12), snow (20) | 10 coins | x1.5 | choose 1 of 3, REROLL** | the same 15 |
-| **Epic** | desert (4) and snow (8) only | 100 coins | x2 | **a random one**, REROLL** | the epic perks (with Reroll and Keen Eye) |
-| **Legendary** | orange loot box, orange outline; desert (2) and snow (4) only | 150 coins | x2 (150, 300, 600...) | choose 1 of 3, REROLL** | the epic perks (with Reroll and Keen Eye) |
+| **Epic** | desert (4) and snow (8) only | 100 coins | x2 | **a random one**, REROLL** | the epic perks (with Reroll, Keen Eye and Arrow Recovery) |
+| **Legendary** | orange loot box, orange outline; desert (2) and snow (4) only | 150 coins | x2 (150, 300, 600...) | choose 1 of 3, REROLL** | the epic perks (with Reroll, Keen Eye and Arrow Recovery) |
 
 The numbers in **Where** are the ObjectScatter rules' counts. In the old world (GameScene) a count is for the whole
 map. In the new world (endless since 21/11/2026) a count is for every 400,000 m² of that ground, so a 256 m square of
@@ -75,8 +75,9 @@ system). Until then no box shows the REROLL button, in either system.
 | **Night Power** | epic, legendary | at night: +10 % max health, max stamina, walking speed and melee damage (punches, tools; the fireball stays the same) (stacks); a message says when it wakes up and when it rests at dawn | 0.1 |
 | **Reroll** | epic, legendary | unlocks the **REROLL** button at loot boxes (without it no box can reroll) | - |
 | **Keen Eye** | epic, legendary | the crosshair turns **yellow** when your attack will reach what you aim at (a monster, an animal, a tree or a rock): a click hits it. Then boxes offer Long Reach | - |
+| **Arrow Recovery** | epic, legendary | your arrows can be had back: one in a monster or an animal stays in it (walk within 2.5 m to take it back) and falls out onto the ground when it dies; a missed arrow stays where it landed (walk within 1.6 m to pick it up). Without it an arrow that hits a creature is used up (22/11/2026, `Docs/Bow Setup.md`) | - |
 
-Last Stand, Critical Strike, Glide, Reroll and Keen Eye can be held one at a time (**Max Picks** 1); the others stack.
+Last Stand, Critical Strike, Glide, Reroll, Keen Eye and Arrow Recovery can be held one at a time (**Max Picks** 1); the others stack.
 Like every perk, they're lost when you die (so REROLL locks again until you find another Reroll perk).
 
 Also with them:
@@ -92,8 +93,8 @@ Also with them:
    (it rebuilds the title screen; `Docs/Main Title Setup.md`).
 
 The tool:
-- **Perk Data:** makes the 19 new perks in `Assets/Config/Perks` (`Perk_SecondWind`, `Perk_AttackSpeed`,
-  `Perk_Vampire`, `Perk_Reroll`, `Perk_KeenEye`, `Perk_LongReach`...), only if missing, with drawn icons
+- **Perk Data:** makes the 20 new perks in `Assets/Config/Perks` (`Perk_SecondWind`, `Perk_AttackSpeed`,
+  `Perk_Vampire`, `Perk_Reroll`, `Perk_KeenEye`, `Perk_LongReach`, `Perk_ArrowRecovery`...), only if missing, with drawn icons
   (`Assets/UI/Perks`), and puts the new ones in their boxes' lists. A perk you changed keeps your numbers (Last Stand's
   old "Once a life..." text and Night Power's old "...speed and damage." are brought up to date if you didn't change
   them).

@@ -11,10 +11,16 @@ public class PlayerCoins : MonoBehaviour
     public event Action<int> CoinsChanged;
 
     // [Tony] added (10/11/2026): when the player dies, the coins go back to what the player had at the start
-    // (20 right now, from the test line in Awake; 0 once that line is gone). Untick to keep the coins after dying.
+    // (Starting Coins below, 20 by default). Untick to keep the coins after dying.
     // To undo: delete every line marked [Tony]. Log: Docs/TonyEditMate/Marko/10-11-2026 Coins Reset On Death, Perk Menu Closes, Punch.md
     [Tooltip("[Tony] On: dying puts the coins back to the starting amount.")]
     public bool resetOnDeath = true;                                                  // [Tony] added
+    // [Tony] added (22/11/2026): the coins the player starts with (your test line in Awake gave 20). The title
+    // screen's NEW GAME page can change it (GameSetup calls SetStartCoins below).
+    // Log: Docs/TonyEditMate/Marko/22-11-2026 Starting Coins On The New Game Page.md
+    [Tooltip("[Tony] Coins the player starts with (and goes back to after dying, with Reset On Death). The NEW GAME page can change it.")]
+    [Min(0)]                                                                          // [Tony] added
+    public int startingCoins = 20;                                                    // [Tony] added
     private int startCoins;                                                           // [Tony] added
     private PlayerHealth health;                                                      // [Tony] added
 
@@ -30,7 +36,8 @@ public class PlayerCoins : MonoBehaviour
 
 
         ///temporary test code
-        AddCoins(20);
+        //AddCoins(20);                                                               // [Tony] replaced (22/11/2026) by the line below
+        AddCoins(startingCoins);                                                      // [Tony] replaced: the Starting Coins setting (20 by default)
 
         startCoins = Coins; // [Tony] added: what the player starts with (dying goes back to it)
     }
@@ -56,6 +63,16 @@ public class PlayerCoins : MonoBehaviour
     {                                                                                 // [Tony] added
         Coins = startCoins;                                                           // [Tony] added
         Debug.Log("Coins reset to " + Coins + " (the player died).");                 // [Tony] added
+        CoinsChanged?.Invoke(Coins);                                                  // [Tony] added
+    }                                                                                 // [Tony] added
+
+    // [Tony] added (22/11/2026): sets the coins the player starts with (and goes back to after dying), and the coins
+    // now. The title screen's NEW GAME page uses it through GameSetup, right after the game loads (before Start).
+    public void SetStartCoins(int amount)                                             // [Tony] added
+    {                                                                                 // [Tony] added
+        startingCoins = Mathf.Max(0, amount);                                         // [Tony] added
+        startCoins = startingCoins;                                                   // [Tony] added
+        Coins = startCoins;                                                           // [Tony] added
         CoinsChanged?.Invoke(Coins);                                                  // [Tony] added
     }                                                                                 // [Tony] added
 

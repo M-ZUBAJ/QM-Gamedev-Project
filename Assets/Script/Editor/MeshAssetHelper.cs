@@ -11,7 +11,7 @@ Purpose: Small helpers for tools that save meshes of their own (the first two mo
            whatever links to it keeps working).
          - SaveSkinnedCopy: a copy of an animated character's mesh (bones and all) with only the faces you choose, saved
            the same way (Build Plate Armor's skin without the faces under the gloves).
-Requirement: MeshAssetHelper.cs <-x ArmorBuilder.cs, RockBreakBuilder.cs, RockBuilder.cs
+Requirement: MeshAssetHelper.cs <-x ArmorBuilder.cs, BowBuilder.cs, RockBreakBuilder.cs, RockBuilder.cs
 */
 
 using System.Collections.Generic;
