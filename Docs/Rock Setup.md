@@ -29,7 +29,8 @@ The tool:
   ground, so 15 % of the rock sits in the ground.
 - **Rock prefabs:** rebuilds Turki's `StoneNode`, `CopperNode` and `IronNode` in the same files:
   - a rock shape and a **Mesh Collider** in that shape, instead of the cube and its box;
-  - **RockLook**, which picks a random shape when the game runs;
+  - **RockLook**, which picks a shape when the game runs (from where the rock stands, since 22/11/2026: the same rock
+    always gets the same shape, also when the new world makes it again);
   - **StandOnGround**, which puts the rock on the floor and tilts it on slopes;
   - the stone: grey, `Assets/Materials/Rocks/Copper Ore.mat` or `Iron Ore.mat`. The two ore materials are made
     once; change their **Color** to retint them.

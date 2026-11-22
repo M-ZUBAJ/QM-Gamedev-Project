@@ -59,6 +59,16 @@ public class FireballProjectile : MonoBehaviour
         // otherwise if it hit a resource/animal, make that take damage instead.
         else if (resource != null)
         {
+            // [Tony] added (22/11/2026): a rock or tree that needs a tool (ores: a good enough pickaxe; the snow's spruce:
+            // an Iron Axe or better) isn't broken by a fireball either, like a sword can't break it. It says which tool
+            // it needs. To undo: delete the 6 lines marked [Tony] added below.
+            // Log: Docs/TonyEditMate/Marko/22-11-2026 Fireball Leaves Ores And Spruce Alone.md
+            if (ToolRules.NeededFor(resource) != ToolTier.None)                  // [Tony] added
+            {                                                                    // [Tony] added
+                ToolRules.TellCantMine(resource);                                // [Tony] added: "Needs an Iron Axe or better"
+                Destroy(gameObject);                                             // [Tony] added
+                return;                                                          // [Tony] added
+            }                                                                    // [Tony] added
             // [Tony] replaced (21/11/2026): resource.TakeDamage(damage);
             PerkEffects.Hurt(resource, () => resource.TakeDamage(damage));       // [Tony] replaced (Vampire: animals only)
         }

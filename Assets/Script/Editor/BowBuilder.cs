@@ -5,13 +5,20 @@ Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Menu Tools > Items > Build Bow And Arrows (it asks first, and saves your open scenes). Needs GameLair's
               Medieval Fantasy Weapon Pack (Assets/Imported3D/GameLair) and, for the animation, Mixamo's Shooting Arrow
-              (Assets/Imported3D/Mixamo/BotShootingArrow.fbx). To use another of the pack's bows (BowTwo, BowThree),
-              select it in the Project window first; else BowOne. Run it again any time: everything is made again in
-              the same files (the arrows' recipes and damage too). Guide: Docs/Bow Setup.md
-Purpose: The bow and its arrows, in one click:
-           1. Wooden Bow: Item Data Assets/Config/Items/Tools/WoodenBow (Tool, Kind Bow, Tier Wood; recipe 10 Wood +
-              10 Plank) and its prefab Assets/Prefabs/Item/Tools/WoodenBow (the pack's bow; its Model has the bow's grip
-              at its middle, upright, shooting along x: ToolInHand puts that in the left fist).
+              (Assets/Imported3D/Mixamo/BotShootingArrow.fbx). Which of the pack's bows each one shows, its numbers and
+              its recipe are in the Bows table below. Run it again any time: everything is made again in the same files
+              (the bows' and arrows' recipes and numbers too). Guide: Docs/Bow Setup.md
+Purpose: The bows and their arrows, in one click:
+           1. Two bows (the Bows table), each an Item Data in Assets/Config/Items/Tools (Tool, Kind Bow, with its Bow
+              section: Damage, Draw Seconds, Arrow Speed, see BowStats.cs) and a prefab in Assets/Prefabs/Item/Tools
+              (the pack's bow; its Model has the bow's grip at its middle, upright, shooting along x: ToolInHand puts
+              that in the left fist):
+              - Wooden Bow (BowOne, Tier Wood): 10 Wood + 10 Plank; 5 damage, draws in 1 s, arrows at 45 m/s;
+              - Spruce Bow (BowThree, the recurve, in a darker spruce brown: Assets/Materials/Tools/Spruce Bow.mat, made
+                once; Tier Iron): the Wooden Bow + 20 Spruce Wood + 15 Iron (an upgrade: crafting uses the Wooden Bow up
+                and puts the Spruce Bow in its slot); 15 damage, draws in 0.6 s (it shoots faster), arrows at 60 m/s
+                (22/11/2026).
+              A shot hurts by the bow's Damage + the arrow's.
            2. Five arrows: Assets/Config/Items/Arrows/<Stone|Copper|Iron|Gold|Diamond>Arrow (Ammo; Damage 20 / 25 / 30 /
               40 / 50; recipes 2 Wood + 2 Stone = 4 Stone Arrows, then 4 arrows + 1 Copper / Iron / Gold / Diamond =
               4 arrows of the next kind) and their prefabs in Assets/Prefabs/Item/Arrows. All are the pack's ArrowOne
@@ -22,14 +29,16 @@ Purpose: The bow and its arrows, in one click:
               when the tool runs again).
            4. The bow's animation: Tools > Player > Set Up Player Animations' file work (BotShootingArrow cut into
               BowDraw / BowAim / BowRelease, both controllers).
-           5. Turki's crafting list sorted again: the bow joins the Wooden tools, the arrows come after the tools.
+           5. Turki's crafting list sorted again: each bow joins the tools of its tier (the Wooden Bow after the Wooden
+              Sword, the Spruce Bow after the Iron Sword), the arrows come after the tools.
            6. The draw ring and arrow count: Assets/Prefabs/UI/Bow/BowCanvas (BowHUD). ToolInHand on the character
               prefab, if it isn't there yet (it holds the bow).
            7. Every game scene in File > Build Settings (GameScene, ProceduralGenerateScene), saved: BowShooter on the
-              Player (Arrow Prefab filled), the bow and the arrows in ToolTestKit (GameRules > Tool Test gives them), one
+              Player (Arrow Prefab filled), the bows and the arrows in ToolTestKit (GameRules > Tool Test gives them), one
               BowCanvas.
-           A missing Gold or Diamond item is made first (the desert's and the snow's tools make the same ones).
-Requirement: BowBuilder.cs x-> ItemData.cs, AmmoStats.cs, ToolStats.cs, ItemPickup.cs, ArrowProjectile.cs, BowShooter.cs, BowHUD.cs, ToolTestKit.cs, ToolInHand.cs, PlayerAnimationSetup.cs, CraftingMenuBuilder.cs, DesertBuilder.cs, SnowBuilder.cs, IconArt.cs, MeshBounds.cs, MeshAssetHelper.cs, MaterialBuildHelper.cs, UIBuildHelper.cs, MenuOrder.cs
+           A missing Gold, Diamond or Spruce Wood item is made first (the desert's and the snow's tools make the same ones);
+           the Spruce Wood item is also put right every run (its Mined With = Iron: an Iron Axe or better chops its trees).
+Requirement: BowBuilder.cs x-> ItemData.cs, AmmoStats.cs, BowStats.cs, ToolStats.cs, ItemPickup.cs, ArrowProjectile.cs, BowShooter.cs, BowHUD.cs, ToolTestKit.cs, ToolInHand.cs, PlayerAnimationSetup.cs, CraftingMenuBuilder.cs, DesertBuilder.cs, SnowBuilder.cs, IconArt.cs, MeshBounds.cs, MeshAssetHelper.cs, MaterialBuildHelper.cs, UIBuildHelper.cs, MenuOrder.cs
 */
 
 using System.Collections.Generic;
@@ -58,14 +67,46 @@ public static class BowBuilder
     const string HudName = "BowCanvas";
     const int HudSortOrder = 2;          // HUD 0, notifications 5: the ring sits over the HUD's crosshair
 
-    const string BowId = "WoodenBow";
-    const string BowShown = "Wooden Bow";
-    const string DefaultBow = "BowOne";  // the pack's plain longbow (BowTwo: shorter, wrapped; BowThree: a recurve)
     const string ArrowModel = "ArrowOne";
     const string PackMaterial = "WeaponMaterial";   // the pack's one material (Standard, its color sheet)
     const string ModelName = "Model";    // ToolInHand copies the child with this name into the hand
-    const int BowWood = 10, BowPlanks = 10;
     const int ArrowsPerCraft = 4;
+
+    // The bows, weakest first: the Item Id and the name the player sees, which of the pack's bows it shows (BowOne: the
+    // plain longbow, BowTwo: shorter and wrapped, BowThree: a recurve), its tier (it only sorts the crafting list), a
+    // tint for the pack's color sheet (white = its own colors), its Bow numbers (BowStats) and its recipe (items by Item
+    // Id: a bow made earlier in the table may be one, and then crafting uses it up: an upgrade). The numbers and
+    // recipes are set again every time the tool runs.
+    struct BowKind
+    {
+        public string id, shown, model;
+        public ToolTier tier;
+        public Color tint;
+        public float damage, drawSeconds, arrowSpeed;
+        public (string id, int amount)[] recipe;
+        public BowKind(string id, string shown, string model, ToolTier tier, Color tint, float damage, float drawSeconds,
+                       float arrowSpeed, params (string id, int amount)[] recipe)
+        {
+            this.id = id;
+            this.shown = shown;
+            this.model = model;
+            this.tier = tier;
+            this.tint = tint;
+            this.damage = damage;
+            this.drawSeconds = drawSeconds;
+            this.arrowSpeed = arrowSpeed;
+            this.recipe = recipe;
+        }
+    }
+    static readonly Color SpruceTint = new Color(0.72f, 0.6f, 0.5f);   // the pack's wood colors -> darker spruce brown
+    static readonly BowKind[] Bows =
+    {
+        new BowKind("WoodenBow", "Wooden Bow", "BowOne", ToolTier.Wood, Color.white, 5f, 1f, 45f, ("Wood", 10), ("Plank", 10)),
+        // The better bow (Tony, 22/11/2026: "Use spruce to create a better bow ... shoot faster than normal bow", then
+        // "spruce bow recipe is wooden bow + 20 spruce woods + 15 irons"): more damage, a quicker draw and faster arrows.
+        new BowKind("SpruceBow", "Spruce Bow", "BowThree", ToolTier.Iron, SpruceTint, 15f, 0.6f, 60f,
+                    ("WoodenBow", 1), (SnowBuilder.SpruceWoodId, 20), ("Iron", 15)),
+    };
 
     // The arrows, weakest first: each kind's head color (metal, shine) and damage. Stone is made from Wood + Stone,
     // every other kind from 4 arrows of the kind before + 1 of its metal (the item named like it).
@@ -114,19 +155,25 @@ public static class BowBuilder
             return;
         }
         if (!CheckTMP(ToolName)) return;
-        string bowPath = ChosenBow();
+        string bowPath = ModelPath(Bows[0].model);
         string arrowPath = ModelPath(ArrowModel);
         if (bowPath == null || arrowPath == null)
         {
-            EditorUtility.DisplayDialog(ToolName, "GameLair's Medieval Fantasy Weapon Pack isn't in the project (its BowOne and " +
-                                        "ArrowOne models).\n\nImport it (Window > Package Manager > My Assets), then run this again.", "OK");
+            EditorUtility.DisplayDialog(ToolName, "GameLair's Medieval Fantasy Weapon Pack isn't in the project (its " + Bows[0].model +
+                                        " and ArrowOne models).\n\nImport it (Window > Package Manager > My Assets), then run this again.", "OK");
             return;
         }
 
         List<string> scenes = GameScenes();
+        List<string> bowLines = new List<string>();
+        foreach (BowKind kind in Bows)
+        {
+            bowLines.Add("- " + kind.shown + " (" + kind.model + "): " + RecipeText(kind) + "; " + kind.damage + " damage, draws in " +
+                         kind.drawSeconds + " s");
+        }
         if (!EditorUtility.DisplayDialog(ToolName,
-                "Make the Wooden Bow (from " + Path.GetFileNameWithoutExtension(bowPath) + ") and five arrows:\n\n" +
-                "- Wooden Bow: 10 Wood + 10 Plank\n" +
+                "Make " + Bows.Length + " bows and five arrows:\n\n" +
+                string.Join("\n", bowLines) + "\n" +
                 "- 4 Stone Arrows: 2 Wood + 2 Stone\n" +
                 "- 4 Copper / Iron / Gold / Diamond Arrows: 4 arrows of the kind before + 1 Copper / Iron / Gold / Diamond\n\n" +
                 "It also sets up the bow's animation (BotShootingArrow), sorts Turki's crafting list, makes the draw ring, " +
@@ -139,7 +186,12 @@ public static class BowBuilder
         List<string> report = new List<string>();
         Material palette = FindPalette(bowPath);
         if (palette == null) report.Add("the pack's " + PackMaterial + " material wasn't found: the bow and arrows have no colors (pink)");
-        ItemData bow = BuildBow(bowPath, palette, report);
+        List<ItemData> bows = new List<ItemData>();
+        foreach (BowKind kind in Bows)
+        {
+            ItemData made = BuildBow(kind, palette, bows, report);
+            if (made != null) bows.Add(made);
+        }
         List<ItemData> arrows = new List<ItemData>();
         if (SplitArrow(arrowPath, palette, out ArrowShape shape, report))
         {
@@ -155,12 +207,12 @@ public static class BowBuilder
         report.Add(HudFolder + "/" + HudName + ".prefab made (the draw ring and arrow count)");
 
         SceneSetup[] before = EditorSceneManager.GetSceneManagerSetup();
-        foreach (string scene in scenes) report.Add(SetUpScene(scene, bow, arrows, hud));
+        foreach (string scene in scenes) report.Add(SetUpScene(scene, bows, arrows, hud));
         if (before.Length > 0) EditorSceneManager.RestoreSceneManagerSetup(before);
         AssetDatabase.SaveAssets();
 
         string text = ToolName + ":\n- " + string.Join("\n- ", report.FindAll(line => !string.IsNullOrEmpty(line))) +
-                      "\nTest: tick GameRules > Tool Test (a Wooden Bow and 32 of each arrow), Play, select the bow, hold the left " +
+                      "\nTest: tick GameRules > Tool Test (both bows and 32 of each arrow), Play, select a bow, hold the left " +
                       "mouse button and let go.";
         if (report.Exists(line => line != null && line.Contains("MISSING"))) Debug.LogWarning(text);   // yellow: something to fix
         else Debug.Log(text);
@@ -169,19 +221,6 @@ public static class BowBuilder
     // ===== My methods =====
 
     // ----- The pack -----
-
-    // The bow model to use: one of the pack's bows selected in the Project window, else BowOne. Null = none.
-    static string ChosenBow()
-    {
-        Object picked = Selection.activeObject;
-        if (picked is GameObject go && go.name.StartsWith("Bow"))
-        {
-            MeshFilter filter = go.GetComponentInChildren<MeshFilter>(true);
-            string path = filter != null && filter.sharedMesh != null ? AssetDatabase.GetAssetPath(filter.sharedMesh) : AssetDatabase.GetAssetPath(go);
-            if (!string.IsNullOrEmpty(path) && MeshAssetHelper.MeshIn(path) != null) return path;
-        }
-        return ModelPath(DefaultBow);
-    }
 
     // A model file by its exact name (e.g. "BowOne"), wherever it is; null if there's none.
     static string ModelPath(string modelName)
@@ -214,51 +253,89 @@ public static class BowBuilder
 
     // ----- The bow -----
 
-    static ItemData BuildBow(string modelPath, Material palette, List<string> report)
+    // One bow of the Bows table: its Item Data (a Tool of Kind Bow with its Bow numbers and recipe) and its prefab.
+    // "made" = the bows made before it in this run (its recipe may use one: the Spruce Bow's Wooden Bow).
+    static ItemData BuildBow(BowKind kind, Material palette, List<ItemData> made, List<string> report)
     {
-        Mesh mesh = MeshAssetHelper.MeshIn(modelPath);
+        string modelPath = ModelPath(kind.model);
+        Mesh mesh = modelPath != null ? MeshAssetHelper.MeshIn(modelPath) : null;
         if (mesh == null)
         {
-            report.Add("no mesh in " + modelPath + ": no bow made");
+            report.Add("no " + kind.model + " model in the pack: no " + kind.shown + " made");
             return null;
         }
-        ItemData item = FindOrMakeItem(ToolItemFolder, BowId);
-        GameObject prefab = BuildBowPrefab(mesh, palette, item);
+        ItemData item = FindOrMakeItem(ToolItemFolder, kind.id);
+        GameObject prefab = BuildBowPrefab(kind.id, mesh, BowLook(kind, palette), item);
         if (prefab == null)
         {
-            report.Add("couldn't save the bow's prefab (see the Console)");
+            report.Add("couldn't save the " + kind.shown + "'s prefab (see the Console)");
             return item;
         }
 
-        SerializedObject so = new SerializedObject(item);
-        so.FindProperty("displayName").stringValue = BowShown;
+        SerializedObject so = new SerializedObject(item);   // the names in quotes must match ItemData's fields
+        so.FindProperty("displayName").stringValue = kind.shown;
         so.FindProperty("prefab").objectReferenceValue = prefab;
         so.FindProperty("pickup").enumValueIndex = (int)PickupType.Pickup;
         so.FindProperty("icon.mode").enumValueIndex = (int)IconMode.Capture;
         so.FindProperty("itemType").enumValueIndex = (int)ItemType.Tool;
         so.FindProperty("tool.kind").enumValueIndex = (int)ToolKind.Bow;
-        so.FindProperty("tool.tier").enumValueIndex = (int)ToolTier.Wood;
+        so.FindProperty("tool.tier").enumValueIndex = (int)kind.tier;
+        so.FindProperty("bow.damage").floatValue = kind.damage;
+        so.FindProperty("bow.drawSeconds").floatValue = kind.drawSeconds;
+        so.FindProperty("bow.arrowSpeed").floatValue = kind.arrowSpeed;
         so.FindProperty("minedWith").enumValueIndex = (int)ToolTier.None;
         so.FindProperty("craftAmount").intValue = 1;
         so.FindProperty("craftedAt").enumValueIndex = (int)CraftStation.Crafting;
-        string missing = SetRecipe(so, ("Wood", FindItem("Wood"), BowWood), ("Plank", FindItem("Plank"), BowPlanks));
+        var parts = new (string name, ItemData item, int amount)[kind.recipe.Length];
+        for (int i = 0; i < kind.recipe.Length; i++)
+        {
+            string id = kind.recipe[i].id;
+            ItemData earlier = made.Find(bow => bow != null && bow.name == id);   // a bow made just before (the Wooden Bow)
+            parts[i] = (id, earlier != null ? earlier : CostItem(id, report), kind.recipe[i].amount);
+        }
+        string missing = SetRecipe(so, parts);
         so.ApplyModifiedPropertiesWithoutUndo();
         EditorUtility.SetDirty(item);
-        report.Add(BowShown + " (" + ToolItemFolder + "/" + BowId + ", from " + Path.GetFileNameWithoutExtension(modelPath) + "): " +
-                   (missing == null ? BowWood + " Wood + " + BowPlanks + " Plank" : "no recipe yet, no " + missing + " item"));
+        report.Add(kind.shown + " (" + ToolItemFolder + "/" + kind.id + ", from " + kind.model + "): " +
+                   (missing == null ? RecipeText(kind) : "no recipe yet, no " + missing + " item") +
+                   "; " + kind.damage + " damage, draws in " + kind.drawSeconds + " s, arrows at " + kind.arrowSpeed + " m/s");
         return item;
     }
 
-    // The bow's prefab, emptied and refilled IN PLACE if it exists (so links to it keep working):
-    //   WoodenBow (BoxCollider, ItemPickup)
+    // A bow's recipe in words, e.g. "1 WoodenBow + 20 SpruceWood + 15 Iron".
+    static string RecipeText(BowKind kind)
+    {
+        List<string> words = new List<string>();
+        foreach ((string id, int amount) in kind.recipe) words.Add(amount + " " + id);
+        return string.Join(" + ", words);
+    }
+
+    // A bow's material: the pack's color sheet itself (a white tint), or a tinted copy of it in Assets/Materials/Tools
+    // named after the bow (e.g. "Spruce Bow.mat"), made once, so changes made to it by hand stay.
+    static Material BowLook(BowKind kind, Material palette)
+    {
+        if (palette == null || kind.tint == Color.white) return palette;
+        MakeFolders(MaterialFolder);
+        string path = MaterialFolder + "/" + kind.shown + ".mat";
+        Material look = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (look != null) return look;
+
+        look = new Material(palette) { name = kind.shown };
+        if (look.HasProperty("_Color")) look.color = palette.color * kind.tint;
+        AssetDatabase.CreateAsset(look, path);
+        return look;
+    }
+
+    // A bow's prefab, emptied and refilled IN PLACE if it exists (so links to it keep working):
+    //   <Id> (BoxCollider, ItemPickup), e.g. WoodenBow
     //     > Model     leaning like a tool icon; its middle = the bow's grip (ToolInHand puts that in the fist)
     //         > Bow   the pack's mesh, upright (y), turned so it shoots along x
-    static GameObject BuildBowPrefab(Mesh mesh, Material palette, ItemData item)
+    static GameObject BuildBowPrefab(string id, Mesh mesh, Material palette, ItemData item)
     {
-        string path = FindPrefabPath(ToolPrefabFolder + "/" + BowId + ".prefab");
+        string path = FindPrefabPath(ToolPrefabFolder + "/" + id + ".prefab");
         MakeFolders(FolderOf(path));
         bool existed = AssetDatabase.LoadAssetAtPath<GameObject>(path) != null;
-        GameObject root = existed ? PrefabUtility.LoadPrefabContents(path) : new GameObject(BowId);
+        GameObject root = existed ? PrefabUtility.LoadPrefabContents(path) : new GameObject(id);
         try
         {
             if (existed) Empty(root, null);
@@ -572,13 +649,17 @@ public static class BowBuilder
         return material;
     }
 
-    // The metal an arrow kind costs (the item named like it); a missing Gold or Diamond item is made first.
-    static ItemData CostItem(string tier, List<string> report)
+    // An item a recipe costs, by its Item Id (e.g. the metal an arrow kind costs: the item named like it); a missing
+    // Gold or Diamond item is made first. Spruce Wood is always put right by SnowBuilder (made if missing, else kept, and
+    // its Mined With set to Iron while it's still None: its trees need an Iron Axe or better), so this tool alone brings
+    // a Spruce Wood item made before 22/11/2026's axe rule up to date.
+    static ItemData CostItem(string id, List<string> report)
     {
-        ItemData item = FindItem(tier);
+        if (id == SnowBuilder.SpruceWoodId) return SnowBuilder.MakeSpruceWood(report);
+        ItemData item = FindItem(id);
         if (item != null) return item;
-        if (tier == "Gold") return DesertBuilder.MakeGold(report);
-        if (tier == "Diamond") return SnowBuilder.MakeDiamond(report);
+        if (id == "Gold") return DesertBuilder.MakeGold(report);
+        if (id == "Diamond") return SnowBuilder.MakeDiamond(report);
         return null;
     }
 
@@ -751,9 +832,9 @@ public static class BowBuilder
         return found;
     }
 
-    // Opens a game scene: BowShooter on the Player with the flying arrow, the bow and arrows in the test kit, one
+    // Opens a game scene: BowShooter on the Player with the flying arrow, the bows and arrows in the test kit, one
     // BowCanvas; saves it. Returns a report.
-    static string SetUpScene(string path, ItemData bow, List<ItemData> arrows, GameObject hud)
+    static string SetUpScene(string path, List<ItemData> bows, List<ItemData> arrows, GameObject hud)
     {
         Scene scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
         PlayerInventory player = Object.FindFirstObjectByType<PlayerInventory>();
@@ -770,7 +851,7 @@ public static class BowBuilder
         ToolTestKit kit = player.GetComponent<ToolTestKit>();
         if (kit == null) kit = player.gameObject.AddComponent<ToolTestKit>();
         SerializedObject kitSo = new SerializedObject(kit);
-        AddToList(kitSo.FindProperty("tools"), bow);
+        foreach (ItemData bow in bows) AddToList(kitSo.FindProperty("tools"), bow);
         foreach (ItemData arrow in arrows) AddToList(kitSo.FindProperty("arrows"), arrow);
         kitSo.ApplyModifiedPropertiesWithoutUndo();
 
@@ -795,7 +876,7 @@ public static class BowBuilder
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
         return scene.name + ": BowShooter (Arrow Prefab " + (arrowSet ? "set" : "MISSING: drag " + ArrowPrefabFolder + "/" + ProjectileName +
-                                                             " into it") + "), the bow and " +
+                                                             " into it") + "), " + bows.Count + " bows and " +
                arrows.Count + " arrows in ToolTestKit, " + (kept ? "its BowCanvas updated" : "BowCanvas added") + " (saved)";
     }
 

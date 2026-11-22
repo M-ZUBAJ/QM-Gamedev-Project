@@ -25,7 +25,8 @@ Purpose: Minecraft-style hands for the first-person view. A copy of the player's
          Screen and the tool drop fade out, Aim Blend Speed): while it's only held, up in front and ready (the hands
          controller's BowIdle, made by Tools > Player > Set Up Player Animations; this script sets its BowHeld bool);
          while it's drawn, the bow in front and the arrow at the cheek. A hands controller without BowIdle (made before
-         22/11/2026) hides the hands while the bow is only held, as before.
+         22/11/2026) hides the hands while the bow is only held, as before. The draw plays as fast as the bow in the
+         hand draws (its BowDrawSpeed = BowShooter.DrawSpeed), like the body's.
 Requirement: FirstPersonHands.cs x-> ToolRules.cs, Animator (Unity)
              FirstPersonHands.cs o-> PlayerAnimator.cs, CameraController.cs, PlayerInventory.cs, PlayerHealth.cs, PlayerController.cs, BowShooter.cs, Camera (Unity)
              FirstPersonHands.cs <-x ArmorBuilder.cs, FirstPersonArmsHelper.cs, FirstPersonHandsBuilder.cs, TierToolBuilder.cs
@@ -93,6 +94,7 @@ public class FirstPersonHands : MonoBehaviour
     [SerializeField] float aimBlendSpeed = 8f;
 
     static readonly int BowHeldHash = Animator.StringToHash(PlayerAnimator.BowHeldName);   // the hands controller's bool
+    static readonly int BowDrawSpeedHash = Animator.StringToHash(PlayerAnimator.BowDrawSpeedName);   // how fast its draw plays
 
     [Header("Drawing on top")]
     [Range(8, 31)]
@@ -204,6 +206,7 @@ public class FirstPersonHands : MonoBehaviour
     {
         bool alive = !(health != null && health.IsDead);
         if (HasReadyPose) animator.SetBool(BowHeldHash, ToolRules.BowInHand && alive);   // the bow up, ready (set while hidden too)
+        if (parameters.Contains(BowDrawSpeedHash)) animator.SetFloat(BowDrawSpeedHash, BowShooter.DrawSpeed);   // a faster bow draws faster
         bool want = cameraControl != null && cameraControl.IsFirstPerson
                     && alive
                     && !HoldingATool()

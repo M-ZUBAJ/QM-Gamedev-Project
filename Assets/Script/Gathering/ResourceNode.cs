@@ -63,6 +63,13 @@ public class ResourceNode : MonoBehaviour
     void Start()
     {
         currentHealth = maxHealth;
+
+        // [Tony] added (22/11/2026): only a berry bush (Collect With Key) needs Update below (it watches for the key).
+        // Every other node (trees, rocks, ores, deer) switches its Update off here, after its health is set: the new
+        // world has about 2000 of them near the player, and each one's empty Update cost time every frame. Hitting it
+        // still works (TakeDamage doesn't need Update), so it shows unticked in the Inspector while playing.
+        // To undo: delete this line. Log: Docs/TonyEditMate/Turki/22-11-2026 Trees And Rocks Skip Their Empty Update.md
+        if (!collectWithKey) enabled = false;                                         // [Tony] added
     }
 
     // NEW: berries are picked with a key instead of being hit, so the node watches for the key itself.

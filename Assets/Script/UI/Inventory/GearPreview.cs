@@ -1,6 +1,6 @@
 /*
 First Date: 20/11/2026
-Date: 20/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: The Raw Image showing the character on the left of the inventory's Gear page (GearPage > Preview > Character).
         Tools > UI > Build Gear Page puts it there and fills in Character Prefab.
@@ -102,7 +102,11 @@ public class GearPreview : MonoBehaviour, IDragHandler
         }
         if (mainCamera != null) mainCamera.cullingMask |= 1 << previewLayer;
         if (studio != null) Destroy(studio);
-        if (picture != null) picture.Release();
+        if (picture != null)
+        {
+            picture.Release();
+            Destroy(picture);   // (only emptied before 22/11/2026)
+        }
     }
 
     // LateUpdate: after the character's animation moved it this frame.
@@ -232,7 +236,11 @@ public class GearPreview : MonoBehaviour, IDragHandler
         Vector2Int size = new Vector2Int(Mathf.Max(64, Mathf.RoundToInt(rect.width * scale)), Mathf.Max(64, Mathf.RoundToInt(rect.height * scale)));
         if (picture != null && size == pictureSize) return;
 
-        if (picture != null) picture.Release();
+        if (picture != null)
+        {
+            picture.Release();
+            Destroy(picture);   // (only emptied before 22/11/2026: each window resize left one behind)
+        }
         RenderTextureDescriptor shape = new RenderTextureDescriptor(size.x, size.y, RenderTextureFormat.ARGB32, 24) { msaaSamples = 4 };
         shape.msaaSamples = Mathf.Max(1, SystemInfo.GetRenderTextureSupportedMSAASampleCount(shape));   // what this computer can do
         picture = new RenderTexture(shape) { name = "Gear Preview" };

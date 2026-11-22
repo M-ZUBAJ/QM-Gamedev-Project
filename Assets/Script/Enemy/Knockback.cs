@@ -10,7 +10,7 @@ Purpose: Pushes a monster away (a punch's knockback): its body (a non-kinematic 
          cancelled at once. Bodies that physics doesn't move (kinematic: a deer, a dead monster) and things without a
          body (trees, rocks) aren't pushed.
 Requirement: Knockback.cs x-> Rigidbody (Unity)
-             Knockback.cs <-x ArrowProjectile.cs, EnemyMovement.cs, PunchEffect.cs
+             Knockback.cs <-x ArrowProjectile.cs, EnemyMovement.cs, FlyingEnemy.cs, PunchEffect.cs
 */
 
 using UnityEngine;

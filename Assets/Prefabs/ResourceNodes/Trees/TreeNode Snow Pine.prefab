@@ -24,6 +24,14 @@ PrefabInstance:
       propertyPath: m_Mesh
       value: 
       objectReference: {fileID: 4300000, guid: 0ddb82da3485fac4dbfe187acb70a610, type: 3}
+    - target: {fileID: 2962278684664453714, guid: 586d1bc6a3cce44eb9b011b8d05ebd30, type: 3}
+      propertyPath: dropItem
+      value: 
+      objectReference: {fileID: 11400000, guid: 512b1bf6d032e05489766c6a27b6db67, type: 2}
+    - target: {fileID: 2962278684664453714, guid: 586d1bc6a3cce44eb9b011b8d05ebd30, type: 3}
+      propertyPath: maxHealth
+      value: 300
+      objectReference: {fileID: 0}
     - target: {fileID: 3245735666504203572, guid: 586d1bc6a3cce44eb9b011b8d05ebd30, type: 3}
       propertyPath: m_Name
       value: TreeNode Snow Pine

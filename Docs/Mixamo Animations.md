@@ -20,7 +20,9 @@
 
 **With a bow in the hand** (22/11/2026, `Docs/Bow Setup.md`): holding left click plays Mixamo's **Shooting Arrow**
 (`BotShootingArrow.fbx`, 5 s: reach to the quiver, nock, draw, aim, shoot, lower), cut into clips:
-- **BowDraw:** from the arrow nocked at the hip to full draw, made to last BowShooter's Draw Seconds (1 s);
+- **BowDraw:** from the arrow nocked at the hip to full draw, made to last 1 s (BowShooter.DefaultDrawSeconds) at
+  its speed multiplier **BowDrawSpeed** 1; a faster bow plays it faster (the Spruce Bow's 0.6 s: 1.67, set by
+  PlayerAnimator / FirstPersonHands since 22/11/2026);
 - **BowAim:** one frame of full draw, held as long as the button is (only when there's no Aim Idle file);
 - **BowRelease:** the shot and the arms coming down (1.5x speed);
 - **BowReady** / **BowReadyDraw** (first-person hands only): the bow up in front, ready, while it's only held (so it

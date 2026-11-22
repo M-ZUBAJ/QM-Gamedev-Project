@@ -32,7 +32,9 @@ For size: the old placeholder tree was 5.65 m tall, and the player's character i
 
 **The snow's trees** (21/11/2026, made by **Tools > World > Build Snow Content**, not by this tool's menu; guide
 `Docs/Snow Setup.md`): 4 more Prefab Variants of TreeNode in the pack's winter **Cold** colors, spawned only on the new
-world's snow (not mixed into the grassland):
+world's snow (not mixed into the grassland). Since 22/11/2026 they drop **Spruce Wood** instead of Wood and have **300
+health** (TreeNode: 30): Build Snow Content sets both on each one's ResourceNode, so they no longer follow TreeNode's
+drop and health (its drop amounts and Apple bonus they still do):
 
 | Look | Prefab | Pack tree | Height |
 |---|---|---|---|

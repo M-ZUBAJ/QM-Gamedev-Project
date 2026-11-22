@@ -1,6 +1,6 @@
 /*
 First Date: 10/11/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: An enemy's top object, next to Marko's EnemyCombat, EnemyMovement and EnemyAttack, with the monster model
         (and its Animator) as a child. Tools > Enemies > Build Monster Enemy makes such enemies (e.g. SlimeEnemy).
@@ -19,10 +19,11 @@ Purpose: Makes a monster act like a real enemy: it stands, walks or runs as fast
          nobody killed it.
          A monster with a shell (ShellDefense, the turtle) plays Defend while it's in its shell (SetShell), and
          DefendGetHit instead of a flinch when it's hit there (PlayShellHit, or a fireball hurting it inside).
+         LastAttackTime = when it last attacked (a flying monster, FlyingEnemy, climbs away after each bite).
          It only shows the enemy: Marko's scripts still decide where it goes, when it attacks and its health.
 Requirement: EnemyAnimator.cs o-> EnemyCombat.cs, EnemyMovement.cs, EnemyAttack.cs, PlayerHealth.cs, DeathEffect.cs, Animator (Unity), Rigidbody (Unity)
              EnemyAnimator.cs <-x DeathEffectBuilder.cs, EnemyAttack.cs, EnemyBuilder.cs, EnemyCombat.cs, EnemySpawner.cs
-             EnemyAnimator.cs <-o ArrowProjectile.cs, DesertMonsterSpawner.cs, ShellDefense.cs
+             EnemyAnimator.cs <-o ArrowProjectile.cs, DesertMonsterSpawner.cs, FlyingEnemy.cs, NightMonsters.cs, ShellDefense.cs
 */
 
 using System.Collections;
@@ -85,9 +86,11 @@ public class EnemyAnimator : MonoBehaviour
     bool dead;                  // stopped for good: dying, or burning away
     bool vanishing;             // burning away (or about to) because day came
     bool inShell;               // ShellDefense says it's in its shell: a hit shakes the shell instead of a flinch
+    float lastAttack = -100f;   // Time.time of its last attack
 
     public bool IsDead => dead;
     public bool IsVanishing => vanishing;
+    public float LastAttackTime => lastAttack;   // when it last attacked (FlyingEnemy climbs away after a bite)
 
     // ===== Unity messages (Unity calls these) =====
 
@@ -165,6 +168,7 @@ public class EnemyAnimator : MonoBehaviour
     public void PlayAttack()
     {
         if (dead || (playerHealth != null && playerHealth.IsDead)) return;   // a dead player gets a cheer, not more hits
+        lastAttack = Time.time;
         SetTrigger(Attack);
     }
 

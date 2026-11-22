@@ -1,6 +1,6 @@
 /*
 First Date: 20/11/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: An empty object in the new world's scene (Assets/Scenes/ProceduralGenerateScene, "World Generator").
         Tools > World > Build New World Scene puts it there, filled in.
@@ -8,7 +8,8 @@ Unity Editor: Seed = 0: a new random world every game (the Console says which se
               that world every time, handy to look at one world again. The ground textures, the terrain's material, the
               caves and the ores are filled in by the tool; the other numbers are in meters.
               Endless land: Chunk Size (one square of land), Load Distance (made this far ahead), Show / Hide Distance,
-              Frame Budget (how much of each frame making land may take).
+              Content Distance (past it a chunk lets go of its trees, rocks and chests to save memory), Frame Budget (how
+              much of each frame making land may take).
               Biomes: Start Radius (always grassland), Desert From / Snow From (how far from the start they can begin),
               Climate Size (how big the hot and cold areas are). Caves: each biome's chance of a cave per chunk.
               Rules Area: how thick ObjectScatter's trees, rocks and chests grow (smaller = more).
@@ -32,13 +33,19 @@ Purpose: Makes the new world while its scene loads, and then keeps making it, en
              so the game doesn't stop; within Show Distance they're shown (their trees, rocks and chests wake up a
              small group at a time over a few frames, not all in one). A chunk left behind (past Hide Distance) is
              hidden, not thrown away: its ground stays solid and its trees, rocks and opened chests stay as they were
-             when the player comes back.
+             when the player comes back;
+           - farther still (past Content Distance, 22/11/2026) a chunk lets go of its trees, bushes, rocks, chests and
+             caves: every one is remembered (what, where, which way, how big) along with which ones the player used up
+             (chopped, mined, picked, opened), and when the player comes back within Load Distance the rest is made
+             again, the same, a few at a time. Before, every chunk ever made kept all its things, so the more land the
+             player walked, the more memory the game held and the slower it got. A new chunk's ground is also built
+             over a few frames now (heights, textures, grass, then the terrain), not all in one.
          No barrier: the world has no edge. The same seed always makes the same world, trees and rocks included.
          When the player dies, the death screen's Respawn makes a brand-new world (New World On Death): the scene loads
          again behind the screen fader ("DAY 1", "A new world"), so it's Day 1 with a new seed and everything fresh
          (inventory, armor, perks, coins), like a new game; the New Game page's choices stay.
 Requirement: WorldGenerator.cs x-> Terrain (Unity)
-             WorldGenerator.cs o-> ObjectScatter.cs, PlayerController.cs, PlayerRespawn.cs, ViewDistance.cs, ScreenFader.cs, Rigidbody (Unity)
+             WorldGenerator.cs o-> ObjectScatter.cs, PlayerController.cs, PlayerRespawn.cs, ViewDistance.cs, ScreenFader.cs, PerkChest.cs, Rigidbody (Unity)
              WorldGenerator.cs <-x LootChestBuilder.cs, NewWorldBuilder.cs, WorldBarrierBuilder.cs
              WorldGenerator.cs <-o PlayerRespawn.cs
 */
@@ -72,6 +79,20 @@ public class WorldGenerator : MonoBehaviour
         public CaveKind kind;
     }
 
+    // One thing put in a chunk (a tree, bush, rock, chest, cave or a cave's rock), remembered so the chunk can let go of
+    // it far away and make it again, the same, when the player comes back (Refill).
+    class Placed
+    {
+        public GameObject prefab;
+        public Vector3 position;
+        public Quaternion rotation;
+        public Vector3 scale;        // its local scale
+        public bool cave;            // a cave (its rocks go inside it)
+        public int inCave = -1;      // a cave's rock: that cave's place in the chunk's list (-1 = not in a cave)
+        public bool gone;            // the player used it up (chopped, mined, picked, opened): it isn't made again
+        public GameObject made;      // the thing in the world now (null while the chunk has let go of it)
+    }
+
     // One square of land: its terrain (the ground) and its content (caves, trees, rocks, chests).
     class Chunk
     {
@@ -84,6 +105,9 @@ public class WorldGenerator : MonoBehaviour
         public bool shown;
         public readonly List<GameObject> sleeping = new List<GameObject>();   // groups of its content not woken up yet
         public GameObject filling;   // the group new trees, rocks and chests go into while it's being made
+        public readonly List<Placed> things = new List<Placed>();   // everything put in it, in the order it was made
+        public bool hasContent = true;   // its things are in the world (false = let go, far away)
+        public IEnumerator refilling;    // bringing its things back (null when not)
     }
 
     // A used spot, like ObjectScatter's: shared by every chunk, so the rules keep their spacing across chunk edges.
@@ -135,6 +159,13 @@ public class WorldGenerator : MonoBehaviour
              "solid, and everything in it stays as it was for when the player comes back.")]
     [Range(60f, 1000f)]
     [SerializeField] float hideDistance = 240f;
+
+    [Tooltip("A chunk farther than this (meters, to its nearest edge) lets go of its trees, bushes, rocks, chests and " +
+             "caves to save memory: the ones the player chopped, mined, picked or opened are remembered, the rest come back " +
+             "the same when the player returns (its ground always stays). Kept at least Load Distance + half a chunk. " +
+             "0 = keep everything (the game slows down the more land the player walks).")]
+    [Range(0f, 3000f)]
+    [SerializeField] float contentDistance = 500f;
 
     [Tooltip("Milliseconds of each frame spent making new land. More = chunks are ready sooner, but the game may stutter " +
              "(the web game is slower: keep it small).")]
@@ -323,6 +354,7 @@ public class WorldGenerator : MonoBehaviour
     Transform worldRoot;                // "Generated World": every chunk is under it
     readonly Dictionary<Vector2Int, Chunk> chunks = new Dictionary<Vector2Int, Chunk>();
     readonly List<Vector2Int> waiting = new List<Vector2Int>();   // chunks to make (the nearest first)
+    readonly List<Chunk> refills = new List<Chunk>();             // chunks near again whose things come back (the nearest first)
     readonly Dictionary<Vector2Int, List<Spot>> placed = new Dictionary<Vector2Int, List<Spot>>();
     float widestClearance;              // the biggest clearance used so far, so the spacing checks look far enough
     bool building;                      // the chunk maker is running
@@ -390,7 +422,8 @@ public class WorldGenerator : MonoBehaviour
         Vector3 at = PlayerPosition();
         QueueChunksNear(at);
         ShowOrHide(at);
-        if (!building && waiting.Count > 0) StartCoroutine(Building());
+        LetGoOrRefill(at);
+        if (!building && (waiting.Count > 0 || refills.Count > 0)) StartCoroutine(Building());
     }
 
     void OnDestroy()
@@ -454,6 +487,12 @@ public class WorldGenerator : MonoBehaviour
                 }
                 IEnumerator making = chunk.making;
                 while (making != null && making.MoveNext()) { }   // no waiting between the steps
+                if (!chunk.hasContent)   // it let go of its things (it was far away): back now, all at once
+                {
+                    refills.Remove(chunk);
+                    IEnumerator refilling = chunk.refilling ?? (chunk.refilling = Refill(chunk));
+                    while (refilling.MoveNext()) { }
+                }
             }
         }
     }
@@ -483,21 +522,18 @@ public class WorldGenerator : MonoBehaviour
         }
     }
 
-    // Makes the waiting chunks one after the other, nearest first, a few milliseconds of each frame (Frame Budget).
+    // Makes the waiting chunks, and brings back the things of chunks that are near again (Refill), one job after the
+    // other, nearest first, a few milliseconds of each frame (Frame Budget).
     IEnumerator Building()
     {
         building = true;
-        while (waiting.Count > 0)
+        while (waiting.Count > 0 || refills.Count > 0)
         {
-            Vector3 at = PlayerPosition();
-            waiting.Sort((a, b) => DistanceTo(a, at).CompareTo(DistanceTo(b, at)));
-            Vector2Int next = waiting[0];
-            waiting.RemoveAt(0);
-            if (chunks.ContainsKey(next) || DistanceTo(next, at) > loadDistance + chunkSize) continue;   // made, or left behind
+            IEnumerator job = NextJob(PlayerPosition());
+            if (job == null) continue;   // made, brought back or left behind meanwhile
 
             budget.Restart();
-            IEnumerator making = NewChunk(next).making;
-            while (making.MoveNext())   // false once it's made (also when MakeChunksNow finished it meanwhile)
+            while (job.MoveNext())   // false once it's done (also when MakeChunksNow finished it meanwhile)
             {
                 yield return null;   // the rest next frame
                 budget.Restart();
@@ -506,6 +542,134 @@ public class WorldGenerator : MonoBehaviour
             ShowOrHide(PlayerPosition());
         }
         building = false;
+    }
+
+    // The nearest job: a chunk to make, or a chunk whose things come back. Null = that one needs nothing any more (made,
+    // brought back, or the player went away again).
+    IEnumerator NextJob(Vector3 at)
+    {
+        waiting.Sort((a, b) => DistanceTo(a, at).CompareTo(DistanceTo(b, at)));
+        refills.Sort((a, b) => DistanceTo(a.coord, at).CompareTo(DistanceTo(b.coord, at)));
+        bool refillFirst = refills.Count > 0 && (waiting.Count == 0 || DistanceTo(refills[0].coord, at) <= DistanceTo(waiting[0], at));
+        if (refillFirst)
+        {
+            Chunk chunk = refills[0];
+            refills.RemoveAt(0);
+            if (chunk.hasContent || DistanceTo(chunk.coord, at) > loadDistance + chunkSize) return null;
+            return chunk.refilling ?? (chunk.refilling = Refill(chunk));
+        }
+        Vector2Int next = waiting[0];
+        waiting.RemoveAt(0);
+        if (chunks.ContainsKey(next) || DistanceTo(next, at) > loadDistance + chunkSize) return null;   // made, or left behind
+        return NewChunk(next).making;
+    }
+
+    // ----- Letting go of far things, and bringing them back -----
+
+    // Content Distance, kept at least Load Distance + half a chunk, so a chunk at the edge doesn't let go of its things
+    // and bring them back over and over. 0 = never let go.
+    float ContentDistance => contentDistance <= 0f ? 0f : Mathf.Max(contentDistance, loadDistance + chunkSize * 0.5f);
+
+    // Every check: one far chunk (past Content Distance, hidden) lets go of its things (one a check, so it never takes
+    // long), and every chunk without its things that's within Load Distance again goes on the list to get them back.
+    void LetGoOrRefill(Vector3 at)
+    {
+        float far = ContentDistance;
+        if (far <= 0f) return;
+        bool letGo = false;
+        foreach (Chunk chunk in chunks.Values)
+        {
+            if (!chunk.ready) continue;
+            float distance = DistanceTo(chunk.coord, at);
+            if (chunk.hasContent)
+            {
+                if (letGo || chunk.shown || distance <= far) continue;
+                LetGo(chunk);
+                letGo = true;
+            }
+            else if (distance <= loadDistance && chunk.refilling == null && !refills.Contains(chunk)) refills.Add(chunk);
+        }
+    }
+
+    // A far chunk lets go of its things: each one the player used up while it was there (chopped, mined, picked, a
+    // chest bought) is remembered as gone, then the rest are thrown away (its ground stays). Refill brings them back.
+    void LetGo(Chunk chunk)
+    {
+        foreach (Placed thing in chunk.things)
+        {
+            if (thing.gone) continue;
+            thing.gone = thing.made == null || UsedUp(thing.made);
+            thing.made = null;
+        }
+        waking.Remove(chunk);
+        chunk.sleeping.Clear();
+        chunk.filling = null;
+        if (chunk.content != null) Destroy(chunk.content);
+        chunk.content = null;
+        chunk.hasContent = false;
+    }
+
+    // A thing that's still there but used up: an opened chest (they remove themselves when bought, unless Marko's
+    // Despawn After Opened is off).
+    static bool UsedUp(GameObject thing)
+    {
+        PerkChest chest = thing.GetComponent<PerkChest>();
+        return chest != null && chest.IsOpened;
+    }
+
+    // A chunk's things made again from its list, the same as the first time, without the gone ones; a few each frame
+    // (Pause). A cave gets its own group again and its rocks go inside it.
+    IEnumerator Refill(Chunk chunk)
+    {
+        chunk.content = new GameObject("Content");
+        chunk.content.transform.SetParent(chunk.terrain.transform, false);
+        chunk.content.SetActive(false);   // switched on with the chunk (then a group at a time)
+        chunk.filling = null;
+        Dictionary<int, Transform> caves = new Dictionary<int, Transform>();
+        for (int i = 0; i < chunk.things.Count; i++)
+        {
+            Placed thing = chunk.things[i];
+            if (thing.gone || thing.prefab == null) continue;
+            Transform parent;
+            if (thing.cave) parent = GroupFor(chunk, true);
+            else if (thing.inCave >= 0)
+            {
+                if (!caves.TryGetValue(thing.inCave, out parent)) continue;   // its cave isn't there
+            }
+            else parent = GroupFor(chunk);
+
+            GameObject made = Instantiate(thing.prefab, thing.position, thing.rotation, parent);
+            made.transform.localScale = thing.scale;
+            thing.made = made;
+            if (thing.cave) caves[i] = made.transform;
+            if (Pause()) yield return null;
+        }
+        chunk.filling = null;
+        chunk.hasContent = true;
+        chunk.refilling = null;
+        if (chunk.shown)   // shown while its things were coming back: switch them on now, a group at a time
+        {
+            chunk.content.SetActive(true);
+            if (chunk.sleeping.Count > 0 && !waking.Contains(chunk)) waking.Add(chunk);
+        }
+    }
+
+    // Remembers a thing just put in a chunk (what, where, which way, how big, in which cave). Returns its place in the
+    // chunk's list.
+    static int Record(Chunk chunk, GameObject prefab, GameObject made, int inCave, bool cave)
+    {
+        Transform t = made.transform;
+        chunk.things.Add(new Placed
+        {
+            prefab = prefab,
+            position = t.position,
+            rotation = t.rotation,
+            scale = t.localScale,
+            cave = cave,
+            inCave = inCave,
+            made = made,
+        });
+        return chunk.things.Count - 1;
     }
 
     // True when this frame's Frame Budget is used up (the chunk maker then waits for the next frame).
@@ -622,13 +786,14 @@ public class WorldGenerator : MonoBehaviour
             if (Pause()) yield return null;
         }
 
-        MakeTerrain(chunk, ground, paint, tufts);
+        IEnumerator terrainSteps = MakingTerrain(chunk, ground, paint, tufts);
+        while (terrainSteps.MoveNext()) yield return null;
         chunk.content = new GameObject("Content");
         chunk.content.transform.SetParent(chunk.terrain.transform, false);
         chunk.content.SetActive(false);   // nothing in it wakes up until the chunk is shown (then a group at a time)
         if (Pause()) yield return null;
 
-        foreach (CaveSite site in caves) PlaceCave(site, GroupFor(chunk, true), rng);
+        foreach (CaveSite site in caves) PlaceCave(chunk, site, GroupFor(chunk, true), rng);
         if (Pause()) yield return null;
 
         IEnumerator scattering = Scatter(chunk, ground, paint, snowy, rng);
@@ -639,18 +804,23 @@ public class WorldGenerator : MonoBehaviour
     }
 
     // The terrain for a chunk: its heights, textures and grass, at its corner, joined to its neighbors, hidden for now.
-    void MakeTerrain(Chunk chunk, Ground ground, float[,,] paint, int[,] tufts)
+    // Each slow step (the heights, the textures, the grass, the terrain with its collider) can wait for the next frame
+    // (Pause), so making a chunk never stops the game for long in one go.
+    IEnumerator MakingTerrain(Chunk chunk, Ground ground, float[,,] paint, int[,] tufts)
     {
         TerrainData data = new TerrainData { name = "World Chunk " + chunk.coord.x + ", " + chunk.coord.y };
         data.heightmapResolution = ground.res;   // first: changing it also changes the size
         data.size = new Vector3(chunkSize, maxHeight, chunkSize);
         data.SetHeights(0, 0, ground.Heights01());
+        if (Pause()) yield return null;
         if (paint != null)
         {
             data.terrainLayers = layers;
             data.alphamapResolution = paint.GetLength(0);
             data.SetAlphamaps(0, 0, paint);
+            if (Pause()) yield return null;
             if (tufts != null) AddGrass(data, tufts);
+            if (Pause()) yield return null;
         }
 
         GameObject go = Terrain.CreateTerrainGameObject(data);   // a Terrain and its Terrain Collider
@@ -850,18 +1020,19 @@ public class WorldGenerator : MonoBehaviour
         return found;
     }
 
-    void PlaceCave(CaveSite site, Transform parent, System.Random rng)
+    void PlaceCave(Chunk chunk, CaveSite site, Transform parent, System.Random rng)
     {
         Vector3 at = new Vector3(site.center.x, site.height, site.center.y);
         GameObject cave = Instantiate(site.prefab, at, Quaternion.Euler(0f, site.turn, 0f), parent);
-        FillOres(cave.transform, site.kind, rng);
+        int index = Record(chunk, site.prefab, cave, -1, true);
+        FillOres(chunk, index, cave.transform, site.kind, rng);
     }
 
     // Puts the rocks on a cave's ore spots (its children named OreSpot), in a random order: a grassland cave a few iron,
     // a few copper, the rest stone; a desert cave a few gold, a few iron, the rest sandstone; a snow cave a few diamond,
     // a few gold, the rest stone (1 desert / snow cave in 20 is lucky: 4 gold / 4 diamond). They settle onto the floor
     // by themselves (StandOnGround).
-    void FillOres(Transform cave, CaveKind kind, System.Random rng)
+    void FillOres(Chunk chunk, int caveIndex, Transform cave, CaveKind kind, System.Random rng)
     {
         List<Transform> spots = new List<Transform>();
         foreach (Transform part in cave.GetComponentsInChildren<Transform>(true))
@@ -897,7 +1068,9 @@ public class WorldGenerator : MonoBehaviour
         {
             GameObject ore = i < first ? rare : i < first + second ? alsoRare : common;
             if (ore == null) ore = common;
-            if (ore != null) Instantiate(ore, spots[i].position, Quaternion.Euler(0f, (float)rng.NextDouble() * 360f, 0f), cave);
+            if (ore == null) continue;
+            GameObject made = Instantiate(ore, spots[i].position, Quaternion.Euler(0f, (float)rng.NextDouble() * 360f, 0f), cave);
+            Record(chunk, ore, made, caveIndex, false);
         }
     }
 
@@ -1083,6 +1256,7 @@ public class WorldGenerator : MonoBehaviour
                 GameObject made = Instantiate(rule.prefab, pos, Quaternion.Euler(0f, (float)rng.NextDouble() * 360f, 0f), GroupFor(chunk));
                 float scale = RandomSize(rule, rng);
                 if (scale != 1f) made.transform.localScale = rule.prefab.transform.localScale * scale;
+                Record(chunk, rule.prefab, made, -1, false);
                 Remember(pos, GroupOf(rule), rule.clearance);
                 spawned++;
                 if (Pause()) yield return null;

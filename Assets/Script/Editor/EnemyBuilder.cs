@@ -1,6 +1,6 @@
 /*
 First Date: 10/11/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Open GameScene, then menu Tools > Enemies > Build Monster Enemy.
@@ -19,9 +19,13 @@ Purpose: Turns a monster model into a working enemy in one click, using Marko's 
          a shell (the turtle: Defend / DefendGetHit) also gets Shell (Defend, held while the Shell parameter is on) and
          Shell Hit (DefendGetHit, the ShellHit trigger, back to the shell's inside pose), for ShellDefense.
          BuildMonster does the same for a monster by name, without asking (Tools > Enemies > Set Up Night Monsters and
-         Tools > World > Build Desert Content: the TurtleShell). A rebuild keeps an EnemyAggro, a ShellDefense (with its
-         settings) and DeathEffect's Vanish Color that other tools gave the enemy.
-Requirement: EnemyBuilder.cs x-> UIBuildHelper.cs, AnimatorBuildHelper.cs, MeshBounds.cs, EnemyAnimator.cs, EnemyAggro.cs, ShellDefense.cs, EnemyCombat.cs, EnemyMovement.cs, EnemyAttack.cs, EnemySpawner.cs, DeathEffect.cs, DeathEffectBuilder.cs, MenuOrder.cs
+         Tools > World > Build Desert Content: the TurtleShell, the Chest Monster, the Beholder), at its own height, and
+         for a flying monster (the Beholder) without gravity, with its collider around its body in the air and
+         FlyingEnemy. A rebuild keeps an EnemyAggro, a ShellDefense, a FlyingEnemy (with their settings) and
+         DeathEffect's Vanish Color that other tools gave the enemy.
+         Works with RPG Monster DUO and RPG Monster Partners (22/11/2026): Partners calls its run "Run" (not RunFWD),
+         and its prefabs end in "Default" (ChestMonsterPolyartDefault -> ChestMonsterEnemy).
+Requirement: EnemyBuilder.cs x-> UIBuildHelper.cs, AnimatorBuildHelper.cs, MeshBounds.cs, EnemyAnimator.cs, EnemyAggro.cs, ShellDefense.cs, FlyingEnemy.cs, EnemyCombat.cs, EnemyMovement.cs, EnemyAttack.cs, EnemySpawner.cs, DeathEffect.cs, DeathEffectBuilder.cs, MenuOrder.cs
              EnemyBuilder.cs <-x NightMonsterBuilder.cs
 */
 
@@ -41,7 +45,8 @@ public static class EnemyBuilder
     const string PrefabFolder = "Assets/Prefabs/Enemy";
     const string ControllerFolder = "Assets/Animation/Enemy";
     const string NoFrictionPath = "Assets/Prefabs/Enemy/EnemyNoFriction.physicMaterial";
-    const float Height = 1f;   // meters from the ground to the top of the monster (Marko's ball enemy was 1 m too)
+    const float Height = 1f;   // meters from the ground to the top of the monster (Marko's ball enemy was 1 m too); BuildMonster can pick another
+    const float FlyerBall = 0.8f;   // a flying monster's collider: this share of the ball that fits it, around the middle of its body
 
     // Starting numbers on the new prefab. Marko's EnemySpawner still raises health and damage each day.
     const float MoveSpeed = 2f;       // meters per second (the player walks at 7.8)
@@ -57,6 +62,7 @@ public static class EnemyBuilder
     const string IdleState = "IdleBattle";
     const string WalkState = "WalkFWD";
     const string RunState = "RunFWD";
+    const string RunStateToo = "Run";              // RPG Monster Partners' name for it (the Chest Monster, the Beholder)
     const string AttackState = "Attack01";
     const string HitState = "GetHit";
     const string DieState = "Die";
@@ -115,12 +121,18 @@ public static class EnemyBuilder
     // ===== My methods =====
 
     // Builds (refills) the enemy for one of the monster prefabs by its file name (e.g. "TurtleShellPolyart"), without
-    // asking and without touching the EnemySpawner: its controller and prefab, like the menu. Tools > World > Build
-    // Desert Content uses it for the desert's turtle. Returns the prefab (null = no such monster, or it couldn't be
-    // saved); "report" says what happened.
-    public static GameObject BuildMonster(string monsterName, out string report)
+    // asking and without touching the EnemySpawner: its controller and prefab, like the menu. Tools > Enemies > Set Up
+    // Night Monsters uses it for the night monsters. height = meters from the ground to its top (1 = like the slime);
+    // flying = it flies (no gravity, its collider around its body, FlyingEnemy). Returns the prefab (null = no such
+    // monster, or it couldn't be saved); "report" says what happened.
+    public static GameObject BuildMonster(string monsterName, out string report, float height = Height, bool flying = false)
     {
         GameObject monster = FindMonster(monsterName);
+        if (monster == null)
+        {
+            report = "no monster prefab called " + monsterName + " in the project (import its pack)";
+            return null;
+        }
         string problem = Problem(monster);
         if (problem != null)
         {
@@ -132,7 +144,7 @@ public static class EnemyBuilder
         string prefabPath = FindPrefabPath(PrefabFolder + "/" + name + ".prefab");
         List<string> missing = new List<string>();
         AnimatorController controller = BuildController(ControllerFolder + "/" + name + ".controller", ClipsByState(monster), missing);
-        GameObject prefab = BuildPrefab(monster, name, prefabPath, controller);
+        GameObject prefab = BuildPrefab(monster, name, prefabPath, controller, height, flying);
         DeathEffectBuilder.MakeMeshesReadable();
         report = prefab == null ? "couldn't save " + prefabPath
                                 : prefabPath + (missing.Count > 0 ? " (no " + string.Join(", ", missing) + " animation)" : "");
@@ -181,10 +193,11 @@ public static class EnemyBuilder
         return null;
     }
 
-    // "SlimePolyart" -> "SlimeEnemy", "TurtleShellPBR" -> "TurtleShellEnemy".
+    // "SlimePolyart" -> "SlimeEnemy", "TurtleShellPBR" -> "TurtleShellEnemy", "ChestMonsterPolyartDefault" ->
+    // "ChestMonsterEnemy" (RPG Monster Partners' prefabs end in "Default").
     static string EnemyName(GameObject monster)
     {
-        string name = monster.name.Replace("Polyart", "").Replace("PBR", "").Replace(" ", "");
+        string name = monster.name.Replace("Polyart", "").Replace("PBR", "").Replace("Default", "").Replace(" ", "");
         return (name.Length > 0 ? name : "Monster") + "Enemy";
     }
 
@@ -217,11 +230,15 @@ public static class EnemyBuilder
         c.AddParameter(EnemyAnimator.DeadName, AnimatorControllerParameterType.Bool);
         c.AddParameter(EnemyAnimator.VictoryName, AnimatorControllerParameterType.Trigger);
 
-        // A clip by its demo state name (null + noted as missing if the monster has no such state).
-        Motion Clip(string state)
+        // A clip by its demo state name, or by the first of several names the monster has (the run: RunFWD, or Run in
+        // RPG Monster Partners); null + noted as missing if it has none of them.
+        Motion Clip(params string[] states)
         {
-            if (clips.TryGetValue(state, out Motion motion)) return motion;
-            missing.Add(state);
+            foreach (string state in states)
+            {
+                if (clips.TryGetValue(state, out Motion motion)) return motion;
+            }
+            missing.Add(states[0]);
             return null;
         }
 
@@ -234,7 +251,7 @@ public static class EnemyBuilder
         move.useAutomaticThresholds = false;
         AddClip(move, Clip(IdleState), 0f);
         AddClip(move, Clip(WalkState), WalkAt);
-        AddClip(move, Clip(RunState), RunAt);
+        AddClip(move, Clip(RunState, RunStateToo), RunAt);
         sm.defaultState = locomotion;
 
         AnimatorState dead = AddState(sm, "Dead", Clip(DieState), new Vector3(300f, 260f));
@@ -305,10 +322,13 @@ public static class EnemyBuilder
         if (clip != null) tree.AddChild(clip, speed);
     }
 
-    // The enemy prefab: physics, Marko's scripts, EnemyAnimator, and the monster as its Model child.
+    // The enemy prefab: physics, Marko's scripts, EnemyAnimator, and the monster as its Model child, "height" meters tall.
+    // A flying one (or one that flew before: it had FlyingEnemy) has no gravity, its collider around the middle of its
+    // body and FlyingEnemy.
     // An existing prefab is emptied and refilled IN PLACE: its top object stays the same, so links to it (the
     // EnemySpawner's Enemy Prefab) keep working. A brand-new object saved over it could break those links.
-    static GameObject BuildPrefab(GameObject monster, string name, string path, AnimatorController controller)
+    static GameObject BuildPrefab(GameObject monster, string name, string path, AnimatorController controller,
+                                  float height = Height, bool flying = false)
     {
         MakeFolders(FolderOf(path));
         bool existed = AssetDatabase.LoadAssetAtPath<GameObject>(path) != null;
@@ -320,6 +340,9 @@ public static class EnemyBuilder
             bool waits = existed && root.GetComponent<EnemyAggro>() != null;
             ShellDefense oldShell = existed ? root.GetComponent<ShellDefense>() : null;   // the turtle's shell, with its settings
             string shellSettings = oldShell != null ? EditorJsonUtility.ToJson(oldShell) : null;
+            FlyingEnemy oldFlyer = existed ? root.GetComponent<FlyingEnemy>() : null;     // a flying monster, with its settings
+            string flyerSettings = oldFlyer != null ? EditorJsonUtility.ToJson(oldFlyer) : null;
+            bool flies = flying || oldFlyer != null;
             DeathEffect oldEffect = existed ? root.GetComponent<DeathEffect>() : null;
             SerializedObject oldLook = oldEffect != null ? new SerializedObject(oldEffect) : null;
             Color? vanishColor = oldLook != null ? oldLook.FindProperty("vanishColor").colorValue : (Color?)null;
@@ -334,17 +357,18 @@ public static class EnemyBuilder
             Animator animator = model.GetComponentInChildren<Animator>(true);
             animator.runtimeAnimatorController = controller;
             animator.applyRootMotion = false;   // the movement script moves the enemy
-            float radius = Fit(model.transform);
+            float radius = Fit(model.transform, height);
 
             Rigidbody body = root.AddComponent<Rigidbody>();
             body.mass = Mass;
             body.interpolation = RigidbodyInterpolation.Interpolate;              // smooth between physics steps
             body.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;   // can't slip through thin walls
             body.constraints = RigidbodyConstraints.FreezeRotation;              // never tips over; EnemyMovement turns it
+            body.useGravity = !flies;                                            // a flying one holds itself up (FlyingEnemy)
 
             SphereCollider shape = root.AddComponent<SphereCollider>();
-            shape.radius = radius;
-            shape.center = new Vector3(0f, radius, 0f);   // its bottom touches the ground under the feet
+            shape.radius = flies ? radius * FlyerBall : radius;
+            shape.center = new Vector3(0f, flies ? height * 0.5f : radius, 0f);   // on the ground: its bottom under the feet; flying: its body
             shape.sharedMaterial = NoFriction();
 
             // Marko's scripts (public fields, so set directly). The EnemySpawner sets their targets.
@@ -359,6 +383,11 @@ public static class EnemyBuilder
             DeathEffectBuilder.AddTo(root);   // its body turns into red particles during the death animation
             if (waits) root.AddComponent<EnemyAggro>();
             if (shellSettings != null) EditorJsonUtility.FromJsonOverwrite(shellSettings, root.AddComponent<ShellDefense>());
+            if (flies)
+            {
+                FlyingEnemy flyer = root.AddComponent<FlyingEnemy>();
+                if (flyerSettings != null) EditorJsonUtility.FromJsonOverwrite(flyerSettings, flyer);
+            }
             DeathEffect effect = root.GetComponent<DeathEffect>();
             if (vanishColor.HasValue && effect != null)
             {
@@ -388,23 +417,23 @@ public static class EnemyBuilder
         }
     }
 
-    // Scales the model to Height, stands its feet on the root (ground level), centers it over the root, and returns
-    // the radius of a ball that fits inside it (for the collider).
-    static float Fit(Transform model)
+    // Scales the model to "height" meters, stands its feet on the root (ground level), centers it over the root, and
+    // returns the radius of a ball that fits inside it (for the collider).
+    static float Fit(Transform model, float height)
     {
         model.localPosition = Vector3.zero;
         model.localRotation = Quaternion.identity;
         model.localScale = Vector3.one;
 
         Bounds look = MeshBounds.Of(model.gameObject);    // the size you see, as it comes (the root is at the world's middle)
-        if (look.size.y < 0.01f) return Height * 0.5f;    // nothing to measure: leave it as it is
+        if (look.size.y < 0.01f) return height * 0.5f;    // nothing to measure: leave it as it is
 
-        float scale = Height / look.size.y;
+        float scale = height / look.size.y;
         model.localScale = Vector3.one * scale;
         model.localPosition = new Vector3(-look.center.x, -look.min.y, -look.center.z) * scale;
 
         float width = Mathf.Max(look.size.x, look.size.z) * scale;
-        return 0.5f * Mathf.Min(Height, width);
+        return 0.5f * Mathf.Min(height, width);
     }
 
     // A physics material without friction, so the enemy slides along walls instead of sticking to them.

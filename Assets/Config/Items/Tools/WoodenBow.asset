@@ -30,6 +30,10 @@ MonoBehaviour:
   tool:
     kind: 3
     tier: 1
+  bow:
+    damage: 5
+    drawSeconds: 1
+    arrowSpeed: 45
   armor:
     slot: 2
     protection: 1.5

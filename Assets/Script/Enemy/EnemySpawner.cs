@@ -122,7 +122,13 @@ public class EnemySpawner : MonoBehaviour
     {
         while (DaylightCycle.Current != null && DaylightCycle.Current.IsNight)
         {
-            if (enemyCounter < maxEnemyNumber)
+            // [Tony] edited (22/11/2026): + "&& AliveEnemies() < MostAtOnce()". Was: if (enemyCounter < maxEnemyNumber)
+            // enemyCounter is never counted up, so Max Enemy Number never stopped a spawn: on nights 3 - 5 a monster came
+            // every 5 s all night (about 55 by dawn) and the game got slower and slower. Now the ones still alive are
+            // counted, capped by Max Enemy Number and by Tony's NightMonsters > Most At Once (20), whichever is lower.
+            // To undo: put the line above back and delete AliveEnemies / MostAtOnce under GroundHeight.
+            // Log: Docs/TonyEditMate/Marko/22-11-2026 Night Monsters Stop Piling Up.md
+            if (enemyCounter < maxEnemyNumber && AliveEnemies() < MostAtOnce())      // [Tony] edited
             {
                 SpawnEnemy();
 
@@ -257,6 +263,21 @@ public class EnemySpawner : MonoBehaviour
             return hit.point.y + 0.5f;                                                // [Tony] added
         }                                                                             // [Tony] added
         return 0.5f;                                                                  // [Tony] added
+    }                                                                                 // [Tony] added
+
+    // [Tony] added (22/11/2026): how many of the enemies this spawner made are still there (killed ones and ones burnt
+    // away or taken away are gone), and the most allowed at once: Max Enemy Number, or Tony's NightMonsters > Most At
+    // Once if that's lower. Log: Docs/TonyEditMate/Marko/22-11-2026 Night Monsters Stop Piling Up.md
+    int AliveEnemies()                                                                // [Tony] added
+    {                                                                                 // [Tony] added
+        spawnedEnemies.RemoveAll(enemy => enemy == null);                             // [Tony] added
+        return spawnedEnemies.Count;                                                  // [Tony] added
+    }                                                                                 // [Tony] added
+
+    int MostAtOnce()                                                                  // [Tony] added
+    {                                                                                 // [Tony] added
+        NightMonsters nightMonsters = GetComponent<NightMonsters>();                  // [Tony] added
+        return nightMonsters != null ? Mathf.Min(maxEnemyNumber, nightMonsters.MostAtOnce) : maxEnemyNumber;   // [Tony] added
     }                                                                                 // [Tony] added
 
     public void DespawnEnemies()

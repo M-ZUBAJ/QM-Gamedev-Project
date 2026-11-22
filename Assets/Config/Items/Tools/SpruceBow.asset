@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a7f3d5fd2bbcd4dab390231f45945a, type: 3}
+  m_Name: SpruceBow
+  m_EditorClassIdentifier: 
+  displayName: Spruce Bow
+  prefab: {fileID: 6810426384721750174, guid: 014eeb8bda73e744cac2973dd79909fb, type: 3}
+  pickup: 0
+  icon:
+    mode: 0
+    image: {fileID: 0}
+    aseprite: {fileID: 0}
+    asepriteTag: 
+    frames: []
+    durations: []
+  itemType: 2
+  consumable:
+    health: 0
+    hunger: 0
+    stamina: 0
+  tool:
+    kind: 3
+    tier: 3
+  bow:
+    damage: 15
+    drawSeconds: 0.6
+    arrowSpeed: 60
+  armor:
+    slot: 2
+    protection: 1.5
+    set: 
+    piece: 
+    hides: []
+    look: {fileID: 0}
+  ammo:
+    damage: 20
+    head: {fileID: 0}
+  minedWith: 0
+  recipe:
+  - item: {fileID: 11400000, guid: 8b9616aa48ce0b646a2bb24b5ff4c8d9, type: 2}
+    amount: 1
+  - item: {fileID: 11400000, guid: 512b1bf6d032e05489766c6a27b6db67, type: 2}
+    amount: 20
+  - item: {fileID: 11400000, guid: 5c6e2eb642dbe4159a36e38d99e65413, type: 2}
+    amount: 15
+  craftAmount: 1
+  craftedAt: 0

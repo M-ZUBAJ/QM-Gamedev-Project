@@ -19,11 +19,18 @@ shell states Shell / Shell Hit). They come with the slimes, at about 3 in 10 of 
 and then (ShellDefense: melee hits on the shell hurt the player). Night monsters appear out of the player's sight.
 Guide: `Docs/Night Monsters Setup.md`. (Until 21/11/2026 the turtles were the new world's desert day monster.)
 
+**From night 3: chest monsters, from night 4: beholders** (22/11/2026, RPG Monster Partners PBR Polyart:
+`ChestMonsterEnemy`, `BeholderEnemy`), made by the same tool with `BuildMonster(name, out report, height, flying)`: the
+chest monster 1.1 m tall, the beholder 1.3 m and **flying** (no gravity, its collider around the middle of its body,
+Tony's **FlyingEnemy**: high up, it dives to bite). This tool works with that pack too: it calls its run **Run** (the
+DUO pack: RunFWD) and its prefab names end in "Default" (`ChestMonsterPolyartDefault` -> `ChestMonsterEnemy`).
+
 **Another monster for the night:** make it with **Tools > Enemies > Build Monster Enemy**, then add it to the
 EnemySpawner's **NightMonsters** > Monsters with its First Night (`Docs/Night Monsters Setup.md`). To replace the slime
 (the first night's monster), answer **Use** when the tool asks to put it in the EnemySpawner. Running it on a monster
-that already has an enemy prefab rebuilds it in place and keeps an EnemyAggro, a ShellDefense and the ember colors other
-tools gave it.
+that already has an enemy prefab rebuilds it in place and keeps an EnemyAggro, a ShellDefense, a FlyingEnemy and the
+ember colors other tools gave it (it's rebuilt 1 m tall, though: Tools > Enemies > Set Up Night Monsters rebuilds the
+night monsters at their own sizes).
 
 **How it works:**
 - **Movement, attacks, health, coins:** Marko's scripts (EnemyMovement, EnemyAttack, EnemyCombat, EnemySpawner).

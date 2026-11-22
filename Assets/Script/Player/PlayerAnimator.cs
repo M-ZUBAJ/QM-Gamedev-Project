@@ -20,7 +20,8 @@ Purpose: Makes the player's character move like the player: it stands, runs (for
          speed (ActionSpeed, used by both controllers), so in first person the hands and the body's shadow move together.
          The bow (BowShooter) plays three: BowDraw (draw, then hold at full draw: the BowAim state), BowRelease (shoot)
          and BowCancel (lower it without shooting); each takes back the other two's waiting triggers (TakesBack), so an
-         old one can't play later. No flinch while the bow is drawn (it would drop the pose).
+         old one can't play later. No flinch while the bow is drawn (it would drop the pose). BowDraw plays as fast as
+         the bow in the hand draws (BowShooter.DrawSpeed into the controller's BowDrawSpeed: the Spruce Bow's is faster).
 Requirement: PlayerAnimator.cs x-> Animator (Unity)
              PlayerAnimator.cs o-> PlayerController.cs, PlayerJump.cs, PlayerHealth.cs, CameraController.cs, BowShooter.cs, Rigidbody (Unity)
              PlayerAnimator.cs <-x FirstPersonHandsBuilder.cs, PlayerAnimationSetup.cs, PlayerCharacterBuilder.cs, PlayerCombat.cs, PunchCombo.cs, PunchEffect.cs, PunchEffectBuilder.cs, TierToolBuilder.cs, ToolRules.cs
@@ -77,6 +78,7 @@ public class PlayerAnimator : MonoBehaviour
     public const string BowOverdrawStateName = "BowOverdraw";
     public const string BowIdleStateName = "BowIdle";
     public const string BowHeldName = "BowHeld";
+    public const string BowDrawSpeedName = "BowDrawSpeed";   // BowDraw's speed: 1 = the Wooden Bow's 1 s draw, 1.67 = the Spruce Bow's 0.6 s
     public const float BowDrawBlendSeconds = 0.12f;
     public const float BowReleaseSpeed = 1.5f;
     public const float BowOverdrawAfter = 2.5f;
@@ -124,6 +126,7 @@ public class PlayerAnimator : MonoBehaviour
     static readonly int Jump = Animator.StringToHash(JumpName);
     static readonly int Dead = Animator.StringToHash(DeadName);
     static readonly int EmptyState = Animator.StringToHash(EmptyStateName);
+    static readonly int BowDrawSpeed = Animator.StringToHash(BowDrawSpeedName);
     // One trigger per action, in the same order as PlayerAction.
     static readonly int[] Actions = System.Array.ConvertAll(System.Enum.GetNames(typeof(PlayerAction)), Animator.StringToHash);
 
@@ -219,6 +222,7 @@ public class PlayerAnimator : MonoBehaviour
         SetFloat(MoveX, move.x, blendTime);
         SetFloat(MoveZ, move.z, blendTime);
         SetFloat(RunSpeed, runAnimationSpeed, 0f);
+        SetFloat(BowDrawSpeed, BowShooter.DrawSpeed, 0f);   // the bow in the hand: how fast its draw plays (1 = no bow)
 
         // Falling: only after a moment in the air. On the ground = PlayerController or PlayerJump says so. PlayerJump
         // looks below the feet itself, so it still knows when Unity stops sending PlayerController touch messages

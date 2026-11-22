@@ -1,6 +1,6 @@
 /*
 First Date: 12/11/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Needs Broken Vector's free "Low Poly Tree Pack" (Assets/Imported3D/BrokenVector/LowPolyTreePack).
@@ -25,8 +25,9 @@ Purpose: Swaps the placeholder tree (brown cylinder + green ball) for low-poly t
          a Model child showing the pack's mesh, with the foot of its trunk on the top object's position.
          BuildSnowTrees (Tools > World > Build Snow Content, 21/11/2026) makes 4 more Prefab Variants of TreeNode for
          the new world's snow: the pack's pines and spruces in its winter "Cold" colours (TreeNode Snow Pine, Tall Snow
-         Pine, Snow Spruce, Tall Snow Spruce). They're not part of the grassland's mix.
-Requirement: GrasslandTreeBuilder.cs x-> UIBuildHelper.cs, ShapeColor.cs, ResourceNode.cs, ObjectScatter.cs, MenuOrder.cs
+         Pine, Snow Spruce, Tall Snow Spruce). They're not part of the grassland's mix. Since 22/11/2026 they're given
+         their own drop and health (SnowBuilder's Spruce Wood and 300), set on each variant's ResourceNode.
+Requirement: GrasslandTreeBuilder.cs x-> UIBuildHelper.cs, ShapeColor.cs, ResourceNode.cs, ObjectScatter.cs, ItemData.cs, MenuOrder.cs
              GrasslandTreeBuilder.cs <-x NewWorldBuilder.cs, SnowBuilder.cs
 */
 
@@ -185,10 +186,11 @@ public static class GrasslandTreeBuilder
 
     // ===== My methods =====
 
-    // The snow's trees: Prefab Variants of TreeNode (its drops and health: they give Wood like every tree), refilled in
-    // place if they exist. Needs TreeNode as a low-poly tree (Use Low Poly Grassland Trees, run first). Returns them in
-    // SnowLooks' order; "report" says what happened, for the Console.
-    public static List<GameObject> BuildSnowTrees(out string report)
+    // The snow's trees: Prefab Variants of TreeNode, refilled in place if they exist, dropping "drop" (null = TreeNode's
+    // Wood) and taking "health" damage to chop down (0 = TreeNode's 30). SnowBuilder gives Spruce Wood and 300. Needs
+    // TreeNode as a low-poly tree (Use Low Poly Grassland Trees, run first). Returns them in SnowLooks' order; "report"
+    // says what happened, for the Console.
+    public static List<GameObject> BuildSnowTrees(ItemData drop, float health, out string report)
     {
         List<GameObject> made = new List<GameObject>();
         GameObject treeNode = AssetDatabase.LoadAssetAtPath<GameObject>(TreeNodePath);
@@ -200,13 +202,14 @@ public static class GrasslandTreeBuilder
         List<string> names = new List<string>();
         foreach (Look look in SnowLooks)
         {
-            GameObject variant = BuildVariant(treeNode, look);
+            GameObject variant = BuildVariant(treeNode, look, drop, health);
             if (variant == null) continue;
             made.Add(variant);
             names.Add(variant.name);
         }
         AssetDatabase.SaveAssets();
-        report = made.Count + " snow trees in " + VariantFolder + " (" + string.Join(", ", names) + ")";
+        report = made.Count + " snow trees in " + VariantFolder + " (" + string.Join(", ", names) + "), dropping " +
+                 (drop != null ? drop.DisplayName : "TreeNode's Wood") + ", " + (health > 0f ? health + " health" : "TreeNode's health");
         return made;
     }
 
@@ -259,8 +262,9 @@ public static class GrasslandTreeBuilder
     }
 
     // One more look: a Prefab Variant of TreeNode (it keeps TreeNode's drops and health, and follows Turki's changes to
-    // them) showing another tree. An existing one is refilled IN PLACE, so links to it keep working.
-    static GameObject BuildVariant(GameObject treeNode, Look look)
+    // them) showing another tree. An existing one is refilled IN PLACE, so links to it keep working. drop / health (the
+    // snow's trees) override TreeNode's: null / 0 = keep TreeNode's.
+    static GameObject BuildVariant(GameObject treeNode, Look look, ItemData drop = null, float health = 0f)
     {
         string path = VariantPath(look);
         MakeFolders(FolderOf(path));
@@ -282,6 +286,7 @@ public static class GrasslandTreeBuilder
         {
             Transform model = root.transform.Find(ModelName);
             if (model == null || !Dress(root, model, look)) return null;
+            if (drop != null || health > 0f) SetDrops(root, drop, health);
             return PrefabUtility.SaveAsPrefabAsset(root, path);   // a TreeNode copy saved as its own file = a Prefab Variant
         }
         finally
@@ -289,6 +294,18 @@ public static class GrasslandTreeBuilder
             if (existed) PrefabUtility.UnloadPrefabContents(root);
             else EditorSceneManager.ClosePreviewScene(hidden);
         }
+    }
+
+    // A tree's ResourceNode (Turki's): what it drops and how much damage it takes before it falls. drop null = keep its
+    // drop, health 0 = keep its health. Only its numbers are changed, not his script.
+    static void SetDrops(GameObject root, ItemData drop, float health)
+    {
+        ResourceNode node = root.GetComponent<ResourceNode>();
+        if (node == null) return;
+        SerializedObject so = new SerializedObject(node);   // the names in quotes must match Turki's fields
+        if (drop != null) so.FindProperty("dropItem").objectReferenceValue = drop;
+        if (health > 0f) so.FindProperty("maxHealth").floatValue = health;
+        so.ApplyModifiedPropertiesWithoutUndo();
     }
 
     // Gives a tree its look: the pack tree's mesh and material on Model, with the foot of its trunk on the top object,

@@ -11,6 +11,8 @@
   punches. The hit lands when the swing reaches its lowest point, with the grey wind burst (like a punch).
 - **Mining:** copper and iron need a **Stone pickaxe or better**. A bare hand, axe or sword can't break them, and a
   message says *"Needs a Stone Pickaxe or better"*.
+- **Chopping** (22/11/2026): the new world's snow trees (spruce) need an **Iron Axe or better** (*"Needs an Iron Axe
+  or better"*), from their Spruce Wood's Mined With = Iron. Every other tree can be chopped with anything, even a hand.
 - **Each tool is best at its own job:**
   - an axe chops trees fast;
   - a pickaxe breaks rock and ores fast;
@@ -19,7 +21,9 @@
 
 **The bow** (22/11/2026) is a tool too: the **Wooden Bow** (Kind **Bow**, Tier Wood; 10 Wood + 10 Plank), held in the
 left hand; hold left click to draw, let go to shoot arrows (Stone, Copper, Iron, Gold, Diamond). It doesn't swing or
-punch, and a higher-tier bow would shoot 25 % harder per tier. It has its own tool and guide: **Tools > Items > Build
+punch. Bows get no tier bonus: since 22/11/2026 each bow has its own **Bow** section (Damage added to the arrow's,
+Draw Seconds, Arrow Speed), and the better **Spruce Bow** (the Wooden Bow + 20 Spruce Wood + 15 Iron: an upgrade, like
+the tier tools) draws in 0.6 s instead of 1. It has its own tool and guide: **Tools > Items > Build
 Bow And Arrows**, `Docs/Bow Setup.md`.
 
 They replaced Marko's three placeholder tools (Sword, Axe, PickAxe). Change logs:
@@ -102,7 +106,7 @@ StonePickaxe    Box Collider (aim + F to pick up) + ItemPickup (StonePickaxe, 1)
 | `HandleShare` at the top of `Assets/Script/Editor/TierToolBuilder.cs` | (0.7) | How long axe and pickaxe handles are, as a share of the pack's (0.7 = 30 % shorter, 1 = the pack's length). Change it, then **Tools > Items > Rebuild Tool Models**: it rebuilds only the 15 tool prefabs, leaving names and recipes alone. |
 | Player > **PunchEffect** | **Swing Delay**, **Mine Delay** | Seconds from the click until a sword / axe or pickaxe swing lands (measured by the tool). |
 | A tool's Item Data | **Item Type** Tool, **Tool > Kind / Tier** | What the tool is. |
-| An ore's Item Data | **Mining > Mined With** | The weakest pickaxe that can mine a rock that drops it. None = anything, even a hand. |
+| An ore's (or a wood's) Item Data | **Mining > Mined With** | The weakest pickaxe that can mine a rock that drops it, or (since 22/11/2026) the weakest axe that can chop a tree that drops it (Spruce Wood: Iron). None = anything, even a hand. |
 | Player > **PlayerCombat** (Marko) | the damage numbers | What a hand or a wooden tool does. |
 | `Assets/Script/Tool/ToolRules.cs` | `TierBonus` (1.25) | How much stronger each tier is. |
 | GameRules | **Tool Test** | Gives one of every tool (default off). |

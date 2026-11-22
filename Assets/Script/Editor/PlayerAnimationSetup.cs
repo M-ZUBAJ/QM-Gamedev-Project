@@ -33,8 +33,9 @@ Purpose: Puts the player's animations into their correct setting, in one click:
             character on every run (the file is cut again only when that changes): the aim = the bow hand up at the
             head and the string hand at the face, the release = the end of the aim. Both controllers get the bow
             states and the BowDraw / BowRelease / BowCancel triggers (PlayerAnimator); the hands also get BowIdle and
-            the BowHeld bool (FirstPersonHands sets it). BowDraw plays at the speed that makes it last BowShooter's Draw
-            Seconds.
+            the BowHeld bool (FirstPersonHands sets it). BowDraw lasts BowShooter.DefaultDrawSeconds (1 s) times its
+            speed parameter BowDrawSpeed (a float, 1 by default), which PlayerAnimator and FirstPersonHands set from the
+            bow in the hand: a bow that draws in 0.6 s (the Spruce Bow) plays it 1.67 times as fast (22/11/2026).
          One file can play several actions: BotAxeAttackDownward is the swing of every tool (Attack and Mine).
          Tools > Items > Build Bow And Arrows runs the file part of this too (FixAnimationFiles).
 Requirement: PlayerAnimationSetup.cs x-> AnimatorBuildHelper.cs, FirstPersonArmsHelper.cs, PunchEffectBuilder.cs, PlayerAnimator.cs, PunchEffect.cs, PunchCombo.cs, PlayerInventory.cs, BowShooter.cs, UIBuildHelper.cs, MenuOrder.cs
@@ -612,6 +613,7 @@ public static class PlayerAnimationSetup
         {
             AddParameter(controller, trigger.ToString(), AnimatorControllerParameterType.Trigger);
         }
+        AddFloat(controller, PlayerAnimator.BowDrawSpeedName, 1f);   // the bow in the hand's draw speed (the scripts set it)
         bool ready = !body && back != null && bow.ready != null && bow.readyDraw != null;
         if (ready) AddParameter(controller, PlayerAnimator.BowHeldName, AnimatorControllerParameterType.Bool);
 
@@ -624,7 +626,9 @@ public static class PlayerAnimationSetup
 
         AnimationClip drawClip = ready ? bow.readyDraw : bow.draw;
         draw.motion = drawClip;
-        draw.speed = drawClip.length / DrawSeconds();   // lasts BowShooter's Draw Seconds
+        draw.speed = drawClip.length / BowShooter.DefaultDrawSeconds;   // lasts 1 s at BowDrawSpeed 1 (the Wooden Bow)
+        draw.speedParameter = PlayerAnimator.BowDrawSpeedName;          // x the held bow's speed (the Spruce Bow: 1.67)
+        draw.speedParameterActive = true;
         aim.motion = bow.aimLoop != null ? bow.aimLoop : bow.aim;
         aim.speed = 1f;
         release.motion = bow.release;
@@ -748,12 +752,21 @@ public static class PlayerAnimationSetup
         controller.AddParameter(name, type);
     }
 
-    // BowShooter's Draw Seconds on the open scene's Player, else its default.
-    static float DrawSeconds()
+    // A float parameter with this default value; one made before with another type or default gets put right. (A new
+    // float would start at 0, and a state whose speed it multiplies would stand still until a script set it.)
+    static void AddFloat(AnimatorController controller, string name, float value)
     {
-        BowShooter shooter = Object.FindFirstObjectByType<BowShooter>();
-        SerializedProperty seconds = shooter != null ? new SerializedObject(shooter).FindProperty("drawSeconds") : null;
-        return seconds != null ? Mathf.Max(0.1f, seconds.floatValue) : BowShooter.DefaultDrawSeconds;
+        AnimatorControllerParameter[] all = controller.parameters;
+        for (int i = 0; i < all.Length; i++)
+        {
+            if (all[i].name != name) continue;
+            if (all[i].type == AnimatorControllerParameterType.Float && Mathf.Approximately(all[i].defaultFloat, value)) return;
+            all[i].type = AnimatorControllerParameterType.Float;
+            all[i].defaultFloat = value;
+            controller.parameters = all;   // the array is a copy: give it back
+            return;
+        }
+        controller.AddParameter(new AnimatorControllerParameter { name = name, type = AnimatorControllerParameterType.Float, defaultFloat = value });
     }
 
     // A new action state like the builders make: its trigger, an arrow from Any State and an arrow back once it played.

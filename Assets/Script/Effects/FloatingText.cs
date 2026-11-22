@@ -9,6 +9,8 @@ Purpose: A short word in the world that pops up, rises and fades away, always fa
          everything (a TextMeshPro text, overlay), e.g. "BLOCKED!" over a turtle whose shell a hit bounced off. It
          removes itself when it has faded. It runs on real time, so one shown just before the game freezes (the
          victory page, the pause menu) still fades away instead of hanging in the middle of the screen.
+         Its outline and overlay make TextMeshPro copy the font's material for it; TextMeshPro doesn't remove that copy,
+         so it does (OnDestroy): before 22/11/2026 every damage number left one behind until the scene changed.
 Requirement: FloatingText.cs x-> TextMeshPro (Unity)
              FloatingText.cs <-x DamageNumbers.cs
              FloatingText.cs <-o ShellDefense.cs
@@ -25,6 +27,7 @@ public class FloatingText : MonoBehaviour
     const float FadeFrom = 0.6f;      // it starts fading after this share of its time
 
     TextMeshPro text;
+    Material ownMaterial;   // the copy of the font's material made for this text (its outline, drawn over everything)
     float seconds;    // how long it shows
     float age;        // how long it has shown
     Color color;
@@ -53,6 +56,11 @@ public class FloatingText : MonoBehaviour
         FaceCamera();
     }
 
+    void OnDestroy()
+    {
+        if (ownMaterial != null) Destroy(ownMaterial);   // TextMeshPro leaves its copy behind
+    }
+
     // ===== My methods =====
 
     // Shows "words" at "point" in the world for "seconds". size = the letters' size (3 = about a quarter of a meter),
@@ -71,13 +79,15 @@ public class FloatingText : MonoBehaviour
         tmp.alignment = TextAlignmentOptions.Center;
         tmp.enableWordWrapping = false;
         tmp.color = color;
-        tmp.isOverlay = true;        // drawn over the turtle (and everything else), so it's never hidden inside it
-        tmp.outlineWidth = 0.25f;    // a dark edge: readable on the bright desert and at night
+        tmp.outlineWidth = 0.25f;    // a dark edge: readable on the bright desert and at night (this makes its own material)
         tmp.outlineColor = new Color32(0, 0, 0, 220);
+        tmp.isOverlay = true;        // drawn over the turtle (and everything else); after the outline, so the font's shared material isn't changed
         tmp.rectTransform.sizeDelta = new Vector2(4f, 1f);
 
         FloatingText floating = go.AddComponent<FloatingText>();
         floating.text = tmp;
+        Material own = tmp.fontSharedMaterial;   // the copy made for this text (never the font's own material)
+        floating.ownMaterial = tmp.font != null && own == tmp.font.material ? null : own;
         floating.seconds = seconds;
         floating.color = color;
         floating.start = point;

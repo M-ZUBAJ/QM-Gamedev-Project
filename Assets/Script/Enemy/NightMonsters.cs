@@ -1,13 +1,13 @@
 /*
 First Date: 21/11/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: The object with Marko's EnemySpawner (in both game scenes). Tools > Enemies > Set Up Night Monsters puts it there
-        with the turtle.
+        with the turtle (night 2), the Chest Monster (night 3) and the flying Beholder (night 4).
 Unity Editor: Monsters = the night monsters after the first night's (the EnemySpawner's Enemy Prefab, the slime, comes
               every night): each with its First Night, its Share of the night's spawns, Max Alive, and its own Health and
-              Damage (0 = the spawner's numbers). A monster for night 3: click + under Monsters, drag its enemy prefab in,
-              First Night 3.
+              Damage (0 = the spawner's numbers). A monster for a later night: click + under Monsters, drag its enemy
+              prefab in, First Night 5 (the list is read top to bottom: keep it in order of First Night).
               Where they appear: Min / Max Distance from the player, and Out Of Sight.
               Testing: Play, select the sun (DaylightCycle): Day = 2, then drag Time Of Day past 0.77 (night). About a
               third of the monsters are turtles. Turn around quickly: none pops up right in front of you.
@@ -21,8 +21,13 @@ Purpose: Which monsters come each night, how strong they are, and where they app
            - FindSpot: a spot Min - Max Distance away that the player can't see (PlayerSight: behind them, or behind a
              hill or a tree), inside the world barrier, so no monster appears right in front of the player when they
              turn around (before, they appeared 10 m away in any direction). If every try is in sight, the one most
-             behind the camera.
-Requirement: NightMonsters.cs o-> PlayerSight.cs, WorldBarrier.cs, EnemyCombat.cs, EnemyAttack.cs
+             behind the camera;
+           - MostAtOnce (22/11/2026): Marko's EnemySpawner asks it before each spawn: at most Most At Once (20) night
+             monsters alive together, every kind (before, nothing stopped them: about 55 by the end of nights 3 - 5, and
+             the game got slower and slower);
+           - far ones go: every 2 s, a monster it spawned that's farther than Leave Distance (90 m) from the player and
+             out of their sight is taken away quietly, so ones left far behind don't take a place or the game's time.
+Requirement: NightMonsters.cs o-> PlayerSight.cs, WorldBarrier.cs, EnemyCombat.cs, EnemyAttack.cs, EnemyAnimator.cs, PlayerController.cs
              NightMonsters.cs <-x EnemySpawner.cs, NightMonsterBuilder.cs
 */
 
@@ -102,6 +107,20 @@ public class NightMonsters : MonoBehaviour
              "(the turtle from night 2). Add the next night's monster here.")]
     [SerializeField] List<Monster> monsters = new List<Monster>();
 
+    [Header("How many at once")]
+    [Tooltip("The most night monsters alive at once, every kind together (slimes too). Each one walks, animates and " +
+             "pushes the others: past about 20 the game slows down, most of all in the web build. Marko's EnemySpawner " +
+             "asks this before each spawn (its own Max Enemy Number caps it too, whichever is lower). Before 22/11/2026 " +
+             "nothing did: nights 3 - 5 brought one every 5 s all night, about 55 by dawn.")]
+    [Range(1, 100)]
+    [SerializeField] int mostAtOnce = 20;
+
+    [Tooltip("A night monster farther than this from the player (meters, over the ground), where the player can't see " +
+             "it, is taken away quietly: ones left far behind (the player walked or ran off) don't keep a place in Most At " +
+             "Once (a new one comes nearer) or use the game's time. 0 = never.")]
+    [Range(0f, 400f)]
+    [SerializeField] float leaveDistance = 90f;
+
     [Header("Where they appear")]
     [Tooltip("The nearest a monster appears to the player, in meters (more than PlayerSight's Notice Radius, 20: closer " +
              "always counts as seen).")]
@@ -120,10 +139,43 @@ public class NightMonsters : MonoBehaviour
     [SerializeField] int tries = 16;
 
     const float SpotHeight = 1.5f;   // how tall a monster is taken to be, for "could the player see it there"
+    const float LeaveCheckEvery = 2f;   // seconds between two looks for monsters left far behind
 
     Monster picked;                  // what Pick chose, for Prepare right after
+    readonly List<GameObject> spawned = new List<GameObject>();   // every monster the spawner made tonight (for Leave Distance)
+    Transform playerBody;            // the player (PlayerController), found once
+    float nextLeaveCheck;
 
     public IReadOnlyList<Monster> Monsters => monsters;
+
+    // The most night monsters alive at once (Marko's EnemySpawner asks before each spawn).
+    public int MostAtOnce => mostAtOnce;
+
+    // ===== Unity messages (Unity calls these) =====
+
+    // Every Leave Check: monsters left far behind, out of sight, are taken away (no coins, nobody sees it).
+    void Update()
+    {
+        if (leaveDistance <= 0f || Time.time < nextLeaveCheck) return;
+        nextLeaveCheck = Time.time + LeaveCheckEvery;
+        spawned.RemoveAll(enemy => enemy == null);   // killed, or burnt away at dawn
+        if (spawned.Count == 0 || Player() == null) return;
+
+        Camera cam = Camera.main;
+        float far = leaveDistance * leaveDistance;
+        for (int i = spawned.Count - 1; i >= 0; i--)
+        {
+            GameObject enemy = spawned[i];
+            Vector3 flat = enemy.transform.position - playerBody.position;
+            flat.y = 0f;
+            if (flat.sqrMagnitude < far) continue;
+            EnemyAnimator look = enemy.GetComponent<EnemyAnimator>();
+            if (look != null && (look.IsDead || look.IsVanishing)) continue;   // going anyway
+            if (Seen(enemy.transform.position, cam)) continue;                  // never in front of the player
+            spawned.RemoveAt(i);
+            Destroy(enemy);
+        }
+    }
 
     // ===== My methods =====
 
@@ -153,6 +205,7 @@ public class NightMonsters : MonoBehaviour
     // and it's counted for Max Alive. The first night's monster keeps the spawner's numbers.
     public void Prepare(GameObject enemy, int night)
     {
+        if (enemy != null) spawned.Add(enemy);   // every spawn, the first night's monster too (Leave Distance)
         Monster monster = picked;
         picked = null;
         if (monster == null || enemy == null) return;
@@ -213,6 +266,17 @@ public class NightMonsters : MonoBehaviour
         if (cam == null) return false;
         Vector3 view = cam.WorldToViewportPoint(feet + Vector3.up * (SpotHeight * 0.5f));
         return view.z > 0f && view.x > -0.1f && view.x < 1.1f && view.y > -0.1f && view.y < 1.1f;
+    }
+
+    // The player's body (PlayerController), found the first time it's needed.
+    Transform Player()
+    {
+        if (playerBody == null)
+        {
+            PlayerController found = FindFirstObjectByType<PlayerController>();
+            if (found != null) playerBody = found.transform;
+        }
+        return playerBody;
     }
 
     // The ground under a spot (a ray from high above): "at" gets its height. False = no ground there.

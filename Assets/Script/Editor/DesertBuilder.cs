@@ -1,6 +1,6 @@
 /*
 First Date: 20/11/2026
-Date: 21/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Menu Tools > World > Build Desert Content (Tools > World > Build New World Scene runs it too, and puts it
@@ -24,7 +24,8 @@ Purpose: Everything the new world's desert needs, in one click:
              night monster from night 2, with its shell (ShellDefense), no longer the desert's day monster. Tools >
              Enemies > Set Up Night Monsters puts it in the scenes' night spawner.
          MakeOreItem, RockMaterial and MakeVariant are shared with SnowBuilder (the snow's Diamond, DiamondNode and
-         StoneNode Snow); MakeGold with ArmorBuilder (the gold armor's recipes need the Gold item). Since 21/11/2026 an ore item copied from Iron also gets its own Mined With when it still has
+         StoneNode Snow), and PaintItemPrefab (its Spruce Wood log); MakeGold with ArmorBuilder (the gold armor's recipes
+         need the Gold item). Since 21/11/2026 an ore item copied from Iron also gets its own Mined With when it still has
          the one the copy brought from Iron (Stone): Gold had kept it, so a Stone Pickaxe mined gold.
 Requirement: DesertBuilder.cs x-> ItemData.cs, ToolStats.cs, ItemPickup.cs, ShapeColor.cs, ResourceNode.cs, NightMonsterBuilder.cs, RockCaveBuilder.cs, RockBreakBuilder.cs, UIBuildHelper.cs, MenuOrder.cs
              DesertBuilder.cs <-x ArmorBuilder.cs, BowBuilder.cs, NewWorldBuilder.cs, SnowBuilder.cs
@@ -160,8 +161,8 @@ public static class DesertBuilder
     }
 
     // An ore item's prefab: its cube colored (its ShapeColor), picked up as that item (its ItemPickup), its top object
-    // named after it.
-    static void PaintItemPrefab(string path, ItemData item, Color cube)
+    // named after it. (SnowBuilder colors its Spruce Wood log with it.)
+    public static void PaintItemPrefab(string path, ItemData item, Color cube)
     {
         GameObject root = PrefabUtility.LoadPrefabContents(path);
         try

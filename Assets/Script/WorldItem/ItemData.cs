@@ -13,7 +13,9 @@ Unity Editor: Easiest: select an item object (in the scene or a prefab) > menu T
               and how much it protects) or Ammo (an arrow: a bow shoots it; its Ammo section, see AmmoStats.cs, says how
               hard it hits).
               Choosing Consumable shows its Health / Hunger / Stamina fields (see Consumable.cs), Tool shows its Kind
-              and Tier (see ToolStats.cs), Material shows Mined With (which pickaxe a rock dropping it needs).
+              and Tier (see ToolStats.cs) and, for a bow (Kind Bow), its Bow section (Damage, Draw Seconds, Arrow Speed:
+              see BowStats.cs), Material shows Mined With (which pickaxe a rock dropping it needs, or which axe a tree:
+              Spruce Wood = Iron).
               Both types can be used in crafting and building recipes.
               Full steps: Docs/Item Setup.md
 Purpose: One kind of item (a material like Wood or Stone, or food like an Apple): what it looks like,
@@ -26,8 +28,8 @@ Purpose: One kind of item (a material like Wood or Stone, or food like an Apple)
          so is armor whose recipe uses up a piece for the same slot (an Iron Helmet of a Copper Helmet).
          Armor is worn, one piece per slot (PlayerArmor), from the inventory's Gear tab.
 Requirement: ItemData.cs <-> Recipe.cs
-             ItemData.cs x-> Consumable.cs, ToolStats.cs, ArmorStats.cs, AmmoStats.cs, IconCapture.cs, IconSource.cs, PlayerInventory.cs
-             ItemData.cs <-x ArmorBuilder.cs, ArmorLook.cs, ArmorPicker.cs, ArmorSlotUI.cs, ArmorTestKit.cs, ArrowProjectile.cs, AutoCollector.cs, BowBuilder.cs, BowHUD.cs, BowShooter.cs, CraftingMenu.cs, CraftingMenuBuilder.cs, CraftingRow.cs, CraftingSetPanels.cs, CraftingTabs.cs, Crosshair.cs, DesertBuilder.cs, HeldItemView.cs, ItemConsumer.cs, ItemDataEditor.cs, ItemIconRules.cs, ItemPickup.cs, ItemTools.cs, PlayerArmor.cs, PlayerInventory.cs, PlayerStats.cs, ResourceNode.cs, SnowBuilder.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs
+             ItemData.cs x-> Consumable.cs, ToolStats.cs, BowStats.cs, ArmorStats.cs, AmmoStats.cs, IconCapture.cs, IconSource.cs, PlayerInventory.cs
+             ItemData.cs <-x ArmorBuilder.cs, ArmorLook.cs, ArmorPicker.cs, ArmorSlotUI.cs, ArmorTestKit.cs, ArrowProjectile.cs, AutoCollector.cs, BowBuilder.cs, BowHUD.cs, BowShooter.cs, CraftingMenu.cs, CraftingMenuBuilder.cs, CraftingRow.cs, CraftingSetPanels.cs, CraftingTabs.cs, Crosshair.cs, DesertBuilder.cs, GrasslandTreeBuilder.cs, HeldItemView.cs, ItemConsumer.cs, ItemDataEditor.cs, ItemIconRules.cs, ItemPickup.cs, ItemTools.cs, PlayerArmor.cs, PlayerInventory.cs, PlayerStats.cs, ResourceNode.cs, SnowBuilder.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs
 */
 
 using System.Collections.Generic;
@@ -91,6 +93,11 @@ public class ItemData : ScriptableObject
     [Tooltip("What kind of tool it is and how strong (see ToolStats.cs). It shows in the player's hand and left click swings it.")]
     [SerializeField] ToolStats tool = new ToolStats();
 
+    // Only shown for a bow: Item Type = Tool and Tool > Kind = Bow (Editor/ItemDataEditor.cs hides it otherwise).
+    [Header("Bow (a Tool of Kind Bow)")]
+    [Tooltip("What its arrows get from it: extra damage, how fast it draws and how fast its arrows fly (see BowStats.cs).")]
+    [SerializeField] BowStats bow = new BowStats();
+
     // Only shown when Item Type = Armor (Editor/ItemDataEditor.cs hides it otherwise).
     [Header("Armor (helmet, chestplate...)")]
     [Tooltip("Where it's worn, how much it protects, and which part of the character it shows (see ArmorStats.cs).")]
@@ -102,9 +109,10 @@ public class ItemData : ScriptableObject
     [SerializeField] AmmoStats ammo = new AmmoStats();
 
     // Only shown when Item Type = Material.
-    [Header("Mining")]
-    [Tooltip("The weakest pickaxe that can mine a rock that drops this item. None = anything can, even a bare hand " +
-             "(Stone). Copper and Iron: Stone. Gold: Iron. Diamond: Gold.")]
+    [Header("Mining")]   // (rock and, since 22/11/2026, trees: see the tooltip)
+    [Tooltip("The weakest tool that can gather a rock or a tree that drops this item: a pickaxe for a rock, an axe for a " +
+             "tree. None = anything can, even a bare hand (Stone, Wood). Copper and Iron: Stone. Gold: Iron. Diamond: " +
+             "Gold. Spruce Wood: Iron (the snow's spruce needs an Iron Axe or better).")]
     [SerializeField] ToolTier minedWith = ToolTier.None;
 
     [Header("Crafting (for the crafting system, coming later)")]
@@ -131,11 +139,13 @@ public class ItemData : ScriptableObject
     public bool IsConsumable => itemType == ItemType.Consumable && consumable != null && consumable.IsConsumable;
     public bool IsTool => itemType == ItemType.Tool && tool != null;   // held in the hand and swung (ToolRules, ToolInHand)
     public ToolStats Tool => tool;               // its kind and tier (only means something when IsTool)
+    public bool IsBow => IsTool && tool.kind == ToolKind.Bow && bow != null;   // a bow: BowShooter shoots it (BowStats)
+    public BowStats Bow => bow;                  // its damage, draw time and arrow speed (only means something when IsBow)
     public bool IsArmor => itemType == ItemType.Armor && armor != null;   // worn on the body (PlayerArmor, the Gear tab)
     public ArmorStats Armor => armor;            // its slot, defense and look (only means something when IsArmor)
     public bool IsAmmo => itemType == ItemType.Ammo && ammo != null;   // an arrow: a bow shoots it (BowShooter)
     public AmmoStats Ammo => ammo;               // its damage and head look (only means something when IsAmmo)
-    public ToolTier MinedWith => minedWith;      // the weakest pickaxe for a rock that drops it (None = anything)
+    public ToolTier MinedWith => minedWith;      // the weakest pickaxe (rock) or axe (tree) for one that drops it (None = anything)
     public IReadOnlyList<Ingredient> Recipe => recipe;
     public int CraftAmount => craftAmount;
     public CraftStation CraftedAt => craftedAt;
@@ -163,6 +173,7 @@ public class ItemData : ScriptableObject
         if (icon == null) icon = new IconSource();
         if (consumable == null) consumable = new Consumable();
         if (tool == null) tool = new ToolStats();
+        if (bow == null) bow = new BowStats();
         if (armor == null) armor = new ArmorStats();
         if (ammo == null) ammo = new AmmoStats();
         icon.EditorRefresh(this);

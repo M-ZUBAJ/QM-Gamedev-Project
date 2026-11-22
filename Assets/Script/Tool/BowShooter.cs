@@ -3,26 +3,31 @@ First Date: 22/11/2026
 Date: 22/11/2026
 Author: Tony
 Use by: The Player (next to PlayerInventory). Tools > Items > Build Bow And Arrows puts it there and fills Arrow Prefab.
-Unity Editor: Testing: tick GameRules > Tool Test (a Wooden Bow and 32 of each arrow), Play, select the Wooden Bow in the
-              hotbar, hold the left mouse button (the bow draws, the ring around the crosshair fills, gold when full) and
-              let go: an arrow flies where the crosshair points. The numbers below can be changed while playing.
+Unity Editor: Testing: tick GameRules > Tool Test (both bows and 32 of each arrow), Play, select a bow in the hotbar,
+              hold the left mouse button (the bow draws, the ring around the crosshair fills, gold when full) and let
+              go: an arrow flies where the crosshair points. The numbers below can be changed while playing. Each bow's
+              own numbers (Damage, Draw Seconds, Arrow Speed) are in its Item Data's Bow section (BowStats).
 Purpose: Shooting a bow. With a bow (Item Data > Tool > Kind Bow) in the selected hotbar slot:
            - hold the left mouse button (KeyBindings' Swing) to draw: the character draws (PlayerAnimator's BowDraw, then
-             it holds at full draw) and the longer you hold, up to Draw Seconds, the harder and farther the arrow goes;
-           - let go to shoot: one arrow leaves the inventory and flies (ArrowProjectile) toward what the crosshair points
-             at, falling a little on the way. It hurts by the arrow's Damage (Item Data > Ammo: Stone 20 ... Diamond 50)
-             x how far the bow was drawn (half = half) x the bow's tier bonus (ToolRules: 25 % per tier above Wood).
-             Only a fully drawn shot can be a critical hit (the Critical Strike perk: double damage, a big orange number);
-           - let go before Min Draw Seconds, change the hotbar slot, open a menu or die: nothing is shot, no arrow used.
+             it holds at full draw) and the longer you hold, up to the bow's Draw Seconds, the harder and farther the
+             arrow goes. A better bow draws faster, so it shoots faster (Wooden Bow 1 s, Spruce Bow 0.6 s), and the
+             draw animation keeps up (DrawSpeed);
+           - let go to shoot: one arrow leaves the inventory and flies (ArrowProjectile, at the bow's Arrow Speed)
+             toward what the crosshair points at, falling a little on the way. It hurts by the bow's Damage + the
+             arrow's Damage (Wooden Bow 5, Spruce Bow 15; Stone Arrow 20 ... Diamond Arrow 50) x how far the bow was
+             drawn (half = half). Only a fully drawn shot can be a critical hit (the Critical Strike perk: double
+             damage, a big orange number);
+           - let go before Min Draw Seconds, change the hotbar slot (to another bow too), open a menu or die: nothing is
+             shot, no arrow used.
          It shoots the strongest arrow you carry (the most Damage). With none it says so and doesn't draw.
          Holding the bow drawn tires the arms: stamina drains while the button is held (Stamina Per Second: 4, sprinting
          uses 20), and the shot itself costs nothing. If the bar runs out mid-draw the string is let go without
          shooting (no arrow used), and like sprinting, a tired player can't draw again until stamina is back to
          PlayerStamina's Recover To (20).
          Marko's PlayerCombat doesn't punch while a bow is in the hand (its [Tony] line), so a click only shoots.
-         Other scripts read: BowShooter.HoldingBow, Drawing, Power, InAimPose, NextArrow, ArrowCount, ArrowLook,
-         ArrowLength (BowHUD, ToolInHand, FirstPersonHands, PlayerAnimator).
-Requirement: BowShooter.cs x-> PlayerInventory.cs, ItemData.cs, AmmoStats.cs, ToolStats.cs, ToolRules.cs, ArrowProjectile.cs, KeyBindings.cs, MenuState.cs, ClickClaim.cs
+         Other scripts read: BowShooter.HoldingBow, Drawing, Power, DrawSpeed, InAimPose, NextArrow, ArrowCount,
+         ArrowLook, ArrowLength (BowHUD, ToolInHand, FirstPersonHands, PlayerAnimator).
+Requirement: BowShooter.cs x-> PlayerInventory.cs, ItemData.cs, AmmoStats.cs, BowStats.cs, ToolRules.cs, ArrowProjectile.cs, KeyBindings.cs, MenuState.cs, ClickClaim.cs
              BowShooter.cs o-> PlayerAnimator.cs, PlayerHealth.cs, CameraController.cs, PlayerController.cs, NotificationFeed.cs, PerkEffects.cs, PlayerStamina.cs
              BowShooter.cs <-x BowBuilder.cs, BowHUD.cs, PlayerAnimationSetup.cs
              BowShooter.cs <-o FirstPersonHands.cs, PlayerAnimator.cs, ToolInHand.cs
@@ -35,15 +40,13 @@ using UnityEngine.EventSystems;   // EventSystem: is the free mouse over a menu?
 public class BowShooter : MonoBehaviour
 {
     // ===== Fields =====
-    public const float DefaultDrawSeconds = 1f;   // Set Up Player Animations times the draw animation to Draw Seconds
+    // The draw animation's own length: Set Up Player Animations makes BowDraw last this long, and a bow with other Draw
+    // Seconds plays it faster or slower (DrawSpeed: the Spruce Bow's 0.6 s = 1.67 times as fast).
+    public const float DefaultDrawSeconds = 1f;
 
     [Header("Drawing")]
-    [Tooltip("Seconds of holding to draw the bow all the way: full damage and speed (Minecraft's bow: 1 second). Tools > " +
-             "Player > Set Up Player Animations times the draw animation to this: run it again after changing it.")]
-    [Range(0.3f, 3f)]
-    [SerializeField] float drawSeconds = DefaultDrawSeconds;
-
-    [Tooltip("Let go sooner than this (seconds) and nothing is shot and no arrow is used: a quick click wastes nothing.")]
+    [Tooltip("Let go sooner than this (seconds) and nothing is shot and no arrow is used: a quick click wastes nothing. " +
+             "(How long a full draw takes is each bow's own Draw Seconds: its Item Data > Bow.)")]
     [Range(0f, 1f)]
     [SerializeField] float minDrawSeconds = 0.25f;
 
@@ -51,11 +54,8 @@ public class BowShooter : MonoBehaviour
     [Tooltip("The flying arrow (Tools > Items > Build Bow And Arrows makes Assets/Prefabs/Item/Arrows/Arrow Projectile).")]
     [SerializeField] ArrowProjectile arrowPrefab;
 
-    [Tooltip("How fast an arrow from a fully drawn bow flies, in meters per second (Minecraft's: about 50).")]
-    [Range(10f, 120f)]
-    [SerializeField] float fullSpeed = 45f;
-
-    [Tooltip("How fast the weakest shot flies (the least draw that still shoots), as a share of Full Speed.")]
+    [Tooltip("How fast the weakest shot flies (the least draw that still shoots), as a share of the bow's Arrow Speed " +
+             "(its Item Data > Bow: the speed of a fully drawn shot).")]
     [Range(0.1f, 1f)]
     [SerializeField] float slowestShare = 0.35f;
 
@@ -79,6 +79,7 @@ public class BowShooter : MonoBehaviour
     [SerializeField] string tiredText = "Too tired to hold the bow! Rest a moment.";
 
     const float MessageGap = 2f;           // seconds between two messages ("No arrows!", "Too tired...")
+    static readonly BowStats PlainBow = new BowStats();   // the numbers of a bow without its own (the Wooden Bow's)
     const float AimPoseAfterShot = 0.6f;   // seconds the arms stay up after a shot (the release animation)
     static readonly RaycastHit[] hits = new RaycastHit[16];
 
@@ -87,6 +88,8 @@ public class BowShooter : MonoBehaviour
     PlayerStamina stamina;             // holding the draw uses it up (can be missing = free)
     CameraController cameraControl;    // first or third person (can be missing)
     bool holdingBow;                   // a bow is in the selected hotbar slot right now
+    ItemData bow;                      // that bow (its Item Data, with its Bow numbers), null = none
+    ItemData drawnBow;                 // the bow being drawn (swapping to another one puts it away)
     bool drawing;
     float drawStart;                   // Time.time the draw began
     ItemData loaded;                   // the arrow picked when the draw began
@@ -106,6 +109,10 @@ public class BowShooter : MonoBehaviour
 
     // How far it's drawn: 0 = not drawing, 1 = fully drawn (full damage and speed).
     public static float Power => Current != null && Current.drawing ? Current.PowerNow() : 0f;
+
+    // How fast the draw animation plays for the bow in the hand: 1 = it lasts Default Draw Seconds (the Wooden Bow), 1.67 =
+    // 0.6 s (the Spruce Bow). PlayerAnimator and FirstPersonHands give it to their controllers (BowDrawSpeed). 1 = no bow.
+    public static float DrawSpeed => Current != null && Current.bow != null ? DefaultDrawSeconds / DrawSecondsOf(Current.bow) : 1f;
 
     // The arms are in the bow's pose: drawing, or just shot (FirstPersonHands shows the archer's own view then).
     public static bool InAimPose => Current != null && (Current.drawing || Time.time < Current.releasedAt + AimPoseAfterShot);
@@ -151,6 +158,7 @@ public class BowShooter : MonoBehaviour
     {
         drawing = false;   // (no animation call: the scene may be closing, the character already gone)
         loaded = null;
+        drawnBow = null;
         if (Current == this) Current = null;   // statics outlive the scene
     }
 
@@ -158,11 +166,13 @@ public class BowShooter : MonoBehaviour
     {
         if (inventory == null) inventory = PlayerInventory.Instance;
         holdingBow = ToolRules.BowInHand && !(health != null && health.IsDead);
+        bow = holdingBow ? BowInSlot() : null;
         if (!holdingBow)
         {
             if (drawing) Cancel();   // the slot changed, or the player died
             return;
         }
+        if (drawing && bow != drawnBow) Cancel();   // swapped to another bow mid-draw: this one is put away
         bestArrow = StrongestArrow();
 
         bool blocked = MenuState.AnyOpen || ClickClaim.Claimed;   // a menu, or placing a building, owns the mouse
@@ -186,7 +196,20 @@ public class BowShooter : MonoBehaviour
 
     // ===== My methods =====
 
-    float PowerNow() => Mathf.Clamp01((Time.time - drawStart) / Mathf.Max(0.01f, drawSeconds));
+    float PowerNow() => Mathf.Clamp01((Time.time - drawStart) / DrawSecondsOf(drawnBow));
+
+    // A bow's numbers (its Item Data > Bow), or the plain ones (the Wooden Bow's) when it has none.
+    static BowStats StatsOf(ItemData bowItem) => bowItem != null && bowItem.IsBow ? bowItem.Bow : PlainBow;
+
+    // How long a bow takes to draw all the way, in seconds (its Draw Seconds).
+    static float DrawSecondsOf(ItemData bowItem) => Mathf.Max(0.1f, StatsOf(bowItem).drawSeconds);
+
+    // The bow in the selected hotbar slot (its Item Data), or null.
+    ItemData BowInSlot()
+    {
+        PlayerInventory.Slot slot = inventory != null ? inventory.ActiveItem : null;
+        return slot != null && !slot.IsEmpty && slot.data != null && slot.data.IsBow ? slot.data : null;
+    }
 
     void StartDrawing()
     {
@@ -201,6 +224,7 @@ public class BowShooter : MonoBehaviour
             return;
         }
         loaded = bestArrow;
+        drawnBow = bow;
         drawing = true;
         drawStart = Time.time;
         PlayerAnimator.Play(PlayerAction.BowDraw);
@@ -212,7 +236,9 @@ public class BowShooter : MonoBehaviour
         drawing = false;
         float held = Time.time - drawStart;
         ItemData arrow = loaded != null && inventory != null && inventory.Count(loaded.Id) > 0 ? loaded : StrongestArrow();
+        ItemData shotFrom = drawnBow;
         loaded = null;
+        drawnBow = null;
 
         if (arrowPrefab == null && !warnedNoPrefab)
         {
@@ -226,7 +252,7 @@ public class BowShooter : MonoBehaviour
             return;
         }
 
-        Shoot(arrow, Mathf.Clamp01(held / Mathf.Max(0.01f, drawSeconds)));
+        Shoot(arrow, shotFrom, Mathf.Clamp01(held / DrawSecondsOf(shotFrom)));
         releasedAt = Time.time;
         PlayerAnimator.Play(PlayerAction.BowRelease);
     }
@@ -251,11 +277,13 @@ public class BowShooter : MonoBehaviour
     {
         drawing = false;
         loaded = null;
+        drawnBow = null;
         PlayerAnimator.Play(PlayerAction.BowCancel);
     }
 
     // One arrow on its way: from the bow toward what the crosshair points at, power = how far the bow was drawn (0 - 1).
-    void Shoot(ItemData arrow, float power)
+    // It hurts by the bow's Damage + the arrow's, x power, and flies at the bow's Arrow Speed (slower when half drawn).
+    void Shoot(ItemData arrow, ItemData bowItem, float power)
     {
         Camera cam = Camera.main;
         Vector3 target = AimPoint(cam);
@@ -264,10 +292,11 @@ public class BowShooter : MonoBehaviour
         if (toward.sqrMagnitude < 2f) toward = cam != null ? cam.transform.forward : transform.forward;   // aimed right in front: straight on
         toward.Normalize();
 
-        float damage = arrow.Ammo.damage * power * ToolRules.Boost(ToolRules.ToolIn(inventory.ActiveItem), ToolKind.Bow);
+        BowStats stats = StatsOf(bowItem);
+        float damage = (stats.damage + arrow.Ammo.damage) * power;   // the bow's + the arrow's (since 22/11/2026: no tier bonus)
         bool critical = power >= 1f && PerkEffects.RollCritical();   // only a fully drawn shot
         if (critical) damage *= PerkEffects.CriticalMultiplier;
-        float speed = fullSpeed * Mathf.Lerp(slowestShare, 1f, power);
+        float speed = stats.arrowSpeed * Mathf.Lerp(slowestShare, 1f, power);
 
         ArrowProjectile shot = Instantiate(arrowPrefab, from, Quaternion.LookRotation(toward));
         shot.name = arrow.DisplayName;

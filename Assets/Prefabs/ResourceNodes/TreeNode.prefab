@@ -163,7 +163,6 @@ MonoBehaviour:
   bonusMin: 1
   bonusMax: 3
   collectWithKey: 0
-  collectKey: 101
   collectRange: 3
   currentHealth: 0
 --- !u!114 &4389488909739055060

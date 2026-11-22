@@ -6,17 +6,18 @@ Use by: Not a script you put on an object. It is the "Tool" section inside an It
         (e.g. Assets/Config/Items/Tools/StonePickaxe), and the lists of tool kinds and tiers.
 Unity Editor: Select a tool's Item Data > Item Type = Tool > the Tool section: Kind (Pickaxe / Axe / Sword / Bow) and
               Tier (Wood ... Diamond). Tools > Items > Build Tier Tools makes all 15 tools, Tools > Items > Build Bow And
-              Arrows the Wooden Bow. An ore's Item Data uses ToolTier too: its Mined With (the weakest pickaxe that can
-              mine it).
+              Arrows the Wooden Bow and the Spruce Bow. An ore's Item Data uses ToolTier too: its Mined With (the weakest
+              pickaxe that can mine it).
 Purpose: What a tool is: its kind (what it's good at) and its tier (how strong). ToolRules turns these into damage and
          into which rocks it can mine:
          - Pickaxe: rock and ores. A higher tier mines harder ores (Wood: stone, Stone: copper and iron, Iron: gold,
            Gold: diamond).
-         - Axe: chops trees faster.
+         - Axe: chops trees faster. A higher tier chops harder trees (Iron: the snow's spruce).
          - Sword: hits enemies and animals harder.
          - Bow: shoots arrows (BowShooter: hold the attack button to draw, let go to shoot); it doesn't hit up close.
-         Each tier is 25 % stronger than the one before at the tool's own job (a bow's arrows hit harder).
-Requirement: ToolStats.cs <-x BowBuilder.cs, BowShooter.cs, CraftingMenuBuilder.cs, DesertBuilder.cs, ItemData.cs, PlayerCombat.cs, SnowBuilder.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs
+         Each tier is 25 % stronger than the one before at the tool's own job. Not a bow: how strong a bow is comes from
+         its own Bow section (BowStats: its damage, draw time and arrow speed); its tier only sorts the crafting list.
+Requirement: ToolStats.cs <-x BowBuilder.cs, CraftingMenuBuilder.cs, DesertBuilder.cs, FireballProjectile.cs, ItemData.cs, ItemDataEditor.cs, PlayerCombat.cs, SnowBuilder.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs
 */
 
 using UnityEngine;
@@ -50,6 +51,7 @@ public class ToolStats
     public ToolKind kind = ToolKind.Pickaxe;
 
     [Tooltip("How strong it is. Each tier is 25 % stronger than the one before at its own job, and a pickaxe's tier " +
-             "decides which ores it can mine.")]
+             "decides which ores it can mine (an axe's: which trees, the snow's spruce needs Iron). A bow's strength is its Bow " +
+             "section instead (its tier only sorts the crafting list).")]
     public ToolTier tier = ToolTier.Wood;
 }

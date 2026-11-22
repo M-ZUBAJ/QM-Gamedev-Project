@@ -49,6 +49,31 @@ Imported into `Assets/Imported3D/RPG Monster DUO PBR Polyart`. It has a slime an
 Polyart look, 15 animations each, and Standard materials (Built-in). **Tools > Enemies > Build Monster Enemy** turns
 the slime into `SlimeEnemy.prefab`, the night enemy (guide: `Docs/Enemy Setup.md`).
 
+### RPG Monster Partners PBR Polyart (Dungeon Mason)
+
+Imported into `Assets/Imported3D/RPGMonsterPartnersPBRPolyart` on 22/11/2026 and checked the same day from its files.
+Used since then: the Chest Monster from night 3 and the Beholder, the flying enemy, from night 4 (**Tools > Enemies >
+Set Up Night Monsters**, `Docs/Night Monsters Setup.md`). The same family as the DUO pack, set up the same way:
+
+| | Chest Monster | Beholder |
+|---|---|---|
+| What it is | a mimic: a treasure chest with one big eye, upper and lower teeth, a lock and four legs | a floating eyeball with six tentacles (5 bones each) and five small spikes (bones Process01-05); it flies |
+| Prefabs (`Prefabs/Character`) | `ChestMonsterPolyartDefault`, `ChestMonsterPBRDefault` | `BeholderPolyartDefault`, `BeholderPBRDefault` |
+| Model | `Meshes/Character/ChestMonsterPolyartMesh.fbx` (+ PBR) | `Meshes/Character/BeholderPolyartMesh.fbx` (+ PBR); its Root bone sits about 1.25 m above the model's feet point, so it hovers |
+| Clips (length in frames; L = loops) | IdleNormal 40 L, IdleBattle 22 L, **IdleChest 20 L** (shut, looks like a plain chest), WalkFWD / BWD / Left / Right 30 L, Run 16 L, Attack01 24 L, Attack02 22 L, GetHit 18 L, Dizzy 40 L, Taunting 60 L, SenseSomethingST 8 + RPT 140 L, Victory 30 L, Die 28 | IdleNormal 40 L, IdleBattle 22 L, WalkFWD / BWD / Left / Right 28 L, Run 16 L, Attack01 22 L, **Attack02ST 16 + Attack02RPT 20 L** (a start and a repeating part: a held attack), Attack03 22 L, GetHit 22 L, Dizzy 40 L, Taunting 30 L, SenseSomethingST 22 + RPT 110 L, Victory 60 L, Die 22 |
+| Demo controller (`Animators/`) | `ChestMonster.controller`: one state per clip, named like the clip | `Beholder.controller`: the same (plus two spare IdleBattle copies) |
+
+- **Built-in ready:** both materials (`PolyartDefault`: one flat-color sheet `Textures/Albedo.png`; `PBRDefault`: the
+  same sheet + `Metallic-Smoothness.png`) use Unity's Standard shader, like the DUO pack: no pink, nothing to convert.
+  The pack also brings a demo stage, skybox material and two demo scenes (`Scenes/`), not needed by the game.
+- **Rigs:** Generic (not Humanoid), one animation per FBX file, Read/Write on: the same as the slime and the turtle.
+- **For Tools > Enemies > Build Monster Enemy** (EnemyBuilder): its state names match the slime's (IdleBattle, WalkFWD,
+  Attack01, GetHit, Die, Victory) except the run, called **Run** here instead of RunFWD, and the prefab names end in
+  "Default". Since 22/11/2026 EnemyBuilder handles both (ChestMonsterPolyartDefault -> ChestMonsterEnemy) and can build
+  a flying enemy (the Beholder: no gravity, Tony's FlyingEnemy sets its height while Marko's EnemyMovement steers it).
+- The pack folder was moved into Imported3D outside Unity (its folder's .meta stayed in `Assets/`); the .meta was put
+  next to the folder on 22/11/2026, so the folder keeps its GUID.
+
 ### Broken Vector: Low Poly Tree Pack
 
 [Low Poly Tree Pack](https://assetstore.unity.com/packages/3d/vegetation/trees/low-poly-tree-pack-57866) (free),
@@ -155,7 +180,7 @@ Unity version (the pages don't list 2023.1 itself; older versions working normal
 | For | Asset | Publisher | What's inside | Size | Pipelines | Version |
 |---|---|---|---|---|---|---|
 | Night enemies (Marko) | [RPG Monster Duo PBR Polyart](https://assetstore.unity.com/packages/3d/characters/creatures/rpg-monster-duo-pbr-polyart-157762) | Dungeon Mason | A slime (1009 triangles) and a turtle-shell monster (1021 triangles), 15 animations each. Rated 4.9 (39 ratings). | 4.1 MB | Built-in ✓ (2020.3), URP ✓, HDRP ✓ | 1.5, 19/7/2023 |
-| More enemies (Marko) | [RPG Monster Partners PBR Polyart](https://assetstore.unity.com/packages/3d/characters/creatures/rpg-monster-partners-pbr-polyart-168251) | Dungeon Mason | More monsters; its tags include rat and chest (count and animations not shown on the page) | 7.0 MB | Built-in ✓ (2020.3), URP ✓, HDRP ✓ | 1.5, 6/7/2023 |
+| More enemies (Marko) | [RPG Monster Partners PBR Polyart](https://assetstore.unity.com/packages/3d/characters/creatures/rpg-monster-partners-pbr-polyart-168251) | Dungeon Mason | **In the project since 22/11/2026** (section 1): a Chest Monster (mimic) and a Beholder (flying eye), 17 / 18 animations each | 7.0 MB | Built-in ✓ (2020.3), URP ✓, HDRP ✓ | 1.5, 6/7/2023 |
 | Animals (Marko) | [Animals FREE - Animated Low Poly 3D Models](https://assetstore.unity.com/packages/3d/characters/animals/animals-free-animated-low-poly-3d-models-260727) | ithappy | Animated, rigged animals; tags include dog, horse, tiger, kitty, farm animals | 10.7 MB | Built-in ✓ (2021.3 and Unity 6), URP ✓, HDRP ✓ | 2.3, 5/9/2025 |
 | Ores and mining (Turki) | [Free Mining Pack - Low Poly Ores, Gems, Tools & Props](https://assetstore.unity.com/packages/3d/props/free-mining-pack-low-poly-ores-gems-tools-props-189962) | Pure Poly | Ore rocks, gems, mining tools (pickaxe), torch, mine props | 1.4 MB | Built-in ✓ (2021.3 and Unity 6), URP ✓, HDRP ✓ | 2.0, 17/9/2025 |
 | Crafting materials (Turki) | [Simple Ores, Chunks, and Bars](https://assetstore.unity.com/packages/3d/props/simple-ores-chunks-and-bars-285315) | thatbluemuffin | Iron, coal, copper, gold, nickel, silver and zinc, each as ore, chunk and bar (good for ore → bar crafting) | 0.5 MB | Built-in ✓ (2022.3) only | 1.0.0, 11/6/2024 |
