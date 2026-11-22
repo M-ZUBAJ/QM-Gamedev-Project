@@ -28,6 +28,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: TreeNode Birch
       objectReference: {fileID: 0}
+    - target: {fileID: 4389488909739055060, guid: 586d1bc6a3cce44eb9b011b8d05ebd30, type: 3}
+      propertyPath: closedMeshes.Array.data[0].open
+      value: 
+      objectReference: {fileID: 4300000, guid: 1e97612a294865943926d93961f9c229, type: 3}
+    - target: {fileID: 4389488909739055060, guid: 586d1bc6a3cce44eb9b011b8d05ebd30, type: 3}
+      propertyPath: closedMeshes.Array.data[0].closed
+      value: 
+      objectReference: {fileID: 4300000, guid: dc259942facf5bf44b263620679e10cb, type: 2}
     - target: {fileID: 5094321629820696536, guid: 586d1bc6a3cce44eb9b011b8d05ebd30, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.7214296

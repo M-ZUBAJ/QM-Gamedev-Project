@@ -24,7 +24,8 @@ tools, crafting; Sanyam = world, nature, building pieces; Tony = the player. Sho
 (Blink, free, 8.3 MB, 48 files), imported into `Assets/Imported3D/Blink/`.
 
 - **The store page lists:** a male human body with underwear, 2 armor sets, 64 color variations per armor set,
-  one hairstyle, one beard, one moustache.
+  one hairstyle, one beard, one moustache. The armor sets are a starter outfit (worn now) and a plate set
+  (switched off): see section 10.
 - **What we found inside:**
   - Humanoid rig.
   - Standard materials, so it works in Built-in.
@@ -47,6 +48,31 @@ not an animation. How the character is set up: `Docs/Player Character Setup.md`.
 Imported into `Assets/Imported3D/RPG Monster DUO PBR Polyart`. It has a slime and a turtle-shell monster, each with a PBR and a
 Polyart look, 15 animations each, and Standard materials (Built-in). **Tools > Enemies > Build Monster Enemy** turns
 the slime into `SlimeEnemy.prefab`, the night enemy (guide: `Docs/Enemy Setup.md`).
+
+### RPG Monster Partners PBR Polyart (Dungeon Mason)
+
+Imported into `Assets/Imported3D/RPGMonsterPartnersPBRPolyart` on 22/11/2026 and checked the same day from its files.
+Used since then: the Chest Monster from night 3 and the Beholder, the flying enemy, from night 4 (**Tools > Enemies >
+Set Up Night Monsters**, `Docs/Night Monsters Setup.md`). The same family as the DUO pack, set up the same way:
+
+| | Chest Monster | Beholder |
+|---|---|---|
+| What it is | a mimic: a treasure chest with one big eye, upper and lower teeth, a lock and four legs | a floating eyeball with six tentacles (5 bones each) and five small spikes (bones Process01-05); it flies |
+| Prefabs (`Prefabs/Character`) | `ChestMonsterPolyartDefault`, `ChestMonsterPBRDefault` | `BeholderPolyartDefault`, `BeholderPBRDefault` |
+| Model | `Meshes/Character/ChestMonsterPolyartMesh.fbx` (+ PBR) | `Meshes/Character/BeholderPolyartMesh.fbx` (+ PBR); its Root bone sits about 1.25 m above the model's feet point, so it hovers |
+| Clips (length in frames; L = loops) | IdleNormal 40 L, IdleBattle 22 L, **IdleChest 20 L** (shut, looks like a plain chest), WalkFWD / BWD / Left / Right 30 L, Run 16 L, Attack01 24 L, Attack02 22 L, GetHit 18 L, Dizzy 40 L, Taunting 60 L, SenseSomethingST 8 + RPT 140 L, Victory 30 L, Die 28 | IdleNormal 40 L, IdleBattle 22 L, WalkFWD / BWD / Left / Right 28 L, Run 16 L, Attack01 22 L, **Attack02ST 16 + Attack02RPT 20 L** (a start and a repeating part: a held attack), Attack03 22 L, GetHit 22 L, Dizzy 40 L, Taunting 30 L, SenseSomethingST 22 + RPT 110 L, Victory 60 L, Die 22 |
+| Demo controller (`Animators/`) | `ChestMonster.controller`: one state per clip, named like the clip | `Beholder.controller`: the same (plus two spare IdleBattle copies) |
+
+- **Built-in ready:** both materials (`PolyartDefault`: one flat-color sheet `Textures/Albedo.png`; `PBRDefault`: the
+  same sheet + `Metallic-Smoothness.png`) use Unity's Standard shader, like the DUO pack: no pink, nothing to convert.
+  The pack also brings a demo stage, skybox material and two demo scenes (`Scenes/`), not needed by the game.
+- **Rigs:** Generic (not Humanoid), one animation per FBX file, Read/Write on: the same as the slime and the turtle.
+- **For Tools > Enemies > Build Monster Enemy** (EnemyBuilder): its state names match the slime's (IdleBattle, WalkFWD,
+  Attack01, GetHit, Die, Victory) except the run, called **Run** here instead of RunFWD, and the prefab names end in
+  "Default". Since 22/11/2026 EnemyBuilder handles both (ChestMonsterPolyartDefault -> ChestMonsterEnemy) and can build
+  a flying enemy (the Beholder: no gravity, Tony's FlyingEnemy sets its height while Marko's EnemyMovement steers it).
+- The pack folder was moved into Imported3D outside Unity (its folder's .meta stayed in `Assets/`); the .meta was put
+  next to the folder on 22/11/2026, so the folder keeps its GUID.
 
 ### Broken Vector: Low Poly Tree Pack
 
@@ -91,6 +117,33 @@ Imported into `Assets/Imported3D/ithappy/Animals_FREE` on 12/11/2026 (free, Asse
 **Used for:** the deer that replaced the sheep. **Tools > World > Build Wild Animal** makes `DeerNode`, or any
 other animal from the pack when it's selected. Guide: `Docs/Animal Setup.md`.
 
+### Broken Vector: Low Poly Rock Pack
+
+[Low Poly Rock Pack](https://assetstore.unity.com/packages/3d/environments/low-poly-rock-pack-57874) (free), imported
+on 20/11/2026 and moved to `Assets/Imported3D/BrokenVector/LowPolyRockPack`.
+
+- **Works in Built-in:** 4 Standard materials, each with an 8 x 8 color sheet:
+  - **Grey:** greys;
+  - **Sand:** a pinkish beige;
+  - **Orange:** a muted terracotta;
+  - **Green:** greys with a little moss.
+- **The 24 models** are Collada (`.dae`), Scale Factor 1.5, Generate Colliders on. Each has its pivot at its base. The
+  24 prefabs all use Grey.
+
+| Type | Shape | Sizes as in the file (x 1.5 when imported) |
+|---|---|---|
+| Type1 | boulders | 01 2.9 x 1.1 x 1.7 m, 02 1.9 x 1.6 x 2.4, 03 1.5 x 0.7 x 1.6, 04 small (0.6 m) |
+| Type2 | rounded rocks | 01 / 02 about 1.8 x 1.3 x 1.8, 03 flat (0.4 high), 04 small |
+| Type3 | tall pointed rocks | 01 / 02 about 2.1 m high, 03 1.3 m high, 04 low |
+| Type4 | flat slabs, 0.3 to 0.5 m high | 01 to 04 |
+| Type5 | wide boulders | 01 2 x 1 x 1.9, 02 / 03 about 2.2 x 1.45 x 2.2, 04 small |
+| Type6 | rounded rocks | 01 / 02 about 1.8 x 1.2 x 1.7, 03 1.1 x 1.1 x 1.3, 04 small |
+
+**Used for:** the rocks to mine. **Tools > World > Use Low Poly Rocks** copies the rounder ones (not the flat slabs or
+the plain small ones with under 80 triangles: 14 of the 24) at about 1.3 m into StoneNode / CopperNode / IronNode. It uses Grey for
+stone, Sand for desert stone, and tinted Orange / Grey for copper / iron. **Tools > Effects > Build Rock Break**
+uses Type1 / Type2 / Type6 04 as flying chunks. Guide: `Docs/Rock Setup.md`.
+
 ### Abduo Bricks: Low Poly Tool Pack
 
 Imported into `Assets/Imported3D/Abduo Bricks/Low Poly Tool Pack` on 12/11/2026 (free).
@@ -127,7 +180,7 @@ Unity version (the pages don't list 2023.1 itself; older versions working normal
 | For | Asset | Publisher | What's inside | Size | Pipelines | Version |
 |---|---|---|---|---|---|---|
 | Night enemies (Marko) | [RPG Monster Duo PBR Polyart](https://assetstore.unity.com/packages/3d/characters/creatures/rpg-monster-duo-pbr-polyart-157762) | Dungeon Mason | A slime (1009 triangles) and a turtle-shell monster (1021 triangles), 15 animations each. Rated 4.9 (39 ratings). | 4.1 MB | Built-in ✓ (2020.3), URP ✓, HDRP ✓ | 1.5, 19/7/2023 |
-| More enemies (Marko) | [RPG Monster Partners PBR Polyart](https://assetstore.unity.com/packages/3d/characters/creatures/rpg-monster-partners-pbr-polyart-168251) | Dungeon Mason | More monsters; its tags include rat and chest (count and animations not shown on the page) | 7.0 MB | Built-in ✓ (2020.3), URP ✓, HDRP ✓ | 1.5, 6/7/2023 |
+| More enemies (Marko) | [RPG Monster Partners PBR Polyart](https://assetstore.unity.com/packages/3d/characters/creatures/rpg-monster-partners-pbr-polyart-168251) | Dungeon Mason | **In the project since 22/11/2026** (section 1): a Chest Monster (mimic) and a Beholder (flying eye), 17 / 18 animations each | 7.0 MB | Built-in ✓ (2020.3), URP ✓, HDRP ✓ | 1.5, 6/7/2023 |
 | Animals (Marko) | [Animals FREE - Animated Low Poly 3D Models](https://assetstore.unity.com/packages/3d/characters/animals/animals-free-animated-low-poly-3d-models-260727) | ithappy | Animated, rigged animals; tags include dog, horse, tiger, kitty, farm animals | 10.7 MB | Built-in ✓ (2021.3 and Unity 6), URP ✓, HDRP ✓ | 2.3, 5/9/2025 |
 | Ores and mining (Turki) | [Free Mining Pack - Low Poly Ores, Gems, Tools & Props](https://assetstore.unity.com/packages/3d/props/free-mining-pack-low-poly-ores-gems-tools-props-189962) | Pure Poly | Ore rocks, gems, mining tools (pickaxe), torch, mine props | 1.4 MB | Built-in ✓ (2021.3 and Unity 6), URP ✓, HDRP ✓ | 2.0, 17/9/2025 |
 | Crafting materials (Turki) | [Simple Ores, Chunks, and Bars](https://assetstore.unity.com/packages/3d/props/simple-ores-chunks-and-bars-285315) | thatbluemuffin | Iron, coal, copper, gold, nickel, silver and zinc, each as ore, chunk and bar (good for ore → bar crafting) | 0.5 MB | Built-in ✓ (2022.3) only | 1.0.0, 11/6/2024 |
@@ -145,7 +198,7 @@ their [Monster Bundle](https://marketplace.unity.com/packages/3d/characters/crea
 | For | Asset | Publisher | Size | Why check |
 |---|---|---|---|---|
 | Trees (Sanyam) | [Low Poly Tree Pack](https://assetstore.unity.com/packages/3d/vegetation/trees/low-poly-tree-pack-57866) | Broken Vector | 942.8 KB | **Imported 12/11/2026: it works in Built-in (Standard materials). See section 1.** The page has no pipeline table, but it was made in 2018 for Unity 5.6, before URP existed. Popular: about 4,994 favourites; a reviewer praised the many tree types. Version 1.3, 2/7/2018. |
-| Rocks (Sanyam) | [Low Poly Rock Pack](https://assetstore.unity.com/packages/3d/environments/low-poly-rock-pack-57874) | Broken Vector | 236.8 KB | Same as the trees (2018, no pipeline table). Its [itch.io page](https://brokenvector.itch.io/low-poly-rock-pack) says 24 rocks with 4 color schemes. Version 1.3, 9/7/2018. |
+| Rocks (Sanyam) | [Low Poly Rock Pack](https://assetstore.unity.com/packages/3d/environments/low-poly-rock-pack-57874) | Broken Vector | 236.8 KB | **Imported 20/11/2026: it works in Built-in (Standard materials). See section 1.** Same as the trees (2018, no pipeline table). Its [itch.io page](https://brokenvector.itch.io/low-poly-rock-pack) says 24 rocks with 4 color schemes. Version 1.3, 9/7/2018. |
 | Building pieces (Sanyam) | [WOODLAND - FREE - Low Poly Modular Village & Forest Kit](https://assetstore.unity.com/packages/3d/environments/fantasy/woodland-free-low-poly-modular-village-forest-kit-424362) | ForgeWorks | 6.7 MB | Built-in ✓, but only listed for Unity 6 (6000.3), so it may not open in our 2023.1. Cottages, buildings, props. Version 1.0, 6/11/2026. |
 | Building pieces (Sanyam) | [Low Poly Survival modular Kit VR and Mobile](https://assetstore.unity.com/packages/3d/environments/low-poly-survival-modular-kit-vr-and-mobile-128903) | Albert_Einsteinn | 4.7 MB | Old (2018, no pipeline table). A reviewer says the colliders let you go through the walls and roof. Version 1.0, 24/9/2018. |
 
@@ -354,3 +407,47 @@ official FAQ: [helpx.adobe.com/creative-cloud/faq/mixamo-faq.html](https://helpx
   ([forum thread](https://discussions.unity.com/t/what-kind-of-license-can-be-used-to-protect-assets-purchased-from-the-asset-store-in-a-public-repo/860104)).
   Some teams keep the pack folders out of git with `.gitignore` and each person imports them
   ([forum thread](https://discussions.unity.com/t/question-regarding-github-and-asset-store/767483)).
+
+---
+
+## 10. Armor for the player (searched on 19/11/2026)
+
+Armor is a skinned mesh: it bends with the body it was made for. So armor only fits our player if it was made for
+**Blink's human**. Armor from another pack comes on its own body: using it means swapping the whole player model. Our
+animations still work then, because they're Humanoid. **Tools > Player > Add Character Model** takes any Humanoid
+prefab selected in the Project window. Helmets and shields that don't bend can be stuck onto a bone instead, the way
+`ToolInHand` holds the tools.
+
+### Best fit: already in the project (Blink's free human)
+
+The character pack we use comes with **2 armor sets made for this exact body and skeleton**. The store page says
+there are 64 color variations per armor set. Inside `HumanMale_Character_FREE` (and so our `PlayerCharacter`), under
+`Armors`:
+
+| Set | Pieces | Now |
+|---|---|---|
+| `StarterClothes` | Starter_Chest, Starter_Pants, Starter_Boots | **on** (switched on in PlayerCharacter) |
+| `Plate1` (`PlateSet1_HumanMale.fbx`) | PlateSet1_Helmet, _Chest, _Shoulders, _Gloves, _Pants, _Boots | **off** |
+
+Both use `Materials_Humans/Armor.mat` with `Textures_Humans/LowPolyArmorTexture.png`. Blink's
+`MaterialTilingOffset.cs` (**BLINK** menu) changes the material's tiling / offset, which is how the color variations
+are picked. To try the plate armor, open `Assets/Prefabs/Player/PlayerCharacter.prefab` and tick the PlateSet1 pieces
+on (and the Starter pieces off).
+
+### Asset Store pages checked
+
+Each page was opened on 19/11/2026. Their Description sections didn't load, so "inside" comes from the search
+results' copy of the listing text.
+
+| Asset | Publisher | Price | Pipelines (Unity version) | Size, version | Inside | Fits our player? |
+|---|---|---|---|---|---|---|
+| [Low Poly Modular Armors - Free (Medieval Fantasy Series)](https://assetstore.unity.com/packages/3d/characters/lowpoly-modular-armors-free-pack-199890) | Polytope Studio | **Free** | Built-in ✓, URP ✓, HDRP ✗ (2022.3.62) | 62.9 MB, 1.3.0, 27/6/2026 | 6 modular armor sets (3 male, 3 female) and 2 undressed bodies, hair / beard / head variations, 2,090 to 9,490 triangles per character, Mecanim / Mixamo compatible, no animations. 1,107 favourites | Only by swapping the player model to one of its bodies. More detailed than Blink's flat look. **Imported 20/11/2026** into `Assets/Imported3D/Polytope Studio` (99 MB on disk: Lowpoly_Characters, Lowpoly_Demos, Lowpoly_Environments, Lowpoly_Props, Lowpoly_Weapons); not used yet |
+| [Low Poly Axe Warrior - Customizable Humanoid](https://assetstore.unity.com/packages/3d/characters/humanoids/low-poly-axe-warrior-customizable-humanoid-314095) | polymirage | **Free** | Built-in ✓, URP ✓, HDRP ✗ (**Unity 6**, 6000.0.62) | 2.4 MB, 1.1, 29/12/2025 | A rigged warrior with 3 armor sets and modular helmets, pouches and accessories, no animations | Swapping the model. Made with Unity 6, so it may not open in our 2023.1 |
+| [FREE Low Poly Style Weapons & Shields](https://assetstore.unity.com/packages/3d/props/weapons/free-low-poly-style-weapons-shields-244523) | Dimasjk Studio | **Free** | Built-in ✓, URP ✓, HDRP ✓ (2022.3.62) | 11.3 MB, 1.2, 9/6/2026 | Weapons and shields (props, not worn armor) | A shield could be held like a tool |
+| [Low Poly Armor Sets 1 - RPG Characters](https://assetstore.unity.com/packages/3d/characters/humanoids/fantasy/low-poly-armor-sets-1-rpg-characters-232717) | Blink | €22.99 | Built-in ✓, URP ✓, HDRP ✓ (2020.3.37) | 2.3 MB, 1.0, 10/9/2022 | Blink's armor sets (the page doesn't say which body). Sets 2 to 6 are listed for about the same price; the [Low Poly RPG Characters Bundle](https://marketplace.unity.com/packages/3d/characters/humanoids/fantasy/low-poly-rpg-characters-bundle-232729) has them all | Probably, same artist (not free) |
+| [FREE Fantasy Low poly Armor Set for RPG](https://assetstore.unity.com/packages/3d/characters/humanoids/fantasy/free-fantasy-low-poly-armor-set-for-rpg-301358) | not shown | - | - | - | **Deprecated**: can't be added any more | No |
+| [Fantasy Heroes: Modular Character Creator Kit](https://assetstore.unity.com/packages/3d/characters/character-set-fantasy-rpg-185676) | Zerin Labs | €12.87 | Built-in ✓, URP ✓, HDRP ✓ (Unity 6) | 32.3 MB, 2.0, 28/4/2025 | Modular fantasy characters (knight, warrior, wizard, orc, goblin) | Not free |
+
+**Result:** no free Asset Store armor fits Blink's body. Blink's own extra armor is paid. The plate set already in
+the project is the free armor that fits. The best free pack from another artist is Polytope's, but it means changing
+the player's whole look.

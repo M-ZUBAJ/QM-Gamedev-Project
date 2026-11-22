@@ -30,9 +30,25 @@ MonoBehaviour:
   tool:
     kind: 2
     tier: 1
+  bow:
+    damage: 5
+    drawSeconds: 1
+    arrowSpeed: 45
+  armor:
+    slot: 2
+    protection: 1.5
+    set: 
+    piece: 
+    hides: []
+    look: {fileID: 0}
+  ammo:
+    damage: 20
+    head: {fileID: 0}
   minedWith: 0
   recipe:
   - item: {fileID: 11400000, guid: d524931321f754afdaeefd6219e3fa3c, type: 2}
-    amount: 2
+    amount: 3
+  - item: {fileID: 11400000, guid: 3531b718bb76535458623a98976a16c7, type: 2}
+    amount: 6
   craftAmount: 1
   craftedAt: 0

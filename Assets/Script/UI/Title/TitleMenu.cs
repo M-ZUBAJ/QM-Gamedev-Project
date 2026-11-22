@@ -1,6 +1,6 @@
 /*
 First Date: 7/11/2026
-Date: 13/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Put this on the title screen's menu canvas (Tools > UI > Build Main Title Scene makes TitleCanvas with it).
 Unity Editor: Nothing to connect: it finds its pages and buttons by NAME (TitlePage, NewGamePage, SettingsPage, Title,
@@ -14,13 +14,14 @@ Purpose: The title screen:
                        the buttons rise in one by one, then the version and credits fade in.
            PLAY:       slides to the New Game page. START GAME there: a white flash, a shockwave ring, a burst of
                        sparks, the menu zooms away, then "DAY 1" and the game loads (ScreenFader) with the choices
-                       made (NewGamePanel -> GameSetup).
+                       made (NewGamePanel -> GameSetup): Game Scene, or New World Scene when Map is New world.
            SETTINGS:   slides to the Settings page (key bindings, and tabs still to come).
-           BACK / Esc: slides back. QUIT: the title shrinks away and the screen fades to black (hidden on WebGL,
+           BACK / Esc: slides back (not while a number is being typed, e.g. Starting coins: there Esc only stops
+                       the typing). QUIT: the title shrinks away and the screen fades to black (hidden on WebGL,
                        where a web page can't close itself).
          The mouse is free here, and time runs normally (also when coming back from a paused game).
 Requirement: TitleMenu.cs x-> UITween.cs, UISparks.cs, UISound.cs, ScreenFader.cs, TitleTextFX.cs, CascadeIn.cs, ButtonFX.cs, NewGamePanel.cs, GameSetup.cs
-             TitleMenu.cs o-> KeyBindingMenu.cs
+             TitleMenu.cs o-> KeyBindingMenu.cs, StepperRow.cs
              TitleMenu.cs <-x TitleSceneBuilder.cs
 */
 
@@ -53,8 +54,12 @@ public class TitleMenu : MonoBehaviour
     [SerializeField] bool sparks = true;
 
     [Header("Game")]
-    [Tooltip("The scene START GAME loads (its file name).")]
+    [Tooltip("The scene START GAME loads (its file name): the old world, the hand-made map.")]
     [SerializeField] string gameScene = "GameScene";
+
+    [Tooltip("The scene START GAME loads when NEW GAME's Map is New world (a new random world every game). It must be " +
+             "in Build Settings: Tools > World > Build New World Scene puts it there.")]
+    [SerializeField] string newWorldScene = "ProceduralGenerateScene";
 
     [Header("Sounds (optional)")]
     [Tooltip("Mouse over a button.")]
@@ -145,8 +150,10 @@ public class TitleMenu : MonoBehaviour
     {
         if (introPlaying && Input.anyKeyDown) { SkipIntro(); return; }
 
-        // Esc goes back to the title page (unless the key menu is waiting for a key: there Esc cancels).
-        if (!busy && currentPage != titlePage && Input.GetKeyDown(KeyCode.Escape) && !KeyBindingMenu.IsListening)
+        // Esc goes back to the title page (unless the key menu is waiting for a key, or a number is being typed, e.g.
+        // Starting coins: there Esc cancels that).
+        if (!busy && currentPage != titlePage && Input.GetKeyDown(KeyCode.Escape) && !KeyBindingMenu.IsListening &&
+            !StepperRow.Typing)
             ShowPage(titlePage, false);
     }
 
@@ -319,7 +326,17 @@ public class TitleMenu : MonoBehaviour
         }
 
         int n = newGame != null ? newGame.DaysToWin : 5;
-        ScreenFader.LoadScene(gameScene, "DAY 1", "Survive " + n + (n == 1 ? " night" : " nights"));
+        ScreenFader.LoadScene(SceneToLoad(), "DAY 1", "Survive " + n + (n == 1 ? " night" : " nights"));
+    }
+
+    // The old world, or the new one if it was picked (and can be loaded: it must be in Build Settings).
+    string SceneToLoad()
+    {
+        if (GameSetup.NewWorld != true) return gameScene;
+        if (Application.CanStreamedLevelBeLoaded(newWorldScene)) return newWorldScene;
+        Debug.LogWarning("TitleMenu: \"" + newWorldScene + "\" isn't in Build Settings, so the old world starts instead. " +
+                         "Run Tools > World > Build New World Scene.", this);
+        return gameScene;
     }
 
     IEnumerator QuitGame()

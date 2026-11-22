@@ -123,7 +123,14 @@ public class CraftingMenu : MonoBehaviour
             if (item == null || !item.IsCraftable || item.CraftedAt != CraftStation.Crafting) continue;
 
             Button row = Instantiate(rowPrefab, rows);
-            row.GetComponentInChildren<TMP_Text>().text = RowText(item);
+            // [Tony] replaced (19/11/2026): a row with pictures (Tony's CraftingRow, on the row prefab made by
+            // Tools > UI > Build Crafting Menu) shows the item's icon and its recipe as icons with "have/need",
+            // green / red for enough / missing. A plain row without CraftingRow still gets your text.
+            // Log: Docs/TonyEditMate/Turki/19-11-2026 Crafting Menu Icons And Tier Tools.md
+            // Original: row.GetComponentInChildren<TMP_Text>().text = RowText(item);
+            CraftingRow pictures = row.GetComponent<CraftingRow>();                           // [Tony] added
+            if (pictures != null) pictures.Show(item);                                        // [Tony] added
+            else row.GetComponentInChildren<TMP_Text>().text = RowText(item);                 // [Tony] replaced
             row.onClick.AddListener(() => Craft(item));
         }
     }
@@ -145,15 +152,36 @@ public class CraftingMenu : MonoBehaviour
         PlayerInventory inv = PlayerInventory.Instance;
         if (inv == null) { message.text = "No inventory in the scene."; return; }
 
+        // [Tony] added (20/11/2026): an armor upgrade (e.g. Copper Helmet + 4 Iron = Iron Helmet) can use the
+        // piece the player is wearing: Tony's PlayerArmor takes it off into the inventory for the recipe, then puts the
+        // new piece on in its place (or the old one back on if nothing was crafted). Anything else crafts as before.
+        // Log: Docs/TonyEditMate/Turki/20-11-2026 Reinforced Iron Armor And Set Panels.md
+        PlayerArmor armor = item.IsArmor ? PlayerArmor.Current : null;                        // [Tony] added
+        if (armor != null) armor.LendForUpgrade(item);                                        // [Tony] added
+
         if (!item.CanCraft(inv))
         {
             message.text = "Can't craft " + item.DisplayName + ". Missing: " + item.Missing(inv);
+            if (armor != null) armor.FinishUpgrade(item, false);   // [Tony] added: the worn piece goes back on (after the message, so it isn't listed as missing)
             return;
         }
 
+        // [Tony] replaced (19/11/2026): an upgraded tool (e.g. Wooden Axe + 3 Plank + 6 Stone = Stone Axe) goes into the
+        // slot the old tool was in, hotbar or inventory, instead of the first free slot. Everything else is added as
+        // before (AddInto works like Add when there's no old tool).
+        // Log: Docs/TonyEditMate/Turki/19-11-2026 Upgraded Tool Keeps Its Slot.md
+        // Original: if (inv.Add(item.Id, item.DisplayName, item.GetIcon(), item.CraftAmount, item))
+        int oldToolSlot = inv.SlotOf(item.UpgradedFrom);   // [Tony] added: where the old tool is (-1 = not an upgrade)
         item.TakeRecipeFrom(inv);
-        if (inv.Add(item.Id, item.DisplayName, item.GetIcon(), item.CraftAmount, item))
+        // [Tony] replaced (21/11/2026): crafted tools and food (Item Type Tool or Consumable) go to the hotbar first, the
+        // leftmost free slot (or onto a hotbar stack of the same item), so they're ready in hand; an upgraded tool still
+        // takes the old tool's slot when that was on the hotbar. Materials and armor go where they went before.
+        // Tony's PlayerInventory.AddCrafted decides. To undo: put the line below back.
+        // Log: Docs/TonyEditMate/Turki/21-11-2026 Crafted Tools And Food Go To The Hotbar.md
+        // Was: if (inv.AddInto(oldToolSlot, item.Id, item.DisplayName, item.GetIcon(), item.CraftAmount, item))   // [Tony] replaced
+        if (inv.AddCrafted(item, item.CraftAmount, oldToolSlot))                                // [Tony] replaced
         {
+            if (armor != null) armor.FinishUpgrade(item, true);                               // [Tony] added: the new piece is worn
             message.text = "Crafted " + item.DisplayName + "!";
         }
         else
@@ -163,6 +191,7 @@ public class CraftingMenu : MonoBehaviour
                 if (ing != null && ing.item != null)
                     inv.Add(ing.ItemId, ing.DisplayName, ing.item.GetIcon(), ing.amount, ing.item);
             }
+            if (armor != null) armor.FinishUpgrade(item, false);                              // [Tony] added: the worn piece goes back on
             message.text = "Inventory is full!";
         }
     }

@@ -52,12 +52,25 @@ public class FireballProjectile : MonoBehaviour
         // if fireball hit an enemy, make it take damage
         if (enemy != null)
         {
-            enemy.TakeDamage(damage);
+            // [Tony] replaced (21/11/2026): enemy.TakeDamage(damage);
+            // The same hit, through Tony's PerkEffects: with the Vampire perk the player heals a share of the damage.
+            PerkEffects.Hurt(enemy, () => enemy.TakeDamage(damage));             // [Tony] replaced
         }
         // otherwise if it hit a resource/animal, make that take damage instead.
         else if (resource != null)
         {
-            resource.TakeDamage(damage);
+            // [Tony] added (22/11/2026): a rock or tree that needs a tool (ores: a good enough pickaxe; the snow's spruce:
+            // an Iron Axe or better) isn't broken by a fireball either, like a sword can't break it. It says which tool
+            // it needs. To undo: delete the 6 lines marked [Tony] added below.
+            // Log: Docs/TonyEditMate/Marko/22-11-2026 Fireball Leaves Ores And Spruce Alone.md
+            if (ToolRules.NeededFor(resource) != ToolTier.None)                  // [Tony] added
+            {                                                                    // [Tony] added
+                ToolRules.TellCantMine(resource);                                // [Tony] added: "Needs an Iron Axe or better"
+                Destroy(gameObject);                                             // [Tony] added
+                return;                                                          // [Tony] added
+            }                                                                    // [Tony] added
+            // [Tony] replaced (21/11/2026): resource.TakeDamage(damage);
+            PerkEffects.Hurt(resource, () => resource.TakeDamage(damage));       // [Tony] replaced (Vampire: animals only)
         }
 
         Destroy(gameObject);

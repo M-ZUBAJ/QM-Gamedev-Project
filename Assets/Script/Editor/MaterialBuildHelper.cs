@@ -1,6 +1,6 @@
 /*
 First Date: 12/11/2026
-Date: 12/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Not used directly. The tools that bring in Asset Store models use it (Tools > World > Build Wild Animal,
@@ -9,8 +9,10 @@ Purpose: Many free packs ship materials made for URP (the Universal Render Pipel
          pipeline, which can't draw them: they show pink. This makes a Standard-shader copy of such a material with the
          same picture, colour, smoothness and metalness, read from the saved file (the URP shader itself isn't in the
          project). Made once: an existing copy is kept as it is, so changes made to it stay.
+         withMaps (the loot boxes) also copies the glow (emission map and color), the metal / shine map and the
+         ambient occlusion map, so glowing edges keep glowing.
 Requirement: MaterialBuildHelper.cs x-> UIBuildHelper.cs
-             MaterialBuildHelper.cs <-x TierToolBuilder.cs, WildAnimalBuilder.cs
+             MaterialBuildHelper.cs <-x BowBuilder.cs, LootChestBuilder.cs, TierToolBuilder.cs, WildAnimalBuilder.cs
 */
 
 using UnityEditor;
@@ -42,7 +44,8 @@ public static class MaterialBuildHelper
     }
 
     // A Standard copy of a material: "<name> (Built-in).mat" in the folder. An existing copy is kept as it is.
-    public static Material BuiltInCopy(Material original, string folder, float? glossiness = null)
+    // withMaps = also its emission (glow), metal / shine and ambient occlusion maps (the other tools leave it off).
+    public static Material BuiltInCopy(Material original, string folder, float? glossiness = null, bool withMaps = false)
     {
         if (original == null) return null;
         MakeFolders(folder);
@@ -58,8 +61,31 @@ public static class MaterialBuildHelper
         copy.color = SavedColor(original, "_BaseColor", SavedColor(original, "_Color", Color.white));
         copy.SetFloat("_Glossiness", glossiness ?? SavedFloat(original, "_Smoothness", SavedFloat(original, "_Glossiness", 0.1f)));
         copy.SetFloat("_Metallic", SavedFloat(original, "_Metallic", 0f));
+        if (withMaps) CopyMaps(original, copy);
         AssetDatabase.CreateAsset(copy, path);
         return copy;
+    }
+
+    // The emission, metal / shine and ambient occlusion maps of a URP material onto its Standard copy (same names).
+    static void CopyMaps(Material original, Material copy)
+    {
+        Texture glow = SavedTexture(original, "_EmissionMap");
+        if (glow != null)
+        {
+            copy.SetTexture("_EmissionMap", glow);
+            copy.SetColor("_EmissionColor", SavedColor(original, "_EmissionColor", Color.white));
+            copy.EnableKeyword("_EMISSION");
+            copy.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;   // it glows (Standard's own setting)
+        }
+        Texture metal = SavedTexture(original, "_MetallicGlossMap");
+        if (metal != null)
+        {
+            copy.SetTexture("_MetallicGlossMap", metal);
+            copy.EnableKeyword("_METALLICGLOSSMAP");
+            copy.SetFloat("_GlossMapScale", SavedFloat(original, "_Smoothness", 0.5f));   // the map's shine, scaled like URP
+        }
+        Texture occlusion = SavedTexture(original, "_OcclusionMap");
+        if (occlusion != null) copy.SetTexture("_OcclusionMap", occlusion);
     }
 
     static Texture SavedTexture(Material m, string property)

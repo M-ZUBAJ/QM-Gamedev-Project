@@ -1,10 +1,12 @@
 /*
 First Date: 11/10/2026
-Date: 10/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerHealth).
 Unity Editor: Set "Respawn Point" to where the player comes back (default 0, 0.5, 0: the middle of the world,
               just above the ground). Make sure that spot is on solid ground, not inside a wall.
+              In the new (generated) world, WorldGenerator sets it to where the player starts (SetRespawnPoint), and
+              with its New World On Death on, respawning makes a brand-new world instead (StartsNewWorld).
               With a DeathScreen in the scene, the player respawns when its Respawn button is clicked;
               without one, straight away.
               Testing: in Play mode, click PlayerHealth's ⋮ menu > "Test: Die" (or type 0 into its Health).
@@ -12,9 +14,12 @@ Purpose: When the player dies (PlayerHealth reaches 0), brings them back at the 
          moved there, stopped (no falling speed kept), and full Health, Hunger and Stamina again.
          The inventory is kept. Fires Respawned afterwards (PlayerStats starts counting a new life).
          The moment the player dies, every open menu closes (inventory, build menu, crafting, perk choice...).
+         In the new world (WorldGenerator > New World On Death) Respawn doesn't bring the player back: a brand-new world
+         loads instead (Day 1, everything fresh, like a new game).
 Requirement: PlayerRespawn.cs x-> PlayerHealth.cs, MenuState.cs
-             PlayerRespawn.cs o-> PlayerHunger.cs, PlayerStamina.cs, Rigidbody (Unity)
+             PlayerRespawn.cs o-> PlayerHunger.cs, PlayerStamina.cs, WorldGenerator.cs, Rigidbody (Unity)
              PlayerRespawn.cs <-x DeathScreen.cs, PlayerStats.cs
+             PlayerRespawn.cs <-o WorldGenerator.cs
 */
 
 using UnityEngine;
@@ -41,6 +46,16 @@ public class PlayerRespawn : MonoBehaviour
     public event System.Action Respawned;
 
     public Vector3 RespawnPoint => respawnPoint;
+
+    // True in the new world with New World On Death on: Respawn loads a brand-new world instead of bringing the player
+    // back here (DeathScreen keeps its page up until it does).
+    public bool StartsNewWorld => WorldGenerator.NewWorldOnRespawn;
+
+    // Moves the respawn point (e.g. WorldGenerator: the spot in the grassland where a new world starts the player).
+    public void SetRespawnPoint(Vector3 point)
+    {
+        respawnPoint = point;
+    }
 
     // ===== Unity messages (Unity calls these) =====
 
@@ -85,6 +100,13 @@ public class PlayerRespawn : MonoBehaviour
     public void Respawn()
     {
         respawnNextFrame = false;   // e.g. the button was clicked: no second respawn
+
+        // The new world (WorldGenerator > New World On Death): no coming back here, a brand-new world loads instead.
+        if (StartsNewWorld)
+        {
+            WorldGenerator.Current.StartNewWorld();
+            return;
+        }
         if (rb != null)
         {
             rb.velocity = Vector3.zero;          // don't keep the speed of the fall that killed us

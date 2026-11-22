@@ -54,6 +54,9 @@ public class EnemyMovement : MonoBehaviour
     void FixedUpdate()                                                                // [Tony] added
     {                                                                                 // [Tony] added
         if (body == null || target == null) return;                                   // [Tony] added
+        // [Tony] added (21/11/2026): a punch knocked it back (Tony's Knockback): no walking until the push is over, so
+        // the push isn't cancelled at once. Log: Docs/TonyEditMate/Marko/21-11-2026 Loot Boxes And New Perks.md
+        if (Knockback.IsPushed(body)) return;                                         // [Tony] added
 
         Vector3 toTarget = target.position - body.position;                           // [Tony] added
         toTarget.y = 0f; // flat: gravity does the up and down                       // [Tony] added

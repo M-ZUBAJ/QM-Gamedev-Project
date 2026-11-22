@@ -1,232 +1,257 @@
 /*
 First Date: 7/10/2026
-Date: 12/11/2026
+Date: 19/11/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerInventory).
-Unity Editor: Tune it WHILE PLAYING: hold an item (pick one up, put it in the hotbar, press its number key),
-              then change Offset / Rotation / Item Size in the Inspector and watch the Game view.
-              Right-click the component title > Copy Component, stop playing, right-click > Paste Component Values
-              to keep the numbers (Play mode changes are lost otherwise).
-Purpose: Shows the selected hotbar item at the bottom right of the screen, like the player is holding it.
-         It is a look-only copy (no scripts or physics), made by IconCapture when the item was picked up.
-         It follows the camera; turning makes it lag a little (sway) and walking makes it bob.
-         Nothing selected, or an empty hotbar slot = empty hand. A tool (Item Data > Item Type = Tool) isn't shown here:
-         it's in the character's own hand (ToolInHand), in first and third person.
-Requirement: HeldItemView.cs x-> PlayerInventory.cs, IconCapture.cs, MenuState.cs
-             HeldItemView.cs o-> PlayerController.cs, CameraController.cs
+Unity Editor: Testing: Play, pick something up (wood, stone, food...) and select it in the hotbar: it's in the
+              character's right fist, in first person (the hands) and third person (the body).
+              To fit it better, change Size In Hand, Item Nudge and Item Turn WHILE PLAYING with an item in the hand,
+              then right-click the component title > Copy Component, stop playing, and right-click > Paste Component
+              Values (Play mode changes are lost otherwise).
+Purpose: Shows the selected hotbar item in the character's right hand, like holding it (Minecraft-style): on the body
+         (the Player's "Character") and on the first-person hands (Main Camera > FirstPersonHands). Each is a look-only
+         copy (meshes and colors, no scripts or physics) from IconCapture, sized so its longest side is Size In Hand,
+         with that side through the fist like a handle (the fist's grip comes from HandGrip, the same as a tool's).
+         A tool (Item Data > Item Type = Tool) isn't shown here: ToolInHand holds it. Nothing selected, or an empty
+         slot = empty fists.
+         Before 19/11/2026 this floated the item at the bottom right of the screen, where the first-person fists
+         (drawn on top of everything) hid it.
+Requirement: HeldItemView.cs x-> PlayerInventory.cs, ItemData.cs, IconCapture.cs, HandGrip.cs
+             HeldItemView.cs o-> FirstPersonHands.cs, CameraController.cs, Animator (Unity)
 */
 
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;   // ShadowCastingMode
 
 [RequireComponent(typeof(PlayerInventory))]
 [DisallowMultipleComponent]
-[DefaultExecutionOrder(100)]   // move the item AFTER the camera has moved this frame, so it never shakes
 public class HeldItemView : MonoBehaviour
 {
+    // One hand that holds the item: the body's, or the first-person hands'.
+    class Holder
+    {
+        public HandGrip grip;
+        public bool handsCopy;                 // the first-person hands: no shadow. The body: only a shadow in first person.
+        public GameObject held;                // the item copy in this hand (null = empty)
+        public readonly List<Renderer> parts = new List<Renderer>();
+        public bool shownFirstPerson;          // the view its shadows were last set for
+    }
+
     // ===== Fields =====
-    [Header("Where (from the camera)")]
-    [Tooltip("x = right, y = up (negative = down), z = forward, in meters from the camera. " +
-             "Bigger z = farther from the player's eyes.")]
-    [SerializeField] Vector3 offset = new Vector3(0.35f, -0.3f, 0.6f);
+    [Header("Held item")]
+    [Tooltip("How big a held item is: its longest side, in meters. Every item is sized to this, big or small.")]
+    [Range(0.05f, 0.6f)]
+    [SerializeField] float sizeInHand = 0.2f;
 
-    [Tooltip("Turn of the item in degrees: x = tip forward, y = turn left/right, z = roll.")]
-    [SerializeField] Vector3 rotation = new Vector3(10f, -25f, 0f);
+    [Tooltip("Moves the item in the fist, in meters: y = toward the thumb (where a handle sticks out), " +
+             "x = the way the fingers point, z = out of the palm.")]
+    [SerializeField] Vector3 itemNudge = Vector3.zero;
 
-    [Range(0.05f, 1f)]
-    [Tooltip("How big the item looks: its longest side, in meters. Every item is scaled to this, big or small.")]
-    [SerializeField] float itemSize = 0.25f;
+    [Tooltip("Turns the item in the fist (degrees around its own x / y / z), after its longest side is put through the fist.")]
+    [SerializeField] Vector3 itemTurn = Vector3.zero;
 
-    [Header("Feel")]
-    [Range(0f, 30f)]
-    [Tooltip("How fast the item catches up when you turn. Lower = more sway. 0 = no sway (glued to the camera).")]
-    [SerializeField] float swaySpeed = 12f;
+    const int MaxTries = 60;   // frames to keep trying when an item has no look-only copy yet (then wait for a change)
 
-    [Range(0f, 0.1f)]
-    [Tooltip("How far the item bobs up and down while walking, in meters. 0 = no bob.")]
-    [SerializeField] float bobAmount = 0.015f;
+    readonly List<Holder> holders = new List<Holder>();
+    PlayerInventory inventory;
+    CameraController cameraControl;   // first or third person (can be missing)
+    string shownId;                   // the Item Id in the hands now (null = empty hands)
+    int triesLeft;                    // > 0 = the selected item had no copy yet: try again next frame
 
-    [Range(0f, 20f)]
-    [Tooltip("How fast it bobs while walking (steps).")]
-    [SerializeField] float bobSpeed = 9f;
-
-    [Header("When to show")]
-    [Tooltip("Off: also show it in third person (F5). On: only in first person.")]
-    [SerializeField] bool firstPersonOnly = false;
-
-    [Tooltip("Hide it while a menu is open (inventory, build menu...).")]
-    [SerializeField] bool hideInMenus = false;
-
-    [Tooltip("Ticked: the item casts a shadow on the ground. Usually off for items in hand.")]
-    [SerializeField] bool castShadows = false;
-
-    [Tooltip("The camera the item follows. Empty = the Main Camera.")]
-    [SerializeField] Transform cameraTransform;
-
-    const int IGNORE_RAYCAST_LAYER = 2;   // the crosshair looks straight through the item in hand
-
-    PlayerInventory inv;
-    PlayerController controller;     // for the walking bob (can be missing)
-    CameraController cameraControl;  // for first / third person (can be missing)
-
-    Transform hand;                  // moves with the camera; the item model sits in it
-    GameObject model;                // the item shown right now (null = empty hand)
-    Vector3 modelScale;              // the model's own scale (keeps its proportions, e.g. a long thin stick)
-    string shownId;                  // its Item Id
-    Quaternion swayRotation;         // the camera's turn, followed a bit late (sway)
-    float bobTime;
-    float bobWeight;                 // 0 = standing still, 1 = walking (eases between them)
+    // The item's own size, measured once per item: in meters at its own scale, around its pivot.
+    Bounds itemBox;
+    Vector3 itemScale;                            // the copy's own scale (keeps its proportions, e.g. a long thin plank)
+    Quaternion toHandle = Quaternion.identity;    // turns its longest side onto y (through the fist)
 
     // ===== Unity messages (Unity calls these) =====
 
     void Awake()
     {
-        inv = GetComponent<PlayerInventory>();
-        controller = GetComponent<PlayerController>();
+        inventory = GetComponent<PlayerInventory>();
     }
 
     void Start()
     {
-        if (cameraTransform == null && Camera.main != null) cameraTransform = Camera.main.transform;
-        if (cameraTransform != null)
+        cameraControl = FindFirstObjectByType<CameraController>();
+
+        // The body: the first Humanoid under the Player that isn't the first-person copy.
+        foreach (Animator body in GetComponentsInChildren<Animator>(true))
         {
-            cameraControl = cameraTransform.GetComponent<CameraController>();
-            swayRotation = cameraTransform.rotation;
+            if (body.GetComponent<FirstPersonHands>() == null && AddHolder(body, false)) break;
         }
+        // The first-person hands (under the Main Camera).
+        FirstPersonHands hands = FindFirstObjectByType<FirstPersonHands>(FindObjectsInactive.Include);
+        if (hands != null) AddHolder(hands.GetComponent<Animator>(), true);
 
-        hand = new GameObject("HeldItem (hand)").transform;   // not a child of the player: it follows the camera
-        Refresh();
-    }
+        if (holders.Count == 0)
+            Debug.LogWarning("HeldItemView: no Humanoid character with a right hand (Tools > Player > Add Character Model), " +
+                             "so held items don't show.", this);
 
-    void OnEnable()
-    {
         PlayerInventory.Changed += Refresh;   // also fired when the selected hotbar slot changes
-        if (hand != null) Refresh();
-    }
-
-    void OnDisable()
-    {
-        PlayerInventory.Changed -= Refresh;
-        if (hand != null) hand.gameObject.SetActive(false);
+        Refresh();
     }
 
     void OnDestroy()
     {
-        if (hand != null) Destroy(hand.gameObject);
+        PlayerInventory.Changed -= Refresh;
+        Clear();
     }
 
     void LateUpdate()
     {
-        if (hand == null || cameraTransform == null) return;
+        if (triesLeft > 0) Refresh();   // the item's copy wasn't ready a moment ago
 
-        bool show = model != null
-                    && !(hideInMenus && MenuState.AnyOpen)
-                    && !(firstPersonOnly && cameraControl != null && !cameraControl.IsFirstPerson);
-        if (hand.gameObject.activeSelf != show) hand.gameObject.SetActive(show);
-        if (!show)
+        // The body's item only casts a shadow in first person (where the body is just a shadow too).
+        bool firstPerson = cameraControl != null && cameraControl.IsFirstPerson;
+        foreach (Holder h in holders)
         {
-            swayRotation = cameraTransform.rotation;   // appear in place next time, not swinging in
-            return;
+            if (h.held != null && !h.handsCopy && h.shownFirstPerson != firstPerson) SetShadows(h, firstPerson);
         }
-
-        // Sway: the item's turn follows the camera's turn a little late. 0 = glued.
-        // (1 - e^(-speed x time) is the same smooth catch-up at any frame rate.)
-        swayRotation = swaySpeed <= 0f
-            ? cameraTransform.rotation
-            : Quaternion.Slerp(swayRotation, cameraTransform.rotation, 1f - Mathf.Exp(-swaySpeed * Time.deltaTime));
-
-        // Position follows the camera exactly (no lag while walking), turned by the swaying rotation.
-        hand.position = cameraTransform.position + swayRotation * (offset + Bob());
-        hand.rotation = swayRotation * Quaternion.Euler(rotation);
     }
 
-    // Unity calls this when a value is changed in the Inspector, so Item Size updates while testing.
+    // Unity calls this when a value is changed in the Inspector: move the held item while testing.
     void OnValidate()
     {
-        if (Application.isPlaying && model != null && hand != null) FitModel();
+        if (!Application.isPlaying) return;
+        foreach (Holder h in holders)
+        {
+            if (h.held != null) Place(h);
+        }
     }
 
     // ===== My methods =====
 
-    // Makes the hand show the selected hotbar item. Called whenever the inventory changes.
+    // A hand that can hold things. False = not a Humanoid with a right hand.
+    bool AddHolder(Animator animator, bool handsCopy)
+    {
+        if (!HandGrip.TryMeasure(animator, out HandGrip grip)) return false;
+        holders.Add(new Holder { grip = grip, handsCopy = handsCopy });
+        return true;
+    }
+
+    // Puts the selected hotbar item in every hand (or empties them). Called whenever the inventory changes.
     void Refresh()
     {
-        PlayerInventory.Slot active = inv.ActiveItem;
-        bool tool = active != null && !active.IsEmpty && active.data != null && active.data.IsTool;   // shown in the hand (ToolInHand)
-        string id = active != null && !active.IsEmpty && !tool ? active.id : null;
-        if (id == shownId && (id == null || model != null)) return;   // same item as before (e.g. only the count changed)
+        PlayerInventory.Slot slot = inventory != null ? inventory.ActiveItem : null;
+        bool item = slot != null && !slot.IsEmpty && !(slot.data != null && slot.data.IsTool);   // a tool: ToolInHand
+        string id = item ? slot.id : null;
+        bool retrying = triesLeft > 0 && id == shownId;
+        if (id == shownId && !retrying) return;   // the same item as before (e.g. only the count changed)
 
-        if (model != null) Destroy(model);
-        model = null;
+        int tries = retrying ? triesLeft - 1 : MaxTries;
+        Clear();
         shownId = id;
-        if (id == null || hand == null) return;
+        triesLeft = 0;
+        if (id == null || holders.Count == 0) return;
 
-        model = IconCapture.MakeModel(id);   // null if this item was never seen this play session
-        if (model == null) return;
-
-        model.transform.SetParent(hand, false);
-        modelScale = model.transform.localScale;
-        foreach (Transform t in model.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = IGNORE_RAYCAST_LAYER;
-        foreach (Renderer r in model.GetComponentsInChildren<Renderer>(true))
+        GameObject first = MakeCopy(slot);
+        if (first == null)
         {
-            r.shadowCastingMode = castShadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
+            triesLeft = tries;   // not photographed yet: try again next frame, for a moment
+            return;
         }
-        FitModel();
-    }
 
-    // Scales the model so its longest side is itemSize, and centers it in the hand.
-    void FitModel()
-    {
-        // Measure it in the hand's own space: put it back to its own size, measure, then scale and center.
-        model.transform.localPosition = Vector3.zero;
-        model.transform.localRotation = Quaternion.identity;
-        model.transform.localScale = modelScale;
-
-        Bounds box = LocalBounds(model);
-        float longest = Mathf.Max(box.size.x, Mathf.Max(box.size.y, box.size.z));
-        float scale = longest > 0.0001f ? itemSize / longest : 1f;
-
-        model.transform.localScale = modelScale * scale;          // same proportions, just bigger or smaller
-        model.transform.localPosition = -box.center * scale;   // the middle of the item sits on the hand point
-    }
-
-    // The box around every mesh of the model, in the hand's directions.
-    Bounds LocalBounds(GameObject go)
-    {
-        Bounds box = new Bounds();
-        bool first = true;
-
-        foreach (MeshFilter mf in go.GetComponentsInChildren<MeshFilter>(true))
+        Measure(first);
+        for (int i = 0; i < holders.Count; i++)
         {
-            if (mf.sharedMesh == null) continue;
-            Bounds b = mf.sharedMesh.bounds;   // the mesh's own box
+            GameObject copy = i == 0 ? first : MakeCopy(slot);
+            if (copy != null) Hold(holders[i], copy);
+        }
+    }
 
-            // Its 8 corners, moved into the hand's space.
-            for (int c = 0; c < 8; c++)
+    // A look-only copy of the item. IconCapture photographs it first if it hasn't yet, which also keeps the copy.
+    GameObject MakeCopy(PlayerInventory.Slot slot)
+    {
+        ItemData data = slot.data;
+        if (data != null && data.Prefab != null) IconCapture.GetIcon(slot.id, data.Prefab);
+        return IconCapture.MakeModel(slot.id);   // null if it was never photographed
+    }
+
+    // The item's own box (in meters, around its pivot) and the turn that puts its longest side through the fist.
+    void Measure(GameObject copy)
+    {
+        Transform root = copy.transform;
+        root.SetParent(null, false);
+        root.SetPositionAndRotation(Vector3.zero, Quaternion.identity);   // measured upright, at its own scale
+        itemScale = root.localScale;
+
+        bool any = false;
+        Bounds box = new Bounds();
+        foreach (MeshFilter mesh in copy.GetComponentsInChildren<MeshFilter>(true))
+        {
+            if (mesh.sharedMesh == null) continue;
+            Bounds own = mesh.sharedMesh.bounds;
+            for (int c = 0; c < 8; c++)   // its 8 corners (the 3 bits of c pick - or + on each side)
             {
-                Vector3 corner = b.center + Vector3.Scale(b.extents, new Vector3(
-                    (c & 1) == 0 ? -1f : 1f,     // the 3 bits of c pick - or + on each axis
-                    (c & 2) == 0 ? -1f : 1f,
-                    (c & 4) == 0 ? -1f : 1f));
-                Vector3 p = hand.InverseTransformPoint(mf.transform.TransformPoint(corner));
-
-                if (first) { box = new Bounds(p, Vector3.zero); first = false; }
-                else box.Encapsulate(p);
+                Vector3 corner = own.center + Vector3.Scale(own.extents, new Vector3(
+                    (c & 1) == 0 ? -1f : 1f, (c & 2) == 0 ? -1f : 1f, (c & 4) == 0 ? -1f : 1f));
+                Vector3 point = mesh.transform.TransformPoint(corner);
+                if (any) box.Encapsulate(point);
+                else box = new Bounds(point, Vector3.zero);
+                any = true;
             }
         }
-        return box;
+        itemBox = any ? box : new Bounds(Vector3.zero, Vector3.one * 0.1f);
+
+        Vector3 size = itemBox.size;
+        Vector3 longest = size.x >= size.y && size.x >= size.z ? Vector3.right
+                        : size.z >= size.y ? Vector3.forward
+                        : Vector3.up;
+        toHandle = Quaternion.FromToRotation(longest, Vector3.up);
     }
 
-    // Up-and-down (and a little side-to-side) while walking, easing in and out.
-    Vector3 Bob()
+    // Puts a copy in this hand, drawn the same way as the hand.
+    void Hold(Holder h, GameObject copy)
     {
-        bool walking = controller != null && controller.IsMoving;
-        bobWeight = Mathf.MoveTowards(bobWeight, walking ? 1f : 0f, Time.deltaTime * 4f);   // a quarter second to start / stop
-        if (bobWeight <= 0f || bobAmount <= 0f) return Vector3.zero;
+        h.held = copy;
+        copy.name = "Held " + shownId;
+        copy.transform.SetParent(h.grip.hand, false);
 
-        bobTime += Time.deltaTime * bobSpeed;
-        float up = Mathf.Abs(Mathf.Sin(bobTime)) * bobAmount;   // one bounce per step
-        float side = Mathf.Sin(bobTime) * bobAmount * 0.5f;     // swing left and right between steps
-        return new Vector3(side, -up, 0f) * bobWeight;
+        int layer = h.grip.hand.gameObject.layer;   // the first-person hands are drawn on their own layer: the item joins them
+        foreach (Transform part in copy.GetComponentsInChildren<Transform>(true)) part.gameObject.layer = layer;
+        h.parts.Clear();
+        h.parts.AddRange(copy.GetComponentsInChildren<Renderer>(true));
+
+        Place(h);
+        SetShadows(h, cameraControl != null && cameraControl.IsFirstPerson);
+    }
+
+    // Its longest side through the fist, Size In Hand long in meters whatever the character's scale, its middle in the fist.
+    void Place(Holder h)
+    {
+        Transform hand = h.grip.hand;
+        float toHand = 1f / Mathf.Max(0.0001f, hand.lossyScale.x);   // world meters -> the hand's own units
+        float longest = Mathf.Max(itemBox.size.x, Mathf.Max(itemBox.size.y, itemBox.size.z));
+        float scale = (longest > 0.0001f ? sizeInHand / longest : 1f) * toHand;
+
+        Quaternion turn = h.grip.rotation * Quaternion.Euler(itemTurn) * toHandle;
+        Transform t = h.held.transform;
+        t.localRotation = turn;
+        t.localScale = itemScale * scale;
+        t.localPosition = h.grip.center + h.grip.rotation * (itemNudge * toHand) - turn * (itemBox.center * scale);
+    }
+
+    void SetShadows(Holder h, bool firstPerson)
+    {
+        h.shownFirstPerson = firstPerson;
+        ShadowCastingMode mode = h.handsCopy ? ShadowCastingMode.Off
+                               : firstPerson ? ShadowCastingMode.ShadowsOnly
+                               : ShadowCastingMode.On;
+        foreach (Renderer part in h.parts)
+        {
+            if (part != null) part.shadowCastingMode = mode;
+        }
+    }
+
+    // Empties every hand.
+    void Clear()
+    {
+        foreach (Holder h in holders)
+        {
+            if (h.held != null) Destroy(h.held);
+            h.held = null;
+            h.parts.Clear();
+        }
     }
 }

@@ -28,4 +28,5 @@ MonoBehaviour:
   clearItemOnDead: 1
   autoPickupDrops: 1
   showNotifications: 1
-  readFrom: GameScene, 9/11/2026 20:05
+  toolTest: 0
+  readFrom: GameScene, 19/11/2026 23:00

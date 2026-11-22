@@ -1,6 +1,6 @@
 /*
 First Date: 11/10/2026
-Date: 11/10/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerInventory, PlayerHealth, PlayerHunger and PlayerStamina).
 Unity Editor: Make an item edible in its Item Data: Item Type = Consumable, then set its stats (see Consumable.cs).
@@ -12,7 +12,7 @@ Purpose: Eat / drink the item in hand, like Minecraft: right click with food sel
          Does nothing with an empty hand, a non-food item, a menu open, while placing a blueprint, or when dead.
          A missing stat script (e.g. no PlayerStamina) just skips that stat.
 Requirement: ItemConsumer.cs x-> PlayerInventory.cs, ItemData.cs, Consumable.cs, KeyBindings.cs, MenuState.cs, ClickClaim.cs
-             ItemConsumer.cs o-> PlayerHealth.cs, PlayerHunger.cs, PlayerStamina.cs
+             ItemConsumer.cs o-> PlayerHealth.cs, PlayerHunger.cs, PlayerStamina.cs, PerkEffects.cs
              ItemConsumer.cs <-x PlayerStats.cs
              ItemConsumer.cs <-o FoodBuff.cs
 */
@@ -82,23 +82,25 @@ public class ItemConsumer : MonoBehaviour
     }
 
     // Changes each stat by the item's number. The stat scripts keep values between 0 and max.
+    // The Gourmet perk (PerkEffects) makes the good part bigger (+10 % each); bad food doesn't get worse.
     void Apply(Consumable food)
     {
+        float more = PerkEffects.FoodMultiplier;   // 1 = no Gourmet
         if (health != null)
         {
-            if (food.health > 0f) health.Heal(food.health);
-            else if (food.health < 0f) health.TakeDamage(-food.health);   // minus a minus = a positive damage amount
+            if (food.health > 0f) health.Heal(food.health * more);
+            else if (food.health < 0f) health.LoseHealth(-food.health);   // minus a minus = a positive damage amount
         }
 
         if (hunger != null)
         {
-            if (food.hunger > 0f) hunger.Eat(food.hunger);
+            if (food.hunger > 0f) hunger.Eat(food.hunger * more);
             else if (food.hunger < 0f) hunger.LoseFood(-food.hunger);
         }
 
         if (stamina != null)
         {
-            if (food.stamina > 0f) stamina.Restore(food.stamina);
+            if (food.stamina > 0f) stamina.Restore(food.stamina * more);
             else if (food.stamina < 0f) stamina.Use(-food.stamina);
         }
     }

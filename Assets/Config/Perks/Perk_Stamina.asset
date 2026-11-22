@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayName: Stamina
   description: Increase max stamina by 25 points.
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 94e3ae8e066de9f4b8e4d94383dfb646, type: 3}
   perkType: 1
   value: 25

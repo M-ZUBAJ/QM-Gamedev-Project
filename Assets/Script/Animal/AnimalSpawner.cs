@@ -1,6 +1,6 @@
 /*
 First Date: 13/11/2026
-Date: 13/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: An empty GameObject in the game scene. Tools > World > Set Up World Spawning makes it ("AnimalSpawner - DeerNode").
         By hand: Create Empty, add this, drag the animal prefab (DeerNode) into Animal Prefab. The Player needs PlayerSight.
@@ -12,10 +12,10 @@ Purpose: Keeps a number of wild animals (deer) around the player, and only ever 
          spawning animals out of view. They come in small herds. The spawn reach is at least PlayerSight's range +
          Beyond Sight, so when a perk or buff makes the player see farther, new animals appear farther out by
          themselves. Hunted animals are replaced after a while; animals left far behind (and out of sight) are taken
-         away, so the herds follow the player around the map.
+         away, so the herds follow the player around the map. Never outside the world's barrier (WorldBarrier).
 Requirement: AnimalSpawner.cs x-> PlayerSight.cs
-             AnimalSpawner.cs o-> Terrain (Unity)
-             AnimalSpawner.cs <-x WorldSpawnSetup.cs
+             AnimalSpawner.cs o-> Terrain (Unity), WorldBarrier.cs
+             AnimalSpawner.cs <-x NewWorldBuilder.cs, WorldSpawnSetup.cs
 */
 
 using System.Collections.Generic;
@@ -194,6 +194,7 @@ public class AnimalSpawner : MonoBehaviour
     bool Usable(Vector3 spot, out Vector3 feet)
     {
         feet = spot;
+        if (!WorldBarrier.Inside(spot, 3f)) return false;   // never outside the world's barrier
         Terrain t = TerrainAt(spot);
         if (t == null) return false;
         TerrainData data = t.terrainData;

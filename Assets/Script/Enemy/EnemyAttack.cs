@@ -44,6 +44,10 @@ public class EnemyAttack : MonoBehaviour
         if (playerHealth != null)
         {
             playerHealth.TakeDamage(attackDamage);
+
+            // [Tony] added (21/11/2026): the Thorns perk (Tony's PerkEffects): this enemy takes a share of its hit back
+            // (+10 % per pick). To undo: delete this line. Log: Docs/TonyEditMate/Marko/21-11-2026 New Chest System.md
+            PerkEffects.Reflect(this, attackDamage);                                  // [Tony] added
         }
 
         // [Tony] added (10/11/2026): play the attack animation, if the enemy has Tony's EnemyAnimator (the SlimeEnemy does).

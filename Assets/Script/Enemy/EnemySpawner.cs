@@ -112,7 +112,12 @@ public class EnemySpawner : MonoBehaviour
             case 4: return night4SpawnInterval;
             case 5: return night5SpawnInterval;
 
-            default: return 0f;
+            // [Tony] replaced (22/11/2026): default: return 0f;
+            // Nights 6 and later had no monsters at all, so a game set to more than 5 days to win (the NEW GAME page
+            // allows 1 - 30) went quiet after night 5. Now every night after night 5 keeps night 5's interval. Night 0 or
+            // below can't happen (the day count starts at 1) and still spawns nothing.
+            // To undo: put the line above back. Log: Docs/TonyEditMate/Marko/22-11-2026 Monsters Keep Coming After Night 5.md
+            default: return night > 5 ? night5SpawnInterval : 0f;                     // [Tony] replaced
         }
     }
 
@@ -122,7 +127,12 @@ public class EnemySpawner : MonoBehaviour
     {
         while (DaylightCycle.Current != null && DaylightCycle.Current.IsNight)
         {
-            if (enemyCounter < maxEnemyNumber)
+            // [Tony] edited (22/11/2026): + "&& (limit == null || limit.RoomForMore())". Was: if (enemyCounter < maxEnemyNumber)
+            // On Easy (NEW GAME page) Tony's NightMonsters allows at most 20 night monsters alive at once; on Normal and
+            // Hard it always says yes, so the monsters gather until dawn exactly as before.
+            // To undo: put the line above back and delete the "limit" line. Log: Docs/TonyEditMate/Marko/22-11-2026 Easy Keeps At Most 20 Monsters.md
+            NightMonsters limit = GetComponent<NightMonsters>();                          // [Tony] added
+            if (enemyCounter < maxEnemyNumber && (limit == null || limit.RoomForMore()))  // [Tony] edited
             {
                 SpawnEnemy();
 
@@ -158,6 +168,15 @@ public class EnemySpawner : MonoBehaviour
             return;
         }
 
+        // [Tony] added (21/11/2026): Tony's NightMonsters (on this object) decides more about each spawn: which monster
+        // (from night 2 some are turtles; every night can bring a new one, and the ones before keep coming), its
+        // strength, and where it appears (farther away and out of the player's sight, so nothing pops up right in
+        // front of them when they turn around). Without NightMonsters everything works exactly as before.
+        // To undo: delete the lines marked [Tony] (21/11/2026) and put back enemyPrefab in Instantiate.
+        // Log: Docs/TonyEditMate/Marko/21-11-2026 Night Monsters And The Turtle Shell.md
+        NightMonsters nightMonsters = GetComponent<NightMonsters>();                                       // [Tony] added
+        int night = DaylightCycle.Current != null ? DaylightCycle.Current.Day : 1;                        // [Tony] added
+
         Vector3 spawnPosition = transform.position;
 
         // if the player is assigned, enemy appears in a random direction around them. If the
@@ -171,6 +190,11 @@ public class EnemySpawner : MonoBehaviour
             randomDirection.Normalize();
 
             spawnPosition = player.position + randomDirection * spawnDistance;
+            // [Tony] added (20/11/2026): near the edge of the world, a spot past Tony's barrier (WorldBarrier) is moved to
+            // the player's other side, so no enemy appears outside the world (stuck behind the barrier, or falling where
+            // there's no ground). Log: Docs/TonyEditMate/Marko/20-11-2026 Night Enemies Burn Away At Day.md
+            if (!WorldBarrier.Inside(spawnPosition, 2f)) spawnPosition = player.position - randomDirection * spawnDistance;   // [Tony] added
+            if (nightMonsters != null && nightMonsters.FindSpot(player, out Vector3 hidden)) spawnPosition = hidden;   // [Tony] added (21/11/2026): out of the player's sight
             //spawnPosition.y = transform.position.y;
             // [Tony] replaced (10/11/2026): spawnPosition.y = 0.5f;
             // A fixed 0.5 put enemies inside hills or in the air over dips. Now they appear on the ground that's there.
@@ -179,7 +203,8 @@ public class EnemySpawner : MonoBehaviour
         }
 
         GameObject enemy = Instantiate(
-            enemyPrefab,
+            // [Tony] replaced (21/11/2026): enemyPrefab,
+            nightMonsters != null ? nightMonsters.Pick(enemyPrefab, night) : enemyPrefab,   // [Tony] replaced: tonight's monster
             spawnPosition,
             Quaternion.identity
         );
@@ -203,6 +228,8 @@ public class EnemySpawner : MonoBehaviour
         {
             enemyAttack.attackDamage = 10f + (daysPassed * 2f);
         }
+
+        if (nightMonsters != null) nightMonsters.Prepare(enemy, night);   // [Tony] added (21/11/2026): a picked monster's own health / damage (the turtle)
 
 
         // Connect the spawned enemy to the player.
@@ -248,7 +275,11 @@ public class EnemySpawner : MonoBehaviour
         {
             if (enemy != null)
             {
-                Destroy(enemy);
+                // [Tony] replaced (20/11/2026): Destroy(enemy);
+                // The night's enemies now burn away into orange embers when day comes (Tony's EnemyAnimator.Vanish),
+                // instead of blinking out. An enemy without Tony's EnemyAnimator is still removed at once.
+                // Log: Docs/TonyEditMate/Marko/20-11-2026 Night Enemies Burn Away At Day.md
+                EnemyAnimator.Vanish(enemy);                                                  // [Tony] replaced
             }
         }
 

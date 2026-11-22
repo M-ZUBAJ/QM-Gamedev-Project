@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a7f3d5fd2bbcd4dab390231f45945a, type: 3}
+  m_Name: IronBoots
+  m_EditorClassIdentifier: 
+  displayName: Iron Boots
+  prefab: {fileID: 899055853251455616, guid: d5fc576677b57014bb33b2fd7facd826, type: 3}
+  pickup: 0
+  icon:
+    mode: 0
+    image: {fileID: 0}
+    aseprite: {fileID: 0}
+    asepriteTag: 
+    frames: []
+    durations: []
+  itemType: 3
+  consumable:
+    health: 0
+    hunger: 0
+    stamina: 0
+  tool:
+    kind: 0
+    tier: 1
+  armor:
+    slot: 5
+    protection: 2.25
+    set: Iron
+    piece: PlateSet1_Boots
+    hides:
+    - Starter_Boots
+    look: {fileID: 2100000, guid: 0fa5ddbc35f7d9e459603a29af14cd05, type: 2}
+  minedWith: 0
+  recipe:
+  - item: {fileID: 11400000, guid: f20eb7af7a0f2b34286e348f87f55ac7, type: 2}
+    amount: 1
+  - item: {fileID: 11400000, guid: 5c6e2eb642dbe4159a36e38d99e65413, type: 2}
+    amount: 3
+  craftAmount: 1
+  craftedAt: 0

@@ -1,6 +1,6 @@
 /*
 First Date: 12/11/2026
-Date: 13/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Needs Broken Vector's free "Low Poly Tree Pack" (Assets/Imported3D/BrokenVector/LowPolyTreePack).
@@ -23,7 +23,12 @@ Purpose: Swaps the placeholder tree (brown cylinder + green ball) for low-poly t
          willows, acacias and dead tree are left out (they belong to other biomes).
          Each tree: the ResourceNode and its Capsule Collider on the top object (the collider wraps the trunk), and
          a Model child showing the pack's mesh, with the foot of its trunk on the top object's position.
-Requirement: GrasslandTreeBuilder.cs x-> UIBuildHelper.cs, ShapeColor.cs, ResourceNode.cs, ObjectScatter.cs, MenuOrder.cs
+         BuildSnowTrees (Tools > World > Build Snow Content, 21/11/2026) makes 4 more Prefab Variants of TreeNode for
+         the new world's snow: the pack's pines and spruces in its winter "Cold" colours (TreeNode Snow Pine, Tall Snow
+         Pine, Snow Spruce, Tall Snow Spruce). They're not part of the grassland's mix. Since 22/11/2026 they're given
+         their own drop and health (SnowBuilder's Spruce Wood and 300), set on each variant's ResourceNode.
+Requirement: GrasslandTreeBuilder.cs x-> UIBuildHelper.cs, ShapeColor.cs, ResourceNode.cs, ObjectScatter.cs, ItemData.cs, MenuOrder.cs
+             GrasslandTreeBuilder.cs <-x NewWorldBuilder.cs, SnowBuilder.cs
 */
 
 using System.Collections.Generic;
@@ -52,20 +57,23 @@ public static class GrasslandTreeBuilder
     const float MaxSize = 1.15f;
 
     // One tree look: our name for it, the pack's prefab it shows, how tall it is (meters, ground to top: the whole
-    // tree is scaled to it) and its share of the trees the ObjectScatter spawns (percent).
+    // tree is scaled to it), its share of the trees the ObjectScatter spawns (percent) and, optionally, which of the
+    // pack's colour schemes it wears instead of the pack tree's own (Normal, Fall, Dry, Cold).
     struct Look
     {
         public string name;
         public string packTree;
         public float height;
         public int share;
+        public string colors;
 
-        public Look(string name, string packTree, float height, int share)
+        public Look(string name, string packTree, float height, int share, string colors = null)
         {
             this.name = name;
             this.packTree = packTree;
             this.height = height;
             this.share = share;
+            this.colors = colors;
         }
     }
 
@@ -79,6 +87,16 @@ public static class GrasslandTreeBuilder
         new Look("Tall Broadleaf", "Tree Type4 04", 13f, 10),  // the tallest
         new Look("Birch", "Tree Type5 03", 11f, 15),           // white trunk, light green leaves
         new Look("Birch Cluster", "Tree Type5 04", 10f, 10),   // three birch trunks growing together
+    };
+
+    // The snow's trees (BuildSnowTrees): pines (Type1) and spruces (Type2) in the pack's winter colours (Cold: darker,
+    // colder greens), dark against the white snow. Shares: of the snow's tree rules (Build New World Scene).
+    static readonly Look[] SnowLooks =
+    {
+        new Look("Snow Pine", "Tree Type1 04", 10f, 25, "Cold"),          // a slim pine
+        new Look("Tall Snow Pine", "Tree Type1 05", 13f, 25, "Cold"),     // the tallest, with more branches
+        new Look("Snow Spruce", "Tree Type2 04", 10f, 25, "Cold"),        // layered, like a Christmas tree
+        new Look("Tall Snow Spruce", "Tree Type2 05", 12.5f, 25, "Cold"),
     };
 
     // The foot of a mesh's trunk (the middle of its lowest part), how thick the trunk is and how tall the tree is,
@@ -168,6 +186,43 @@ public static class GrasslandTreeBuilder
 
     // ===== My methods =====
 
+    // The snow's trees: Prefab Variants of TreeNode, refilled in place if they exist, dropping "drop" (null = TreeNode's
+    // Wood) and taking "health" damage to chop down (0 = TreeNode's 30). SnowBuilder gives Spruce Wood and 300. Needs
+    // TreeNode as a low-poly tree (Use Low Poly Grassland Trees, run first). Returns them in SnowLooks' order; "report"
+    // says what happened, for the Console.
+    public static List<GameObject> BuildSnowTrees(ItemData drop, float health, out string report)
+    {
+        List<GameObject> made = new List<GameObject>();
+        GameObject treeNode = AssetDatabase.LoadAssetAtPath<GameObject>(TreeNodePath);
+        if (treeNode == null || treeNode.transform.Find(ModelName) == null)
+        {
+            report = "no snow trees: TreeNode isn't a low-poly tree yet (run Tools > World > Use Low Poly Grassland Trees first)";
+            return made;
+        }
+        List<string> names = new List<string>();
+        foreach (Look look in SnowLooks)
+        {
+            GameObject variant = BuildVariant(treeNode, look, drop, health);
+            if (variant == null) continue;
+            made.Add(variant);
+            names.Add(variant.name);
+        }
+        AssetDatabase.SaveAssets();
+        report = made.Count + " snow trees in " + VariantFolder + " (" + string.Join(", ", names) + "), dropping " +
+                 (drop != null ? drop.DisplayName : "TreeNode's Wood") + ", " + (health > 0f ? health + " health" : "TreeNode's health");
+        return made;
+    }
+
+    // The share (percent) of a snow tree among the snow trees, by its prefab name (25 if it isn't one).
+    public static int SnowShare(GameObject tree)
+    {
+        foreach (Look look in SnowLooks)
+        {
+            if (tree != null && tree.name == "TreeNode " + look.name) return look.share;
+        }
+        return 25;
+    }
+
     // ----- The prefabs -----
 
     // Turki's TreeNode: its old look taken off and the first look put on, IN PLACE (same file, same top object), so
@@ -207,8 +262,9 @@ public static class GrasslandTreeBuilder
     }
 
     // One more look: a Prefab Variant of TreeNode (it keeps TreeNode's drops and health, and follows Turki's changes to
-    // them) showing another tree. An existing one is refilled IN PLACE, so links to it keep working.
-    static GameObject BuildVariant(GameObject treeNode, Look look)
+    // them) showing another tree. An existing one is refilled IN PLACE, so links to it keep working. drop / health (the
+    // snow's trees) override TreeNode's: null / 0 = keep TreeNode's.
+    static GameObject BuildVariant(GameObject treeNode, Look look, ItemData drop = null, float health = 0f)
     {
         string path = VariantPath(look);
         MakeFolders(FolderOf(path));
@@ -230,6 +286,7 @@ public static class GrasslandTreeBuilder
         {
             Transform model = root.transform.Find(ModelName);
             if (model == null || !Dress(root, model, look)) return null;
+            if (drop != null || health > 0f) SetDrops(root, drop, health);
             return PrefabUtility.SaveAsPrefabAsset(root, path);   // a TreeNode copy saved as its own file = a Prefab Variant
         }
         finally
@@ -237,6 +294,18 @@ public static class GrasslandTreeBuilder
             if (existed) PrefabUtility.UnloadPrefabContents(root);
             else EditorSceneManager.ClosePreviewScene(hidden);
         }
+    }
+
+    // A tree's ResourceNode (Turki's): what it drops and how much damage it takes before it falls. drop null = keep its
+    // drop, health 0 = keep its health. Only its numbers are changed, not his script.
+    static void SetDrops(GameObject root, ItemData drop, float health)
+    {
+        ResourceNode node = root.GetComponent<ResourceNode>();
+        if (node == null) return;
+        SerializedObject so = new SerializedObject(node);   // the names in quotes must match Turki's fields
+        if (drop != null) so.FindProperty("dropItem").objectReferenceValue = drop;
+        if (health > 0f) so.FindProperty("maxHealth").floatValue = health;
+        so.ApplyModifiedPropertiesWithoutUndo();
     }
 
     // Gives a tree its look: the pack tree's mesh and material on Model, with the foot of its trunk on the top object,
@@ -257,7 +326,7 @@ public static class GrasslandTreeBuilder
         MeshRenderer renderer = model.GetComponent<MeshRenderer>();
         if (renderer == null) renderer = model.gameObject.AddComponent<MeshRenderer>();
         filter.sharedMesh = shape.sharedMesh;
-        renderer.sharedMaterials = paint.sharedMaterials;   // the pack's "Normal" colours: summer green
+        renderer.sharedMaterials = Colors(paint.sharedMaterials, look);   // the pack's "Normal" colours (summer green), or the look's
 
         Trunk trunk = Measure(shape.sharedMesh);
         float size = trunk.height > 0f ? look.height / trunk.height : 1f;   // e.g. 9 m wanted / 4.9 m as imported = 1.84
@@ -312,6 +381,28 @@ public static class GrasslandTreeBuilder
         }
         if (widest > 0f) trunk.radius = widest;
         return trunk;
+    }
+
+    // The pack tree's materials, or, when the look names a colour scheme (e.g. "Cold"), the pack's material of that
+    // name in their place (the schemes are colour sheets laid out the same way, so any tree can wear any of them).
+    static Material[] Colors(Material[] own, Look look)
+    {
+        if (string.IsNullOrEmpty(look.colors)) return own;
+        Material scheme = null;
+        foreach (string guid in AssetDatabase.FindAssets(look.colors + " t:Material", new[] { "Assets" }))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            if (System.IO.Path.GetFileNameWithoutExtension(path) == look.colors && path.Contains("LowPolyTreePack"))
+                scheme = AssetDatabase.LoadAssetAtPath<Material>(path);
+        }
+        if (scheme == null)
+        {
+            Debug.LogWarning(ToolName + ": the tree pack has no \"" + look.colors + "\" material, so " + look.name + " keeps its own colours.");
+            return own;
+        }
+        Material[] result = new Material[Mathf.Max(1, own.Length)];
+        for (int i = 0; i < result.Length; i++) result[i] = scheme;
+        return result;
     }
 
     // A tree prefab of Broken Vector's pack by its name (e.g. "Tree Type0 06"); null if it isn't in the project.

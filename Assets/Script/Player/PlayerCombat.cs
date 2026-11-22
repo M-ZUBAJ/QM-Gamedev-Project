@@ -9,6 +9,12 @@ public class PlayerCombat : MonoBehaviour
 
     public float attackRange = 2.5f; // from how far away player can attack
 
+    // [Tony] added (21/11/2026): how far the attack reaches now: Attack Range, longer with the Long Reach perk (Tony's
+    // PerkEffects: +10 % per pick). Tony's crosshair uses it too: with the Keen Eye perk it turns yellow when what it
+    // points at is this close (a click will hit it). To undo: delete these lines and put back the attack's raycast below.
+    // Log: Docs/TonyEditMate/Marko/21-11-2026 Reroll Perk, Keen Eye And Long Reach.md
+    public float AttackReach => attackRange * PerkEffects.ReachMultiplier;                    // [Tony] added
+
     [Header("Attack Cooldown")]
     [Min(0f)]
     public float attackCooldown = 0.5f; // half a second
@@ -57,6 +63,11 @@ public class PlayerCombat : MonoBehaviour
         if (Cursor.lockState != CursorLockMode.Locked && EventSystem.current != null &&                       // [Tony] added
             EventSystem.current.IsPointerOverGameObject()) return;                                            // [Tony] added
 
+        // [Tony] added (22/11/2026): a bow in the hand doesn't punch or swing: Tony's BowShooter shoots it instead (hold
+        // the left mouse button to draw, let go to shoot an arrow; the arrow hurts where it lands, not this ray).
+        // To undo: delete this line. Log: Docs/TonyEditMate/Marko/22-11-2026 Bow Shoots Instead Of Punching.md
+        if (ToolRules.BowInHand) return;                                                                      // [Tony] added
+
         // [Tony] added (13/11/2026): with no tool in the hand, Tony's PunchCombo decides the punches: left click = a jab
         // (left, right, left...), right click = a heavy punch (left hook, heavy right, left hook...: more damage and stamina).
         // Tools still attack with left click, below. Without PunchCombo nothing changes.
@@ -88,7 +99,10 @@ public class PlayerCombat : MonoBehaviour
             return;
         }
 
-        nextAttackTime = Time.time + attackCooldown;
+        // [Tony] replaced (21/11/2026): nextAttackTime = Time.time + attackCooldown;
+        // The rare box's Attack Speed perk (Tony's PerkEffects: +10 % per pick) makes the wait between attacks shorter.
+        // To undo: put the line above back. Log: Docs/TonyEditMate/Marko/21-11-2026 New Chest System.md
+        nextAttackTime = Time.time + attackCooldown / PerkEffects.AttackSpeedMultiplier;          // [Tony] replaced
 
         if (playerStamina != null)
         {
@@ -115,7 +129,9 @@ public class PlayerCombat : MonoBehaviour
 
         RaycastHit hit;
 
-        if (Physics.Raycast(ray, out hit, attackRange))
+        // [Tony] replaced (21/11/2026): if (Physics.Raycast(ray, out hit, attackRange))
+        // The Long Reach perk makes the attack reach farther (AttackReach, at the top). To undo: put the line above back.
+        if (Physics.Raycast(ray, out hit, AttackReach))                                           // [Tony] replaced
         {
             EnemyCombat enemy =
                 hit.collider.GetComponentInParent<EnemyCombat>();
@@ -153,13 +169,43 @@ public class PlayerCombat : MonoBehaviour
                     damage = pickAxeDamage;
 
                 // [Tony] added (12/11/2026): a better sword hits harder: +25 % per tier above Wood (ToolRules.Boost).
-                damage *= ToolRules.Boost(tool, ToolKind.Sword);                                  // [Tony] added
-                damage *= PunchCombo.Power(swing);                                                // [Tony] added: a heavy punch hits harder (13/11/2026)
+                damage *= ToolRules.Boost(tool, ToolKind.Sword);
+
+                // Apply this particular sword's earned upgrade bonus.
+                // Capture the ID of the sword used for this attack.
+                // This is saved now because PunchEffect may apply the hit later.
+                string swordId = null;
+
+                if (inventory != null &&
+                    inventory.ActiveItem != null &&
+                    !inventory.ActiveItem.IsEmpty &&
+                    ToolRules.IsSword(inventory.ActiveItem))
+                {
+                    swordId = inventory.ActiveItem.id;
+
+                    if (WeaponUpgradeSystem.Instance != null)
+                    {
+                        damage *= WeaponUpgradeSystem.Instance.GetDamageMultiplier(swordId);
+                    }
+                }
+
+                damage *= PunchCombo.Power(swing);
+
+                // [Tony] added (21/11/2026): the epic box's Night Power perk (Tony's PerkEffects): +10 % damage per pick
+                // at night. To undo: delete this line. Log: Docs/TonyEditMate/Marko/21-11-2026 New Chest System.md
+                damage *= PerkEffects.DamageMultiplier;                                                     // [Tony] added
+
+                // [Tony] added (21/11/2026): the epic box's Critical Strike perk (Tony's PerkEffects): a chance for this
+                // hit to do double damage; the wind burst turns red. Log: Docs/TonyEditMate/Marko/21-11-2026 Loot Boxes And New Perks.md
+                bool critical = PerkEffects.RollCritical();                                                 // [Tony] added
+                if (critical) damage *= PerkEffects.CriticalMultiplier;                                     // [Tony] added
 
                 // [Tony] replaced (12/11/2026): enemy.TakeDamage(damage);
                 // Every swing now hurts when it lands: Tony's PunchEffect waits that swing's delay (punch, sword / axe or
                 // pickaxe), then hurts the enemy; a punch also bursts wind on it. Without PunchEffect it hurts at once.
-                PunchEffect.Hit(enemy, hit, () => enemy.TakeDamage(damage), swing);               // [Tony] replaced
+                // [Tony] edited (21/11/2026): + critical at the end (a red burst). Was:
+                // PunchEffect.Hit(enemy, hit, () => enemy.TakeDamage(damage, swordId), swing);
+                PunchEffect.Hit(enemy, hit, () => enemy.TakeDamage(damage, swordId), swing, critical);     // [Tony] replaced
             }
             // Damage against trees, stone and animals.
             else if (resource != null)
@@ -210,11 +256,16 @@ public class PlayerCombat : MonoBehaviour
                 // at trees, the pickaxe at rock and ores, the sword at animals (ToolRules.Boost).
                 damage *= ToolRules.Boost(tool, ToolRules.JobFor(resource));                      // [Tony] added
                 damage *= PunchCombo.Power(swing);                                                // [Tony] added: a heavy punch hits harder (13/11/2026)
+                damage *= PerkEffects.DamageMultiplier;                                           // [Tony] added (21/11/2026): Night Power perk, like above
+                bool critical = PerkEffects.RollCritical();                                       // [Tony] added (21/11/2026): Critical Strike perk, like above
+                if (critical) damage *= PerkEffects.CriticalMultiplier;                           // [Tony] added
 
                 // [Tony] replaced (12/11/2026): resource.TakeDamage(damage);
                 // Every swing now hurts when it lands, so a tree or rock that this swing breaks stays until the fist or
                 // tool lands (a punch also bursts wind, even on a running deer).
-                PunchEffect.Hit(resource, hit, () => resource.TakeDamage(damage), swing);         // [Tony] replaced
+                // [Tony] edited (21/11/2026): + critical at the end. Was:
+                // PunchEffect.Hit(resource, hit, () => resource.TakeDamage(damage), swing);
+                PunchEffect.Hit(resource, hit, () => resource.TakeDamage(damage), swing, critical);   // [Tony] replaced
             }
         }
     }

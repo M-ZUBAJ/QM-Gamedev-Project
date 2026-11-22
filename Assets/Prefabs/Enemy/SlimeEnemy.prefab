@@ -115,7 +115,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 0}
-  moveSpeed: 2
+  moveSpeed: 4
   stopDistance: 1.5
   turnSpeed: 360
 --- !u!114 &308147291705100832

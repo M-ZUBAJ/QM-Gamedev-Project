@@ -1,6 +1,6 @@
 /*
 First Date: 4/10/2026
-Date: 12/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Create an empty GameObject called "GameRules" in the scene and add this script.
         (If you forget to add this script, one is created by itself with the default rules.)
@@ -31,10 +31,20 @@ Purpose: On / off rules for the world, like Minecraft's /gamerule.
          - ShowNotifications (default on): messages like "+3 Wood" or "+5 Coins" pop up on the side of the screen
            when the player gets items or coins (NotificationFeed). Off = no messages.
            Notification Side (dropdown) = which side of the screen they show on: Left or Right.
+         - PerkIcons (default on): the perks at the top of the screen are icons (a heart, lightning, arrows, a flame)
+           with x2 for stacks; off = boxes with each perk's name and stats as text (PerkBar). The inventory's Info tab
+           shows the details either way.
          - ToolTest (default off): on = the player gets one of every tool (pickaxe, axe and sword in wood, stone, iron,
            gold and diamond: 15) in the inventory, at the start or the moment it's ticked (ToolTestKit, for testing).
+         - ArmorTest (default off): on = the player gets one of every armor piece (the Copper and Iron sets: 12) in
+           the inventory, at the start or the moment it's ticked (ArmorTestKit, for testing).
+         - NewChests (default on): the new chest system (ChestTier: random common and epic boxes, a legendary box,
+           REROLL at every box); off = the old one (every box: choose 1 of 3; REROLL only at the epic box).
+           Read when a box wakes up (the New Game page sets it before that).
+         - PauseGame (default on): the Esc pause menu stops the game while it's open (monsters, the sun, hunger); off =
+           the game goes on behind it (PauseMenu reads it each time it opens). The New Game page has a tick box for it.
          Adding a rule = new GameRule entry + bool field + a case in Get and Set + static property.
-Requirement: GameRules.cs <-x AutoCollector.cs, DaylightCycle.cs, GameRulesEditor.cs, GameSetup.cs, HeldItemUI.cs, ItemDropper.cs, ItemIconRules.cs, NewGameDefaultsSync.cs, NotificationFeed.cs, SlotUI.cs, ToolTestKit.cs
+Requirement: GameRules.cs <-x ArmorTestKit.cs, AutoCollector.cs, ChestTier.cs, DaylightCycle.cs, GameRulesEditor.cs, GameSetup.cs, HeldItemUI.cs, ItemDropper.cs, ItemIconRules.cs, NewGameDefaultsSync.cs, NotificationFeed.cs, PauseMenu.cs, PerkBar.cs, SlotUI.cs, ToolTestKit.cs
 */
 
 using UnityEngine;
@@ -51,6 +61,10 @@ public enum GameRule
     DropItem,
     ShowNotifications,
     ToolTest,
+    PerkIcons,
+    ArmorTest,
+    NewChests,
+    PauseGame,
 }
 
 // Which side of the screen the "+3 Wood" messages show on while Show Notifications is on (a dropdown).
@@ -114,11 +128,32 @@ public class GameRules : MonoBehaviour
     [Tooltip("Which side of the screen the messages show on.")]
     [SerializeField] NotificationSide notificationSide = NotificationSide.Left;
 
+    [Header("HUD")]
+    [Tooltip("On: the perks at the top of the screen are icons (heart = Max Health, lightning = Max Stamina, arrows = " +
+             "Move Speed, flame = Fireball) with x2 for stacks. Off: boxes with each perk's name and stats as text. " +
+             "The inventory's Info tab shows the details either way.")]
+    [SerializeField] bool perkIcons = true;
+
     [Header("Testing")]
     [Tooltip("On: the player gets one of every tool (pickaxe, axe and sword in wood, stone, iron, gold and diamond: 15) " +
              "in the inventory, at the start or the moment this is ticked. Tools already owned aren't given twice. " +
              "Turning it off takes nothing away.")]
     [SerializeField] bool toolTest = false;
+
+    [Tooltip("On: the player gets one of every armor piece (the Copper and Iron sets: 12) in the inventory, at " +
+             "the start or the moment this is ticked. Pieces already owned or worn aren't given twice. Turning it off " +
+             "takes nothing away.")]
+    [SerializeField] bool armorTest = false;
+
+    [Tooltip("On: the new chest system (random common and epic boxes, a legendary box in the desert, REROLL at every " +
+             "box). Off: the old one (every box lets you choose 1 of 3, REROLL only at the epic box). The New Game page " +
+             "picks it (Testing > Old chests / New chests).")]
+    [SerializeField] bool newChests = true;
+
+    [Header("Pause menu")]
+    [Tooltip("On: the Esc pause menu stops the game while it's open (monsters, the sun, hunger, the player), like most " +
+             "games. Off: the game goes on behind it. The New Game page has a tick box for it (Rules).")]
+    [SerializeField] bool pauseGame = true;
 
     static GameRules instance;   // the one GameRules in the scene
 
@@ -135,6 +170,10 @@ public class GameRules : MonoBehaviour
     public static bool DropItem         => Get(GameRule.DropItem);
     public static bool ShowNotifications => Get(GameRule.ShowNotifications);
     public static bool ToolTest         => Get(GameRule.ToolTest);
+    public static bool PerkIcons        => Get(GameRule.PerkIcons);
+    public static bool ArmorTest        => Get(GameRule.ArmorTest);
+    public static bool NewChests        => Get(GameRule.NewChests);
+    public static bool PauseGame        => Get(GameRule.PauseGame);
 
     // The dropdown under Overwrite Item Icon (only used while that rule is on).
     public static ItemIconStyle ItemIconStyle => Current.itemIconStyle;
@@ -200,6 +239,10 @@ public class GameRules : MonoBehaviour
             case GameRule.DropItem:         return r.dropItem;
             case GameRule.ShowNotifications: return r.showNotifications;
             case GameRule.ToolTest:         return r.toolTest;
+            case GameRule.PerkIcons:        return r.perkIcons;
+            case GameRule.ArmorTest:        return r.armorTest;
+            case GameRule.NewChests:        return r.newChests;
+            case GameRule.PauseGame:        return r.pauseGame;
         }
         return false;   // a new GameRule with no field yet
     }
@@ -219,6 +262,10 @@ public class GameRules : MonoBehaviour
             case GameRule.DropItem:         r.dropItem = value;          break;
             case GameRule.ShowNotifications: r.showNotifications = value; break;
             case GameRule.ToolTest:         r.toolTest = value;          break;
+            case GameRule.PerkIcons:        r.perkIcons = value;         break;
+            case GameRule.ArmorTest:        r.armorTest = value;         break;
+            case GameRule.NewChests:        r.newChests = value;         break;
+            case GameRule.PauseGame:        r.pauseGame = value;         break;
         }
 
         Changed?.Invoke();   // tell every listening script (if there are any)

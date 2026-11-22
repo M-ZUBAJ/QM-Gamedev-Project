@@ -78,6 +78,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1782702501690864755, guid: 60770bdb4dc667c45bea53db0339dc05, type: 3}
       insertIndex: -1
       addedObject: {fileID: 901868423315585117}
+    - targetCorrespondingSourceObject: {fileID: 1782702501690864755, guid: 60770bdb4dc667c45bea53db0339dc05, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1447661927697771115}
   m_SourcePrefab: {fileID: 100100000, guid: 60770bdb4dc667c45bea53db0339dc05, type: 3}
 --- !u!1 &6992694877398995046 stripped
 GameObject:
@@ -119,3 +122,54 @@ MonoBehaviour:
   heldSize: 0.8
   gripNudge: {x: 0, y: 0, z: 0}
   gripTurn: {x: 0, y: 0, z: 0}
+  axeTurn: 180
+--- !u!114 &1447661927697771115
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6992694877398995046}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e99e2fcee4ad97489977e1c9bfb9621, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  skinUnderClothes:
+  - clothing: Starter_Chest
+    hides:
+    - Arms
+    - Chest
+    trims: []
+  - clothing: Starter_Pants
+    hides:
+    - Legs
+    trims: []
+  - clothing: Starter_Boots
+    hides:
+    - Feet
+    trims: []
+  - clothing: PlateSet1_Chest
+    hides:
+    - Chest
+    trims:
+    - part: Arms
+      full: {fileID: -4911940617345750467, guid: de13a7420582ded45a8d7d3f96889aca, type: 3}
+      trimmed: {fileID: 4300000, guid: 2b824d3b434096541838f5e9c0799b97, type: 2}
+  - clothing: PlateSet1_Pants
+    hides:
+    - Legs
+    trims: []
+  - clothing: PlateSet1_Boots
+    hides:
+    - Feet
+    trims: []
+  - clothing: PlateSet1_Gloves
+    hides: []
+    trims:
+    - part: Hands
+      full: {fileID: 8423666484119569355, guid: de13a7420582ded45a8d7d3f96889aca, type: 3}
+      trimmed: {fileID: 4300000, guid: 4446bdc97c0b92048a89acff9b8cb5e9, type: 2}
+    - part: Hands
+      full: {fileID: 4300000, guid: eef5d2768f2128747af50b21444b2e4a, type: 2}
+      trimmed: {fileID: 4300000, guid: 3570b1e0de471b94aacb1a7db10d1478, type: 2}

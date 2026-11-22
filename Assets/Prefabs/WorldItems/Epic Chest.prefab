@@ -1,0 +1,235 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &778164086490228726
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 830475199259574848}
+  - component: {fileID: 4630258940319513808}
+  - component: {fileID: 7199601354064077046}
+  - component: {fileID: 2177638928340098234}
+  - component: {fileID: 7486479275853587366}
+  - component: {fileID: 2722886989044926597}
+  m_Layer: 0
+  m_Name: Epic Chest
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &830475199259574848
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 778164086490228726}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 432497474415222336}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &4630258940319513808
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 778164086490228726}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.2, y: 0.7394673, z: 0.9585819}
+  m_Center: {x: 0.000000029802322, y: 0.36973366, z: 0.000000014901161}
+--- !u!114 &7199601354064077046
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 778164086490228726}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 600d6889561ba5549bf7e259da82df48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  minCost: 5
+  maxCost: 15
+  interactionRange: 3
+  despawnAfterOpened: 1
+  despawnDelay: 0
+  availablePerks:
+  - {fileID: 11400000, guid: 97f5abba8599e584aab26b46589be9b5, type: 2}
+  - {fileID: 11400000, guid: fabe439a19e30db4ea80b9fda1928eed, type: 2}
+  - {fileID: 11400000, guid: 9bcc23092d96afe438282c721bd0e4ee, type: 2}
+  - {fileID: 11400000, guid: cddc96d5521751743b7b05ea8107cd60, type: 2}
+  - {fileID: 11400000, guid: 931031fdf433a9946a1a7044c50987e8, type: 2}
+  - {fileID: 11400000, guid: 6e39a84c9ee2c7949b8727d4009b5259, type: 2}
+  - {fileID: 11400000, guid: 0b0c5207e69a81d438f77c86f370da46, type: 2}
+  - {fileID: 11400000, guid: 36fe88525278fc54e9785a96325f5d52, type: 2}
+  - {fileID: 11400000, guid: 7c285df68a8052548beae5a4efc8f271, type: 2}
+--- !u!114 &2177638928340098234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 778164086490228726}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 866c73832a0dc0c478ebd574c81600cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tier: 2
+  boxName: Epic box
+  color: {r: 0.78, g: 0.4, b: 1, a: 1}
+  startPrice: 100
+  growth: 1
+  growBy: 2
+  canReroll: 1
+  rerollNeedsPerk: 1
+  rerollShare: 0.1
+  rerollGrowth: 2
+  randomInNewSystem: 1
+  rerollInNewSystem: 1
+  newSystemPerks: []
+  newSystemOnly: 0
+  vanishParticles: {fileID: 8133225597941850435, guid: 22c3e71fbeb4f724e8c4f18585709146, type: 3}
+  burstCount: 180
+  burstSpeed: 2.6
+  toolVersion: 2
+--- !u!114 &7486479275853587366
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 778164086490228726}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f0203aa6be0d2545a0fd9dd9fd28dce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  footOffset: 0
+  maxTilt: 15
+  sink: 0.02
+  lookAbove: 1
+--- !u!114 &2722886989044926597
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 778164086490228726}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e792a8cb53c9f4e478d321da45a01c97, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  color: {r: 0.78, g: 0.4, b: 1, a: 1}
+  width: 4
+  fill: 0
+  pulse: 0.3
+  showWhen: 0
+  range: 3
+  fadeSeconds: 0.12
+--- !u!1 &1567677641501209947
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 432497474415222336}
+  - component: {fileID: 4686437725508771231}
+  - component: {fileID: 1162786507185125296}
+  m_Layer: 0
+  m_Name: Model
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &432497474415222336
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1567677641501209947}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.00000008940697, y: -0.0011838078, z: -0.000000044703484}
+  m_LocalScale: {x: 2.2267988, y: 2.2267988, z: 2.2267988}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 830475199259574848}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &4686437725508771231
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1567677641501209947}
+  m_Mesh: {fileID: 1112115847375050598, guid: e8df03bcfb938054dbf2a8b131ee9f1c, type: 3}
+--- !u!23 &1162786507185125296
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1567677641501209947}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 8f6f5468f77ac5e44b384ecd89605342, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}

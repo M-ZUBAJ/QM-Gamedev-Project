@@ -14,7 +14,7 @@ Purpose: The build menu. B opens / closes it (Esc also closes it). It shows one 
          Pressing B while placing stops placing.
          It also closes by itself when every menu is told to close (MenuState.CloseAll, e.g. the player died).
 Requirement: BuildMenu.cs x-> BuildingButton.cs, BuildingData.cs, BlueprintPlacer.cs, KeyBindings.cs, MenuState.cs
-             BuildMenu.cs <-x BuildMenuUIBuilder.cs
+             BuildMenu.cs <-x BuildMenuUIBuilder.cs, GearPageBuilder.cs
 */
 
 using System.Collections.Generic;

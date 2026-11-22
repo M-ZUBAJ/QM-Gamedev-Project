@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a7f3d5fd2bbcd4dab390231f45945a, type: 3}
+  m_Name: DiamondBoots
+  m_EditorClassIdentifier: 
+  displayName: Diamond Boots
+  prefab: {fileID: 797829815552784281, guid: cd49185d7ea1b8345b148223d7a19e40, type: 3}
+  pickup: 0
+  icon:
+    mode: 0
+    image: {fileID: 0}
+    aseprite: {fileID: 0}
+    asepriteTag: 
+    frames: []
+    durations: []
+  itemType: 3
+  consumable:
+    health: 0
+    hunger: 0
+    stamina: 0
+  tool:
+    kind: 0
+    tier: 1
+  armor:
+    slot: 5
+    protection: 6
+    set: Diamond
+    piece: PlateSet1_Boots
+    hides:
+    - Starter_Boots
+    look: {fileID: 2100000, guid: 7fcb3eeaa01775248b79c1c2416dcf26, type: 2}
+  minedWith: 0
+  recipe:
+  - item: {fileID: 11400000, guid: b89c10d100625284da1c9febd40291f8, type: 2}
+    amount: 1
+  - item: {fileID: 11400000, guid: c483f8b20e5357a418124f1e769fdcb4, type: 2}
+    amount: 3
+  craftAmount: 1
+  craftedAt: 0

@@ -1,6 +1,6 @@
 /*
 First Date: 30/9/2026
-Date: 2/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Drag this script onto the PlayerSphere.
 Purpose: Stores the player's items. Items with the same Item Id stack in one slot.
@@ -8,14 +8,21 @@ Purpose: Stores the player's items. Items with the same Item Id stack in one slo
          The hotbar slots come after the inventory slots (HotbarStart). One of them can be selected (ActiveItem),
          or none (ActiveHotbar = NoHotbar).
          New items go to the inventory first, then to the hotbar when the inventory is full.
+         Crafted tools and food (Item Type Tool or Consumable) go to the hotbar first instead, so they're ready in hand
+         (AddCrafted, which Turki's CraftingMenu calls): onto a hotbar stack of the same item, else the leftmost empty
+         hotbar slot, else the inventory. An upgraded tool goes where the old tool was when that was on the hotbar
+         (SlotOf before crafting uses it up); other crafted items (materials, armor) go where the old one was, else
+         like Add.
+         PutBack adds items back without counting them as new (no "+1" message), e.g. armor taken off (PlayerArmor).
+         PutOnCursor puts items on the cursor stack (e.g. the armor swapped off when a held piece is put on).
          Like Minecraft, clicking a slot picks its stack onto the cursor (Held) and clicking again puts it down.
          Other scripts add items with PlayerInventory.Instance.Add(...)
          and listen to PlayerInventory.Changed to update the UI.
          PlayerInventory.ItemAdded tells which item came in and how many (harvested, picked up, crafted...),
          e.g. GainNotifier shows "+3 Wood". Items only moving inside the inventory don't fire it.
 Requirement: PlayerInventory.cs x-> IHand.cs, ItemData.cs
-             PlayerInventory.cs <-x AutoCollector.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingData.cs, CraftingMenu.cs, DroppedStack.cs, EquippedWeaponDisplay.cs, GainNotifier.cs, GiveSwordForTesting.cs, HeldItemUI.cs, HeldItemView.cs, HotbarSelector.cs, ItemConsumer.cs, ItemData.cs, ItemDropper.cs, ItemGrabber.cs, ItemIconRules.cs, PlayerAnimationSetup.cs, PlayerCombat.cs, PlayerFireball.cs, PunchCombo.cs, Recipe.cs, ResourceNode.cs, SlotGroup.cs, SlotUI.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs, UIBuildHelper.cs
-             PlayerInventory.cs <-o FirstPersonHands.cs
+             PlayerInventory.cs <-x ArmorBuilder.cs, ArmorSlotUI.cs, ArmorTestKit.cs, ArrowProjectile.cs, AutoCollector.cs, BlueprintPlacer.cs, BowBuilder.cs, BowShooter.cs, BuildingButton.cs, BuildingData.cs, CraftingMenu.cs, CraftingRow.cs, CraftingSetPanels.cs, DroppedStack.cs, EquippedWeaponDisplay.cs, GainNotifier.cs, GiveSwordForTesting.cs, HeldItemUI.cs, HeldItemView.cs, HotbarSelector.cs, ItemConsumer.cs, ItemData.cs, ItemDropper.cs, ItemGrabber.cs, ItemIconRules.cs, ItemTooltip.cs, LootChestBuilder.cs, PlayerAnimationSetup.cs, PlayerArmor.cs, PlayerCombat.cs, PlayerFireball.cs, PunchCombo.cs, Recipe.cs, ResourceNode.cs, SlotGroup.cs, SlotUI.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs, UIBuildHelper.cs
+             PlayerInventory.cs <-o FirstPersonHands.cs, PerkEffects.cs
 */
 
 using System.Collections.Generic;
@@ -34,6 +41,11 @@ public class PlayerInventory : MonoBehaviour, IHand
         public ItemData data;   // the item's config file (prefab, pickup type...). Can be empty for old items.
 
         public bool IsEmpty => count <= 0;   // an empty slot has nothing in it
+
+        // The name shown to the player (e.g. when the mouse is on it): its Item Data's Display Name, or the Item Data's
+        // file name when Display Name is empty (ItemData.DisplayName). Not the prefab's name.
+        // An old item without Item Data: the name it was added with, else its Item Id.
+        public string ShownName => data != null ? data.DisplayName : !string.IsNullOrEmpty(name) ? name : id;
 
         // True if both hold the same item, so they can stack.
         public bool SameItemAs(Slot other)
@@ -128,6 +140,103 @@ public class PlayerInventory : MonoBehaviour, IHand
         if (slot == null) return false;
 
         ItemAdded?.Invoke(slot, amount);   // e.g. the "+3 Wood" message
+        return true;
+    }
+
+    // Adds items into slot i if it's empty, e.g. the slot an upgrade's old tool was just taken from, so the new tool
+    // stays where the player kept the old one (the same hotbar or inventory slot, so a tool in hand stays in hand).
+    // Otherwise (i = -1, or the slot isn't empty: the old tool was a stack of 2) it's the same as Add.
+    // Returns false if a new slot is needed but all are full.
+    public bool AddInto(int i, string id, string name, Sprite icon, int amount, ItemData data = null)
+    {
+        if (!IsSlot(i) || !slots[i].IsEmpty || amount <= 0) return Add(id, name, icon, amount, data);
+
+        Slot slot = slots[i];
+        slot.id = id;
+        slot.name = name;
+        slot.icon = icon;
+        slot.data = data;
+        slot.count = amount;
+        Changed?.Invoke();
+        ItemAdded?.Invoke(slot, amount);   // e.g. the "+1 Stone Axe" message
+        return true;
+    }
+
+    // A crafted item (Turki's CraftingMenu calls this): tools and food go to the hotbar first (AddToHotbar), so they're
+    // ready in hand; anything else (materials, armor) as before: into oldSlot if it's empty, else like Add. oldSlot =
+    // where an upgrade's old tool was (SlotOf before crafting used it up), -1 = none. False = no room anywhere.
+    public bool AddCrafted(ItemData item, int amount, int oldSlot = -1)
+    {
+        if (item == null) return false;
+        if (GoesToHotbar(item)) return AddToHotbar(item.Id, item.DisplayName, item.GetIcon(), amount, item, oldSlot);
+        return AddInto(oldSlot, item.Id, item.DisplayName, item.GetIcon(), amount, item);
+    }
+
+    // Tools and food (Item Type Tool or Consumable) go to the hotbar when they're crafted.
+    public static bool GoesToHotbar(ItemData item) => item != null && (item.IsTool || item.Type == ItemType.Consumable);
+
+    // Adds items to the hotbar first: onto a hotbar stack of the same item, else into the leftmost empty hotbar slot.
+    // keepSlot = where an upgrade's old tool was: a hotbar slot that's empty now is used before anything else (the new
+    // tool stays in hand); an inventory slot only when the hotbar has no room. No room on the hotbar = like Add (the
+    // inventory). Fires ItemAdded like Add ("+1 Stone Pickaxe"). False = no room anywhere.
+    public bool AddToHotbar(string id, string name, Sprite icon, int amount, ItemData data = null, int keepSlot = -1)
+    {
+        if (amount <= 0) return Add(id, name, icon, amount, data);
+        if (IsHotbar(keepSlot) && slots[keepSlot].IsEmpty) return AddInto(keepSlot, id, name, icon, amount, data);
+
+        int target = -1;
+        for (int i = HotbarStart; i < slots.Count && target < 0; i++)   // a stack of the same item on the hotbar
+        {
+            if (!slots[i].IsEmpty && slots[i].id == id) target = i;
+        }
+        for (int i = HotbarStart; i < slots.Count && target < 0; i++)   // the leftmost empty hotbar slot
+        {
+            if (slots[i].IsEmpty) target = i;
+        }
+        if (target < 0) return AddInto(keepSlot, id, name, icon, amount, data);   // hotbar full: the old tool's slot, else like Add
+
+        Slot slot = slots[target];
+        if (slot.IsEmpty)
+        {
+            slot.id = id;
+            slot.name = name;
+            slot.icon = icon;
+            slot.data = data;
+        }
+        else if (slot.data == null)
+        {
+            slot.data = data;   // an older stack learns its config file
+        }
+        slot.count += amount;
+        Changed?.Invoke();
+        ItemAdded?.Invoke(slot, amount);   // e.g. the "+1 Stone Pickaxe" message
+        return true;
+    }
+
+    // Puts items back in without counting them as new (no ItemAdded, so no "+1" message), e.g. armor that was taken
+    // off (PlayerArmor). Stacks them on the same item, else the first empty slot. False = no room.
+    public bool PutBack(string id, string name, Sprite icon, int amount, ItemData data = null)
+    {
+        return Put(id, name, icon, amount, data) != null;
+    }
+
+    // Puts items on the cursor (the picked-up stack): when it holds nothing, or holds the same item. False otherwise.
+    // E.g. the armor taken off when the piece held on the cursor is put on in its place (PlayerArmor.EquipFromCursor).
+    public bool PutOnCursor(string id, string name, Sprite icon, int amount, ItemData data = null)
+    {
+        if (amount <= 0) return true;
+        if (!held.IsEmpty && held.id != id) return false;
+
+        if (held.IsEmpty)
+        {
+            held.id = id;
+            held.name = name;
+            held.icon = icon;
+            held.data = data;
+            held.count = 0;
+        }
+        held.count += amount;
+        Changed?.Invoke();
         return true;
     }
 
@@ -355,6 +464,19 @@ public class PlayerInventory : MonoBehaviour, IHand
         return null;
     }
 
+    // Where this item is: the index in Slots of the first slot holding it, which is the slot Remove takes it from first
+    // (inventory first, then hotbar). -1 = the player has none (or item is null).
+    // E.g. crafting asks where the old tool is before an upgrade uses it up, then gives the new tool AddInto that slot.
+    public int SlotOf(ItemData item)
+    {
+        if (item == null) return -1;
+        for (int i = 0; i < slots.Count; i++)
+        {
+            if (!slots[i].IsEmpty && slots[i].id == item.Id) return i;
+        }
+        return -1;
+    }
+
     // Takes "amount" of this item out of the inventory, from as many slots as needed (inventory first, then hotbar).
     // Takes nothing (and returns false) if the player doesn't have that many.
     public bool Remove(string id, int amount)
@@ -419,6 +541,12 @@ public class PlayerInventory : MonoBehaviour, IHand
     bool IsSlot(int i)
     {
         return i >= 0 && i < slots.Count;
+    }
+
+    // Is slot i one of the hotbar's (they come after the inventory's)?
+    bool IsHotbar(int i)
+    {
+        return i >= HotbarStart && i < slots.Count;
     }
 
     Slot FindSlot(string id)

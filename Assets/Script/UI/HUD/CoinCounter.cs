@@ -1,9 +1,10 @@
 /*
 First Date: 18/10/2026
-Date: 2/11/2026
+Date: 19/11/2026
 Author: Tony
 Use by: Put this on the coin counter in the HUD (Tools > UI > Build HUD makes it: HUDCanvas > TopRight > CoinCounter),
-        an object with two children: "Icon" (an Image) and "Text" (a TextMeshPro text).
+        an object with an "Icon" (an Image) and a "Text" (a TextMeshPro text) inside it (Build HUD puts them in a dark
+        round "Pill" with Coin.png from Assets/UI/Common as the Static Icon).
 Unity Editor: Choose the Look; only the fields that look needs are shown (CoinCounterEditor):
                 Auto Icon     = a gold coin drawn by this script (no art needed)
                 Static Icon   = drag a PNG (imported as Sprite) into Static Icon
@@ -14,6 +15,7 @@ Unity Editor: Choose the Look; only the fields that look needs are shown (CoinCo
               PlayerCoins.AddCoins from a test script; the number goes up.
 Purpose: Shows how many coins the player has (Marko's PlayerCoins.Instance.Coins), and redraws whenever the total
          changes (PlayerCoins.CoinsChanged). Waits quietly if the player isn't there yet.
+         It pops (grows for a moment) whenever the total changes, so a gain or a payment catches the eye.
          ShownSprite = the coin picture it shows right now (e.g. the "+5 Coins" message uses the same coin).
 Requirement: CoinCounter.cs x-> PlayerCoins.cs, AsepriteFrames.cs
              CoinCounter.cs <-x CoinCounterEditor.cs, HUDBuilder.cs
@@ -56,10 +58,22 @@ public class CoinCounter : MonoBehaviour
     [Tooltip("Color of the number (and the word).")]
     [SerializeField] Color textColor = new Color(1f, 0.85f, 0.2f);   // gold
 
-    [Tooltip("The picture. Empty = the child named \"Icon\".")]
+    [Header("Pop when the coins change")]
+    [Tooltip("How much it grows for a moment when the total changes. 1 = no pop.")]
+    [Range(1f, 1.6f)]
+    [SerializeField] float popScale = 1.2f;
+
+    [Tooltip("Seconds the pop takes.")]
+    [Range(0.05f, 1f)]
+    [SerializeField] float popSeconds = 0.3f;
+
+    [Tooltip("What grows (e.g. the Pill behind the coin). Empty = this object.")]
+    [SerializeField] RectTransform popTarget;
+
+    [Tooltip("The picture. Empty = the child (at any depth) named \"Icon\".")]
     [SerializeField] Image icon;
 
-    [Tooltip("The number. Empty = the child named \"Text\".")]
+    [Tooltip("The number. Empty = the child (at any depth) named \"Text\".")]
     [SerializeField] TMP_Text text;
 
     // Read from the .aseprite file in the editor and saved with the scene / prefab, so they work in a built game too.
@@ -76,6 +90,8 @@ public class CoinCounter : MonoBehaviour
     bool dirty = true;                   // something changed: redraw at the next Update
     int frame;
     float frameTimer;
+    float popTimer = -1f;                // seconds into the pop (below 0 = not popping)
+    int shownTotal = -1;                 // the total on screen (-1 = none yet: the first one doesn't pop)
 
     public CoinLook Look => look;
 
@@ -95,6 +111,8 @@ public class CoinCounter : MonoBehaviour
     {
         if (coins != null) coins.CoinsChanged -= OnCoinsChanged;
         coins = null;
+        if (popTimer >= 0f) PopTarget().localScale = Vector3.one;   // never left half-popped
+        popTimer = -1f;
     }
 
     void Update()
@@ -102,6 +120,7 @@ public class CoinCounter : MonoBehaviour
         if (Application.isPlaying && coins == null) FindCoins();
         if (look == CoinLook.AnimatedIcon) Animate();
         if (dirty) Redraw();
+        if (popTimer >= 0f) Pop();
     }
 
     // Unity calls this when a value is changed in the Inspector.
@@ -118,16 +137,18 @@ public class CoinCounter : MonoBehaviour
 
     void FindChildren()
     {
-        if (icon == null)
+        if (icon == null) icon = FindDeep<Image>("Icon");
+        if (text == null) text = FindDeep<TMP_Text>("Text") ?? GetComponentInChildren<TMP_Text>(true);
+    }
+
+    // The first T under this object (at any depth) on an object with this name, or null.
+    T FindDeep<T>(string objectName) where T : Component
+    {
+        foreach (T part in GetComponentsInChildren<T>(true))
         {
-            Transform t = transform.Find("Icon");
-            if (t != null) icon = t.GetComponent<Image>();
+            if (part.name == objectName) return part;
         }
-        if (text == null)
-        {
-            Transform t = transform.Find("Text");
-            text = t != null ? t.GetComponent<TMP_Text>() : GetComponentInChildren<TMP_Text>(true);
-        }
+        return null;
     }
 
     // Looks for Marko's PlayerCoins, at most twice a second, until it's there (e.g. the player spawns later).
@@ -146,7 +167,24 @@ public class CoinCounter : MonoBehaviour
     void OnCoinsChanged(int total)
     {
         dirty = true;
+        if (Application.isPlaying && shownTotal >= 0 && total != shownTotal) popTimer = 0f;   // a gain or a payment: pop
     }
+
+    // Grows and shrinks back once (real time, so it also pops while the game is paused).
+    void Pop()
+    {
+        popTimer += Time.unscaledDeltaTime;
+        float t = popSeconds > 0f ? popTimer / popSeconds : 1f;
+        if (t >= 1f)
+        {
+            PopTarget().localScale = Vector3.one;
+            popTimer = -1f;
+            return;
+        }
+        PopTarget().localScale = Vector3.one * (1f + (popScale - 1f) * Mathf.Sin(t * Mathf.PI));   // up and back down
+    }
+
+    Transform PopTarget() => popTarget != null ? popTarget : transform;
 
     void Redraw()
     {
@@ -155,6 +193,7 @@ public class CoinCounter : MonoBehaviour
 
         int total = coins != null ? coins.Coins : 0;
         bool word = look == CoinLook.TextName;
+        if (coins != null) shownTotal = total;
 
         if (text != null)
         {

@@ -1,22 +1,27 @@
 /*
 First Date: 12/11/2026
-Date: 13/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Nothing to set up: a set of rules other scripts ask (it isn't put on an object).
 Unity Editor: Nothing to click. The numbers live in three places:
               - Tier Bonus below (1.25 = each tier hits 25 % harder than the one before);
               - Marko's damage numbers on the Player's PlayerCombat (Hand Damage, Sword Damage, Axe Tree Damage,
                 Pick Axe Stone Damage...), used as they are for a wooden tool;
-              - each ore's Item Data > Mined With (the weakest pickaxe that can mine it).
+              - each ore's Item Data > Mined With (the weakest pickaxe that can mine it), and a wood's (the weakest axe
+                that can chop a tree dropping it: Spruce Wood = Iron).
 Purpose: How tools work, in one place. Marko's PlayerCombat asks it on every attack (its [Tony] lines):
          - The swing a click makes: nothing (or a non-tool, like wood or food) in the hand = Punch, a sword or an axe
            = Attack, a pickaxe = Mine.
          - Which rocks a tool can mine: copper and iron need a Stone pickaxe, gold an Iron one, diamond a Gold one
            (the ore's Mined With). Hands, axes and swords only break rock that needs nothing (Stone).
+         - Which trees a tool can chop (22/11/2026): the same rule with an axe, from the wood's Mined With. The snow's
+           spruce (Spruce Wood: Iron) needs an Iron Axe or better; every other tree needs nothing (even a hand).
          - The tier bonus: a tool hits 25 % harder per tier at its own job (sword: enemies and animals, axe: trees,
            pickaxe: rock and ores): Wood = Marko's number, Stone x1.25, Iron x1.56, Gold x1.95, Diamond x2.44.
+         - A bow (IsBow, BowInHand): BowShooter shoots it; Marko's PlayerCombat doesn't hit with it. A bow gets no tier
+           bonus: its arrows hurt by the bow's own Damage + the arrow's (its Item Data's Bow section, since 22/11/2026).
 Requirement: ToolRules.cs x-> ToolStats.cs, ItemData.cs, PlayerInventory.cs, ResourceNode.cs, PlayerAnimator.cs, NotificationFeed.cs
-             ToolRules.cs <-x PlayerCombat.cs, PlayerFireball.cs, PunchCombo.cs, TierToolBuilder.cs
+             ToolRules.cs <-x BowShooter.cs, Crosshair.cs, FireballProjectile.cs, FirstPersonHands.cs, PlayerCombat.cs, PlayerFireball.cs, PunchCombo.cs, TierToolBuilder.cs
 */
 
 using UnityEngine;
@@ -52,6 +57,16 @@ public static class ToolRules
         return tool != null && tool.kind == ToolKind.Sword;
     }
 
+    // True if the slot holds a bow of any tier (BowShooter shoots it; Marko's PlayerCombat doesn't hit with it).
+    public static bool IsBow(PlayerInventory.Slot slot)
+    {
+        ToolStats tool = ToolIn(slot);
+        return tool != null && tool.kind == ToolKind.Bow;
+    }
+
+    // True while the selected hotbar slot holds a bow.
+    public static bool BowInHand => PlayerInventory.Instance != null && IsBow(PlayerInventory.Instance.ActiveItem);
+
     // The animation a click plays: Punch (no tool), Mine (pickaxe) or Attack (sword, axe). Mine and Attack both show
     // Mixamo's BotAxeAttackDownward; they stay two actions so each can have its own clip and hit timing later.
     public static PlayerAction SwingFor(ToolStats tool)
@@ -68,6 +83,7 @@ public static class ToolRules
         {
             case ToolKind.Sword: return "Sword";
             case ToolKind.Axe: return "Axe";
+            case ToolKind.Bow: return "Bow";   // (PlayerCombat doesn't attack with a bow: BowShooter shoots it)
             default: return "PickAxe";
         }
     }
@@ -91,29 +107,33 @@ public static class ToolRules
         }
     }
 
-    // The weakest pickaxe that can mine this (None = anything can, even a bare hand). Only rock can need one: it's
-    // the Mined With of the item the rock drops (copper and iron: Stone, gold: Iron, diamond: Gold).
+    // The weakest tool of its job (JobFor: a pickaxe for rock, an axe for a tree) that can break this (None = anything
+    // can, even a bare hand). It's the Mined With of the item it drops: copper and iron: Stone, gold: Iron, diamond:
+    // Gold; Spruce Wood (the snow's spruce): Iron. Animals never need one.
     public static ToolTier NeededFor(ResourceNode node)
     {
-        if (node == null || node.resourceType != ResourceNode.ResourceType.Stone) return ToolTier.None;
+        if (node == null || node.resourceType == ResourceNode.ResourceType.Animal) return ToolTier.None;
         ItemData drop = node.DropItem;
         return drop != null ? drop.MinedWith : ToolTier.None;
     }
 
-    // Can this tool (null = a bare hand) break this resource at all?
+    // Can this tool (null = a bare hand) break this resource at all? One that needs a tier needs a tool of its job
+    // (a pickaxe for rock, an axe for a tree) of that tier or better.
     public static bool CanMine(ToolStats tool, ResourceNode node)
     {
         ToolTier need = NeededFor(node);
         if (need == ToolTier.None) return true;
-        return tool != null && tool.kind == ToolKind.Pickaxe && tool.tier >= need;
+        return tool != null && tool.kind == JobFor(node) && tool.tier >= need;
     }
 
-    // Tells the player which pickaxe a rock needs (not more often than every MessageGap seconds).
+    // Tells the player which tool a rock or tree needs, e.g. "Needs a Stone Pickaxe or better", "Needs an Iron Axe or
+    // better" (not more often than every MessageGap seconds).
     public static void TellCantMine(ResourceNode node)
     {
         if (Time.time < nextMessage) return;
         nextMessage = Time.time + MessageGap;
-        NotificationFeed.Show("Needs a " + TierName(NeededFor(node)) + " Pickaxe or better");
+        string tool = TierName(NeededFor(node)) + " " + (JobFor(node) == ToolKind.Axe ? "Axe" : "Pickaxe");
+        NotificationFeed.Show("Needs " + ("AEIOU".IndexOf(tool[0]) >= 0 ? "an " : "a ") + tool + " or better");
     }
 
     // A tier as the tools' names say it: "Wooden", "Stone", "Iron", "Gold", "Diamond".

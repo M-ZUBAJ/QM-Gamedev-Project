@@ -11,5 +11,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/GameScene.unity
     guid: c1c338142a6df2f449d8f6f0b9db1465
+  - enabled: 1
+    path: Assets/Scenes/ProceduralGenerateScene.unity
+    guid: 0ef27c2786b510144bd79b6e5ad9cd2c
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

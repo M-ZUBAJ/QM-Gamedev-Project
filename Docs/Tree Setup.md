@@ -30,6 +30,19 @@ birches.
 
 For size: the old placeholder tree was 5.65 m tall, and the player's character is 1.8 m.
 
+**The snow's trees** (21/11/2026, made by **Tools > World > Build Snow Content**, not by this tool's menu; guide
+`Docs/Snow Setup.md`): 4 more Prefab Variants of TreeNode in the pack's winter **Cold** colors, spawned only on the new
+world's snow (not mixed into the grassland). Since 22/11/2026 they drop **Spruce Wood** instead of Wood and have **300
+health** (TreeNode: 30): Build Snow Content sets both on each one's ResourceNode, so they no longer follow TreeNode's
+drop and health (its drop amounts and Apple bonus they still do):
+
+| Look | Prefab | Pack tree | Height |
+|---|---|---|---|
+| Snow Pine | `ResourceNodes/Trees/TreeNode Snow Pine` | Tree Type1 04 | 10 m |
+| Tall Snow Pine | `ResourceNodes/Trees/TreeNode Tall Snow Pine` | Tree Type1 05 | 13 m |
+| Snow Spruce | `ResourceNodes/Trees/TreeNode Snow Spruce` | Tree Type2 04 | 10 m |
+| Tall Snow Spruce | `ResourceNodes/Trees/TreeNode Tall Snow Spruce` | Tree Type2 05 | 12.5 m |
+
 ## Quick way: one click
 
 1. Import the **Low Poly Tree Pack** (free, Broken Vector): **Window > Package Manager > My Assets > Import**.
@@ -93,7 +106,7 @@ Kept out of the grassland, for later:
 
 | Pack trees | What they are | Biome |
 |---|---|---|
-| Type1, Type2, Type0 03 | pines, spruces, a redwood | forest, snow |
+| Type1, Type2, Type0 03 | pines, spruces (Type1 04 / 05 and Type2 04 / 05 are the snow's trees now), a redwood | forest, snow |
 | Type3, Type0 04 | umbrella trees, an acacia | savanna |
 | Type6 | willows | lake shore, swamp |
 | Type7 | palms | beach, desert |
@@ -122,6 +135,11 @@ Kept out of the grassland, for later:
 8. Trees placed in the scene: lower them onto the ground. Their Y was set for the old pivot.
 9. The spawner: select the object with **ObjectScatter**, open **Rules > Trees** and set **Y Offset** to 0. For more
    looks, add a rule per look (same Terrain Layer, Min Strength, Max Slope and Min Spacing) and share the Count.
+
+## When a tree is chopped down
+
+It falls over away from the player and breaks into brown wood chips: Tony's **TreeFall** on TreeNode
+(**Tools > Effects > Build Tree Fall**, guide `Docs/Tree Fall Setup.md`).
 
 ## Problems
 

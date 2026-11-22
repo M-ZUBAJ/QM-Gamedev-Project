@@ -13,7 +13,8 @@ Purpose: The cinematic change from the menu to the game:
          It keeps itself alive through the scene change, so the new scene needs nothing for the fade-in.
          It also blocks clicks while it plays, so nothing is pressed twice.
 Requirement: ScreenFader.cs x-> UITween.cs
-             ScreenFader.cs <-x TitleMenu.cs
+             ScreenFader.cs <-x DeathScreen.cs, PauseMenu.cs, TitleMenu.cs, VictoryScreen.cs
+             ScreenFader.cs <-o WorldGenerator.cs
 */
 
 using System.Collections;

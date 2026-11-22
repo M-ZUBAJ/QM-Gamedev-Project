@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74a7f3d5fd2bbcd4dab390231f45945a, type: 3}
+  m_Name: GoldShoulders
+  m_EditorClassIdentifier: 
+  displayName: Gold Shoulders
+  prefab: {fileID: 1576051812742298671, guid: 9a73f61bd8644f04fb0dd73dd8617255, type: 3}
+  pickup: 0
+  icon:
+    mode: 0
+    image: {fileID: 0}
+    aseprite: {fileID: 0}
+    asepriteTag: 
+    frames: []
+    durations: []
+  itemType: 3
+  consumable:
+    health: 0
+    hunger: 0
+    stamina: 0
+  tool:
+    kind: 0
+    tier: 1
+  armor:
+    slot: 1
+    protection: 3.75
+    set: Gold
+    piece: PlateSet1_Shoulders
+    hides: []
+    look: {fileID: 2100000, guid: 1cd400dbfa4635c4a9097fe7d47e488b, type: 2}
+  minedWith: 0
+  recipe:
+  - item: {fileID: 11400000, guid: 9209ab8e69545c64388a0e04f3be11c6, type: 2}
+    amount: 1
+  - item: {fileID: 11400000, guid: 1dc3de7e035a23447890aa185f8a557a, type: 2}
+    amount: 3
+  craftAmount: 1
+  craftedAt: 0

@@ -14,7 +14,7 @@ Purpose: A UI picture that is either a still image or an Aseprite animation, cho
          Code can also show an item's / building's icon on any Image with UIAnimatedImage.ShowIcon(...):
          it animates Aseprite icons (adding this script by itself) and shows still ones as they are.
 Requirement: UIAnimatedImage.cs x-> AsepriteFrames.cs, IconSource.cs, Image (Unity)
-             UIAnimatedImage.cs <-x BuildingButton.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, SlotUI.cs
+             UIAnimatedImage.cs <-x ArmorPicker.cs, ArmorSlotUI.cs, BuildingButton.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, SlotUI.cs
 */
 
 using UnityEngine;

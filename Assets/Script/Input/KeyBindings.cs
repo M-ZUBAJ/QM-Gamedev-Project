@@ -1,6 +1,6 @@
 /*
 First Date: 2/10/2026
-Date: 9/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Create an empty GameObject called "KeyBindings" in the scene and add this script.
         The keys in the Inspector are the DEFAULT keys. The player can change them in game
@@ -14,7 +14,11 @@ Purpose: One place to change every key in the game.
          (Project Settings → Player → Active Input Handling = "Input Manager (Old)" or "Both").
          The title screen's Settings > Key Bindings page (KeyBindingMenu) changes keys with SetSeveral and
          ResetToDefaults; the choices are saved, so they work in the game too.
-Requirement: KeyBindings.cs <-x BlueprintPlacer.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemGrabber.cs, KeyBindingMenu.cs, NewGameDefaultsSync.cs, ObjectLevitator.cs, PlayerController.cs, PlayerJump.cs, TitleSceneBuilder.cs
+         Fullscreen (F11) switches fullscreen on / off (FullscreenKeys; Alt + Enter always does too).
+         Grab (F) picks up an item lying on the ground (ItemGrabber); Interact (E) opens a chest and picks berries from
+         a bush (Marko's PerkChest and Turki's ResourceNode read it since 21/11/2026: before, each had its own E, and
+         Interact sat unused on the right mouse button, so the key page couldn't show or change E).
+Requirement: KeyBindings.cs <-x BlueprintPlacer.cs, BowShooter.cs, BuildMenu.cs, CameraController.cs, CraftingMenu.cs, FullscreenKeys.cs, HotbarSelector.cs, InventoryWindow.cs, ItemConsumer.cs, ItemGrabber.cs, KeyBindingMenu.cs, NewGameDefaultsSync.cs, ObjectLevitator.cs, PauseMenu.cs, PerkChest.cs, PlayerController.cs, PlayerGlide.cs, PlayerJump.cs, ResourceNode.cs, TitleSceneBuilder.cs
 */
 
 using UnityEngine;
@@ -40,6 +44,7 @@ public enum KeyAction
     Consume,
     Build, Interact, PlaceBuilding, CancelBuilding, AutoPlace,
     Hotbar1, Hotbar2, Hotbar3, Hotbar4, Hotbar5, Hotbar6, Hotbar7, Hotbar8,   // keep them in order: HotbarKey() counts from Hotbar1
+    Fullscreen,
 }
 
 [DisallowMultipleComponent]   // only one KeyBindings per object
@@ -74,8 +79,14 @@ public class KeyBindings : MonoBehaviour
     [SerializeField] KeyCode sprint = KeyCode.LeftShift;
 
     [Header("Actions (default keys)")]
-    [Tooltip("Pick up the item under the crosshair.")]
+    [Tooltip("Pick up an item lying on the ground (the one under the crosshair, e.g. a dropped stack or an apple).")]
     [SerializeField] KeyCode grab = KeyCode.F;
+
+    // (Named interactKey since 21/11/2026: the old "interact" field was the right mouse button, saved in every scene, so
+    // a new name makes every scene start from E.)
+    [Tooltip("Open a chest, pick berries from a bush: what the crosshair points at, close by (Marko's chests and " +
+             "Turki's berry bushes read it).")]
+    [SerializeField] KeyCode interactKey = KeyCode.E;
 
     [Tooltip("Open / close the inventory.")]
     [SerializeField] KeyCode inventory = KeyCode.Tab;
@@ -100,9 +111,6 @@ public class KeyBindings : MonoBehaviour
     [Tooltip("Open / close the build panel.")]
     [SerializeField] KeyCode build = KeyCode.B;
 
-    [Tooltip("Use what the crosshair points at (e.g. open a blueprint). Mouse1 = right mouse button.")]
-    [SerializeField] KeyCode interact = KeyCode.Mouse1;
-
     [Tooltip("Put the blueprint down while placing it. Mouse0 = left mouse button.")]
     [SerializeField] KeyCode placeBuilding = KeyCode.Mouse0;
 
@@ -116,11 +124,16 @@ public class KeyBindings : MonoBehaviour
     [Tooltip("Switch between first and third person.")]
     [SerializeField] KeyCode toggleView = KeyCode.F5;
 
-    [Tooltip("Show the cursor (stop aiming).")]
+    [Tooltip("Open the pause menu (it shows the cursor; KEY BINDINGS and CONTROLS can be changed there). In a scene " +
+             "without a pause menu: just show the cursor (stop aiming).")]
     [SerializeField] KeyCode unlockCursor = KeyCode.Escape;
 
     [Tooltip("Hide the cursor again (start aiming). Mouse0 = left mouse button.")]
     [SerializeField] KeyCode lockCursor = KeyCode.Mouse0;
+
+    [Header("Screen (default keys)")]
+    [Tooltip("Switch fullscreen on / off (Alt + Enter always does too).")]
+    [SerializeField] KeyCode fullscreen = KeyCode.F11;
 
     [Header("Hotbar (default keys)")]
     [Tooltip("Select hotbar slot 1, 2, 3 ... (one key per slot, in order).")]
@@ -131,6 +144,11 @@ public class KeyBindings : MonoBehaviour
     };
 
     static KeyBindings instance;   // the one KeyBindings in the scene
+
+    // Which version of the saved keys the computer has. 2 (21/11/2026): Interact moved from the right mouse button
+    // (where it did nothing) to E, so an Interact saved before is forgotten once (LoadKeys).
+    const string VersionName = "Key_Version";
+    const int SaveVersion = 2;
 
     // The keys being used right now (default or chosen by the player), one per KeyAction.
     KeyCode[] keys;
@@ -167,6 +185,7 @@ public class KeyBindings : MonoBehaviour
     public static KeyCode ToggleView     => Get(KeyAction.ToggleView);
     public static KeyCode UnlockCursor   => Get(KeyAction.UnlockCursor);
     public static KeyCode LockCursor     => Get(KeyAction.LockCursor);
+    public static KeyCode Fullscreen     => Get(KeyAction.Fullscreen);
 
     // The key for hotbar slot i (0 = first slot). Wrong numbers give KeyCode.None.
     public static KeyCode HotbarKey(int i)
@@ -290,6 +309,13 @@ public class KeyBindings : MonoBehaviour
     // Uses the saved key for each action, or the default key if nothing was saved yet.
     void LoadKeys()
     {
+        if (PlayerPrefs.GetInt(VersionName, 1) < SaveVersion)
+        {
+            PlayerPrefs.DeleteKey(SaveName(KeyAction.Interact));   // the old right-click Interact: E (the default) instead
+            PlayerPrefs.SetInt(VersionName, SaveVersion);
+            PlayerPrefs.Save();
+        }
+
         int count = System.Enum.GetValues(typeof(KeyAction)).Length;
         keys = new KeyCode[count];
         inspectorKeys = new KeyCode[count];
@@ -343,13 +369,14 @@ public class KeyBindings : MonoBehaviour
             case KeyAction.Swing:          return swing;
             case KeyAction.Consume:        return consume;
             case KeyAction.Build:          return build;
-            case KeyAction.Interact:       return interact;
+            case KeyAction.Interact:       return interactKey;
             case KeyAction.PlaceBuilding:  return placeBuilding;
             case KeyAction.CancelBuilding: return cancelBuilding;
             case KeyAction.AutoPlace:      return autoPlace;
             case KeyAction.ToggleView:     return toggleView;
             case KeyAction.UnlockCursor:   return unlockCursor;
             case KeyAction.LockCursor:     return lockCursor;
+            case KeyAction.Fullscreen:     return fullscreen;
         }
 
         // Hotbar1 - Hotbar8 read from the hotbar list (Hotbar1 = hotbar[0]).

@@ -5,16 +5,40 @@
 - flinches when hit;
 - falls over when killed, gives coins, and its body breaks into red particles during the fall (DeathEffect,
   `Docs/Death Effect Setup.md`);
-- cheers when the player dies.
+- cheers when the player dies;
+- when day comes (or the player dies at night and the morning comes back), burns away where it stands into orange
+  embers, at a random moment within 1.5 s of the others (no coins: nobody killed it). Test: ⋮ on EnemyAnimator >
+  **Test: Burn Away Now**, or ⋮ on the EnemySpawner > **Test Despawn Enemies**.
 
-Walls and buildings stop them, and they walk up and down the hills.
+Walls and buildings stop them, and they walk up and down the hills. They never spawn outside the world's barrier
+(`Docs/World Barrier Setup.md`).
+
+**From night 2: turtles** (RPG Monster DUO's TurtleShell, `TurtleShellEnemy`; 21/11/2026), made the same way by
+**Tools > Enemies > Set Up Night Monsters** (it calls this tool's `EnemyBuilder.BuildMonster`; its controller gets the
+shell states Shell / Shell Hit). They come with the slimes, at about 3 in 10 of the spawns, and hide in their shell now
+and then (ShellDefense: melee hits on the shell hurt the player). Night monsters appear out of the player's sight.
+Guide: `Docs/Night Monsters Setup.md`. (Until 21/11/2026 the turtles were the new world's desert day monster.)
+
+**From night 3: chest monsters, from night 4: beholders** (22/11/2026, RPG Monster Partners PBR Polyart:
+`ChestMonsterEnemy`, `BeholderEnemy`), made by the same tool with `BuildMonster(name, out report, height, flying)`: the
+chest monster 1.1 m tall, the beholder 1.3 m and **flying** (no gravity, its collider around the middle of its body,
+Tony's **FlyingEnemy**: high up, it dives to bite). This tool works with that pack too: it calls its run **Run** (the
+DUO pack: RunFWD) and its prefab names end in "Default" (`ChestMonsterPolyartDefault` -> `ChestMonsterEnemy`).
+
+**Another monster for the night:** make it with **Tools > Enemies > Build Monster Enemy**, then add it to the
+EnemySpawner's **NightMonsters** > Monsters with its First Night (`Docs/Night Monsters Setup.md`). To replace the slime
+(the first night's monster), answer **Use** when the tool asks to put it in the EnemySpawner. Running it on a monster
+that already has an enemy prefab rebuilds it in place and keeps an EnemyAggro, a ShellDefense, a FlyingEnemy and the
+ember colors other tools gave it (it's rebuilt 1 m tall, though: Tools > Enemies > Set Up Night Monsters rebuilds the
+night monsters at their own sizes).
 
 **How it works:**
 - **Movement, attacks, health, coins:** Marko's scripts (EnemyMovement, EnemyAttack, EnemyCombat, EnemySpawner).
 - **The look:** Tony's EnemyAnimator plays the monster's animations.
 - **Physics:** a Rigidbody and a Sphere Collider on the enemy make walls stop it and keep it on the ground.
 
-The changes to Marko's scripts are listed in `Docs/TonyEditMate/Marko/10-11-2026 Slime Enemy With Animations.md`.
+The changes to Marko's scripts are listed in `Docs/TonyEditMate/Marko/10-11-2026 Slime Enemy With Animations.md`
+(and the burning away at dawn in `Docs/TonyEditMate/Marko/20-11-2026 Night Enemies Burn Away At Day.md`).
 
 ## What you need
 

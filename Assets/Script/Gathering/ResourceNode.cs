@@ -43,8 +43,10 @@ public class ResourceNode : MonoBehaviour
     [Tooltip("On: attacks do nothing. The player collects it by looking at it and pressing the collect key.")]
     [SerializeField] bool collectWithKey = false;
 
-    [Tooltip("The key that collects it (same key as the chests).")]
-    [SerializeField] KeyCode collectKey = KeyCode.E;
+    // [Tooltip("The key that collects it (same key as the chests).")]
+    // [SerializeField] KeyCode collectKey = KeyCode.E;   // [Tony] replaced (21/11/2026): the key is KeyBindings.Interact (E),
+    //                                                   the same key as the chests, shown and changed on the title screen's
+    //                                                   Key Bindings page. Log: Docs/TonyEditMate/Turki/21-11-2026 Berry Key On The Key Bindings Page.md
 
     [Tooltip("How close the player must be, in metres.")]
     [Min(1f)]
@@ -61,13 +63,21 @@ public class ResourceNode : MonoBehaviour
     void Start()
     {
         currentHealth = maxHealth;
+
+        // [Tony] added (22/11/2026): only a berry bush (Collect With Key) needs Update below (it watches for the key).
+        // Every other node (trees, rocks, ores, deer) switches its Update off here, after its health is set: the new
+        // world has about 2000 of them near the player, and each one's empty Update cost time every frame. Hitting it
+        // still works (TakeDamage doesn't need Update), so it shows unticked in the Inspector while playing.
+        // To undo: delete this line. Log: Docs/TonyEditMate/Turki/22-11-2026 Trees And Rocks Skip Their Empty Update.md
+        if (!collectWithKey) enabled = false;                                         // [Tony] added
     }
 
     // NEW: berries are picked with a key instead of being hit, so the node watches for the key itself.
     void Update()
     {
         if (!collectWithKey) return;                   // normal nodes are mined with attacks
-        if (!Input.GetKeyDown(collectKey)) return;
+        // if (!Input.GetKeyDown(collectKey)) return;   // [Tony] replaced (21/11/2026): the key from KeyBindings (E)
+        if (!Input.GetKeyDown(KeyBindings.Interact)) return;   // [Tony] replaced
         if (MenuState.AnyOpen) return;                 // no collecting while a menu is open
 
         Camera cam = Camera.main;
@@ -118,6 +128,12 @@ public class ResourceNode : MonoBehaviour
         else
         {
             Give(inv, dropItem, dropMin, dropMax);   // the normal drop, always
+
+            // [Tony] added (21/11/2026): the rare box's Lumberjack perk (+1 wood per tree) and Prospector perk (+1 per
+            // rock), from Tony's PerkEffects (0 without them; berries picked with the key get nothing extra).
+            // To undo: delete the 2 lines marked [Tony]. Log: Docs/TonyEditMate/Turki/21-11-2026 Lumberjack And Prospector Perks.md
+            int extra = PerkEffects.ExtraDrop(resourceType, collectWithKey);          // [Tony] added
+            if (extra > 0) Give(inv, dropItem, extra, extra);                         // [Tony] added
 
             // Random.value is a random number from 0 to 1. Below the chance = the bonus drops.
             if (bonusItem != null && Random.value < bonusChance)

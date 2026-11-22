@@ -1,6 +1,6 @@
 /*
 First Date: 3/10/2026
-Date: 21/10/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Drag this script onto the Player sphere.
 Unity Editor: The HealthBar (StatBar) finds this by itself. "On Changed" is only for extra things
@@ -9,10 +9,17 @@ Unity Editor: The HealthBar (StatBar) finds this by itself. "On Changed" is only
               Testing: in Play mode, change "Health" in the Inspector (0 = die), or right-click the component's
               title and choose "Test: Take Damage" / "Test: Heal" / "Test: Die" (uses "Test Amount").
 Purpose: Holds the player's health. TakeDamage / Heal change it and fire On Changed (current, max).
-         At 0 health the player dies: the Died event fires once (PlayerRespawn listens to it and brings the
-         player back). Revive fills health back up.
-Requirement: PlayerHealth.cs <-x DeathScreen.cs, EnemyAttack.cs, PerkChest.cs, PerkManager.cs, PlayerCoins.cs, PlayerRespawn.cs
-             PlayerHealth.cs <-o AutoCollector.cs, DaylightCycle.cs, EnemyAnimator.cs, FirstPersonHands.cs, FoodBuff.cs, GainNotifier.cs, ItemConsumer.cs, ItemDropper.cs, PassiveRegen.cs, PlayerAnimator.cs, PlayerHunger.cs, PlayerPerks.cs, PlayerSight.cs, PlayerStats.cs, StatBar.cs, WildAnimal.cs
+         TakeDamage is a hit (an enemy's attack): the armor the player wears (PlayerArmor) takes its share off first.
+         LoseHealth is for what no armor stops (starving, bad food).
+         The epic box's Last Stand perk (PerkEffects): once a life, a hit that would kill leaves 1 health instead, and
+         nothing can hurt the player for a moment (Is Shielded).
+         The Night Power perk (PerkEffects) raises max health at night (SetMaxBoost); health keeps its share of the bar.
+         At 0 health the player dies: first the Dying event (everything is still as it was in that life: the death
+         page reads the day, perks, max health, armor and coins there), then Died, once (PlayerRespawn listens to it
+         and brings the player back; other scripts reset or drop things on it). Revive fills health back up.
+Requirement: PlayerHealth.cs o-> PlayerArmor.cs, PerkEffects.cs
+             PlayerHealth.cs <-x DeathScreen.cs, EnemyAttack.cs, PerkChest.cs, PerkManager.cs, PlayerCoins.cs, PlayerRespawn.cs
+             PlayerHealth.cs <-o ArrowProjectile.cs, AutoCollector.cs, BowShooter.cs, ChestPrompt.cs, DaylightCycle.cs, EnemyAggro.cs, EnemyAnimator.cs, FirstPersonHands.cs, FoodBuff.cs, GainNotifier.cs, GameEndUIBuilder.cs, InteractOutline.cs, ItemConsumer.cs, ItemDropper.cs, PassiveRegen.cs, PerkEffects.cs, PlayerAnimator.cs, PlayerHunger.cs, PlayerInfoPage.cs, PlayerPerks.cs, PlayerSight.cs, PlayerStats.cs, ShellDefense.cs, StatBar.cs, WildAnimal.cs
 */
 
 using UnityEngine;
@@ -44,12 +51,20 @@ public class PlayerHealth : MonoBehaviour
     float startMaxHealth;   // max health before any perk (ResetMaxHealth goes back to it)
     bool dead;           // already died (so Died fires only once per death)
     bool dieNextFrame;   // 0 was typed into Health in the Inspector: die in the next Update (see OnValidate)
+    float shieldedUntil; // Last Stand: no hit hurts until this time
+    float maxBoost = 1f; // Night Power: max health x this at night (SetMaxBoost), 1 = normal
+
+    // Fired once when health reaches 0, just BEFORE Died: at this moment everything is still as it was in that life
+    // (the day, the perks, max health, the armor worn, the coins), because Died is when those are reset or dropped.
+    // DeathScreen reads the days survived and the full stats here.
+    public event System.Action Dying;
 
     // Fired once when health reaches 0. Scripts subscribe in code, e.g. PlayerRespawn: health.Died += Respawn;
     public event System.Action Died;
 
     public float Health => health;         // other scripts can read but not set it
-    public float MaxHealth => maxHealth;
+    public float MaxHealth => maxHealth * maxBoost;   // perks included (Night Power at night)
+    public float StartMaxHealth => startMaxHealth;   // max health before any perk (the inventory's Info tab shows the difference)
     public bool IsDead => health <= 0f;
 
     // ===== Unity messages (Unity calls these) =====
@@ -67,7 +82,7 @@ public class PlayerHealth : MonoBehaviour
     // Unity calls this when a value is changed in the Inspector, so the bar follows while testing.
     void OnValidate()
     {
-        health = Mathf.Clamp(health, 0f, maxHealth);   // keep it between 0 and max
+        health = Mathf.Clamp(health, 0f, MaxHealth);   // keep it between 0 and max
         UpdateBar();
 
         // Typing 0 into Health while playing counts as dying, so respawning can be tested that way too.
@@ -85,8 +100,30 @@ public class PlayerHealth : MonoBehaviour
 
     // ===== My methods =====
 
-    // Lose health. Negative amounts are ignored (use Heal for that).
+    // A hit from outside (e.g. an enemy's attack): the worn armor takes its share off first (PlayerArmor: the full
+    // iron set takes 10 % off). Negative amounts are ignored (use Heal for that).
     public void TakeDamage(float amount)
+    {
+        if (amount <= 0f || IsDead || IsShielded) return;
+        PlayerArmor armor = PlayerArmor.Current;   // asked now, not in Awake: it may be added to the player later
+        if (armor != null) amount = armor.Reduce(amount);
+
+        // A killing blow: the Last Stand perk (once a life) leaves 1 health and a moment of safety instead.
+        if (health - amount <= 0f && PerkEffects.TryLastStand(out float shieldSeconds))
+        {
+            health = Mathf.Min(1f, MaxHealth);
+            shieldedUntil = Time.time + shieldSeconds;
+            UpdateBar();
+            return;
+        }
+        LoseHealth(amount);
+    }
+
+    // True for a moment after Last Stand saved the player: hits do nothing then.
+    public bool IsShielded => Time.time < shieldedUntil;
+
+    // Lose health that no armor can stop (starving, bad food, the test menu's Die). Negative amounts are ignored.
+    public void LoseHealth(float amount)
     {
         if (amount <= 0f || IsDead) return;
 
@@ -120,7 +157,7 @@ public class PlayerHealth : MonoBehaviour
     public void ResetMaxHealth()
     {
         maxHealth = startMaxHealth;
-        health = Mathf.Min(health, maxHealth);
+        health = Mathf.Min(health, MaxHealth);
         UpdateBar();
     }
 
@@ -136,12 +173,26 @@ public class PlayerHealth : MonoBehaviour
 
 
 
+    // The Night Power perk (PerkEffects) calls this when night starts and at dawn: max health is "times" as much
+    // (1.1 = +10 %), 1 = normal. Health keeps its share of the bar (half full stays half full), so the bar doesn't jump
+    // and the boost ending at dawn can't kill anyone.
+    public void SetMaxBoost(float times)
+    {
+        times = Mathf.Max(0.1f, times);
+        if (Mathf.Approximately(times, maxBoost)) return;
+
+        float share = MaxHealth > 0f ? health / MaxHealth : 1f;
+        maxBoost = times;
+        health = share * MaxHealth;
+        UpdateBar();
+    }
+
     // Get health back, never above max.
     public void Heal(float amount)
     {
         if (amount <= 0f) return;
 
-        health = Mathf.Min(health + amount, maxHealth);
+        health = Mathf.Min(health + amount, MaxHealth);
         if (!IsDead) dead = false;   // healed from 0 = alive again
         UpdateBar();
     }
@@ -149,14 +200,14 @@ public class PlayerHealth : MonoBehaviour
     // Back to life with full health (PlayerRespawn calls this).
     public void Revive()
     {
-        health = maxHealth;
+        health = MaxHealth;
         dead = false;
         UpdateBar();
     }
 
     void UpdateBar()
     {
-        onChanged?.Invoke(health, maxHealth);
+        onChanged?.Invoke(health, MaxHealth);
     }
 
     void Die()
@@ -165,6 +216,7 @@ public class PlayerHealth : MonoBehaviour
         dead = true;
 
         Debug.Log(gameObject.name + " died.");
+        Dying?.Invoke();    // first: the life as it was (DeathScreen remembers it)
         onDied?.Invoke();
         Died?.Invoke();     // e.g. PlayerRespawn brings the player back
     }
@@ -185,6 +237,6 @@ public class PlayerHealth : MonoBehaviour
     [ContextMenu("Test: Die")]
     void TestDie()
     {
-        TakeDamage(health);   // all remaining health
+        LoseHealth(health);   // all remaining health, whatever armor is worn
     }
 }

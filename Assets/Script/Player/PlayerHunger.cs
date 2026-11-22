@@ -1,6 +1,6 @@
 /*
 First Date: 3/10/2026
-Date: 9/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: Drag this script onto the Player sphere (next to PlayerController, PlayerHealth and ObjectLevitator).
 Unity Editor: The HungerBar (StatBar) finds this by itself. "On Changed" is only for extra things
@@ -15,7 +15,7 @@ Purpose: Holds the player's food (full = not hungry). It goes down over time:
          The New Game page's difficulty can change how fast it drains (SetDrainPerSecond, used by GameSetup).
 Requirement: PlayerHunger.cs o-> PlayerController.cs, PlayerHealth.cs, ObjectLevitator.cs
              PlayerHunger.cs <-x GameSetup.cs, NewGameDefaultsSync.cs
-             PlayerHunger.cs <-o ItemConsumer.cs, PassiveRegen.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
+             PlayerHunger.cs <-o ItemConsumer.cs, PassiveRegen.cs, PlayerInfoPage.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
 */
 
 using UnityEngine;
@@ -131,11 +131,11 @@ public class PlayerHunger : MonoBehaviour
 
         if (instantDeath)
         {
-            health.TakeDamage(health.Health);   // all remaining health = dead
+            health.LoseHealth(health.Health);   // all remaining health = dead (armor doesn't help against hunger)
         }
         else
         {
-            health.TakeDamage(starveDamagePerSecond * Time.deltaTime);
+            health.LoseHealth(starveDamagePerSecond * Time.deltaTime);   // armor doesn't stop starving
         }
     }
 

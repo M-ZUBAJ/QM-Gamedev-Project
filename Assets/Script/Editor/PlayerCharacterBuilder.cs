@@ -1,6 +1,6 @@
 /*
 First Date: 10/11/2026
-Date: 13/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Open GameScene, then menu Tools > Player > Add Character Model.
@@ -20,7 +20,7 @@ Purpose: Gives the player a real body in one click. The ball keeps doing the mov
            Mine, Gather, Cast, each played once by its trigger, at PlayerAnimator.ActionSpeed like the first-person
            hands; a new trigger starts it again at once.
          The prefab is a Prefab Variant of the character, so Blink's own files are never changed.
-Requirement: PlayerCharacterBuilder.cs x-> UIBuildHelper.cs, AnimatorBuildHelper.cs, MeshBounds.cs, PlayerAnimator.cs, PlayerController.cs, ToolInHand.cs, MenuOrder.cs
+Requirement: PlayerCharacterBuilder.cs x-> UIBuildHelper.cs, AnimatorBuildHelper.cs, MeshBounds.cs, PlayerAnimator.cs, PlayerController.cs, ToolInHand.cs, ArmorLook.cs, MenuOrder.cs
 */
 
 using System.Collections.Generic;
@@ -364,6 +364,7 @@ public static class PlayerCharacterBuilder
             animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;  // keeps moving in first person, where only its shadow shows
             if (animator.GetComponent<PlayerAnimator>() == null) animator.gameObject.AddComponent<PlayerAnimator>();
             if (animator.GetComponent<ToolInHand>() == null) animator.gameObject.AddComponent<ToolInHand>();   // holds the selected tool (the first-person hands copy gets it too)
+            if (temp.GetComponent<ArmorLook>() == null) temp.AddComponent<ArmorLook>();   // worn armor, and no skin flickering through the clothes (Build Plate Armor adds the trimmed skin)
 
             // A collider on the character would join the ball's Rigidbody and change how the player bumps into things.
             foreach (Collider part in temp.GetComponentsInChildren<Collider>(true)) part.enabled = false;

@@ -10,7 +10,7 @@ Purpose: Draws the soft white shapes the menu effects need, so no art is needed:
          ripples), a ring (the START GAME shockwave), a shine streak, the sky gradient, the dark vignette around the
          screen edges and diagonal stripes. They're white with see-through parts, so any color can tint them.
          While playing, each shape is drawn once and shared (Get); the builder saves them with Draw.
-Requirement: UIFXSprites.cs <-x ButtonFX.cs, IncomingMessage.cs, TitleBackground.cs, TitleSceneBuilder.cs, UISparks.cs
+Requirement: UIFXSprites.cs <-x ButtonFX.cs, IconArt.cs, IncomingMessage.cs, TitleBackground.cs, TitleSceneBuilder.cs, UISparks.cs
 */
 
 using System.Collections.Generic;

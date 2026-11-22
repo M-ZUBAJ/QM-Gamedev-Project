@@ -1,15 +1,19 @@
 /*
 First Date: 29/9/2026
-Date: 7/10/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Drag this script onto the Main Camera, then drag the Player sphere into the "Player" slot.
 Purpose: Move the mouse to turn the camera.
          Press F5 to switch between third person (orbit around the ball) and first person (view from the ball).
-         Press Esc to show the cursor again, click in the Game view to hide it.
+         Press Esc to show the cursor again, click in the Game view to hide it. With a pause menu in the scene
+         (PauseMenu), Esc opens that instead (it frees the mouse while it's open).
          (These keys can be changed in KeyBindings.)
-Requirement: CameraController.cs x-> KeyBindings.cs, MenuState.cs
+         The player's mouse settings (Settings > CONTROLS, title screen or Esc menu; MouseSettings) change how it turns:
+         the speed is Sensitivity x the player's choice (5 of 1 - 10 = as set here), and Invert mouse turns up / down.
+Requirement: CameraController.cs x-> KeyBindings.cs, MenuState.cs, MouseSettings.cs
+             CameraController.cs o-> PauseMenu.cs
              CameraController.cs <-x FirstPersonHandsBuilder.cs
-             CameraController.cs <-o FirstPersonHands.cs, HeldItemView.cs, PlayerAnimator.cs, ToolInHand.cs
+             CameraController.cs <-o BowShooter.cs, FirstPersonHands.cs, HeldItemView.cs, PlayerAnimator.cs, ToolInHand.cs
 */
  
 using UnityEngine;
@@ -25,11 +29,12 @@ public class CameraController : MonoBehaviour
     [SerializeField] Transform player;
  
     [Header("Mouse")]
-    [Tooltip("How fast the camera turns when you move the mouse.")]
+    [Tooltip("How fast the camera turns when you move the mouse, at the player's sensitivity 5 (Settings > CONTROLS: " +
+             "1 - 10, 10 = twice this).")]
     [Range(0.1f, 10f)]
     [SerializeField] float sensitivity = 3f;
  
-    [Tooltip("Ticked: moving the mouse up makes the camera look down.")]
+    [Tooltip("Ticked: moving the mouse up makes the camera look down (the player can also choose it: Settings > CONTROLS).")]
     [SerializeField] bool invertY = false;
  
     [Header("Third person")]
@@ -82,8 +87,9 @@ public class CameraController : MonoBehaviour
  
         if (F5Pressed()) ToggleView();
  
-        // Esc frees the cursor (e.g. to click UI). Clicking hides it again.
-        if (EscapePressed()) LockCursor(false);
+        // Esc frees the cursor (e.g. to click UI). Clicking hides it again. With a pause menu in the scene, Esc opens it
+        // instead (it frees the cursor while it's open and locks it again when it closes).
+        if (EscapePressed() && !PauseMenu.Active) LockCursor(false);
         else if (ClickPressed()) LockCursor(true);
     }
  
@@ -93,9 +99,10 @@ public class CameraController : MonoBehaviour
         // Only turn the camera while the cursor is hidden and no menu is open.
         if (Cursor.lockState == CursorLockMode.Locked && !MenuState.AnyOpen)
         {
-            Vector2 mouse = ReadMouseDelta();
+            Vector2 mouse = ReadMouseDelta() * MouseSettings.Multiplier;   // the player's sensitivity (5 = 1x)
+            bool invert = invertY || MouseSettings.InvertY;                  // the player's Invert mouse
             yaw += mouse.x * sensitivity;
-            pitch += (invertY ? mouse.y : -mouse.y) * sensitivity;
+            pitch += (invert ? mouse.y : -mouse.y) * sensitivity;
         }
  
         // Each view has its own up/down limits.

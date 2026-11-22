@@ -10,7 +10,7 @@ Purpose: A tiny animation helper: moves, scales, fades or recolors something smo
          while the game is paused (Time.timeScale = 0). Example:
            UITween.Run(this, 0.4f, UITween.Ease.OutBack, t => box.localScale = Vector3.one * t);
          Each animation is a coroutine on the script that starts it: switching that object off stops it.
-Requirement: UITween.cs <-x ButtonFX.cs, CascadeIn.cs, ChoiceRow.cs, DropdownUnfold.cs, IncomingMessage.cs, KeyBindingMenu.cs, NewGamePanel.cs, PulseFX.cs, ScreenFader.cs, StepperRow.cs, TabFX.cs, TitleBackground.cs, TitleMenu.cs, TitleSceneBuilder.cs, TitleTextFX.cs, TogglePop.cs, UISparks.cs
+Requirement: UITween.cs <-x ArmorPicker.cs, ButtonFX.cs, CascadeIn.cs, ChoiceRow.cs, DeathScreen.cs, DropdownUnfold.cs, IncomingMessage.cs, KeyBindingMenu.cs, NewGamePanel.cs, PauseMenu.cs, PerkPanelInfo.cs, PerkRollUI.cs, PulseFX.cs, ScreenFader.cs, SliderRow.cs, StepperRow.cs, TabFX.cs, TitleBackground.cs, TitleMenu.cs, TitleSceneBuilder.cs, TitleTextFX.cs, TogglePop.cs, UISparks.cs, VictoryScreen.cs
 */
 
 using System;

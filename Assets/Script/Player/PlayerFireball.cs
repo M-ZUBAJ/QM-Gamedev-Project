@@ -47,6 +47,10 @@ public class PlayerFireball : MonoBehaviour
     void Update()
     {
         if (!HasFireballPerk) return;
+        // [Tony] added (21/11/2026): no fireball while a menu is open (the Esc pause menu stops time, so a fireball cast
+        // then hung in the air; the inventory, a chest's panel and the death page are menus too).
+        // Log: Docs/TonyEditMate/Marko/21-11-2026 No Fireball While A Menu Is Open.md
+        if (MenuState.AnyOpen) return;   // [Tony] added
         if (!Input.GetKeyDown(KeyCode.Q)) return;
 
         PlayerInventory inventory = PlayerInventory.Instance;

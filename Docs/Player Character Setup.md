@@ -21,7 +21,9 @@ It has the character and 32 Humanoid animations (in `Assets/Imported3D/Blink/Art
 2. Menu **Tools > Player > Add Character Model**.
    - It makes `Assets/Animation/Player/PlayerCharacter.controller` (which animation plays when) and `UpperBody.mask`.
    - It makes `Assets/Prefabs/Player/PlayerCharacter.prefab`: a **Prefab Variant** of Blink's character, so Blink's
-     own files never change. It wears Blink's starter clothes (the original only wears underwear).
+     own files never change. It wears Blink's starter clothes (the original only wears underwear). It also gets
+     **ArmorLook**: it shows worn armor, and while playing it switches off the skin under the clothes, which would
+     otherwise flicker through them (see `Docs/Armor Setup.md`).
    - It puts that on the **Player** as **Character**, 1.8 m tall with its feet on the bottom of the ball, and switches
      off the ball's **Mesh Renderer** (the ball's look; its collider and scripts keep working).
    - If the prefab or the controller already exists, it asks: **Replace** (build both again) or **Keep** (use them as
@@ -32,7 +34,7 @@ It has the character and 32 Humanoid animations (in `Assets/Imported3D/Blink/Art
 
 ```
 Player                 the ball: SphereCollider, Rigidbody, every player script (Mesh Renderer switched off)
-  Character            PlayerCharacter prefab: Animator (PlayerCharacter controller) + PlayerAnimator
+  Character            PlayerCharacter prefab: Animator (PlayerCharacter controller) + PlayerAnimator + ArmorLook
     Armors, Mesh...    Blink's clothes, body parts and bones
 ```
 
@@ -58,6 +60,10 @@ Double click `Assets/Prefabs/Player/PlayerCharacter.prefab` to open it, then tic
 - **Armors > Plate1**: PlateSet1_Helmet, Chest, Shoulders, Gloves, Pants, Boots (off). Tick them on for plate armor
   (and switch the matching starter clothes off).
 - **Mesh > Customization**: Hair, Beards, Moustaches, Face.
+
+While playing, **ArmorLook** switches off the body's skin under the clothes that show (its **Skin Under Clothes**
+list: e.g. the Arms and Chest under Starter_Chest), because Blink's clothes sit right on the skin and the two would
+flicker. So in the prefab the skin parts stay ticked on.
 
 The Character in the scene updates by itself. Afterwards, if you run the tool again, choose **Keep**
 (**Replace** builds the prefab again and loses these changes).
@@ -226,7 +232,7 @@ heavy punches (left hook / heavy right) in turn. The clips come from Mixamo: see
 8. **Character:** drag `Assets/Imported3D/Blink/Art/Characters/LowPoly/FREE_HumanLowPoly/Prefabs_Humans/HumanMale_Character_FREE.prefab`
    onto **Player** in the Hierarchy (it becomes its child). Rename it **Character**.
    - Its **Animator**: Controller = **PlayerCharacter**, untick **Apply Root Motion**, Culling Mode **Always Animate**.
-   - **Add Component > PlayerAnimator**.
+   - **Add Component > PlayerAnimator** and **Add Component > ArmorLook** (it comes with Blink's skin list filled in).
    - Clothes (optional): tick on Armors > StarterClothes > Starter_Boots, Starter_Chest, Starter_Pants.
 9. **Size and place:** set its **Scale** so it's about 1.8 m tall (a default Cube is 1 m), then move it down until its
    feet touch the bottom of the ball (the ball is 1 m wide, so its bottom is 0.5 below its middle).
@@ -251,9 +257,10 @@ heavy punches (left hook / heavy right) in turn. The clips come from Mixamo: see
 | The Console says some animations weren't found | Blink's pack isn't imported, or another character uses other clip names. Drag clips into those states by hand. |
 | It's pink | Its materials need the **Standard** shader (Blink's already use it). |
 | In first person I see the inside of the head | Tick **Shadow Only In First Person**. |
+| The shirt's shoulders (or the trousers, the boots) flicker between the clothes' and the skin's colour | The character has no **ArmorLook**, which switches off the skin under the clothes: run **Tools > Items > Build Plate Armor** (or Add Character Model with Replace), or add ArmorLook to the prefab by hand. |
 
 ## Good to know
 
 - Only the ball (1 m) bumps into things, so the head (1.8 m) can poke through low ceilings or branches.
-- The item in hand (HeldItemView) and Marko's weapon models still show in front of the camera, not in the
-  character's hand.
+- Held items and tools are in the character's right hand: HeldItemView for items (`Docs/Held Item Setup.md`),
+  ToolInHand for tools. Marko's old weapon models in front of the camera are gone.

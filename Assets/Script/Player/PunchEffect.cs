@@ -1,6 +1,6 @@
 /*
 First Date: 12/11/2026
-Date: 13/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: The Player. Tools > Effects > Build Punch Wind Burst puts it there and fills it in.
         By hand: drag this script onto the Player, then drag Assets/Prefabs/Effects/PunchWindBurst.prefab into Burst Prefab.
@@ -18,7 +18,16 @@ Purpose: A grey burst of wind (dust clouds, wind lines, a shock ring and a few s
          stone may break right then, not before) and the wind bursts on the spot that was hit, even if the target moved
          (a running deer). The burst removes itself when its particles are gone.
          Any script can make a burst: PunchEffect.Play(where, whichWayOut);
-Requirement: PunchEffect.cs x-> PlayerAnimator.cs, PunchCombo.cs
+         A critical hit (the Critical Strike perk: Marko's PlayerCombat passes critical = true) bursts in Critical Color
+         (red), even from a tool. A punch that lands on a monster pushes it away (Knockback; a heavy punch harder, the
+         Brawler perk farther: PerkEffects.KnockbackMultiplier). With the Vampire perk the player heals a share of the
+         damage each hit really does (PerkEffects.WithVampire).
+         When the hit lands, the damage it really did pops up as a number there (DamageNumbers, if the player has damage
+         numbers on: DISPLAY page); a critical hit's number is big, orange-red and says CRITICAL.
+         A swing that lands on a turtle hiding in its shell (ShellDefense.Blocks) bounces off: no damage, no wind burst,
+         no push; the shell hurts the player instead, with sparks and "BLOCKED!" (ShellDefense.Deflect).
+Requirement: PunchEffect.cs x-> PlayerAnimator.cs, PunchCombo.cs, Knockback.cs, DamageNumbers.cs
+             PunchEffect.cs o-> PerkEffects.cs, ShellDefense.cs
              PunchEffect.cs <-x PlayerAnimationSetup.cs, PlayerCombat.cs, PunchEffectBuilder.cs, TierToolBuilder.cs
 */
 
@@ -76,6 +85,27 @@ public class PunchEffect : MonoBehaviour
     [Range(0f, 1f)]
     [SerializeField] float mineDelay = 0.35f;
 
+    [Header("Knockback (punches on monsters)")]
+    [Tooltip("How fast a jab pushes a monster away, in m/s (it slides about this x Knockback Seconds meters). 0 = no push. The Brawler perk adds to it.")]
+    [Range(0f, 15f)]
+    [SerializeField] float knockback = 3f;
+
+    [Tooltip("The same for a heavy punch (right click).")]
+    [Range(0f, 20f)]
+    [SerializeField] float heavyKnockback = 6f;
+
+    [Tooltip("Seconds the monster is pushed (it doesn't walk meanwhile).")]
+    [Range(0.05f, 1f)]
+    [SerializeField] float knockbackSeconds = 0.25f;
+
+    [Tooltip("How much of the push goes upward (0.15 = a little hop), so it slides instead of sticking to the ground.")]
+    [Range(0f, 1f)]
+    [SerializeField] float knockbackLift = 0.15f;
+
+    [Header("Critical Strike")]
+    [Tooltip("The burst's color on a critical hit (the Critical Strike perk: double damage).")]
+    [SerializeField] Color criticalColor = new Color(1f, 0.15f, 0.1f);
+
     float lifetime;          // seconds until a burst's last particle is gone (worked out from the prefab)
     GameObject lifetimeOf;   // the prefab that lifetime belongs to (worked out again if Burst Prefab changes)
 
@@ -113,18 +143,26 @@ public class PunchEffect : MonoBehaviour
     }
 
     // Any swing: it lands after that swing's delay (Punch = Impact Delay, Attack = Swing Delay, Mine = Mine Delay), then
-    // hurts the target and bursts wind (a heavy punch bigger, a tool Tool Burst Size). Without a PunchEffect on the
-    // Player, hurt happens at once.
-    public static void Hit(Component target, RaycastHit hit, System.Action hurt, PlayerAction swing)
+    // hurts the target and bursts wind (a heavy punch bigger, a tool Tool Burst Size; red when critical). A punch also
+    // pushes a monster away. Without a PunchEffect on the Player, hurt happens at once.
+    public static void Hit(Component target, RaycastHit hit, System.Action hurt, PlayerAction swing, bool critical = false)
     {
+        hurt = PerkEffects.WithVampire(target, hurt);   // the Vampire perk: the damage it really does heals the player
         if (Current != null && Current.isActiveAndEnabled)
         {
             float burst = PunchCombo.IsHeavy(swing) ? Current.heavyBurstSize : PunchCombo.IsPunch(swing) ? 1f : Current.toolBurstSize;   // 0 = no burst
-            Current.StartCoroutine(Current.Land(target, hit.point, hit.normal, hurt, Current.DelayFor(swing), burst));
+            if (critical && burst <= 0f) burst = 1f;   // a critical hit always shows
+            Current.StartCoroutine(Current.Land(target, hit.point, hit.normal, hurt, Current.DelayFor(swing), burst, swing, critical));
+        }
+        else if (ShellDefense.Blocks(target))
+        {
+            ShellDefense.Deflect(target, hit.point, hit.normal);   // a turtle in its shell: the hit bounces off
         }
         else
         {
+            float before = DamageNumbers.HealthOf(target, out bool creature);
             hurt?.Invoke();
+            DamageNumbers.ShowDealt(target, before, creature, hit.point, critical);   // the damage it did, as a number
         }
     }
 
@@ -163,8 +201,9 @@ public class PunchEffect : MonoBehaviour
         }
     }
 
-    // burst = the size of the wind burst (1 = normal, 0 = none: a tool swing).
-    IEnumerator Land(Component target, Vector3 point, Vector3 normal, System.Action hurt, float delay, float burst)
+    // burst = the size of the wind burst (1 = normal, 0 = none: a tool swing). critical = a red burst.
+    IEnumerator Land(Component target, Vector3 point, Vector3 normal, System.Action hurt, float delay, float burst,
+                     PlayerAction swing = PlayerAction.Punch, bool critical = false)
     {
         // Where on the target it was hit, in the target's own space, so the burst stays on it if it moves or turns.
         Transform body = target != null ? target.transform : null;
@@ -178,11 +217,39 @@ public class PunchEffect : MonoBehaviour
             point = body.TransformPoint(spot);
             normal = body.TransformDirection(facing);
         }
-        if (target != null) hurt?.Invoke();   // it lands: now it's hurt (a tree or stone may break right here)
-        if (burst > 0f) Spawn(point, normal, burst);   // a punch: the wind bursts where it landed
+        // A turtle in its shell (ShellDefense): the hit bounces off. No damage, no wind burst, no push: sparks,
+        // "BLOCKED!" and the shell hurts the player instead.
+        if (target != null && ShellDefense.Blocks(target))
+        {
+            ShellDefense.Deflect(target, point, normal);
+            yield break;
+        }
+        if (target != null)
+        {
+            float before = DamageNumbers.HealthOf(target, out bool creature);
+            hurt?.Invoke();   // it lands: now it's hurt (a tree or stone may break right here)
+            DamageNumbers.ShowDealt(target, before, creature, point, critical);   // the damage it did, as a number
+            if (PunchCombo.IsPunch(swing)) PushAway(target, swing);
+        }
+        if (burst > 0f) Spawn(point, normal, burst, critical);   // the wind bursts where it landed
     }
 
-    void Spawn(Vector3 point, Vector3 normal, float sizeScale = 1f)
+    // A punch pushes a monster straight away from the player (Knockback): a heavy punch harder, Brawler farther.
+    // Only bodies that physics moves get pushed (Knockback checks), so trees, rocks and deer stay put.
+    void PushAway(Component target, PlayerAction swing)
+    {
+        if (target == null) return;   // the punch destroyed it (a broken tree or rock)
+        float speed = (PunchCombo.IsHeavy(swing) ? heavyKnockback : knockback) * PerkEffects.KnockbackMultiplier;
+        if (speed <= 0f) return;
+
+        Vector3 away = target.transform.position - transform.position;
+        away.y = 0f;
+        if (away.sqrMagnitude < 0.0001f) away = transform.forward;
+        Vector3 push = away.normalized * speed + Vector3.up * (speed * knockbackLift);
+        Knockback.Push(target, push, knockbackSeconds);
+    }
+
+    void Spawn(Vector3 point, Vector3 normal, float sizeScale = 1f, bool critical = false)
     {
         if (burstPrefab == null) return;
         if (normal.sqrMagnitude < 0.0001f) normal = Vector3.up;   // no direction given: burst upward
@@ -197,8 +264,36 @@ public class PunchEffect : MonoBehaviour
         // The prefab's front (blue arrow) points out of the surface, so its wind flies out toward the puncher.
         GameObject burst = Instantiate(burstPrefab, point + normal * pushOut, Quaternion.LookRotation(normal));
         burst.transform.localScale = Vector3.one * (size * sizeScale);   // its parts scale with it (Scaling Mode: Hierarchy)
+        if (critical) Tint(burst, criticalColor);
         Destroy(burst, lifetime);
     }
+
+    // Colors every part of a burst (grey wind becomes red wind): each part's start color times "color", its
+    // see-through amount kept. Done before its first particles come out.
+    static void Tint(GameObject burst, Color color)
+    {
+        foreach (ParticleSystem part in burst.GetComponentsInChildren<ParticleSystem>(true))
+        {
+            ParticleSystem.MainModule main = part.main;
+            ParticleSystem.MinMaxGradient start = main.startColor;
+            switch (start.mode)
+            {
+                case ParticleSystemGradientMode.Color:
+                    start.color = Times(start.color, color);
+                    break;
+                case ParticleSystemGradientMode.TwoColors:
+                    start.colorMin = Times(start.colorMin, color);
+                    start.colorMax = Times(start.colorMax, color);
+                    break;
+                default:
+                    start = new ParticleSystem.MinMaxGradient(color);
+                    break;
+            }
+            main.startColor = start;
+        }
+    }
+
+    static Color Times(Color a, Color b) => new Color(a.r * b.r, a.g * b.g, a.b * b.b, a.a);
 
     // The longest any part of the burst lasts: its start delay + how long it emits + how long its particles live.
     static float Lifetime(GameObject prefab)

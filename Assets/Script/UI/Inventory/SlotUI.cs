@@ -1,6 +1,6 @@
 /*
 First Date: 7/10/2026
-Date: 20/10/2026
+Date: 19/11/2026
 Author: Tony
 Use by: On the Slot prefab (Assets/Prefabs/UI/Inventory/Slot.prefab). Tools > UI > Add Inventory Scripts adds it for you.
 Unity Editor: Icon, Count and ItemName are found by themselves (children named "Icon", "Count" and "ItemName").
@@ -13,7 +13,8 @@ Purpose: Shows one inventory slot: the item's picture and how many (no number fo
          Clicks (like Minecraft): left = pick up / put down / swap the whole stack,
          right = pick up half / put down one, double left click = gather all of that item here.
          Holding a stack, hold right click and drag over slots: one item goes into each slot you pass (once per slot).
-Requirement: SlotUI.cs x-> PlayerInventory.cs, UIAnimatedImage.cs, IconSource.cs, ItemIconRules.cs, GameRules.cs, Image (Unity)
+         Mouse over an item: its name shows next to the mouse (ItemTooltip; the name is PlayerInventory.Slot.ShownName).
+Requirement: SlotUI.cs x-> PlayerInventory.cs, UIAnimatedImage.cs, IconSource.cs, ItemIconRules.cs, GameRules.cs, ItemTooltip.cs, Image (Unity)
              SlotUI.cs <-x HeldItemUI.cs, InventoryUIBuilder.cs, SlotGroup.cs
 */
 
@@ -25,7 +26,7 @@ using UnityEngine.UI;
 
 [RequireComponent(typeof(Image))]
 [DisallowMultipleComponent]
-public class SlotUI : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IPointerEnterHandler
+public class SlotUI : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IPointerEnterHandler, IPointerExitHandler
 {
     // ===== Fields =====
     [Tooltip("The item's picture. Empty = the child named \"Icon\".")]
@@ -83,6 +84,7 @@ public class SlotUI : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, 
 
     TextLayout nameLayout, countLayout;   // how ItemName and Count were set up (Marko's / the prefab's layout)
     bool labelLayout;                     // ItemName and Count are moved for Label mode right now
+    bool hovered;                         // the mouse is on this slot: its item's name shows next to it (ItemTooltip)
 
     // Right-click drag, shared by every slot (only one mouse): is a drag placing items, and which slots got one.
     static bool rightDragPlacing;
@@ -118,6 +120,8 @@ public class SlotUI : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, 
     {
         PlayerInventory.Changed -= Refresh;
         GameRules.Changed -= Refresh;
+        if (hovered) ItemTooltip.Hide();   // the window closed with the mouse on this slot
+        hovered = false;
     }
 
     // Unity calls this when the slot is clicked: pressed AND let go on this slot (needs an EventSystem in the scene).
@@ -152,6 +156,9 @@ public class SlotUI : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, 
     // Unity calls this when the mouse moves onto the slot, also while a button is held.
     public void OnPointerEnter(PointerEventData pointer)
     {
+        hovered = true;   // the item's name shows next to the mouse (ItemTooltip)
+        ShowName();
+
         PlayerInventory inv = PlayerInventory.Instance;
         if (inv == null || index < 0) return;
         if (!rightDragPlacing || !Input.GetMouseButton(1)) return;   // 1 = right button, still held
@@ -159,6 +166,13 @@ public class SlotUI : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, 
 
         draggedOver.Add(index);
         inv.PlaceOne(index);   // does nothing if a different item is in the slot
+    }
+
+    // Unity calls this when the mouse leaves the slot: no name any more.
+    public void OnPointerExit(PointerEventData pointer)
+    {
+        hovered = false;
+        ItemTooltip.Hide();
     }
 
     // Static values outlive the scene (and Play sessions if domain reload is off): start clean every time.
@@ -220,6 +234,17 @@ public class SlotUI : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, 
         bool selected = inv != null && inv.ActiveHotbar != PlayerInventory.NoHotbar
                         && index == inv.HotbarStart + inv.ActiveHotbar;
         if (frame != null) frame.color = selected ? selectedColor : normalColor;
+
+        if (hovered) ShowName();   // the item under the mouse changed (e.g. picked up): its new name, or none
+    }
+
+    // Shows this slot's item name next to the mouse (ItemTooltip), or nothing for an empty slot.
+    void ShowName()
+    {
+        PlayerInventory inv = PlayerInventory.Instance;
+        PlayerInventory.Slot slot = inv != null && index >= 0 && index < inv.Slots.Count ? inv.Slots[index] : null;
+        if (slot != null && !slot.IsEmpty) ItemTooltip.Show(slot.ShownName);
+        else ItemTooltip.Hide();
     }
 
     // Puts a stack's picture and amount into an Icon and a Count. Also used by HeldItemUI.

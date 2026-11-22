@@ -1,6 +1,6 @@
 /*
 First Date: 7/11/2026
-Date: 9/11/2026
+Date: 21/11/2026
 Author: Tony
 Use by: Put this on the Key Bindings page (Tools > UI > Build Main Title Scene does it: SettingsPage > TabPages >
         KeyBindingsPage). It needs, by NAME: "Content" (the scroll list's content, with a Vertical Layout Group),
@@ -16,9 +16,12 @@ Purpose: The key binding list. Click a key box, then press the new key (Esc = ca
              what moved. Normal play and building are separate: left click can place buildings AND do other things;
            - keys hard-coded in teammates' scripts (Attack, Fireball) are shown greyed: they can't change yet, and
              choosing one of those keys for something else gives a warning shake.
+         ITEMS (21/11/2026): Grab item (F, items lying on the ground) and Open chest / Pick berries (E, KeyBindings'
+         Interact: the chests and berry bushes read it), then Eat / Levitate (right click). GAME: Pause menu (Esc,
+         KeyBindings' Unlock Cursor). The same list is in the Esc pause menu (PauseMenu), so keys change during play.
          RESET ALL puts every key back to its default, the boxes flipping over in a wave down the list.
 Requirement: KeyBindingMenu.cs x-> KeyBindings.cs, UITween.cs
-             KeyBindingMenu.cs <-x TitleSceneBuilder.cs
+             KeyBindingMenu.cs <-x FullscreenKeys.cs, PauseMenu.cs, TitleSceneBuilder.cs
              KeyBindingMenu.cs <-o TitleMenu.cs
 */
 
@@ -74,8 +77,9 @@ public class KeyBindingMenu : MonoBehaviour
         new Row("MOVEMENT", "Move right", When.Playing, new[] { KeyAction.MoveRight }, new[] { KeyAction.MoveRightAlt }),
         new Row("MOVEMENT", "Jump", When.Playing, new[] { KeyAction.Jump }),
         new Row("MOVEMENT", "Sprint", When.Playing, new[] { KeyAction.Sprint }),
-        new Row("ITEMS", "Grab item", When.Playing, new[] { KeyAction.Grab }),
-        new Row("ITEMS", "Eat / Levitate", When.Playing, new[] { KeyAction.Consume, KeyAction.Levitate, KeyAction.Interact }),
+        new Row("ITEMS", "Grab item (on the ground)", When.Playing, new[] { KeyAction.Grab }),
+        new Row("ITEMS", "Open chest / Pick berries", When.Playing, new[] { KeyAction.Interact }),
+        new Row("ITEMS", "Eat / Levitate", When.Playing, new[] { KeyAction.Consume, KeyAction.Levitate }),
         new Row("ITEMS", "Inventory", When.Playing, new[] { KeyAction.Inventory }),
         new Row("ITEMS", "Crafting", When.Playing, new[] { KeyAction.Crafting }),
         new Row("ITEMS", "Hotbar 1 - 8", When.Playing, null),
@@ -84,7 +88,8 @@ public class KeyBindingMenu : MonoBehaviour
         new Row("BUILDING", "Cancel building", When.Building, new[] { KeyAction.CancelBuilding }),
         new Row("BUILDING", "Snap / Surface", When.Building, new[] { KeyAction.AutoPlace }),
         new Row("CAMERA", "Change view", When.Playing, new[] { KeyAction.ToggleView }),
-        new Row("CAMERA", "Free the mouse", When.Playing, new[] { KeyAction.UnlockCursor }),
+        new Row("GAME", "Pause menu", When.Playing, new[] { KeyAction.UnlockCursor }),   // Esc: the pause menu (it frees the mouse)
+        new Row("GAME", "Fullscreen (or Alt + Enter)", When.Playing, new[] { KeyAction.Fullscreen }),   // F11 (FullscreenKeys)
         new Row("FIXED (can't change yet)", "Attack", When.Playing, null, null, "Left click"),
         new Row("FIXED (can't change yet)", "Fireball", When.Playing, null, null, "Q"),
     };

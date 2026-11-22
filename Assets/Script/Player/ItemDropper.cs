@@ -1,6 +1,6 @@
 /*
 First Date: 9/10/2026
-Date: 20/10/2026
+Date: 20/11/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerInventory).
         Tools > UI > Add Inventory Scripts adds it for you.
@@ -18,8 +18,9 @@ Purpose: Like Minecraft: while the inventory is open and a stack is on the curso
          When the player dies (PlayerHealth) and the GameRule Keep Inventory is off, EVERY stack (inventory, hotbar,
          cursor) is thrown out around the body, and the inventory is emptied.
          With the GameRule Clear Item On Dead on, the items are deleted instead (nothing drops).
+         The armor the player wears (PlayerArmor) follows the same rules: dropped with the items, deleted, or kept on.
 Requirement: ItemDropper.cs x-> PlayerInventory.cs, DroppedStack.cs, ItemPickup.cs, MenuState.cs, GameRules.cs
-             ItemDropper.cs o-> PlayerHealth.cs
+             ItemDropper.cs o-> PlayerHealth.cs, PlayerArmor.cs
              ItemDropper.cs <-x InventoryUIBuilder.cs
 */
 
@@ -148,6 +149,8 @@ public class ItemDropper : MonoBehaviour
         if (GameRules.ClearItemOnDead)
         {
             inv.ClearAll();   // inventory, hotbar and the stack on the cursor: all gone, nothing on the ground
+            PlayerArmor armor = PlayerArmor.Current;
+            if (armor != null) armor.TakeAllOff();   // the worn armor too
             Debug.Log("All items are gone (GameRule Clear Item On Dead is on).");
             return;
         }
@@ -167,6 +170,14 @@ public class ItemDropper : MonoBehaviour
             if (DropAround(slot, center, look)) dropped++;
         }
         if (DropAround(inv.Held, center, look)) dropped++;
+        PlayerArmor armor = PlayerArmor.Current;
+        if (armor != null)
+        {
+            foreach (PlayerInventory.Slot piece in armor.TakeAllOff())   // the worn armor drops too
+            {
+                if (DropAround(piece, center, look)) dropped++;
+            }
+        }
 
         inv.ClearAll();
         if (dropped > 0) Debug.Log("Dropped " + dropped + " stack(s) on death (GameRule Keep Inventory is off).");

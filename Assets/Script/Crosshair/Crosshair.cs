@@ -1,17 +1,25 @@
 /*
 First Date: 30/9/2026
-Date: 11/10/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Drag this script onto the Crosshair Image in the HUD Canvas.
         Set the Player sphere's Layer to "Ignore Raycast" so the crosshair looks past the ball.
+Unity Editor: Colors: Normal, Target (an item F can grab), Auto (an AutoPickup item), Reach (Keen Eye perk).
+              Testing Keen Eye: Play, Player > PerkEffects > ⋮ > "Test: Every New Perk Once" (or buy Keen Eye from an
+              epic / legendary box), then walk up to a tree: the crosshair turns yellow once a punch reaches it.
 Purpose: Shows the crosshair in the center of the screen while the mouse turns the camera.
          Changes color when it points at an item (ItemPickup on it or a parent),
          but only within the Grab Range of the player's ItemGrabber.
          Turns the Auto Color (green) for AutoPickup items (see their Item Data) within Auto Range. No tags.
+         With the Keen Eye perk (PerkEffects) it turns the Reach Color (yellow) when the player's attack would hit what
+         it points at: a monster, an animal, a tree or a rock. It asks the attack's own question (Marko's PlayerCombat: a
+         ray from the middle of its camera, as far as its AttackReach, which the Long Reach perk makes longer), so
+         yellow means a click hits.
          Other scripts can read Crosshair.Target to know what the player is aiming at,
          and Crosshair.HitPoint for the exact point on it.
 Requirement: Crosshair.cs <-> ItemGrabber.cs
-             Crosshair.cs x-> ItemPickup.cs, ItemData.cs, BoundsUtil.cs, Image (Unity)
+             Crosshair.cs x-> ItemPickup.cs, ItemData.cs, BoundsUtil.cs, ToolRules.cs, Image (Unity)
+             Crosshair.cs o-> PlayerCombat.cs, PerkEffects.cs, EnemyCombat.cs, ResourceNode.cs
              Crosshair.cs <-x HUDBuilder.cs, ObjectLevitator.cs
 */
 
@@ -33,6 +41,10 @@ public class Crosshair : MonoBehaviour
     [Tooltip("Color when the crosshair points at an AutoPickup item (collected by touch, see its Item Data).")]
     [SerializeField] Color autoColor = Color.green;
 
+    [Tooltip("Color while the player has the Keen Eye perk and the attack can reach what the crosshair points at (a " +
+             "monster, an animal, a tree or a rock): a click will hit it.")]
+    [SerializeField] Color reachColor = Color.yellow;
+
     [Header("Aiming")]
     [Range(1f, 20f)]
     [Tooltip("How far from the player an AutoPickup item turns the crosshair the Auto Color (measured to its surface).")]
@@ -53,6 +65,8 @@ public class Crosshair : MonoBehaviour
 
     Image img;
     Camera cam;
+    PlayerCombat combat;      // Marko's attack: where it aims and how far it reaches (Keen Eye)
+    float nextCombatSearch;   // when to look for it again if the scene has none
 
     // ===== Unity messages (Unity calls these) =====
 
@@ -68,6 +82,7 @@ public class Crosshair : MonoBehaviour
 
         // Nothing dragged in? Look for the ItemGrabber in the scene (on the player).
         if (grabber == null) grabber = FindFirstObjectByType<ItemGrabber>();
+        combat = FindFirstObjectByType<PlayerCombat>();
     }
 
     void Update()
@@ -77,7 +92,7 @@ public class Crosshair : MonoBehaviour
         img.enabled = aiming;   // hides the picture, but this script keeps running
 
         Target = aiming ? FindTarget() : null;
-        img.color = PickColor(Target);
+        img.color = PickColor(Target, aiming && InReach());
     }
 
     void OnDestroy()
@@ -105,12 +120,36 @@ public class Crosshair : MonoBehaviour
         return hit.collider.gameObject;
     }
 
-    // Chooses the crosshair color for what it is pointing at.
-    Color PickColor(GameObject go)
+    // Chooses the crosshair color for what it is pointing at. reach = the attack would hit it (Keen Eye perk).
+    Color PickColor(GameObject go, bool reach)
     {
         if (IsAutoPickUp(go)) return autoColor;      // checked first, so auto items are always green
         if (IsHighlighted(go)) return targetColor;
+        if (reach) return reachColor;
         return normalColor;
+    }
+
+    // Keen Eye perk: true when a click would hit something the attack hurts. It asks the attack's own question (Marko's
+    // PlayerCombat: a ray from the middle of its camera, as far as AttackReach, the first thing it meets), so yellow
+    // means a hit: a monster (EnemyCombat), or an animal, a tree or a rock (ResourceNode). Without the perk it does
+    // nothing (no extra ray).
+    bool InReach()
+    {
+        if (ToolRules.BowInHand) return false;   // a bow doesn't hit up close: there's no reach to show
+        if (!PerkEffects.KeenEye) return false;
+        if (combat == null && Time.unscaledTime >= nextCombatSearch)
+        {
+            combat = FindFirstObjectByType<PlayerCombat>();
+            nextCombatSearch = Time.unscaledTime + 1f;   // not every frame: searching the whole scene is slow
+        }
+        if (combat == null) return false;
+
+        Camera from = combat.playerCamera != null ? combat.playerCamera : cam;
+        if (from == null) return false;
+        Ray ray = from.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));   // the attack's ray: the screen's middle
+        if (!Physics.Raycast(ray, out RaycastHit hit, combat.AttackReach)) return false;   // the same test as the attack
+        return hit.collider.GetComponentInParent<EnemyCombat>() != null ||
+               hit.collider.GetComponentInParent<ResourceNode>() != null;
     }
 
     // True if the object (or a parent) is an AutoPickup item (see its Item Data) within Auto Range of the player.

@@ -1,6 +1,6 @@
 /*
 First Date: 12/11/2026
-Date: 12/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: The top object of a wild animal, e.g. DeerNode. Tools > World > Build Wild Animal puts it there, set up.
         By hand: drag it onto the animal's top object (the one with its collider). The Animator on a child needs a
@@ -9,11 +9,12 @@ Unity Editor: Select an animal to see its circles in the Scene view: yellow = wh
               player can come before it runs, green = how far away the player must be before it calms down.
               Testing: Play and walk up to a deer: it runs away. Hit it: it keeps running for a while even if you stop.
 Purpose: A shy wild animal. It grazes and walks around its home, and runs away when the player comes near or hurts it.
-         It stays on the ground (follows the terrain), steers around trees, rocks, buildings and steep slopes, and
-         plays idle / walk / run on its Animator by itself. Once the player is far enough away it calms down and that
-         spot becomes its new home. It moves itself (no physics), so walls never get pushed and it never tips over.
-Requirement: WildAnimal.cs o-> Animator (Unity), ResourceNode.cs, PlayerController.cs, PlayerHealth.cs
-             WildAnimal.cs <-x DeathEffectBuilder.cs, WildAnimalBuilder.cs, WorldSpawnSetup.cs
+         It stays on the ground (follows the terrain), steers around trees, rocks, buildings and steep slopes, stays
+         inside the world's barrier (WorldBarrier), and plays idle / walk / run on its Animator by itself. Once the
+         player is far enough away it calms down and that spot becomes its new home. It moves itself (no physics), so
+         walls never get pushed and it never tips over.
+Requirement: WildAnimal.cs o-> Animator (Unity), ResourceNode.cs, PlayerController.cs, PlayerHealth.cs, WorldBarrier.cs
+             WildAnimal.cs <-x DeathEffectBuilder.cs, NewWorldBuilder.cs, WildAnimalBuilder.cs, WorldSpawnSetup.cs
 */
 
 using UnityEngine;
@@ -277,6 +278,8 @@ public class WildAnimal : MonoBehaviour
             return false;
         }
 
+        if (!WorldBarrier.Inside(transform.position + way * distance, 1f)) return false;   // the edge of the world (barrier)
+
         Vector3 ahead = transform.position + way * Mathf.Min(distance, 2f);
         return Ground(ahead, out _, out Vector3 normal) && Vector3.Angle(normal, Vector3.up) <= maxSlope;
     }
@@ -297,14 +300,14 @@ public class WildAnimal : MonoBehaviour
         Vector3 forward = Flat(transform.forward).normalized;
         float facing = heading.sqrMagnitude > 0.0001f ? Mathf.Clamp01(Vector3.Dot(forward, heading)) : 1f;
         Vector3 next = transform.position + forward * (speed * Mathf.Max(0.2f, facing) * dt);
-        if (Ground(next, out float y, out _))
+        if (WorldBarrier.Inside(next) && Ground(next, out float y, out _))
         {
             next.y = y;
             transform.position = next;
         }
         else
         {
-            speed = 0f;   // no ground there (the edge of the world): stop
+            speed = 0f;   // past the barrier, or no ground there (the edge of the world): stop
         }
     }
 

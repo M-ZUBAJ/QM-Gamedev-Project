@@ -28,6 +28,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: TreeNode Broadleaf
       objectReference: {fileID: 0}
+    - target: {fileID: 4389488909739055060, guid: 586d1bc6a3cce44eb9b011b8d05ebd30, type: 3}
+      propertyPath: closedMeshes.Array.data[0].open
+      value: 
+      objectReference: {fileID: 4300000, guid: 10155e34e1176c3489486fbf0cef1736, type: 3}
+    - target: {fileID: 4389488909739055060, guid: 586d1bc6a3cce44eb9b011b8d05ebd30, type: 3}
+      propertyPath: closedMeshes.Array.data[0].closed
+      value: 
+      objectReference: {fileID: 4300000, guid: d6eb7552c3fd28b43b78446ab5e74aa6, type: 2}
     - target: {fileID: 5094321629820696536, guid: 586d1bc6a3cce44eb9b011b8d05ebd30, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.6103554

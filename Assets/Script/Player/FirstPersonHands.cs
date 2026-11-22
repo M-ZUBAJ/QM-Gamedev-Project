@@ -1,6 +1,6 @@
 /*
 First Date: 12/11/2026
-Date: 13/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: A copy of the player's character under the Main Camera, on the same object as that copy's Animator.
         Tools > Player > Add First Person Hands puts one there, already set up.
@@ -19,10 +19,18 @@ Purpose: Minecraft-style hands for the first-person view. A copy of the player's
          They show in first person while alive. A selected tool sits in the right fist (ToolInHand, on the same copy)
          and swings with it (PlayerAnimator.Play: Attack for a sword or axe, Mine for a pickaxe); while a tool is in the
          fist the hands sit lower (Tool Lower, a share of the screen), so it doesn't cover the view.
-Requirement: FirstPersonHands.cs x-> Animator (Unity)
-             FirstPersonHands.cs o-> PlayerAnimator.cs, CameraController.cs, PlayerInventory.cs, PlayerHealth.cs, PlayerController.cs, Camera (Unity)
-             FirstPersonHands.cs <-x FirstPersonArmsHelper.cs, FirstPersonHandsBuilder.cs, TierToolBuilder.cs
-             FirstPersonHands.cs <-o ToolInHand.cs
+         When a hit bounces off something (a turtle's shell: ShellDefense calls Recoil) the hands jump back toward the
+         camera and ease back (Recoil Distance / Recoil Seconds), so the player feels it didn't go in.
+         A bow (BowShooter): the hands show where the character really holds them, the archer's own view (Fists On
+         Screen and the tool drop fade out, Aim Blend Speed): while it's only held, up in front and ready (the hands
+         controller's BowIdle, made by Tools > Player > Set Up Player Animations; this script sets its BowHeld bool);
+         while it's drawn, the bow in front and the arrow at the cheek. A hands controller without BowIdle (made before
+         22/11/2026) hides the hands while the bow is only held, as before. The draw plays as fast as the bow in the
+         hand draws (its BowDrawSpeed = BowShooter.DrawSpeed), like the body's.
+Requirement: FirstPersonHands.cs x-> ToolRules.cs, Animator (Unity)
+             FirstPersonHands.cs o-> PlayerAnimator.cs, CameraController.cs, PlayerInventory.cs, PlayerHealth.cs, PlayerController.cs, BowShooter.cs, Camera (Unity)
+             FirstPersonHands.cs <-x ArmorBuilder.cs, FirstPersonArmsHelper.cs, FirstPersonHandsBuilder.cs, TierToolBuilder.cs
+             FirstPersonHands.cs <-o ArmorLook.cs, GearPreview.cs, HeldItemView.cs, ShellDefense.cs, ToolInHand.cs
 */
 
 using System.Collections.Generic;
@@ -69,6 +77,25 @@ public class FirstPersonHands : MonoBehaviour
     [Tooltip("How fast they bob while walking (steps).")]
     [SerializeField] float bobSpeed = 9f;
 
+    [Range(0f, 0.3f)]
+    [Tooltip("How far the hands jump back toward you when a hit bounces off (a turtle's shell), in meters. 0 = no jump.")]
+    [SerializeField] float recoilDistance = 0.1f;
+
+    [Range(0.05f, 1f)]
+    [Tooltip("Seconds they take to come back after jumping back.")]
+    [SerializeField] float recoilSeconds = 0.3f;
+
+    static float recoilStart = -100f;   // Time.time of the last bounce (Recoil)
+
+    [Header("Bow")]
+    [Range(0.5f, 20f)]
+    [Tooltip("How fast the hands move from where Fists On Screen puts them to where the character really holds them, " +
+             "while a bow is in the hand (the archer's own view). 8 = in about an eighth of a second.")]
+    [SerializeField] float aimBlendSpeed = 8f;
+
+    static readonly int BowHeldHash = Animator.StringToHash(PlayerAnimator.BowHeldName);   // the hands controller's bool
+    static readonly int BowDrawSpeedHash = Animator.StringToHash(PlayerAnimator.BowDrawSpeedName);   // how fast its draw plays
+
     [Header("Drawing on top")]
     [Range(8, 31)]
     [Tooltip("A layer only the hands use (30 is free; 31 is IconCapture's). The main camera stops drawing it and a " +
@@ -100,6 +127,7 @@ public class FirstPersonHands : MonoBehaviour
     float bobWeight;       // 0 = standing still, 1 = walking (eases between them)
     float toolWeight;      // 0 = empty hands (at Fists On Screen), 1 = a tool in the fist (Tool Lower further down)
     float fistsDepth = 0.4f;   // how far in front of the camera the fists are, in meters (measured by FrameFists)
+    float aimWeight;       // 0 = placed by Fists On Screen, 1 = where the character holds them (a bow)
 
     // ===== Unity messages (Unity calls these) =====
 
@@ -176,18 +204,44 @@ public class FirstPersonHands : MonoBehaviour
     // LateUpdate: after the camera has switched view and moved this frame.
     void LateUpdate()
     {
+        bool alive = !(health != null && health.IsDead);
+        if (HasReadyPose) animator.SetBool(BowHeldHash, ToolRules.BowInHand && alive);   // the bow up, ready (set while hidden too)
+        if (parameters.Contains(BowDrawSpeedHash)) animator.SetFloat(BowDrawSpeedHash, BowShooter.DrawSpeed);   // a faster bow draws faster
         bool want = cameraControl != null && cameraControl.IsFirstPerson
-                    && !(health != null && health.IsDead)
-                    && !HoldingATool();
-        if (want != shown) Show(want);
+                    && alive
+                    && !HoldingATool()
+                    && !BowLowered();
+        if (want != shown)
+        {
+            Show(want);
+            aimWeight = want && ArchersView() ? 1f : 0f;   // they appear already in the bow's pose (no slide from the guard), or in it
+        }
         if (!shown) return;
 
         if (handsCamera != null) handsCamera.fieldOfView = cam.fieldOfView;   // follows the main camera if it ever zooms
         if (cam != null && !Mathf.Approximately(cam.aspect, framedAspect)) needsFraming = true;   // the window was resized
-        if (needsFraming) FrameFists();
+        aimWeight = Mathf.MoveTowards(aimWeight, ArchersView() ? 1f : 0f, Time.deltaTime * aimBlendSpeed);
+        if (needsFraming && aimWeight <= 0f) FrameFists();   // measured in the guard, never in a bow's pose
         toolWeight = Mathf.MoveTowards(toolWeight, ToolOut() ? 1f : 0f, Time.deltaTime * 5f);
         float drop = ToolDrop() * Mathf.SmoothStep(0f, 1f, toolWeight);   // eases in and out, no jerk
-        transform.localPosition = eyesAt + framing + nudge + Bob() + Vector3.down * drop;
+        // A bow: where the character itself holds the hands (the head on the camera, nothing added), easing over.
+        float placed = 1f - Mathf.SmoothStep(0f, 1f, aimWeight);
+        transform.localPosition = eyesAt + nudge + (framing + Bob() + Vector3.down * drop) * placed + RecoilOffset();
+    }
+
+    // A hit bounced off (a turtle's shell: ShellDefense calls this): the first-person hands jump back and ease in again.
+    public static void Recoil()
+    {
+        recoilStart = Time.time;
+    }
+
+    // Back toward the camera and a little down, at once, then easing back to nothing over Recoil Seconds.
+    Vector3 RecoilOffset()
+    {
+        float since = Time.time - recoilStart;
+        if (since < 0f || since >= recoilSeconds || recoilSeconds <= 0f) return Vector3.zero;   // (a new Play restarts the clock)
+        float k = 1f - since / recoilSeconds;
+        return new Vector3(0f, -0.4f, -1f) * (recoilDistance * k * k);
     }
 
     // ===== My methods =====
@@ -201,6 +255,10 @@ public class FirstPersonHands : MonoBehaviour
         }
         return false;
     }
+
+    // Does this copy draw the part with this name (an arm, a hand, a glove)? ArmorLook asks, so it doesn't switch off
+    // the arms here because the body's shirt covers them: this copy never draws the shirt.
+    public bool Draws(string partName) => IsHandPart(partName, shownParts);
 
     void Show(bool show)
     {
@@ -296,9 +354,28 @@ public class FirstPersonHands : MonoBehaviour
         return false;
     }
 
-    // PlayerAnimator.Play was called (e.g. Punch): play the same action, if this controller has it.
+    // True while a bow is in the hand but not drawn and the hands controller has no ready pose (BowIdle, from Tools >
+    // Player > Set Up Player Animations): the hands hide then, as before (see Purpose).
+    bool BowLowered()
+    {
+        return ToolRules.BowInHand && !BowShooter.InAimPose && !HasReadyPose;
+    }
+
+    // The hands controller has the bow's ready pose (its BowHeld bool).
+    bool HasReadyPose => parameters.Contains(BowHeldHash);
+
+    // The archer's own view (the hands where the character holds them): drawing or just shot, or a bow held up ready.
+    bool ArchersView() => BowShooter.InAimPose || (HasReadyPose && ToolRules.BowInHand);
+
+    // PlayerAnimator.Play was called (e.g. Punch): play the same action, if this controller has it. A bow action takes
+    // back the other bow triggers still waiting, like the body's (PlayerAnimator.TakesBack).
     void OnAction(PlayerAction action)
     {
+        foreach (PlayerAction old in PlayerAnimator.TakesBack(action))
+        {
+            int waiting = Animator.StringToHash(old.ToString());
+            if (parameters.Contains(waiting)) animator.ResetTrigger(waiting);
+        }
         int trigger = Animator.StringToHash(action.ToString());
         if (parameters.Contains(trigger)) animator.SetTrigger(trigger);
     }

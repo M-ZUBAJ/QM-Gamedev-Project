@@ -1,6 +1,6 @@
 /*
 First Date: 13/11/2026
-Date: 13/11/2026
+Date: 20/11/2026
 Author: Tony
 Use by: The top object of a creature that can die, e.g. DeerNode or SlimeEnemy. Tools > Effects > Build Death Particles
         puts it on every animal and enemy made by Tony's tools (and Build Wild Animal / Build Monster Enemy add it too).
@@ -15,9 +15,12 @@ Purpose: What's left when a creature dies, so you can tell at a glance what you 
          - A creature with a death animation (the slime) calls Dissolve (from EnemyAnimator.PlayDeath): it falls,
            then particles come off its body's surface faster and faster while the body shrinks into them, and a last
            pop ends it as the animation ends.
+         - A night enemy still around when day comes burns away (Vanish, from EnemyAnimator.Vanish): the same, where
+           it stands, in orange embers that float up, like burning in the sunlight. It wasn't killed, so no death
+           color. The desert's turtle leaves at night the same way, as falling sand (its own Vanish Color and Rise).
          A creature removed without being killed (an animal left far behind, the scene closing) shows nothing.
 Requirement: DeathEffect.cs o-> ResourceNode.cs, EnemyCombat.cs, EnemyAttack.cs
-             DeathEffect.cs <-x DeathEffectBuilder.cs
+             DeathEffect.cs <-x DeathEffectBuilder.cs, EnemyBuilder.cs, NightMonsterBuilder.cs
              DeathEffect.cs <-o EnemyAnimator.cs
 */
 
@@ -69,6 +72,19 @@ public class DeathEffect : MonoBehaviour
     [Tooltip("Particles in the last pop, when the body is gone.")]
     [Min(0)]
     [SerializeField] int endBurst = 120;
+
+    [Header("Burning away when day comes (night enemies)")]
+    [Tooltip("The color a night enemy burns away in when day comes (Marko's EnemySpawner removes them at dawn).")]
+    [SerializeField] Color vanishColor = new Color(1f, 0.5f, 0.08f);
+
+    [Tooltip("Seconds it takes to burn away: a short glow first, then the body shrinks into the embers.")]
+    [Min(0.2f)]
+    [SerializeField] float vanishSeconds = 1.6f;
+
+    [Tooltip("How fast the particles float up (embers); 0 = they drift like the death particles; below 0 = they fall " +
+             "(sand: the desert's turtle).")]
+    [Range(-1f, 2f)]
+    [SerializeField] float vanishRise = 0.35f;
 
     ResourceNode node;           // Turki's: the deer's health (can be missing)
     EnemyCombat combat;          // Marko's: an enemy's health (can be missing)
@@ -122,7 +138,7 @@ public class DeathEffect : MonoBehaviour
             return;
         }
         if (bones.Count == 0) MeasureBody();
-        ParticleSystem ps = NewParticles();
+        ParticleSystem ps = NewParticles(DeathColor, 0f);
         if (ps != null) BurstInto(ps);
     }
 
@@ -133,7 +149,7 @@ public class DeathEffect : MonoBehaviour
     {
         if (played) return;
         played = true;
-        ParticleSystem ps = NewParticles();
+        ParticleSystem ps = NewParticles(DeathColor, 0f);
         if (ps != null) BurstInto(ps);
     }
 
@@ -144,13 +160,28 @@ public class DeathEffect : MonoBehaviour
         float takes = dissolveStart + dissolveSeconds + 0.1f;
         if (played) return takes;
         played = true;
-        StartCoroutine(Dissolving());
+        StartCoroutine(Dissolving(dissolveStart, dissolveSeconds, DeathColor, 0.35f, 0f));
         return takes;
     }
 
-    IEnumerator Dissolving()
+    // The body burns away where it stands into orange embers that float up (a night enemy when day comes:
+    // EnemyAnimator.Vanish calls this). Returns the seconds until the body is gone, so it can be removed then.
+    public float Vanish()
     {
-        ParticleSystem ps = NewParticles();
+        float takes = vanishSeconds + 0.1f;
+        if (played) return takes;
+        played = true;
+        // A quarter of the time it only glows (a trickle of embers), then it shrinks into them toward its middle.
+        StartCoroutine(Dissolving(vanishSeconds * 0.25f, vanishSeconds * 0.75f, vanishColor, 0.5f, vanishRise));
+        return takes;
+    }
+
+    // Particles come off the body faster and faster while it shrinks into them: a trickle for "startDelay" seconds,
+    // then "seconds" of shrinking toward a point "shrinkHeight" x its height above its feet. "rise" = how fast the
+    // particles float up (0 = the particles' own drift).
+    IEnumerator Dissolving(float startDelay, float seconds, Color color, float shrinkHeight, float rise)
+    {
+        ParticleSystem ps = NewParticles(color, rise);
         if (ps == null) yield break;
 
         // From the body's real surface (it follows the death animation), if Unity may read the mesh; else from its bones.
@@ -171,17 +202,17 @@ public class DeathEffect : MonoBehaviour
         Renderer[] looks = GetComponentsInChildren<Renderer>();
         Vector3 startScale = transform.localScale;
         Vector3 startPosition = transform.position;
-        Vector3 shrinkTo = startPosition + Vector3.up * size.y * 0.35f;   // a dead body lies low: shrink toward its lower middle
+        Vector3 shrinkTo = startPosition + Vector3.up * size.y * shrinkHeight;   // a dead body lies low (0.35), a standing one doesn't (0.5)
         float started = Time.time;
         float owed = 0f;   // part-particles carried to the next frame, so the rate is right at any frame rate
 
-        while (Time.time - started < dissolveStart + dissolveSeconds)
+        while (Time.time - started < startDelay + seconds)
         {
             float time = Time.time - started;
-            float k = Mathf.Clamp01((time - dissolveStart) / dissolveSeconds);   // 0 = whole body, 1 = all particles
+            float k = Mathf.Clamp01((time - startDelay) / seconds);   // 0 = whole body, 1 = all particles
 
-            // A trickle while it falls, then more and more.
-            float rate = time < dissolveStart ? dissolveRate * 0.08f : Mathf.Lerp(dissolveRate * 0.3f, dissolveRate, k);
+            // A trickle first (while it falls, or glows), then more and more.
+            float rate = time < startDelay ? dissolveRate * 0.08f : Mathf.Lerp(dissolveRate * 0.3f, dissolveRate, k);
             owed += rate * Time.deltaTime;
             int count = (int)owed;
             owed -= count;
@@ -202,8 +233,9 @@ public class DeathEffect : MonoBehaviour
         RemoveLater(ps);
     }
 
-    // A copy of the particles at the body, in the death color. Not a child: it stays when the body is removed.
-    ParticleSystem NewParticles()
+    // A copy of the particles at the body, in this color (deep to light). "rise" > 0 = they float up (embers), 0 = their
+    // own drift, < 0 = they fall (sand). Not a child: it stays when the body is removed.
+    ParticleSystem NewParticles(Color color, float rise)
     {
         if (particles == null)
         {
@@ -212,8 +244,8 @@ public class DeathEffect : MonoBehaviour
         }
         ParticleSystem ps = Instantiate(particles, BodyCenter(), Quaternion.identity);
         ParticleSystem.MainModule main = ps.main;
-        Color color = DeathColor;
         main.startColor = new ParticleSystem.MinMaxGradient(color, Color.Lerp(color, Color.white, 0.45f));   // a mix of deep and light
+        if (!Mathf.Approximately(rise, 0f)) main.gravityModifier = -rise;   // only this copy changes, not the prefab
         ps.Play();   // its own emission is off: only Emit makes particles
         return ps;
     }

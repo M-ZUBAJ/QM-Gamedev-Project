@@ -279,5 +279,8 @@ MonoBehaviour:
   hideWhileHolding: []
   bobAmount: 0.015
   bobSpeed: 9
+  recoilDistance: 0.1
+  recoilSeconds: 0.3
+  aimBlendSpeed: 8
   handsLayer: 30
   handsNearClip: 0.01

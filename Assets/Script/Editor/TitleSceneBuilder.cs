@@ -1,6 +1,6 @@
 /*
 First Date: 7/11/2026
-Date: 9/11/2026
+Date: 22/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Menu Tools > UI > Build Main Title Scene. It asks to save the open scene first, and asks before replacing
@@ -9,7 +9,8 @@ Unity Editor: Menu Tools > UI > Build Main Title Scene. It asks to save the open
                 Assets/Prefabs/UI/Title/TitleCanvas.prefab (the menu)
                 Assets/Config/NewGame/NewGameDefaults.asset (the game as it is now, read from GameScene)
                 Assets/UI/Title/*.png + TitleText.mat (the soft shapes and the glowing title; existing files are kept)
-              It builds a brand new scene, so Undo doesn't apply: run it again to rebuild.
+              It builds a brand new scene, so Undo doesn't apply: run it again to rebuild. A rebuild keeps the
+              Version text typed into the old title screen (e.g. v1.1).
               To change texts, sizes or colors for every future build, edit Fields below.
               Needs TMP Essentials (it tells you if they are missing). Guide: Docs/Main Title Setup.md
 Purpose: Builds the whole title screen in one click:
@@ -17,7 +18,24 @@ Purpose: Builds the whole title screen in one click:
            BackgroundCanvas (TitleBackground: the cycling sky and stars) + Embers (a Particle System rising in front)
            TitleCanvas (TitleMenu) > Vignette, Pages > TitlePage / NewGamePage (NewGamePanel) / SettingsPage,
                                      FX > Shockwave, IntroBlack
-Requirement: TitleSceneBuilder.cs x-> UIBuildHelper.cs, MenuOrder.cs, NewGameDefaultsSync.cs, NewGameDefaults.cs, UIFXSprites.cs, UITween.cs, TitleMenu.cs, TitleBackground.cs, TitleTextFX.cs, ButtonFX.cs, CascadeIn.cs, PulseFX.cs, TabFX.cs, TabGroup.cs, ChoiceRow.cs, StepperRow.cs, TogglePop.cs, DropdownUnfold.cs, NewGamePanel.cs, KeyBindingMenu.cs, IncomingMessage.cs, KeyBindings.cs
+         The New Game page's WORLD section starts with Map: Old world (GameScene) / New world (ProceduralGenerateScene,
+         a new random world every game: Tools > World > Build New World Scene makes it).
+         Its TESTING section: Start with all tools, Start with all armor, and Old chests / New chests (the two loot
+         box systems, GameRules > New Chests; New is the default).
+         Its GOAL section has Days to win and Win at side by side in one row (GoalPairRow, since 22/11/2026), which
+         leaves room for Starting coins under DIFFICULTY (CoinsRow: - / + change it by 10, or click the number and type
+         one; 0 - 9999, the default read from GameScene's PlayerCoins > Starting Coins, 20).
+         Under the Difficulty buttons, DifficultyInfo explains the picked level in two lines (since 22/11/2026: what it
+         means, then the seconds between night monsters on each night). To make room, the New Game rows are 48 px tall
+         (were 50) and its section titles 32 (were 34).
+         Settings: KEY BINDINGS (KeyBindingMenu), CONTROLS (ControlsMenu: Mouse sensitivity 1 - 10 on a SliderRow,
+         Invert mouse) and DISPLAY (DisplayMenu: Fullscreen, and a Damage numbers panel: Show damage numbers with its
+         child Only monsters and animals, locked while it's off, and sample numbers); since 21/11/2026, before they
+         were "coming soon". AUDIO is still "coming soon".
+         MakeSettingsTabs (the tab bar and pages) and its small helpers are shared with PauseMenuBuilder, so the Esc
+         pause menu's KEY BINDINGS and CONTROLS look and work the same.
+Requirement: TitleSceneBuilder.cs x-> UIBuildHelper.cs, MenuOrder.cs, SliderRow.cs, ControlsMenu.cs, MouseSettings.cs, DisplayMenu.cs, NewGameDefaultsSync.cs, NewGameDefaults.cs, UIFXSprites.cs, UITween.cs, TitleMenu.cs, TitleBackground.cs, TitleTextFX.cs, ButtonFX.cs, CascadeIn.cs, PulseFX.cs, TabFX.cs, TabGroup.cs, ChoiceRow.cs, StepperRow.cs, TogglePop.cs, DropdownUnfold.cs, NewGamePanel.cs, KeyBindingMenu.cs, IncomingMessage.cs, KeyBindings.cs
+             TitleSceneBuilder.cs <-x PauseMenuBuilder.cs
 */
 
 using System.Collections.Generic;
@@ -42,13 +60,14 @@ public static class TitleSceneBuilder
     const string Credits = "Tony  ·  Turki  ·  Marko  ·  Sanyam";
 
     // The look: dark see-through boxes, white text, gold for what's picked (the same gold as the coins).
-    static readonly Color Gold = new Color(1f, 0.82f, 0.3f);
-    static readonly Color DarkText = new Color(0.12f, 0.09f, 0.04f);
-    static readonly Color BoxColor = new Color(0.07f, 0.08f, 0.11f, 0.9f);
-    static readonly Color PanelColor = new Color(0f, 0f, 0f, 0.55f);
-    static readonly Color KeyColor = new Color(0.18f, 0.2f, 0.26f, 1f);
-    static readonly Color SoftWhite = new Color(0.86f, 0.87f, 0.92f);
-    static readonly Color Dim = new Color(0.62f, 0.64f, 0.7f);
+    // (internal: PauseMenuBuilder uses the same colors)
+    internal static readonly Color Gold = new Color(1f, 0.82f, 0.3f);
+    internal static readonly Color DarkText = new Color(0.12f, 0.09f, 0.04f);
+    internal static readonly Color BoxColor = new Color(0.07f, 0.08f, 0.11f, 0.9f);
+    internal static readonly Color PanelColor = new Color(0f, 0f, 0f, 0.55f);
+    internal static readonly Color KeyColor = new Color(0.18f, 0.2f, 0.26f, 1f);
+    internal static readonly Color SoftWhite = new Color(0.86f, 0.87f, 0.92f);
+    internal static readonly Color Dim = new Color(0.62f, 0.64f, 0.7f);
     static readonly Color[] DifficultyColors =
     {
         new Color(0.36f, 0.85f, 0.46f),   // Peaceful: green
@@ -60,12 +79,19 @@ public static class TitleSceneBuilder
     // Sizes (pixels on a 1920 x 1080 screen).
     const float RowLabelX = 40f;       // where row names start (the changed-dot sits left of them)
     const float ControlX = 380f;       // where the row's buttons / dropdowns start
-    const float RowHeight = 50f;
+    const float RowHeight = 48f;       // a New Game row (50 until 22/11/2026: 2 px each went to the DifficultyInfo)
+    const float SectionHeight = 32f;   // the New Game page's section titles GOAL, WORLD... (34 on the settings pages)
+    const float InfoHeight = 54f;      // DifficultyInfo: two lines (NewGamePanel shows the second from 45 px up)
+    const float HalfControlX = 230f;   // Days to win's - button, in the GOAL row's left half
+    const float WinAtControlX = 150f;  // Win at's dropdown, in the GOAL row's right half
+    const int MaxStartCoins = 9999;    // Starting coins: 0 - 9999 (four digits to type)
+    const int CoinStep = 10;           // - and + change Starting coins by 10
 
     // The art for this build (made or loaded in MakeArt).
     static Sprite gradientSprite, vignetteSprite, glowSprite, ringSprite;
     static Texture2D stripesTexture;
     static Material titleMaterial;
+    static string keptVersion;   // the old title screen's Version text, kept by a rebuild (null = none)
 
     // Unity's built-in UI pictures.
     static Sprite Builtin(string file) => AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/" + file);
@@ -80,6 +106,7 @@ public static class TitleSceneBuilder
                 "MainTitleScene already exists. Build a new one and replace it (and TitleCanvas.prefab)?",
                 "Replace", "Cancel")) return;
         if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;   // the open scene closes next
+        keptVersion = OldVersionText();   // e.g. "v1.1" typed in by hand: the new title screen shows it too
 
         ReadDefaults(out string keyBindingsJson);   // while GameScene can still be opened
 
@@ -110,6 +137,34 @@ public static class TitleSceneBuilder
     // ===== My methods =====
 
     // ----- Files: art, defaults, build settings -----
+
+    // The Version text of the title screen being replaced (e.g. "v1.1" typed in by hand), so a rebuild keeps it.
+    // null = there was none: the new one shows "v" + Project Settings > Player > Version.
+    static string OldVersionText()
+    {
+        Scene open = SceneManager.GetActiveScene();
+        if (open.path == ScenePath) return VersionIn(open);
+        if (!File.Exists(ScenePath)) return null;
+
+        Scene old = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Additive);
+        string text = VersionIn(old);
+        EditorSceneManager.CloseScene(old, true);
+        return text;
+    }
+
+    // The text of the "Version" object in a "Footer" in this scene, or null.
+    static string VersionIn(Scene scene)
+    {
+        foreach (GameObject root in scene.GetRootGameObjects())
+        {
+            foreach (TMP_Text text in root.GetComponentsInChildren<TMP_Text>(true))
+            {
+                if (text.name == "Version" && text.transform.parent != null && text.transform.parent.name == "Footer")
+                    return text.text;
+            }
+        }
+        return null;
+    }
 
     static void MakeArt()
     {
@@ -374,7 +429,8 @@ public static class TitleSceneBuilder
         f.anchoredPosition = new Vector2(0f, 24f);
         f.sizeDelta = new Vector2(-80f, 50f);   // 40 pixels in from each side
         footer.AddComponent<CanvasGroup>();
-        TextMeshProUGUI version = MakeText(footer.transform, "Version", "v" + Application.version, 26f, Dim, TextAlignmentOptions.Left);
+        string versionText = !string.IsNullOrEmpty(keptVersion) ? keptVersion : "v" + Application.version;
+        TextMeshProUGUI version = MakeText(footer.transform, "Version", versionText, 26f, Dim, TextAlignmentOptions.Left);
         Stretch(version.gameObject, 0f, 0f, 0f, 0f);
         TextMeshProUGUI credits = MakeText(footer.transform, "Credits", Credits, 26f, Dim, TextAlignmentOptions.Right);
         Stretch(credits.gameObject, 0f, 0f, 0f, 0f);
@@ -386,7 +442,7 @@ public static class TitleSceneBuilder
         MakeHeader(page, "NEW GAME", true);
 
         GameObject panel = NewUI("Panel", page);
-        Place(panel, new Vector2(0.5f, 0.5f), new Vector2(0f, 10f), new Vector2(1200f, 690f));
+        Place(panel, new Vector2(0.5f, 0.5f), new Vector2(0f, 36f), new Vector2(1200f, 794f));   // room for TESTING and Map
         AddBox(panel).color = PanelColor;
 
         GameObject rows = NewUI("Rows", panel.transform);
@@ -398,36 +454,41 @@ public static class TitleSceneBuilder
         v.childForceExpandHeight = false;
         SetCascade(rows.AddComponent<CascadeIn>(), new Vector2(50f, 0f), 0.035f, 0.4f, UITween.Ease.OutCubic);
 
-        Section(rows.transform, "GOAL");
-        MakeStepperRow(rows.transform, "DaysRow", "Days to win", d.DaysToWin);
-        MakeDropdownRow(rows.transform, "WinAtRow", "Win at");
-        Section(rows.transform, "WORLD");
+        Section(rows.transform, "GOAL", SectionHeight);
+        MakeGoalPairRow(rows.transform, d.DaysToWin);   // Days to win | Win at: one row, so Starting coins fits below
+        Section(rows.transform, "WORLD", SectionHeight);
+        MakeChoiceRow(rows.transform, "WorldRow", "Map", new[] { "Old world", "New world" }, 190f, null, true);
+        WidenInfo(rows.transform.Find("WorldRow"), 260f);   // room for "new random map"
         MakeChoiceRow(rows.transform, "DayLengthRow", "Day length", new[] { "Short", "Normal", "Long" }, 150f, null, true);
         MakeDropdownRow(rows.transform, "StartTimeRow", "Start time");
-        Section(rows.transform, "DIFFICULTY");
+        Section(rows.transform, "DIFFICULTY", SectionHeight);
         MakeChoiceRow(rows.transform, "DifficultyRow", null, new[] { "Peaceful", "Easy", "Normal", "Hard" }, 170f,
                       DifficultyColors, false);
         MakeInfoRow(rows.transform, "DifficultyInfo", "");
-        Section(rows.transform, "RULES");
+        MakeStepperRow(rows.transform, "CoinsRow", "Starting coins", d.StartCoins, 0, MaxStartCoins, CoinStep, true);
+        AddRowHint(rows.transform.Find("CoinsRow"), ControlX + 252f, "or click the number and type one");
+        Section(rows.transform, "RULES", SectionHeight);
         MakeChoiceRow(rows.transform, "DeathRow", "When I die", new[] { "Keep items", "Drop items", "Lose items" }, 190f,
                       null, false);
         MakeToggleRow(rows.transform, "PickupRow", "Pick up dropped items by walking over them");
-        MakeToggleRow(rows.transform, "MessagesRow", "Show \"+3 Wood\" messages");
+        MakeRulesPairRow(rows.transform);   // "+3 Wood" messages | the pause menu pauses the game
+        Section(rows.transform, "TESTING", SectionHeight);
+        MakeTestingRow(rows.transform);
 
         TextMeshProUGUI summary = MakeText(page, "Summary", "Everything is set to the game as it is now.", 30f, SoftWhite,
                                        TextAlignmentOptions.Center);
-        Place(summary.gameObject, new Vector2(0.5f, 0f), new Vector2(0f, 175f), new Vector2(1500f, 44f));
+        Place(summary.gameObject, new Vector2(0.5f, 0f), new Vector2(0f, 155f), new Vector2(1500f, 44f));
 
         // START GAME: a pulsing gold glow behind it, and a Flash inside it for the click.
         Image glow = AddImage(NewUI("StartGlow", page), glowSprite, new Color(Gold.r, Gold.g, Gold.b, 0.55f));
-        Place(glow.gameObject, new Vector2(0.5f, 0f), new Vector2(0f, 90f), new Vector2(760f, 230f));
+        Place(glow.gameObject, new Vector2(0.5f, 0f), new Vector2(0f, 80f), new Vector2(760f, 230f));
         PulseFX pulse = glow.gameObject.AddComponent<PulseFX>();
         Set(pulse, "speed", 0.8f);
         Set(pulse, "growBy", 0.08f);
         Set(pulse, "lowestAlpha", 0.35f);
 
         Button start = MakeButton(page, "StartButton", "START GAME", new Vector2(480f, 96f), 44f, 18, false);
-        Place(start.gameObject, new Vector2(0.5f, 0f), new Vector2(0f, 90f), new Vector2(480f, 96f));
+        Place(start.gameObject, new Vector2(0.5f, 0f), new Vector2(0f, 80f), new Vector2(480f, 96f));
         Image flash = AddBox(NewUI("Flash", start.transform));
         flash.color = new Color(1f, 1f, 1f, 0f);
         flash.raycastTarget = false;
@@ -443,18 +504,29 @@ public static class TitleSceneBuilder
     {
         RectTransform page = MakePage("SettingsPage", parent);
         MakeHeader(page, "SETTINGS", false);
+        MakeSettingsTabs(page, true);
+        page.gameObject.SetActive(false);   // TitleMenu slides it in
+    }
 
-        // The tab bar: four tab buttons side by side, and the gold underline that glides under the open one.
+    // The settings' tab bar and its pages, inside "page": KEY BINDINGS (KeyBindingMenu), CONTROLS (ControlsMenu: mouse
+    // sensitivity and invert), DISPLAY (DisplayMenu: fullscreen, damage numbers) and, with withComingSoon (the title
+    // screen), AUDIO, still "coming soon". The tab bar sits 140 px under the top of the page, the pages (1200 x 700) in
+    // its middle. The Esc pause menu has the same, without the "coming soon" one (PauseMenuBuilder).
+    internal static void MakeSettingsTabs(Transform page, bool withComingSoon)
+    {
+        // The tab bar: the tab buttons side by side, and the gold underline that glides under the open one.
         GameObject bar = NewUI("Tabs", page);
-        Place(bar, new Vector2(0.5f, 1f), new Vector2(0f, -140f), new Vector2(1200f, 64f));
+        Place(bar, new Vector2(0.5f, 1f), new Vector2(0f, -140f), new Vector2(withComingSoon ? 1200f : 1000f, 64f));
         ((RectTransform)bar.transform).pivot = new Vector2(0.5f, 1f);
         HorizontalLayoutGroup h = bar.AddComponent<HorizontalLayoutGroup>();
         h.spacing = 10f;
         h.childControlWidth = h.childControlHeight = true;
         h.childForceExpandWidth = h.childForceExpandHeight = true;
 
-        string[] tabNames = { "KEY BINDINGS", "CONTROLS", "DISPLAY", "AUDIO" };
-        string[] tabObjects = { "KeyBindingsTab", "ControlsTab", "DisplayTab", "AudioTab" };
+        string[] tabNames = withComingSoon ? new[] { "KEY BINDINGS", "CONTROLS", "DISPLAY", "AUDIO" }
+                                           : new[] { "KEY BINDINGS", "CONTROLS", "DISPLAY" };
+        string[] tabObjects = withComingSoon ? new[] { "KeyBindingsTab", "ControlsTab", "DisplayTab", "AudioTab" }
+                                             : new[] { "KeyBindingsTab", "ControlsTab", "DisplayTab" };
         Button[] tabButtons = new Button[tabNames.Length];
         for (int i = 0; i < tabNames.Length; i++) tabButtons[i] = MakeTab(bar.transform, tabObjects[i], tabNames[i]);
 
@@ -464,13 +536,12 @@ public static class TitleSceneBuilder
 
         GameObject holder = NewUI("TabPages", page);
         Place(holder, new Vector2(0.5f, 0.5f), new Vector2(0f, -60f), new Vector2(1200f, 700f));
-        GameObject[] tabPages =
+        List<GameObject> pageList = new List<GameObject>
         {
-            MakeKeyBindingsPage(holder.transform),
-            MakeIncomingPage(holder.transform, "ControlsPage", "Mouse sensitivity, invert mouse and more."),
-            MakeIncomingPage(holder.transform, "DisplayPage", "Fullscreen, quality and more."),
-            MakeIncomingPage(holder.transform, "AudioPage", "Music and sound volume."),
+            MakeKeyBindingsPage(holder.transform), MakeControlsPage(holder.transform), MakeDisplayPage(holder.transform),
         };
+        if (withComingSoon) pageList.Add(MakeIncomingPage(holder.transform, "AudioPage", "Music and sound volume."));
+        GameObject[] tabPages = pageList.ToArray();
 
         TabGroup tabs = bar.AddComponent<TabGroup>();
         SerializedObject so = new SerializedObject(tabs);
@@ -486,8 +557,6 @@ public static class TitleSceneBuilder
         so.FindProperty("normalColor").colorValue = BoxColor;
         so.ApplyModifiedPropertiesWithoutUndo();
         bar.AddComponent<TabFX>();
-
-        page.gameObject.SetActive(false);   // TitleMenu slides it in
     }
 
     static GameObject MakeKeyBindingsPage(Transform parent)
@@ -549,6 +618,282 @@ public static class TitleSceneBuilder
         return page;
     }
 
+    // CONTROLS: the mouse. Mouse sensitivity (a SliderRow, 1 - 10, 5 = the game's normal speed) and Invert mouse (a
+    // tick box), a hint and RESET at the bottom; ControlsMenu shows and saves them (MouseSettings).
+    static GameObject MakeControlsPage(Transform parent)
+    {
+        GameObject page = NewUI("ControlsPage", parent);
+        Stretch(page, 0f, 0f, 0f, 0f);
+
+        GameObject list = NewUI("List", page.transform);
+        Stretch(list, 0f, 0f, 0f, 70f);
+        AddBox(list).color = PanelColor;
+        GameObject content = NewUI("Content", list.transform);
+        Stretch(content, 20f, 14f, 20f, 14f);
+        VerticalLayoutGroup v = content.AddComponent<VerticalLayoutGroup>();
+        v.spacing = 8f;
+        v.childControlWidth = v.childControlHeight = true;
+        v.childForceExpandWidth = true;
+        v.childForceExpandHeight = false;
+        SetCascade(content.AddComponent<CascadeIn>(), new Vector2(50f, 0f), 0.04f, 0.35f, UITween.Ease.OutCubic);
+
+        Section(content.transform, "MOUSE");
+        MakeSliderRow(content.transform, "SensitivityRow", "Mouse sensitivity", MouseSettings.MinSensitivity,
+                      MouseSettings.MaxSensitivity, MouseSettings.DefaultSensitivity);
+        MakeNoteRow(content.transform, "SensitivityNote", "1 = slowest, 10 = fastest. Drag it, or use - and + (half a step).");
+        MakeSettingToggle(content.transform, "InvertRow", "Invert mouse (up / down)", "Moving the mouse up looks down.");
+
+        TextMeshProUGUI hint = MakeText(page.transform, "Hint", "5 = the game's normal speed. Changes work at once and are saved.",
+                                        24f, SoftWhite, TextAlignmentOptions.Left);
+        Place(hint.gameObject, new Vector2(0f, 0f), new Vector2(10f, 14f), new Vector2(880f, 44f));
+        ((RectTransform)hint.transform).pivot = new Vector2(0f, 0f);
+
+        Button reset = MakeButton(page.transform, "ResetControlsButton", "RESET", new Vector2(240f, 56f), 24f, 10, false, false);
+        Place(reset.gameObject, new Vector2(1f, 0f), new Vector2(-126f, 34f), new Vector2(240f, 56f));
+
+        page.AddComponent<ControlsMenu>();
+        page.SetActive(false);   // TabGroup opens it
+        return page;
+    }
+
+    // DISPLAY: Fullscreen (Alt + Enter or F11 too), and the Damage numbers panel: Show damage numbers with, under it and
+    // joined to it by a line, its child Only monsters and animals (DisplayMenu greys it out and locks it while the parent
+    // is off), and sample numbers (normal, critical). A hint and RESET at the bottom.
+    static GameObject MakeDisplayPage(Transform parent)
+    {
+        GameObject page = NewUI("DisplayPage", parent);
+        Stretch(page, 0f, 0f, 0f, 0f);
+
+        GameObject list = NewUI("List", page.transform);
+        Stretch(list, 0f, 0f, 0f, 70f);
+        AddBox(list).color = PanelColor;
+        GameObject content = NewUI("Content", list.transform);
+        Stretch(content, 20f, 14f, 20f, 14f);
+        VerticalLayoutGroup v = content.AddComponent<VerticalLayoutGroup>();
+        v.spacing = 8f;
+        v.childControlWidth = v.childControlHeight = true;
+        v.childForceExpandWidth = true;
+        v.childForceExpandHeight = false;
+        SetCascade(content.AddComponent<CascadeIn>(), new Vector2(50f, 0f), 0.04f, 0.35f, UITween.Ease.OutCubic);
+
+        Section(content.transform, "SCREEN");
+        MakeSettingToggle(content.transform, "FullscreenRow", "Fullscreen", "Alt + Enter or F11 too. In the browser, Esc leaves it.");
+        Section(content.transform, "DAMAGE NUMBERS");
+        MakeDamagePanel(content.transform);
+
+        TextMeshProUGUI hint = MakeText(page.transform, "Hint", "Changes work at once. Damage numbers are saved on this computer.",
+                                        24f, SoftWhite, TextAlignmentOptions.Left);
+        Place(hint.gameObject, new Vector2(0f, 0f), new Vector2(10f, 14f), new Vector2(880f, 44f));
+        ((RectTransform)hint.transform).pivot = new Vector2(0f, 0f);
+
+        Button reset = MakeButton(page.transform, "ResetDisplayButton", "RESET", new Vector2(240f, 56f), 24f, 10, false, false);
+        Place(reset.gameObject, new Vector2(1f, 0f), new Vector2(-126f, 34f), new Vector2(240f, 56f));
+
+        page.AddComponent<DisplayMenu>();
+        page.SetActive(false);   // TabGroup opens it
+        return page;
+    }
+
+    // One framed box for the damage numbers, so it reads as one setting with a part: a gold bar down its left side, the
+    // parent tick box on top, a line from it down and across to the child's tick box (indented under it), and on the
+    // right what the numbers look like. Sizes in pixels from the panel's top left (1160 x 170).
+    static void MakeDamagePanel(Transform parent)
+    {
+        GameObject panel = NewUI("DamagePanel", parent);
+        LayoutElement le = panel.AddComponent<LayoutElement>();
+        le.preferredHeight = le.minHeight = 170f;
+        AddBox(panel).color = new Color(1f, 1f, 1f, 0.06f);
+        Image bar = AddImage(NewUI("GroupBar", panel.transform), null, Gold);   // the gold bar: everything here is one setting
+        RectTransform barRect = (RectTransform)bar.transform;
+        barRect.anchorMin = new Vector2(0f, 0f);
+        barRect.anchorMax = new Vector2(0f, 1f);
+        barRect.pivot = new Vector2(0f, 0.5f);
+        barRect.anchoredPosition = new Vector2(10f, 0f);
+        barRect.sizeDelta = new Vector2(5f, -28f);   // 14 px short of the box's round corners
+
+        // The parent: Show damage numbers. Row 14 - 74 px down; its tick box's middle 54 px from the left, 44 px down.
+        RectTransform top = PanelRow(panel.transform, "DamageRow", 14f, 60f);
+        PanelToggle(top, 54f, 44f, true);
+        TextMeshProUGUI name = MakeText(top, "Label", "Show damage numbers", 26f, Color.white, TextAlignmentOptions.Left);
+        Place(name.gameObject, new Vector2(0f, 0.5f), new Vector2(100f + 200f, 0f), new Vector2(400f, 60f));
+        name.fontStyle = FontStyles.Bold;
+        TextMeshProUGUI info = MakeText(top, "Info", "A number pops up where a hit lands.", 22f, Dim, TextAlignmentOptions.Left);
+        Place(info.gameObject, new Vector2(0f, 0.5f), new Vector2(565f + 200f, 0f), new Vector2(400f, 60f));
+
+        // The child: Only monsters and animals. Row 96 - 152 px down; its tick box indented (middle 128 px from the left,
+        // 124 px down, left side at 108). DisplayMenu fades and locks this whole row (its CanvasGroup) while the parent is off.
+        RectTransform child = PanelRow(panel.transform, "DamageCreaturesRow", 96f, 56f);
+        child.gameObject.AddComponent<CanvasGroup>();
+        // The branch, first so it's behind: from under the parent's tick box (66 px down) to the child's middle, then
+        // across to the child's tick box. It's inside the child's row (positions from the row's top, 96 px down the
+        // panel), so it fades with it.
+        PanelLine(child, "BranchDown", new Vector2(54f, 0f), new Vector2(3f, 60f));          // 66 - 126 px down the panel
+        PanelLine(child, "BranchAcross", new Vector2(80f, -28.5f), new Vector2(54f, 3f));   // 53 - 107 px from the left
+        PanelToggle(child, 128f, 40f, false);
+        TextMeshProUGUI childName = MakeText(child, "Label", "Only monsters and animals", 24f, Color.white, TextAlignmentOptions.Left);
+        Place(childName.gameObject, new Vector2(0f, 0.5f), new Vector2(170f + 190f, 0f), new Vector2(380f, 56f));
+        TextMeshProUGUI note = MakeText(child, "Note", "Off: every hit, trees and rocks too.", 22f, Dim, TextAlignmentOptions.Left);
+        Place(note.gameObject, new Vector2(0f, 0.5f), new Vector2(565f + 200f, 0f), new Vector2(400f, 56f));
+        TextMeshProUGUI locked = MakeText(child, "LockNote", "Turn on Show damage numbers first.", 22f, Gold, TextAlignmentOptions.Left);
+        Place(locked.gameObject, new Vector2(0f, 0.5f), new Vector2(565f + 200f, 0f), new Vector2(400f, 56f));
+        locked.fontStyle = FontStyles.Italic;
+        locked.gameObject.SetActive(false);   // DisplayMenu shows it (instead of the Note) while the child is locked
+
+        // What the numbers look like, on a dark box like the world behind them (the game's colors: DamageNumbers).
+        GameObject preview = NewUI("DamagePreview", panel.transform);
+        Place(preview, new Vector2(1f, 0.5f), new Vector2(-95f, 0f), new Vector2(170f, 150f));
+        AddBox(preview).color = new Color(0f, 0f, 0f, 0.35f);
+        TextMeshProUGUI caption = MakeText(preview.transform, "Caption", "LOOKS LIKE", 16f, Dim, TextAlignmentOptions.Center);
+        Place(caption.gameObject, new Vector2(0.5f, 1f), new Vector2(0f, -15f), new Vector2(170f, 22f));
+        caption.characterSpacing = 4f;
+        TextMeshProUGUI normal = MakeText(preview.transform, "Normal", "12", 32f, Color.white, TextAlignmentOptions.Center);
+        Place(normal.gameObject, new Vector2(0.5f, 1f), new Vector2(0f, -48f), new Vector2(170f, 40f));
+        normal.fontStyle = FontStyles.Bold;
+        TextMeshProUGUI critical = MakeText(preview.transform, "Critical", "<size=45%>CRITICAL</size>\n24!", 40f,
+                                            new Color(1f, 0.38f, 0.12f), TextAlignmentOptions.Center);
+        Place(critical.gameObject, new Vector2(0.5f, 1f), new Vector2(0f, -106f), new Vector2(170f, 76f));
+        critical.fontStyle = FontStyles.Bold;
+    }
+
+    // A row inside the damage panel, its top "fromTop" pixels below the panel's top, the panel's full width.
+    static RectTransform PanelRow(Transform panel, string objectName, float fromTop, float height)
+    {
+        RectTransform row = (RectTransform)NewUI(objectName, panel).transform;
+        row.anchorMin = new Vector2(0f, 1f);
+        row.anchorMax = new Vector2(1f, 1f);
+        row.pivot = new Vector2(0.5f, 1f);
+        row.anchoredPosition = new Vector2(0f, -fromTop);
+        row.sizeDelta = new Vector2(0f, height);
+        return row;
+    }
+
+    // A tick box (TogglePop), its middle "x" pixels from the row's left, "size" pixels square, ticked or not.
+    static void PanelToggle(RectTransform row, float x, float size, bool on)
+    {
+        GameObject go = NewUI("Toggle", row);
+        Place(go, new Vector2(0f, 0.5f), new Vector2(x, 0f), new Vector2(size, size));
+        Image box = AddBox(go);
+        box.color = KeyColor;
+        Image tick = AddImage(NewUI("Checkmark", go.transform), Builtin("Checkmark.psd"), Gold);
+        Stretch(tick.gameObject, 3f, 3f, 3f, 3f);
+        Toggle toggle = go.AddComponent<Toggle>();
+        toggle.targetGraphic = box;
+        toggle.graphic = tick;
+        toggle.isOn = on;
+        go.AddComponent<TogglePop>();
+    }
+
+    // A thin line (the branch joining the child setting to its parent), its middle at "at" from its parent's top left.
+    static void PanelLine(Transform parent, string objectName, Vector2 at, Vector2 size)
+    {
+        Image line = AddImage(NewUI(objectName, parent), null, new Color(Dim.r, Dim.g, Dim.b, 0.8f));
+        Place(line.gameObject, new Vector2(0f, 1f), at, size);
+    }
+
+    // Mouse sensitivity:  the name  [-] [====o====] [+] [5.0]   (SliderRow runs it).
+    static void MakeSliderRow(Transform parent, string objectName, string label, float min, float max, float value)
+    {
+        GameObject row = NewUI(objectName, parent);
+        LayoutElement le = row.AddComponent<LayoutElement>();
+        le.preferredHeight = le.minHeight = 60f;
+
+        TextMeshProUGUI name = MakeText(row.transform, "Label", label, 26f, Color.white, TextAlignmentOptions.Left);
+        Place(name.gameObject, new Vector2(0f, 0.5f), new Vector2(24f + 190f, 0f), new Vector2(380f, 60f));
+
+        Button minus = MakeButton(row.transform, "Minus", "-", new Vector2(56f, 44f), 34f, 6, false, false);
+        Place(minus.gameObject, new Vector2(0f, 0.5f), new Vector2(476f, 0f), new Vector2(56f, 44f));
+
+        Slider slider = MakeSlider(row.transform, "Slider", new Vector2(736f, 0f), new Vector2(440f, 30f));
+        slider.minValue = min;
+        slider.maxValue = max;
+        slider.value = value;
+
+        Button plus = MakeButton(row.transform, "Plus", "+", new Vector2(56f, 44f), 34f, 6, false, false);
+        Place(plus.gameObject, new Vector2(0f, 0.5f), new Vector2(1008f, 0f), new Vector2(56f, 44f));
+
+        GameObject box = NewUI("ValueBox", row.transform);
+        Place(box, new Vector2(0f, 0.5f), new Vector2(1106f, 0f), new Vector2(100f, 44f));
+        AddBox(box).color = KeyColor;
+        TextMeshProUGUI number = MakeText(box.transform, "Value", value.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture),
+                                          30f, Gold, TextAlignmentOptions.Center);
+        Stretch(number.gameObject, 0f, 0f, 0f, 0f);
+        number.fontStyle = FontStyles.Bold;
+
+        SliderRow sliderRow = row.AddComponent<SliderRow>();
+        Set(sliderRow, "min", min);
+        Set(sliderRow, "max", max);
+        Set(sliderRow, "step", 0.5f);
+        Set(sliderRow, "decimals", 1);
+        Set(sliderRow, "value", value);
+    }
+
+    // A Unity slider in the menu's colors: a dark bar, the filled part gold, a white knob (gold under the mouse).
+    static Slider MakeSlider(Transform parent, string objectName, Vector2 center, Vector2 size)
+    {
+        DefaultControls.Resources res = new DefaultControls.Resources
+        {
+            standard = Builtin("UISprite.psd"),
+            background = Builtin("Background.psd"),
+            knob = Builtin("Knob.psd"),
+        };
+        GameObject go = DefaultControls.CreateSlider(res);
+        go.name = objectName;
+        go.transform.SetParent(parent, false);
+        SetLayer(go);
+        Place(go, new Vector2(0f, 0.5f), center, size);
+
+        Image bar = go.transform.Find("Background")?.GetComponent<Image>();
+        if (bar != null) bar.color = KeyColor;
+        Image fill = go.transform.Find("Fill Area/Fill")?.GetComponent<Image>();
+        if (fill != null) fill.color = Gold;
+        RectTransform knob = go.transform.Find("Handle Slide Area/Handle") as RectTransform;
+        if (knob != null) knob.sizeDelta = new Vector2(size.y, 0f);   // round: as wide as the slider is tall
+
+        Slider slider = go.GetComponent<Slider>();
+        ColorBlock colors = slider.colors;
+        colors.highlightedColor = Gold;
+        colors.pressedColor = new Color(Gold.r * 0.85f, Gold.g * 0.85f, Gold.b * 0.85f, 1f);
+        colors.selectedColor = Color.white;
+        slider.colors = colors;
+        return slider;
+    }
+
+    // A small grey line under a setting (what it means).
+    static void MakeNoteRow(Transform parent, string objectName, string text)
+    {
+        GameObject row = NewUI(objectName, parent);
+        LayoutElement le = row.AddComponent<LayoutElement>();
+        le.preferredHeight = le.minHeight = 30f;
+        TextMeshProUGUI note = MakeText(row.transform, "Text", text, 22f, Dim, TextAlignmentOptions.Left);
+        Place(note.gameObject, new Vector2(0f, 0.5f), new Vector2(448f + 340f, 0f), new Vector2(680f, 30f));
+    }
+
+    // [x] Invert mouse: the name, a tick box (TogglePop) and what it does, in the CONTROLS layout.
+    static void MakeSettingToggle(Transform parent, string objectName, string label, string note)
+    {
+        GameObject row = NewUI(objectName, parent);
+        LayoutElement le = row.AddComponent<LayoutElement>();
+        le.preferredHeight = le.minHeight = 60f;
+
+        TextMeshProUGUI name = MakeText(row.transform, "Label", label, 26f, Color.white, TextAlignmentOptions.Left);
+        Place(name.gameObject, new Vector2(0f, 0.5f), new Vector2(24f + 190f, 0f), new Vector2(380f, 60f));
+
+        GameObject go = NewUI("Toggle", row.transform);
+        Place(go, new Vector2(0f, 0.5f), new Vector2(470f, 0f), new Vector2(44f, 44f));
+        Image box = AddBox(go);
+        box.color = KeyColor;
+        Image tick = AddImage(NewUI("Checkmark", go.transform), Builtin("Checkmark.psd"), Gold);
+        Stretch(tick.gameObject, 3f, 3f, 3f, 3f);
+        Toggle toggle = go.AddComponent<Toggle>();
+        toggle.targetGraphic = box;
+        toggle.graphic = tick;
+        toggle.isOn = false;
+        go.AddComponent<TogglePop>();
+
+        TextMeshProUGUI what = MakeText(row.transform, "Note", note, 22f, Dim, TextAlignmentOptions.Left);
+        Place(what.gameObject, new Vector2(0f, 0.5f), new Vector2(520f + 300f, 0f), new Vector2(600f, 60f));
+    }
+
     static GameObject MakeIncomingPage(Transform parent, string objectName, string note)
     {
         GameObject page = NewUI(objectName, parent);
@@ -608,8 +953,8 @@ public static class TitleSceneBuilder
     }
 
     // A menu button: dark box, bold white text, a hidden ">" Arrow, and ButtonFX for the hover / click effects.
-    static Button MakeButton(Transform parent, string objectName, string label, Vector2 size, float fontSize,
-                             int sparks = 14, bool dimOthers = true, bool arrow = true)
+    internal static Button MakeButton(Transform parent, string objectName, string label, Vector2 size, float fontSize,
+                                      int sparks = 14, bool dimOthers = true, bool arrow = true)
     {
         GameObject go = NewUI(objectName, parent);
         ((RectTransform)go.transform).sizeDelta = size;
@@ -661,8 +1006,10 @@ public static class TitleSceneBuilder
         return button;
     }
 
-    // A row in the New Game list: the gold changed-dot, the row's name, and room for its control at ControlX.
-    static RectTransform MakeRow(Transform parent, string objectName, string label, float height = RowHeight)
+    // A row in the New Game list: the gold changed-dot, the row's name (labelWidth pixels of room), and room for its
+    // control at ControlX.
+    static RectTransform MakeRow(Transform parent, string objectName, string label, float height = RowHeight,
+                                 float labelWidth = 330f)
     {
         GameObject row = NewUI(objectName, parent);
         LayoutElement le = row.AddComponent<LayoutElement>();
@@ -674,51 +1021,139 @@ public static class TitleSceneBuilder
         if (label != null)
         {
             TextMeshProUGUI name = MakeText(row.transform, "Label", label, 26f, Color.white, TextAlignmentOptions.Left);
-            Place(name.gameObject, new Vector2(0f, 0.5f), new Vector2(RowLabelX + 165f, 0f), new Vector2(330f, height));
+            Place(name.gameObject, new Vector2(0f, 0.5f), new Vector2(RowLabelX + labelWidth / 2f, 0f), new Vector2(labelWidth, height));
         }
         return (RectTransform)row.transform;
     }
 
-    static void Section(Transform parent, string title)
+    // A gold section title (GOAL, MOUSE...), "height" pixels tall with the words at its bottom.
+    static void Section(Transform parent, string title, float height = 34f)
     {
         GameObject row = NewUI(title.Substring(0, 1) + title.Substring(1).ToLower() + "Header", parent);
         LayoutElement le = row.AddComponent<LayoutElement>();
-        le.preferredHeight = le.minHeight = 34f;
+        le.preferredHeight = le.minHeight = height;
         TextMeshProUGUI text = MakeText(row.transform, "Title", title, 22f, Gold, TextAlignmentOptions.BottomLeft);
         Stretch(text.gameObject, 14f, 0f, 0f, 2f);
         text.fontStyle = FontStyles.Bold;
         text.characterSpacing = 6f;
     }
 
-    // Days to win: [ - ]  5  [ + ]
-    static void MakeStepperRow(Transform parent, string objectName, string label, int value)
+    // Days to win: [ - ]  5  [ + ]. min / max = the numbers allowed, step = how much - and + change it. typing = the
+    // number is a box the player can also click and type into (Starting coins). controlX = where the - button starts,
+    // labelWidth = the room for the row's name (both smaller in a half row).
+    static void MakeStepperRow(Transform parent, string objectName, string label, int value, int min = 1, int max = 30,
+                               int step = 1, bool typing = false, float controlX = ControlX, float labelWidth = 330f)
     {
-        RectTransform row = MakeRow(parent, objectName, label);
+        RectTransform row = MakeRow(parent, objectName, label, RowHeight, labelWidth);
 
         Button minus = MakeButton(row, "Minus", "-", new Vector2(56f, 44f), 34f, 6, false, false);
-        Place(minus.gameObject, new Vector2(0f, 0.5f), new Vector2(ControlX + 28f, 0f), new Vector2(56f, 44f));
+        Place(minus.gameObject, new Vector2(0f, 0.5f), new Vector2(controlX + 28f, 0f), new Vector2(56f, 44f));
 
-        GameObject box = NewUI("ValueBox", row);
-        Place(box, new Vector2(0f, 0.5f), new Vector2(ControlX + 116f, 0f), new Vector2(100f, 44f));
-        AddBox(box).color = KeyColor;
-        box.AddComponent<RectMask2D>();   // the rolling numbers stay inside
-        TextMeshProUGUI number = MakeText(box.transform, "Value", value.ToString(), 32f, Gold, TextAlignmentOptions.Center);
-        Stretch(number.gameObject, 0f, 0f, 0f, 0f);
-        number.fontStyle = FontStyles.Bold;
+        if (typing) MakeNumberBox(row, new Vector2(controlX + 116f, 0f), value, max);
+        else
+        {
+            GameObject box = NewUI("ValueBox", row);
+            Place(box, new Vector2(0f, 0.5f), new Vector2(controlX + 116f, 0f), new Vector2(100f, 44f));
+            AddBox(box).color = KeyColor;
+            box.AddComponent<RectMask2D>();   // the rolling numbers stay inside
+            TextMeshProUGUI number = MakeText(box.transform, "Value", value.ToString(), 32f, Gold, TextAlignmentOptions.Center);
+            Stretch(number.gameObject, 0f, 0f, 0f, 0f);
+            number.fontStyle = FontStyles.Bold;
+        }
 
         Button plus = MakeButton(row, "Plus", "+", new Vector2(56f, 44f), 34f, 6, false, false);
-        Place(plus.gameObject, new Vector2(0f, 0.5f), new Vector2(ControlX + 204f, 0f), new Vector2(56f, 44f));
+        Place(plus.gameObject, new Vector2(0f, 0.5f), new Vector2(controlX + 204f, 0f), new Vector2(56f, 44f));
 
         StepperRow stepper = row.gameObject.AddComponent<StepperRow>();
-        Set(stepper, "min", 1);
-        Set(stepper, "max", 30);
+        Set(stepper, "min", min);
+        Set(stepper, "max", max);
+        Set(stepper, "step", step);
         Set(stepper, "value", value);
     }
 
-    // Win at / Start time: a TextMeshPro dropdown (NewGamePanel fills in its options).
-    static void MakeDropdownRow(Transform parent, string objectName, string label)
+    // The number as a box the player can click and type into: a TextMeshPro Input Field, whole numbers only, at most as
+    // many digits as "max" has. It looks like the other number boxes (dark, gold number) and lights up under the mouse.
+    // StepperRow finds it by itself and keeps a typed number between its Min and Max.
+    static void MakeNumberBox(RectTransform row, Vector2 at, int value, int max)
     {
-        RectTransform row = MakeRow(parent, objectName, label);
+        TMP_DefaultControls.Resources res = new TMP_DefaultControls.Resources
+        {
+            standard = Builtin("UISprite.psd"),
+            inputField = Builtin("InputFieldBackground.psd"),
+        };
+        GameObject go = TMP_DefaultControls.CreateInputField(res);
+        go.name = "ValueBox";
+        go.transform.SetParent(row, false);
+        SetLayer(go);
+        Place(go, new Vector2(0f, 0.5f), at, new Vector2(100f, 44f));
+
+        Image box = go.GetComponent<Image>();
+        box.sprite = Builtin("UISprite.psd");   // the same box as the other numbers, not the white text box picture
+        box.type = Image.Type.Sliced;
+        box.color = KeyColor;
+
+        TMP_InputField input = go.GetComponent<TMP_InputField>();
+        input.contentType = TMP_InputField.ContentType.IntegerNumber;
+        input.characterLimit = max.ToString().Length;
+        input.onFocusSelectAll = true;   // a click selects the number, so typing replaces it
+        input.customCaretColor = true;
+        input.caretColor = Gold;
+        input.caretWidth = 2;
+        input.selectionColor = new Color(Gold.r, Gold.g, Gold.b, 0.4f);
+        ColorBlock colors = input.colors;   // x1.5 = the box's own color; under the mouse / typing: half as bright again
+        colors.normalColor = new Color(0.67f, 0.67f, 0.67f, 1f);
+        colors.highlightedColor = Color.white;
+        colors.selectedColor = Color.white;
+        colors.pressedColor = new Color(0.8f, 0.8f, 0.8f, 1f);
+        colors.colorMultiplier = 1.5f;
+        input.colors = colors;
+
+        RectTransform area = go.transform.Find("Text Area") as RectTransform;
+        if (area != null)   // the whole box's height, so a 32 px number fits
+        {
+            area.offsetMin = new Vector2(6f, 0f);
+            area.offsetMax = new Vector2(-6f, 0f);
+        }
+        TMP_Text text = input.textComponent;
+        text.fontSize = 32f;
+        text.fontStyle = FontStyles.Bold;
+        text.color = Gold;
+        text.alignment = TextAlignmentOptions.Center;
+        text.enableWordWrapping = false;
+        if (input.placeholder is TMP_Text placeholder) placeholder.text = "";   // an empty box gets its number back when typing ends
+        input.text = value.ToString();
+    }
+
+    // A small grey line right of a row's controls ("x" = where it starts), e.g. "or click the number and type one".
+    static void AddRowHint(Transform row, float x, string words)
+    {
+        if (row == null) return;
+        TextMeshProUGUI hint = MakeText(row, "Hint", words, 22f, Dim, TextAlignmentOptions.Left);
+        hint.fontStyle = FontStyles.Italic;
+        Place(hint.gameObject, new Vector2(0f, 0.5f), new Vector2(x + 240f, 0f), new Vector2(480f, 44f));
+    }
+
+    // GOAL: Days to win and Win at side by side, two halves of one row (like the RULES pair), so the panel has room for
+    // Starting coins. NewGamePanel finds DaysRow and WinAtRow by name wherever they are.
+    static void MakeGoalPairRow(Transform parent, int daysToWin)
+    {
+        GameObject pair = NewUI("GoalPairRow", parent);
+        LayoutElement size = pair.AddComponent<LayoutElement>();
+        size.preferredHeight = size.minHeight = RowHeight;
+        HorizontalLayoutGroup h = pair.AddComponent<HorizontalLayoutGroup>();
+        h.spacing = 10f;
+        h.childControlWidth = h.childControlHeight = true;
+        h.childForceExpandWidth = h.childForceExpandHeight = true;   // two equal halves
+        MakeStepperRow(pair.transform, "DaysRow", "Days to win", daysToWin, controlX: HalfControlX,
+                       labelWidth: HalfControlX - RowLabelX - 10f);
+        MakeDropdownRow(pair.transform, "WinAtRow", "Win at", WinAtControlX, 380f, WinAtControlX - RowLabelX - 10f);
+    }
+
+    // Win at / Start time: a TextMeshPro dropdown (NewGamePanel fills in its options), "width" wide from controlX.
+    static void MakeDropdownRow(Transform parent, string objectName, string label, float controlX = ControlX,
+                                float width = 440f, float labelWidth = 330f)
+    {
+        RectTransform row = MakeRow(parent, objectName, label, RowHeight, labelWidth);
 
         TMP_DefaultControls.Resources res = new TMP_DefaultControls.Resources
         {
@@ -734,7 +1169,7 @@ public static class TitleSceneBuilder
         go.name = "Dropdown";
         go.transform.SetParent(row, false);
         SetLayer(go);
-        Place(go, new Vector2(0f, 0.5f), new Vector2(ControlX + 220f, 0f), new Vector2(440f, 44f));
+        Place(go, new Vector2(0f, 0.5f), new Vector2(controlX + width / 2f, 0f), new Vector2(width, 44f));
 
         TMP_Dropdown dropdown = go.GetComponent<TMP_Dropdown>();
         go.GetComponent<Image>().color = KeyColor;
@@ -824,15 +1259,30 @@ public static class TitleSceneBuilder
         }
     }
 
-    // The line under Difficulty ("4 enemies every night, normal hunger").
+    // Makes a choice row's Info text wider, keeping where it starts (left of it are the row's buttons).
+    static void WidenInfo(Transform row, float width)
+    {
+        RectTransform info = row != null ? row.Find("Info") as RectTransform : null;
+        if (info == null) return;
+        float left = info.anchoredPosition.x - info.sizeDelta.x / 2f;
+        info.sizeDelta = new Vector2(width, info.sizeDelta.y);
+        info.anchoredPosition = new Vector2(left + width / 2f, info.anchoredPosition.y);
+    }
+
+    // The two lines under Difficulty (NewGamePanel writes them): what the picked level means in plain words, then the
+    // seconds between night monsters ("A monster every 10 seconds on night 1, every 7 on night 2..."). Its height
+    // (InfoHeight) tells NewGamePanel there's room for the second line. A longer text shrinks to fit (22 down to 16).
     static void MakeInfoRow(Transform parent, string objectName, string text)
     {
         GameObject row = NewUI(objectName, parent);
         LayoutElement le = row.AddComponent<LayoutElement>();
-        le.preferredHeight = le.minHeight = 30f;
+        le.preferredHeight = le.minHeight = InfoHeight;
         TextMeshProUGUI t = row.AddComponent<TextMeshProUGUI>();
         t.text = text;
-        t.fontSize = 24f;
+        t.fontSize = 22f;
+        t.enableAutoSizing = true;   // too long for its box: smaller letters instead of spilling into Starting coins
+        t.fontSizeMin = 16f;
+        t.fontSizeMax = 22f;
         t.color = Dim;
         t.fontStyle = FontStyles.Italic;
         t.alignment = TextAlignmentOptions.Left;
@@ -840,8 +1290,42 @@ public static class TitleSceneBuilder
         t.raycastTarget = false;
     }
 
-    // [x] Pick up dropped items...: a tick box with the row's text right of it.
-    static void MakeToggleRow(Transform parent, string objectName, string label)
+    // TESTING: three parts side by side: the tick boxes all tools (GameRules Tool Test) and all armor (Armor Test), and
+    // Old chests / New chests (GameRules New Chests). Side by side because the panel has no room for another row (its
+    // rows fill it to 2 px).
+    // Two rule tick boxes side by side in one row (the panel's rows are full): Show "+3 Wood" messages, and Pause menu
+    // (Esc) pauses the game (GameRules > Pause Game, on by default).
+    static void MakeRulesPairRow(Transform parent)
+    {
+        GameObject pair = NewUI("RulesPairRow", parent);
+        LayoutElement size = pair.AddComponent<LayoutElement>();
+        size.preferredHeight = size.minHeight = 46f;
+        HorizontalLayoutGroup h = pair.AddComponent<HorizontalLayoutGroup>();
+        h.spacing = 10f;
+        h.childControlWidth = h.childControlHeight = true;
+        h.childForceExpandWidth = h.childForceExpandHeight = true;   // two equal halves
+        MakeToggleRow(pair.transform, "MessagesRow", "Show \"+3 Wood\" messages", 430f);
+        MakeToggleRow(pair.transform, "PauseRow", "Pause menu (Esc) pauses the game", 430f);
+    }
+
+    static void MakeTestingRow(Transform parent)
+    {
+        GameObject testing = NewUI("TestingRow", parent);
+        LayoutElement size = testing.AddComponent<LayoutElement>();
+        size.preferredHeight = size.minHeight = 46f;
+        HorizontalLayoutGroup pair = testing.AddComponent<HorizontalLayoutGroup>();
+        pair.spacing = 10f;
+        pair.childControlWidth = pair.childControlHeight = true;
+        pair.childForceExpandWidth = pair.childForceExpandHeight = true;   // three equal parts
+        MakeToggleRow(testing.transform, "AllToolsRow", "Start with all tools", 280f);
+        MakeToggleRow(testing.transform, "ArmorTestRow", "Start with all armor", 280f);
+        MakeChoiceRow(testing.transform, "ChestRow", null, new[] { "Old chests", "New chests" }, 150f, null, false);
+        LayoutElement chestSize = testing.transform.Find("ChestRow").GetComponent<LayoutElement>();
+        chestSize.preferredHeight = chestSize.minHeight = 46f;   // as tall as the tick boxes' parts
+    }
+
+    // [x] Pick up dropped items...: a tick box with the row's text right of it ("labelWidth" pixels wide).
+    static void MakeToggleRow(Transform parent, string objectName, string label, float labelWidth = 800f)
     {
         RectTransform row = MakeRow(parent, objectName, null, 46f);
 
@@ -859,7 +1343,7 @@ public static class TitleSceneBuilder
         go.AddComponent<TogglePop>();
 
         TextMeshProUGUI text = MakeText(row, "Label", label, 26f, Color.white, TextAlignmentOptions.Left);
-        Place(text.gameObject, new Vector2(0f, 0.5f), new Vector2(RowLabelX + 60f + 400f, 0f), new Vector2(800f, 46f));
+        Place(text.gameObject, new Vector2(0f, 0.5f), new Vector2(RowLabelX + 60f + labelWidth / 2f, 0f), new Vector2(labelWidth, 46f));
     }
 
     // ----- Key binding templates -----
@@ -947,8 +1431,8 @@ public static class TitleSceneBuilder
 
     // ----- Small helpers -----
 
-    static TextMeshProUGUI MakeText(Transform parent, string objectName, string text, float size, Color color,
-                                TextAlignmentOptions alignment)
+    internal static TextMeshProUGUI MakeText(Transform parent, string objectName, string text, float size, Color color,
+                                             TextAlignmentOptions alignment)
     {
         TextMeshProUGUI t = AddText(NewUI(objectName, parent), text, size, alignment);
         t.color = color;
@@ -956,7 +1440,7 @@ public static class TitleSceneBuilder
         return t;
     }
 
-    static Image AddImage(GameObject go, Sprite sprite, Color color)
+    internal static Image AddImage(GameObject go, Sprite sprite, Color color)
     {
         Image image = go.AddComponent<Image>();
         image.sprite = sprite;
@@ -966,7 +1450,7 @@ public static class TitleSceneBuilder
     }
 
     // Anchors a UI object to one point of its parent (0,0 = bottom left, 1,1 = top right) at this position and size.
-    static void Place(GameObject go, Vector2 anchor, Vector2 position, Vector2 size)
+    internal static void Place(GameObject go, Vector2 anchor, Vector2 position, Vector2 size)
     {
         RectTransform rt = (RectTransform)go.transform;
         rt.anchorMin = rt.anchorMax = anchor;
@@ -974,7 +1458,7 @@ public static class TitleSceneBuilder
         rt.sizeDelta = size;
     }
 
-    static void AddScaler(GameObject canvasGo)
+    internal static void AddScaler(GameObject canvasGo)
     {
         CanvasScaler scaler = canvasGo.AddComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
