@@ -23,7 +23,7 @@ Purpose: Makes a monster act like a real enemy: it stands, walks or runs as fast
          It only shows the enemy: Marko's scripts still decide where it goes, when it attacks and its health.
 Requirement: EnemyAnimator.cs o-> EnemyCombat.cs, EnemyMovement.cs, EnemyAttack.cs, PlayerHealth.cs, DeathEffect.cs, Animator (Unity), Rigidbody (Unity)
              EnemyAnimator.cs <-x DeathEffectBuilder.cs, EnemyAttack.cs, EnemyBuilder.cs, EnemyCombat.cs, EnemySpawner.cs, HumanEnemyBuilder.cs
-             EnemyAnimator.cs <-o ArrowProjectile.cs, DesertMonsterSpawner.cs, FlyingEnemy.cs, HumanBrain.cs, NightMonsters.cs, ShellDefense.cs
+             EnemyAnimator.cs <-o ArrowProjectile.cs, BearTrap.cs, DesertMonsterSpawner.cs, EnemyStun.cs, FlyingEnemy.cs, HumanBrain.cs, NightMonsters.cs, ShellDefense.cs
 */
 
 using System.Collections;

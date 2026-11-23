@@ -241,6 +241,7 @@ The inventory's **Crafting** tab (`InventoryCanvas > InventoryWindow > Pages > C
 |---|---|
 | Hurt the player | `health.TakeDamage(10f)` (since 20/11/2026 the armor the player wears makes it smaller: Tony's PlayerArmor; your EnemyAttack needs no change) |
 | Heal the player | `health.Heal(10f)` |
+| Hold one of your monsters still (stunned) | `EnemyStun.Stun(monster.gameObject, 4f, spot)` (Tony's, 23/11/2026; `spot` optional): your EnemyMovement and EnemyAttack are switched off for that time and back on after, its sideways speed stays 0, and a dying monster is just let go. `EnemyStun.IsStunned(monster)` = held right now. Tony's Bear Traps use it (built with B, guide `Docs/Trap Setup.md`); your scripts aren't changed |
 | Is the player dead? | `health.IsDead` (stop attacking a dead player) |
 | Know when the player dies | `health.Died += OnPlayerDied;` (fires once per death) |
 | Know when the player comes back | `player.GetComponent<PlayerRespawn>().Respawned += OnRespawn;` (e.g. despawn enemies) |
@@ -332,7 +333,7 @@ void DropMeat(int amount)
 | Scenes / build order | The game starts at **MainTitleScene** (scene 0 in File > Build Settings), START GAME loads **GameScene** (NEW GAME > Map: Old world) or **ProceduralGenerateScene** (Map: New world). Rebuild the title with **Tools > UI > Build Main Title Scene** (`Docs/Main Title Setup.md`) |
 | The new world (random every game) | Tony's **WorldGenerator** (20/11/2026; **endless** since 21/11/2026) makes a new world in `ProceduralGenerateScene` every game, in 256 x 256 m squares (chunks, each its own Unity Terrain) made while the player walks, in every direction, with no barrier: a grassland start with rock caves (stone, copper, iron), rocky hills, the desert from 400 m (sandstone caves with gold, `Docs/Desert Setup.md`) and the snow from 700 m (snow caves with diamonds, snowy pines, the most chests, `Docs/Snow Setup.md`), and a 100 m view distance (`ViewDistance` on the Main Camera: mist, nothing further drawn, for the web build's frame rate). Far chunks are hidden, never thrown away (what you chopped or opened stays so). Your **ObjectScatter** is switched off there and its **rules** fill every chunk (a rule's Count = how many for every 400,000 m² of its texture; your script isn't changed; rules copied from GameScene, minus Desert Rocks, plus `Hill Rocks`, `Sandstone Rocks` and the snow's rules in that scene only). **Tools > World > Build New World Scene** makes the scene from GameScene again, so change things in GameScene. Ask `WorldGenerator.Current` (null in the old world) for `BiomeAt(position)` (Grassland / Desert / Hills / Snow), `TerrainAt(position)` (the chunk's Terrain there, null if not made yet; or use `Terrain.activeTerrains`, which has the shown ones), `SpawnPoint`, `Seed`, `Terrain` (the start's chunk). There are many terrains there (one per chunk), so `Terrain.activeTerrain` (only one of them) isn't enough. Since 21/11/2026 dying there and clicking Respawn makes a brand-new world (**New World On Death**; `WorldGenerator.NewWorldOnRespawn`, `StartNewWorld()`): the scene loads again, so everything in it starts fresh, your scripts included. Guide: `Docs/New World Setup.md` |
 | The edge of the world (barrier) | Tony's `WorldBarrier` (20/11/2026): a see-through, glowing force field at the edge that players see and can't pass (guide `Docs/World Barrier Setup.md`). The new world (endless since 21/11/2026) has none; your GameScene gets one from **Tools > World > Add World Barrier** (on the inner faces of your `Boundaries` walls, which are left as they are; three of them are triggers and stopped nothing). Your **ObjectScatter** got one `[Tony] added` line: it skips spots outside the barrier, so no chest lands where nobody can reach it (log `Docs/TonyEditMate/Sanyam/20-11-2026 Nothing Spawns Outside The Barrier.md`). In your own spawning: `if (!WorldBarrier.Inside(spot, 2f)) continue;` |
-| Your chest spawn rules (changed) | Tony's **Tools > World > Build Loot Chests** (21/11/2026, logs `Docs/TonyEditMate/Sanyam/21-11-2026 Loot Box Spawn Rules.md` and `.../21-11-2026 Twice The Chests And A Legendary Rule.md`, your script untouched): **ChestsDesert** used the grass layer (every chest spawned on grass): it's on the sand layer now; twice as many boxes: ChestsForest 20, **Rare Chests Grass** 6, ChestsDesert 30, **Rare Chests Desert** 12, **Epic Chests Desert** 4, **Legendary Chests Desert** 2 (the legendary boxes remove themselves in the old chest system); all chest rules in Spacing Group "Chests" |
+| Your chest spawn rules (changed) | Tony's **Tools > World > Build Loot Chests** (21/11/2026, logs `Docs/TonyEditMate/Sanyam/21-11-2026 Loot Box Spawn Rules.md` and `.../21-11-2026 Twice The Chests And A Legendary Rule.md`, your script untouched): **ChestsDesert** used the grass layer (every chest spawned on grass): it's on the sand layer now; twice as many boxes: ChestsForest 20, **Rare Chests Grass** 6, ChestsDesert 30, **Rare Chests Desert** 12, **Epic Chests Desert** 4, **Legendary Chests Desert** 2 (the legendary boxes remove themselves in the old chest system); all chest rules in Spacing Group "Chests". Since 23/11/2026 (log `.../23-11-2026 More Forest Chests On Steeper Ground.md`): ChestsForest **35** and Rare Chests Grass **10**, both **Max Slope 15** (was 10) |
 | Change scene with a fade | `ScreenFader.LoadScene("GameScene", "DAY 1", "Survive 5 nights");` (fades to black, title card, loads, fades in) |
 
 Guides: `Docs/Build Menu Setup.md`, `Docs/Item Setup.md`, `Docs/Inventory Setup.md`.
@@ -447,6 +448,19 @@ EnemyAttack still bites. To make another enemy fly: add FlyingEnemy (it needs a 
 Height** (3.5 m above the ground, trees and rocks don't count), **Bite Height** (0.4 m above the target's middle),
 **Climb Speed**, **Dive Distance** (7 m), **Climb Seconds** / **Back Off Speed** (up and away after each bite), **Bob
 Height** / **Bob Speed**. No public methods.
+
+### BearTrap (on a built Bear Trap) and EnemyStun (put on a monster it catches)
+
+Since 23/11/2026 (guide `Docs/Trap Setup.md`). The player builds the **Bear Traps** with B (Traps tab; Building Data
+`Assets/Config/Building/<Copper|Iron|Gold|Diamond> Bear Trap.asset`, Piece Type **Trap**): Copper = 4 Copper, 1 use,
+damage 10, stun 2 s; Iron = a placed Copper Bear Trap + 3 Iron, 1 use, 20, 3 s; Gold = a placed Iron Bear Trap +
+4 Gold, 2 uses, 25, 3 s; Diamond = a placed Gold Bear Trap + 4 Diamond, 2 uses, 30, 4 s (the upgrades replace the trap
+they're built on). A walking monster (EnemyCombat) whose feet come within **Catch Radius** of its middle is caught: the jaws snap,
+it takes **Damage** (your EnemyCombat.TakeDamage, so a kill gives coins as usual) and **EnemyStun** holds it for **Hold
+Seconds**. After **Uses** snaps it goes away. The player stepping on it is hurt too (**Player Damage** = its damage,
+through PlayerHealth.TakeDamage, so armor counts).
+Flying monsters (FlyingEnemy) fly over it unless **Catch Flying** is on. Read: `trap.IsOpen`, `trap.UsesLeft` (-1 = never
+used up). To stun a monster from your own code: `EnemyStun.Stun(monster.gameObject, seconds, spot)`.
 
 ### PunchEffect (on the Player): the grey wind burst where a punch lands
 
@@ -932,7 +946,14 @@ Get them: BuildingData = a `public BuildingData wall;` field with the file dragg
 | `blueprintPlacer.Built` (event, on the Player) | a building was built (gives its `BuildingData`) |
 | `BlueprintPlacer.Mode` (static) | `PlaceMode.Snap` or `PlaceMode.Surface` (middle click switches) |
 | `BlueprintPlacer.IsSnapped` (static) | the blueprint is locked onto a built piece right now (green) |
-| `BuildingData.Piece` | how it snaps: `PieceType.Floor` / `Wall` / `Roof` / `Other` (Auto = guessed from the file name) |
+| `BuildingData.Piece` | how it snaps: `PieceType.Floor` / `Wall` / `Roof` / `Other` / `Trap` (Auto = guessed from the file name) |
+| `BuildingData.Category` | its build menu tab: `BuildCategory.Building` or `Traps` (Auto = Traps for a trap) |
+| `BuildingData.UpgradeOf` | (23/11/2026) null = built anywhere; else it's built ON a placed building of that kind, which it replaces (e.g. the Iron Bear Trap on a Copper Bear Trap, the Gold one on an Iron one), and its Recipe is only the extra. Works for any building |
+| `BuildingData.NameWithArticle` | its name with "a" / "an" in front: "a Copper Bear Trap", "an Iron Bear Trap" |
+| `BuildingData.Description`, `InfoLines()` | the build menu's info box (rest the mouse on a building 1 s): its words, and the numbers from its prefab's `IBuildingInfo` scripts (e.g. "Damage 20") |
+| `IBuildingInfo` | put it on a building prefab's script (`public string InfoLines()`) to show its numbers in the info box |
+| `BlueprintPlacer.BackToMenuRequested` (static event) | right click while building: the build menu opens again |
+| `BlueprintPlacer.JustStopped` (static) | building stopped this frame or the last (Esc stops build mode; the pause menu waits) |
 | `BuiltPiece` (on every building the player built) | `Data` (its BuildingData), `Type`; `BuiltPiece.All` = every built piece in the scene |
 
 ---

@@ -57,7 +57,11 @@ The tool:
   - The textures come from GameScene's **painted** terrain: the `Terrain (1)` inside Sanyam's `WorldMap` (Grass, Sand,
     Snow, Rock, Mud). GameScene's top-level `Terrain` has no textures at all.
   - The grass picture is Polytope Studio's grass blades (`PT_Grass_01`), copied once to
-    `Assets/Effects/Grass/GrassBlades.png` with clamped edges (Polytope's own file isn't changed).
+    `Assets/Effects/Grass/GrassBlades.png` with clamped edges and **Read/Write** on (Polytope's own file isn't
+    changed). The grass is made while the game runs, and Unity then reads the picture's pixels to pack it into its grass
+    sheet: a built game (the web build) can only do that with Read/Write on. Without it the grass shows as **black
+    squares** in the built game while it looks right in the Editor (23/11/2026). The World Generator warns in the
+    Console when its grass picture isn't readable.
 - **View distance:** puts **ViewDistance** on the **Main Camera** (100 m) and saves the scene with its **fog on**
   (Linear, 40 - 100 m). A built game keeps fog only if a scene in it has fog on (GameScene's is off), and the mist is
   that fog.
@@ -72,6 +76,12 @@ The tool:
 - **Build Settings:** adds the scene after GameScene, so the title screen can load it.
 - **Grass in builds:** adds Unity's terrain grass shaders to **Edit > Project Settings > Graphics > Always Included
   Shaders** (the grass is made while playing, so no saved scene uses them and a built game would leave them out).
+- **Chunk template** (23/11/2026): makes `Assets/Prefabs/World/New World Chunk Template.asset`, a small empty terrain
+  made in the Editor with the grass on it, and gives it to the World Generator (**Chunk Template**). Every chunk's
+  terrain starts as a copy of it. That's the workaround for a Unity 2023.1 bug (UUM-25114, fixed only in later Unity
+  versions): a terrain made from nothing while the game runs draws its grass with the wrong shader in a built game,
+  so the grass showed as **green squares** in the web build (in the Editor it looks right). For an existing
+  ProceduralGenerateScene, **Tools > World > Fix Grass In Builds** does only this step.
 
 ## How it works
 
@@ -207,6 +217,7 @@ cave is 13 m around.
 | No snowy pines | Run **Tools > World > Use Low Poly Grassland Trees** first (TreeNode must be a low-poly tree), then Build New World Scene again. |
 | The grass looks bent over or squashed flat | Set **Grass Width** below **Grass Height** (and **Grass Bending** low). |
 | No grass tufts | **Grass Texture** is empty (the Polytope pack isn't in the project), or **Grass Density** is 0, or Quality settings draw no terrain details. |
+| In the built game (web) the grass is green or black squares, but fine in the Editor | Run **Tools > World > Fix Grass In Builds** (the World Generator's **Chunk Template**: a Unity 2023.1 bug with terrain made while the game runs), check the grass picture has **Read/Write** on, then build again. If it's still wrong, untick World Generator > **Grass In Builds**: no grass in the built game, the Editor keeps it. |
 | The mist starts too near / too far | **Main Camera > View Distance > Distance** (and **Clear Share**). See `Docs/View Distance Setup.md`. |
 | No mist in a built game (the far world just ends) | The scene was saved with fog off: run **Build New World Scene** again (it saves the fog on). |
 | No Map row on the NEW GAME page | Rebuild the title screen: **Tools > UI > Build Main Title Scene**. |

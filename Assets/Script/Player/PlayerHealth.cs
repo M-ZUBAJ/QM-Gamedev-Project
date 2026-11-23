@@ -19,7 +19,7 @@ Purpose: Holds the player's health. TakeDamage / Heal change it and fire On Chan
          and brings the player back; other scripts reset or drop things on it). Revive fills health back up.
 Requirement: PlayerHealth.cs o-> PlayerArmor.cs, PerkEffects.cs
              PlayerHealth.cs <-x DeathScreen.cs, EnemyAttack.cs, PerkChest.cs, PerkManager.cs, PlayerCoins.cs, PlayerRespawn.cs
-             PlayerHealth.cs <-o ArrowProjectile.cs, AutoCollector.cs, BowShooter.cs, ChestPrompt.cs, DaylightCycle.cs, EnemyAggro.cs, EnemyAnimator.cs, FirstPersonHands.cs, FoodBuff.cs, GainNotifier.cs, GameEndUIBuilder.cs, HumanBrain.cs, InteractOutline.cs, ItemConsumer.cs, ItemDropper.cs, PassiveRegen.cs, PerkEffects.cs, PlayerAnimator.cs, PlayerHunger.cs, PlayerInfoPage.cs, PlayerPerks.cs, PlayerSight.cs, PlayerStats.cs, ShellDefense.cs, StatBar.cs, WildAnimal.cs
+             PlayerHealth.cs <-o ArrowProjectile.cs, AutoCollector.cs, BearTrap.cs, BowShooter.cs, ChestPrompt.cs, DaylightCycle.cs, EnemyAggro.cs, EnemyAnimator.cs, FirstPersonHands.cs, FoodBuff.cs, GainNotifier.cs, GameEndUIBuilder.cs, HumanBrain.cs, InteractOutline.cs, ItemConsumer.cs, ItemDropper.cs, PassiveRegen.cs, PerkEffects.cs, PlayerAnimator.cs, PlayerHunger.cs, PlayerInfoPage.cs, PlayerPerks.cs, PlayerSight.cs, PlayerStats.cs, ShellDefense.cs, StatBar.cs, WildAnimal.cs
 */
 
 using UnityEngine;

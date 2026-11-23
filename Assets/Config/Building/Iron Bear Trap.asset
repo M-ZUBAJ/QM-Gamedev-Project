@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 708d1cad608e4e74887028bdb66fb773, type: 3}
+  m_Name: Iron Bear Trap
+  m_EditorClassIdentifier: 
+  displayName: Iron Bear Trap
+  description: 'It lies on the ground and snaps shut on a monster that walks over
+    it, hurting it and holding it still. Careful: it hurts you too if you step on
+    it.'
+  prefab: {fileID: 3082998406976069934, guid: ba373c48f483f5f4793b2e60e4b0bcae, type: 3}
+  icon:
+    mode: 0
+    image: {fileID: 0}
+    aseprite: {fileID: 0}
+    asepriteTag: 
+    frames: []
+    durations: []
+  recipe:
+  - item: {fileID: 11400000, guid: 5c6e2eb642dbe4159a36e38d99e65413, type: 2}
+    amount: 3
+  pieceType: 5
+  category: 0
+  upgradeOf: {fileID: 11400000, guid: cb8c0a52ae408ac4588b41e33101d6af, type: 2}

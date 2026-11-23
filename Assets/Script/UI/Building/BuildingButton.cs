@@ -1,6 +1,6 @@
 /*
 First Date: 7/10/2026
-Date: 20/10/2026
+Date: 23/11/2026
 Author: Tony
 Use by: On the BuildingButton prefab. BuildMenu makes one per building, so don't put it in the scene yourself.
         Tools > UI > Build Build Menu UI makes the prefab for you.
@@ -9,6 +9,10 @@ Unity Editor: The parts are found by name: children "Icon" (Image), "Name" (Text
               Enough / Missing Color = the color of a material's amount when you have enough / not enough.
 Purpose: One building in the build menu: its picture, name and recipe ("Stone 2/3" = have 2, need 3).
          The amounts update as the inventory changes. The button only works when you have every material.
+         It tells the build menu when the mouse comes onto it and leaves (23/11/2026), so the menu can show the
+         building's info box after the mouse rests on it (also on a grey button you can't afford yet).
+         An upgrade (Building Data with Upgrade Of, e.g. the Iron Bear Trap) gets a first line with the building it
+         goes on: "on a Copper Bear Trap", "on an Iron Bear Trap" (with its picture), before its materials.
 Requirement: BuildingButton.cs x-> BuildingData.cs, Recipe.cs, PlayerInventory.cs, UIAnimatedImage.cs, ItemIconRules.cs, Button (Unity)
              BuildingButton.cs <-x BuildMenu.cs, BuildMenuUIBuilder.cs
 */
@@ -16,11 +20,12 @@ Requirement: BuildingButton.cs x-> BuildingData.cs, Recipe.cs, PlayerInventory.c
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;   // the mouse coming onto / leaving the button
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Button))]
 [DisallowMultipleComponent]
-public class BuildingButton : MonoBehaviour
+public class BuildingButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     // One recipe line on screen, and the material it shows.
     class Row
@@ -37,6 +42,11 @@ public class BuildingButton : MonoBehaviour
     [Tooltip("Color of a material's amount when you don't have enough.")]
     [SerializeField] Color missingColor = new Color(0.8f, 0.1f, 0.1f);
 
+    [Header("Upgrades")]
+    [Tooltip("The first line of an upgrade's recipe (e.g. the Gold Bear Trap). {0} = the building it's built on, with " +
+             "a / an in front (\"an Iron Bear Trap\").")]
+    [SerializeField] string upgradeText = "on {0}";
+
     Button button;
     Image icon;
     TMP_Text title;
@@ -45,6 +55,10 @@ public class BuildingButton : MonoBehaviour
 
     BuildingData data;
     readonly List<Row> rows = new List<Row>();
+    System.Action<BuildingButton> onHover;   // the build menu: the mouse came onto this button
+    System.Action<BuildingButton> onLeave;   // ...and left it
+
+    public BuildingData Data => data;
 
     // ===== Unity messages (Unity calls these) =====
 
@@ -62,6 +76,17 @@ public class BuildingButton : MonoBehaviour
     void OnDisable()
     {
         PlayerInventory.Changed -= Refresh;
+        onLeave?.Invoke(this);   // hidden (another tab, the menu closed) while the mouse was on it
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        onHover?.Invoke(this);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        onLeave?.Invoke(this);
     }
 
     // ===== My methods =====
@@ -85,11 +110,15 @@ public class BuildingButton : MonoBehaviour
         }
     }
 
-    // Called by BuildMenu: which building this shows, and who to tell when it's clicked.
-    public void Setup(BuildingData building, System.Action<BuildingData> onChosen)
+    // Called by BuildMenu: which building this shows, who to tell when it's clicked, and (optional) who to tell when
+    // the mouse comes onto it and leaves (the info box).
+    public void Setup(BuildingData building, System.Action<BuildingData> onChosen,
+                      System.Action<BuildingButton> hover = null, System.Action<BuildingButton> leave = null)
     {
         FindParts();
         data = building;
+        onHover = hover;
+        onLeave = leave;
 
         if (title != null) title.text = data.DisplayName;
         if (icon != null)
@@ -107,6 +136,8 @@ public class BuildingButton : MonoBehaviour
     void MakeRows()
     {
         if (recipe == null || ingredientTemplate == null) return;
+
+        if (data.UpgradeOf != null) MakeUpgradeRow(data.UpgradeOf);   // first: the building it goes on
 
         foreach (Ingredient ing in data.Recipe)
         {
@@ -127,6 +158,29 @@ public class BuildingButton : MonoBehaviour
             }
 
             rows.Add(new Row { ingredient = ing, count = FindChild<TMP_Text>(row.transform, "Count") });
+        }
+    }
+
+    // An upgrade's first line: the placed building it's built on (and replaces), e.g. "on a Copper Bear Trap".
+    // It isn't counted: that building is in the world, not in the inventory.
+    void MakeUpgradeRow(BuildingData builtOn)
+    {
+        GameObject row = Instantiate(ingredientTemplate, recipe);
+        row.name = "Upgrade Of";
+        row.SetActive(true);
+
+        Image rowIcon = FindChild<Image>(row.transform, "Icon");
+        if (rowIcon != null)
+        {
+            UIAnimatedImage.ShowIcon(rowIcon, builtOn.GetIcon(), builtOn.Icon);
+            rowIcon.enabled = rowIcon.sprite != null;
+        }
+
+        TMP_Text words = FindChild<TMP_Text>(row.transform, "Count");
+        if (words != null)
+        {
+            words.text = upgradeText.Replace("{0}", builtOn.NameWithArticle);
+            words.color = enoughColor;
         }
     }
 

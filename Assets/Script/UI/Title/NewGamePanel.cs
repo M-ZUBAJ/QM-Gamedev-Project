@@ -1,6 +1,6 @@
 /*
 First Date: 7/11/2026
-Date: 22/11/2026
+Date: 23/11/2026
 Author: Tony
 Use by: Put this on the New Game page (Tools > UI > Build Main Title Scene does it: TitleCanvas > Pages > NewGamePage).
 Unity Editor: Defaults = Assets/Config/NewGame/NewGameDefaults.asset (the game as it is now; the tool fills it in).
@@ -18,9 +18,11 @@ Unity Editor: Defaults = Assets/Config/NewGame/NewGameDefaults.asset (the game a
               Testing: Play, click PLAY, change the options; DEFAULTS puts them all back.
 Purpose: The New Game options. Every option starts at the game as it is now (the defaults). Changed options get a dot,
          the line under the panel says what the goal is, and DEFAULTS puts everything back.
-         Commit() hands only the CHANGED options to GameSetup, which puts them into the game when it loads.
+         Commit() hands only the CHANGED options to GameSetup, which puts them into the game when it loads (and always
+         the Map, which TitleMenu needs to pick the scene).
            Map                      = Old world (GameScene, the hand-made map) or New world (ProceduralGenerateScene:
-                                      a new random endless world every game, WorldGenerator)
+                                      a new random endless world every game, WorldGenerator). New world is the default
+                                      since 23/11/2026 (New World By Default; off = Old world)
            Days to win / Win at     = when the player wins (VictoryScreen)
            Day length               = Short / Normal / Long (half / as now / double the day length)
            Start time               = when the first day starts
@@ -57,6 +59,11 @@ public class NewGamePanel : MonoBehaviour
     // ===== Fields =====
     [Tooltip("The game as it is now (Assets/Config/NewGame/NewGameDefaults.asset): every option starts here.")]
     [SerializeField] NewGameDefaults defaults;
+
+    [Header("Map")]
+    [Tooltip("On: the page starts on Map: New world (a new random world every game) and DEFAULTS goes back to it. Off: " +
+             "Old world (the hand-made map) is the default.")]
+    [SerializeField] bool newWorldByDefault = true;
 
     [Header("Difficulty (compared to Normal = the game as it is now)")]
     [Range(0.1f, 1f)]
@@ -101,7 +108,7 @@ public class NewGamePanel : MonoBehaviour
         { "DaysRow", "WinAtRow", "DayLengthRow", "StartTimeRow", "DifficultyRow", "DeathRow", "PickupRow", "MessagesRow",
           "AllToolsRow", "WorldRow", "ArmorTestRow", "ChestRow", "PauseRow", "CoinsRow" };   // the same order as Refresh's "changed"
     const int NormalDay = 1;   // Short, Normal, Long
-    const int OldWorld = 0;    // Map: Old world (as now), New world
+    const int OldWorld = 0;    // Map: Old world, New world (which one is the default: New World By Default)
     const int NewWorld = 1;
     const int OldChests = 0;   // Testing: Old chests, New chests
     const int NewChests = 1;
@@ -151,6 +158,8 @@ public class NewGamePanel : MonoBehaviour
 
     // ===== My methods =====
 
+    int DefaultWorld => newWorldByDefault ? NewWorld : OldWorld;   // the Map the page starts on
+
     // Puts every option back to the game as it is now.
     public void SetDefaults()
     {
@@ -166,7 +175,7 @@ public class NewGamePanel : MonoBehaviour
         messages.isOn = defaults.ShowNotifications;
         if (allTools != null) allTools.isOn = defaults.ToolTest;
         if (allArmor != null) allArmor.isOn = defaults.ArmorTest;
-        if (world != null) world.Pick(OldWorld, false);
+        if (world != null) world.Pick(DefaultWorld, false);
         if (chests != null) chests.Pick(defaults.NewChests ? NewChests : OldChests, false);
         if (pauseGame != null) pauseGame.isOn = defaults.PauseGame;
         if (coins != null) coins.SetValue(defaults.StartCoins, false);
@@ -203,7 +212,9 @@ public class NewGamePanel : MonoBehaviour
         if (messages.isOn != defaults.ShowNotifications) GameSetup.ShowNotifications = messages.isOn;
         if (allTools != null && allTools.isOn != defaults.ToolTest) GameSetup.StartWithAllTools = allTools.isOn;
         if (allArmor != null && allArmor.isOn != defaults.ArmorTest) GameSetup.StartWithAllArmor = allArmor.isOn;
-        if (world != null && world.Picked == NewWorld) GameSetup.NewWorld = true;
+        // The Map is always handed over (true or false), even when it's the default: TitleMenu loads the new world only
+        // for true, and the page shows the same pick when it opens again.
+        if (world != null) GameSetup.NewWorld = world.Picked == NewWorld;
         if (chests != null && (chests.Picked == NewChests) != defaults.NewChests) GameSetup.NewChests = chests.Picked == NewChests;
         if (pauseGame != null && pauseGame.isOn != defaults.PauseGame) GameSetup.PauseGame = pauseGame.isOn;
         if (coins != null && coins.Value != defaults.StartCoins) GameSetup.StartCoins = coins.Value;
@@ -298,7 +309,8 @@ public class NewGamePanel : MonoBehaviour
         messages.SetIsOnWithoutNotify(GameSetup.ShowNotifications ?? defaults.ShowNotifications);
         if (allTools != null) allTools.SetIsOnWithoutNotify(GameSetup.StartWithAllTools ?? defaults.ToolTest);
         if (allArmor != null) allArmor.SetIsOnWithoutNotify(GameSetup.StartWithAllArmor ?? defaults.ArmorTest);
-        if (world != null) world.Pick(GameSetup.NewWorld == true ? NewWorld : OldWorld, false);
+        if (world != null)
+            world.Pick(GameSetup.NewWorld.HasValue ? (GameSetup.NewWorld.Value ? NewWorld : OldWorld) : DefaultWorld, false);
         if (chests != null) chests.Pick((GameSetup.NewChests ?? defaults.NewChests) ? NewChests : OldChests, false);
         if (pauseGame != null) pauseGame.SetIsOnWithoutNotify(GameSetup.PauseGame ?? defaults.PauseGame);
         if (coins != null) coins.SetValue(GameSetup.StartCoins ?? defaults.StartCoins, false, false);
@@ -341,7 +353,7 @@ public class NewGamePanel : MonoBehaviour
             pickup.isOn != defaults.AutoPickupDrops,
             messages.isOn != defaults.ShowNotifications,
             allTools != null && allTools.isOn != defaults.ToolTest,
-            world != null && world.Picked != OldWorld,
+            world != null && world.Picked != DefaultWorld,
             allArmor != null && allArmor.isOn != defaults.ArmorTest,
             chests != null && (chests.Picked == NewChests) != defaults.NewChests,
             pauseGame != null && pauseGame.isOn != defaults.PauseGame,

@@ -1,9 +1,9 @@
 /*
 First Date: 31/10/2026
-Date: 2/11/2026
+Date: 23/11/2026
 Author: Tony
 Use by: Nothing to set up (code only, no component). BlueprintPlacer uses it in Snap mode.
-Unity Editor: Nothing to set. Each Building Data's Piece Type (Floor / Wall / Roof / Other) decides what it snaps to.
+Unity Editor: Nothing to set. Each Building Data's Piece Type (Floor / Wall / Roof / Other / Trap) decides what it snaps to.
               Testing: Play, press B, build a floor, then choose a wall: aim near the floor's edge and the
               blueprint locks onto it (green). Scroll the mouse wheel: it turns 90 degrees and fits again
               (e.g. across the floor, or at another wall's end as an L corner).
@@ -17,6 +17,8 @@ Purpose: Snap building (like Valheim / Rust): finds the spot where a new piece f
            Roof  -> over a floor that has walls, resting on the walls; next to a roof.
            Other -> furniture (crafting table, furnace...): on a floor or on other furniture; against a wall;
                     next to a floor or other furniture.
+           Trap  -> (23/11/2026, the bear trap) on a floor; nothing snaps onto or next to a trap. Away from
+                    floors it simply lies on the ground (Surface).
          Next to = touching it with the same bottom height, lined up with one end, the middle or the other end.
          On top = flush with a corner or an edge, or in the middle (something bigger than what it sits on, like a
          wide roof, is always centered).
@@ -187,7 +189,11 @@ public static class BuildSnap
 
             case PieceType.Other:
                 if (piece.Type == PieceType.Floor || piece.Type == PieceType.Other) AddOnTop(piece, s, k, p.max.y);
-                if (piece.Type != PieceType.Roof) AddBeside(piece, s, k);   // against a wall, next to a floor or furniture
+                if (piece.Type != PieceType.Roof && piece.Type != PieceType.Trap) AddBeside(piece, s, k);   // against a wall, next to a floor or furniture (not next to a trap)
+                break;
+
+            case PieceType.Trap:   // on a built floor; away from floors it lies on the ground (no spot = Surface)
+                if (piece.Type == PieceType.Floor) AddOnTop(piece, s, k, p.max.y);
                 break;
         }
     }

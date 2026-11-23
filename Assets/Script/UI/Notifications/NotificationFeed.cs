@@ -18,7 +18,7 @@ Purpose: Shows short messages on the side of the screen for the player, newest a
          Nothing shows while GameRules.ShowNotifications is off.
 Requirement: NotificationFeed.cs x-> GameRules.cs, VerticalLayoutGroup (Unity)
              NotificationFeed.cs <-x GainNotifier.cs, NotificationUIBuilder.cs, PerkChest.cs, ToolRules.cs, WeaponUpgrade.cs
-             NotificationFeed.cs <-o BerryBush.cs, BowShooter.cs, PerkEffects.cs
+             NotificationFeed.cs <-o BearTrap.cs, BerryBush.cs, BlueprintPlacer.cs, BowShooter.cs, PerkEffects.cs
 */
 
 using System.Collections.Generic;

@@ -1,12 +1,13 @@
 /*
 First Date: 8/10/2026
-Date: 2/11/2026
+Date: 23/11/2026
 Author: Tony
 Use by: Drag this script onto BuildModeCanvas (the canvas with the mouse button hints for build mode).
         Tools > UI > Add Build Mode Scripts adds it for you.
 Unity Editor: Nothing to set. Leave BuildModeCanvas switched on in the Hierarchy: this script hides it by itself.
               The middle click hint's text (a child named "MiddleClickText") shows the placing mode right now:
-              "Snap" or "Surface" (BlueprintPlacer.Mode).
+              "Snap" or "Surface" (BlueprintPlacer.Mode). The right click hint's text ("RightClickText") is set to Back
+              Text when the game starts ("Back to menu": right click goes back to the build menu since 23/11/2026).
               Testing: Play, press B, click a building: the canvas shows. Middle click: the hint changes.
               Place it or cancel: it hides again.
 Purpose: Shows the build mode canvas only while the player is placing a building (BlueprintPlacer),
@@ -30,7 +31,11 @@ public class BuildModeHUD : MonoBehaviour
     [Tooltip("Middle click hint text while in Surface mode.")]
     [SerializeField] string surfaceText = "Surface";
 
+    [Tooltip("Right click hint text: what right click does while building. Empty = keep the hint's own text.")]
+    [SerializeField] string backText = "Back to menu";
+
     const string ModeTextName = "MiddleClickText";   // the hint text this script rewrites
+    const string BackTextName = "RightClickText";    // the right click hint, set once to Back Text
 
     Canvas canvas;
     TMP_Text modeText;   // can be missing (then only showing / hiding works)
@@ -42,6 +47,8 @@ public class BuildModeHUD : MonoBehaviour
         canvas = GetComponent<Canvas>();
         canvas.enabled = false;   // not placing when the game starts
         modeText = FindText(transform, ModeTextName);
+        TMP_Text back = FindText(transform, BackTextName);
+        if (back != null && !string.IsNullOrEmpty(backText)) back.text = backText;
     }
 
     void Update()

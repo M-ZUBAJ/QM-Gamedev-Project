@@ -7,6 +7,8 @@ Unity Editor: Menu Tools > World > Build New World Scene (it asks first). Run it
               (new menus, player scripts, spawner settings...): the new world is made from GameScene each time, so
               changes made by hand in ProceduralGenerateScene are lost then (put them in GameScene instead).
               Needs the rock shapes from Tools > World > Use Low Poly Rocks (for the caves).
+              Menu Tools > World > Fix Grass In Builds (23/11/2026): only makes the chunk template (below) and gives it to
+              ProceduralGenerateScene's World Generator, nothing else; Build New World Scene does it too.
               Guide: Docs/New World Setup.md
 Purpose: Makes the "New world" of the title screen's NEW GAME page: Assets/Scenes/ProceduralGenerateScene.unity.
            - It's a copy of GameScene with everything the game needs (the player, camera, sun and day / night,
@@ -20,7 +22,9 @@ Purpose: Makes the "New world" of the title screen's NEW GAME page: Assets/Scene
            - plus the World Generator (WorldGenerator), given the old terrain's ground textures (same order, so
              ObjectScatter's rules work the same) and material, the rock caves (Tools > World > Build Rock Caves,
              run first) and the Stone / Copper / Iron rocks for them, and the grass picture (Polytope's grass blades,
-             copied once to Assets/Effects/Grass/GrassBlades.png with clamped edges; Polytope's own file isn't changed);
+             copied once to Assets/Effects/Grass/GrassBlades.png with clamped edges and Read/Write on: since the grass
+             is added while the game runs, a built game must be able to read it, or the grass shows as black squares
+             (23/11/2026); Polytope's own file isn't changed);
              GameScene has two terrains (the painted Terrain (1) inside Sanyam's WorldMap and an unpainted top-level
              Terrain): the textures come from the one with the most of them;
            - ObjectScatter (Sanyam's; his script has one [Tony] line: nothing spawns outside a barrier) gets more
@@ -41,7 +45,11 @@ Purpose: Makes the "New world" of the title screen's NEW GAME page: Assets/Scene
            - Unity's terrain grass shaders go into Project Settings > Graphics > Always Included Shaders (no saved
              scene has terrain grass, so a built game would leave them out);
            - the human enemies' Human Spawner (23/11/2026), when Tools > Enemies > Build Human Enemies has made them
-             (HumanEnemyBuilder.SetUpScene), so a rebuilt new world keeps its humans.
+             (HumanEnemyBuilder.SetUpScene), so a rebuilt new world keeps its humans;
+           - the chunk template Assets/Prefabs/World/New World Chunk Template.asset: a small empty terrain made here in
+             the Editor, with the World Generator's grass on it, that every chunk's terrain starts as a copy of. Unity
+             2023.1 bug UUM-25114 (fixed only in later Unity versions): a terrain made from nothing while the game runs
+             gets the wrong grass shader in a built game, so its grass showed as green squares in the web build.
 Requirement: NewWorldBuilder.cs x-> WorldGenerator.cs, RockCaveBuilder.cs, DesertBuilder.cs, SnowBuilder.cs, GrasslandTreeBuilder.cs, SkyLightingSetup.cs, ObjectScatter.cs, AnimalSpawner.cs, PlayerController.cs, ResourceNode.cs, PerkChest.cs, ItemPickup.cs, WildAnimal.cs, WorldBarrier.cs, ViewDistance.cs, UIBuildHelper.cs, MenuOrder.cs, HumanEnemyBuilder.cs
 */
 
@@ -135,6 +143,7 @@ public static class NewWorldBuilder
         string monsters = "Night monsters: GameScene's EnemySpawner (and its NightMonsters: the turtle from night 2) came with the copy.";
         string view = AddViewDistance(scene);
         string humans = HumanEnemyBuilder.SetUpScene(scene);   // the human enemies, if they've been built
+        string template = SetUpChunkTemplate(scene);
 
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
@@ -148,7 +157,7 @@ public static class NewWorldBuilder
                   (removed.Count > 0 ? string.Join(", ", removed) : "nothing") + ". " + layerReport + " Caves: " + caveReport +
                   ". Desert: " + desert.report + ". Snow: " + snow.report + ". " + scatter + " " + monsters + " " + view +
                   " " + humans +
-                  " Sky light: " + light +
+                  " Sky light: " + light + ". " + template +
                   ". It's in Build Settings. Test: MainTitleScene > Play > " +
                   "NEW GAME > Map: New world > START GAME (rebuild the title screen first: Tools > UI > Build Main Title Scene).");
         if (caves.Count == 0)
@@ -157,7 +166,107 @@ public static class NewWorldBuilder
         }
     }
 
+    // Only the chunk template, for an existing ProceduralGenerateScene (the grass in a built game), without remaking it.
+    [MenuItem("Tools/World/Fix Grass In Builds", false, MenuOrder.FixGrassInBuilds)]
+    static void FixGrassFromMenu()
+    {
+        const string title = "Fix Grass In Builds";
+        if (Application.isPlaying)
+        {
+            EditorUtility.DisplayDialog(title, "Stop Play first: changes made while playing are lost.", "OK");
+            return;
+        }
+        if (AssetDatabase.LoadAssetAtPath<SceneAsset>(NewScenePath) == null)
+        {
+            EditorUtility.DisplayDialog(title, "There's no " + NewScenePath + " yet: run Tools > World > Build New World Scene.", "OK");
+            return;
+        }
+        if (!EditorUtility.DisplayDialog(title,
+                "In a built game (the web build) the new world's grass shows as green squares: a Unity 2023.1 bug with " +
+                "terrain made while the game runs.\n\nThis makes " + TemplatePath + " (a small empty terrain made in the " +
+                "Editor, with the grass on it) and gives it to " + NewSceneName + "'s World Generator: every chunk then " +
+                "starts as a copy of it. Nothing else in the scene changes. Then build the game again.",
+                "Fix", "Cancel")) return;
+        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+
+        SceneSetup[] before = EditorSceneManager.GetSceneManagerSetup();
+        string report;
+        try
+        {
+            Scene scene = EditorSceneManager.OpenScene(NewScenePath, OpenSceneMode.Single);
+            report = SetUpChunkTemplate(scene);
+            EditorSceneManager.SaveScene(scene);
+        }
+        finally
+        {
+            EditorSceneManager.RestoreSceneManagerSetup(before);
+        }
+        Debug.Log(title + ": " + report);
+        EditorUtility.DisplayDialog(title, report + "\n\nNow build the web game again (File > Build Settings > Build And Run).", "OK");
+    }
+
     // ===== My methods =====
+
+    const string TemplatePath = "Assets/Prefabs/World/New World Chunk Template.asset";
+    const int TemplateResolution = 33;   // the smallest heightmap: the World Generator sets each chunk's own
+
+    // The chunk template made (or refilled) and given to the scene's World Generator. Returns what it did.
+    public static string SetUpChunkTemplate(Scene scene)
+    {
+        WorldGenerator generator = null;
+        foreach (WorldGenerator g in FindAll<WorldGenerator>(scene)) generator = g;
+        if (generator == null) return "Chunk template: no World Generator in " + scene.name + ".";
+
+        SerializedObject so = new SerializedObject(generator);   // the names in quotes must match WorldGenerator's fields
+        Texture2D grass = so.FindProperty("grassTexture").objectReferenceValue as Texture2D;
+        if (grass != null) MakeReadable(AssetDatabase.GetAssetPath(grass));
+        TerrainData template = ChunkTemplate(so, grass, out bool made);
+        so.FindProperty("chunkTemplate").objectReferenceValue = template;
+        so.ApplyModifiedPropertiesWithoutUndo();
+        EditorSceneManager.MarkSceneDirty(scene);
+        return "Chunk template " + TemplatePath + (made ? " made" : " updated") + (grass != null ? " with the grass " +
+               grass.name : " (no grass picture on the World Generator)") + " and given to the World Generator.";
+    }
+
+    // A small empty terrain made here in the Editor, with the World Generator's grass on it (a terrain made in the
+    // Editor keeps the right grass shaders in a built game; the World Generator copies it for every chunk and sets
+    // the rest). An existing file is refilled, so the scene's link to it stays.
+    static TerrainData ChunkTemplate(SerializedObject generator, Texture2D grass, out bool made)
+    {
+        MakeFolders(FolderOf(TemplatePath));
+        TerrainData data = AssetDatabase.LoadAssetAtPath<TerrainData>(TemplatePath);
+        made = data == null;
+        if (made) data = new TerrainData();
+        data.heightmapResolution = TemplateResolution;
+        data.size = new Vector3(256f, 100f, 256f);   // any size: the World Generator sets each chunk's
+        if (grass != null)
+        {
+            Vector2 width = generator.FindProperty("grassWidth").vector2Value;
+            Vector2 height = generator.FindProperty("grassHeight").vector2Value;
+            data.SetDetailResolution(32, 16);
+            data.detailPrototypes = new[]
+            {
+                new DetailPrototype
+                {
+                    prototypeTexture = grass,
+                    usePrototypeMesh = false,
+                    renderMode = DetailRenderMode.Grass,   // like the World Generator's grass
+                    minWidth = width.x,
+                    maxWidth = width.y,
+                    minHeight = height.x,
+                    maxHeight = height.y,
+                    healthyColor = generator.FindProperty("grassHealthy").colorValue,
+                    dryColor = generator.FindProperty("grassDry").colorValue,
+                    noiseSpread = 0.08f,
+                },
+            };
+            data.RefreshPrototypes();
+        }
+        if (made) AssetDatabase.CreateAsset(data, TemplatePath);
+        else EditorUtility.SetDirty(data);
+        AssetDatabase.SaveAssets();
+        return data;
+    }
 
     // GameScene copied to the new scene's file. An existing file is overwritten but keeps its ID (.meta), so Build
     // Settings and anything else linked to it stay linked.
@@ -248,7 +357,11 @@ public static class NewWorldBuilder
     static Texture2D GrassTexture()
     {
         Texture2D copy = AssetDatabase.LoadAssetAtPath<Texture2D>(GrassPath);
-        if (copy != null) return copy;
+        if (copy != null)
+        {
+            MakeReadable(GrassPath);
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(GrassPath);
+        }
 
         string source = null;
         foreach (string guid in AssetDatabase.FindAssets(GrassSource + " t:Texture2D", new[] { "Assets" }))
@@ -266,9 +379,21 @@ public static class NewWorldBuilder
             importer.wrapMode = TextureWrapMode.Clamp;
             importer.alphaIsTransparency = true;
             importer.mipmapEnabled = true;
+            importer.isReadable = true;   // see MakeReadable
             importer.SaveAndReimport();
         }
         return AssetDatabase.LoadAssetAtPath<Texture2D>(GrassPath);
+    }
+
+    // Read/Write on for a picture the terrain grass uses. The new world adds its grass while the game runs, and Unity
+    // then packs the grass pictures into one sheet by reading their pixels: a built game can only read a picture with
+    // Read/Write on (the Editor always can), so without it the grass showed as black squares in the web build.
+    static void MakeReadable(string path)
+    {
+        TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+        if (importer == null || importer.isReadable) return;
+        importer.isReadable = true;
+        importer.SaveAndReimport();
     }
 
     // The ground textures when no terrain in GameScene has any: the project's own Terrain Layers (not the imported

@@ -1,6 +1,6 @@
 /*
 First Date: 21/11/2026
-Date: 21/11/2026
+Date: 23/11/2026
 Author: Tony
 Use by: PauseCanvas (Tools > UI > Build Pause Menu makes Assets/Prefabs/UI/Pause/PauseCanvas.prefab and puts it in the game
         scenes). It finds by NAME: "Pause" (everything shown while paused, switched off otherwise), "ResumeButton"
@@ -19,6 +19,7 @@ Purpose: The pause menu, opened with Esc while playing: KEY BINDINGS (the same l
          only cancels that). In the web build the browser itself frees the mouse on Esc: losing the mouse while playing
          opens the menu too.
 Requirement: PauseMenu.cs x-> MenuState.cs, GameRules.cs, KeyBindings.cs, KeyBindingMenu.cs, MouseSettings.cs, ScreenFader.cs, UITween.cs, Canvas (Unity)
+             PauseMenu.cs o-> BlueprintPlacer.cs
              PauseMenu.cs <-x PauseMenuBuilder.cs
              PauseMenu.cs <-o CameraController.cs
 */
@@ -126,8 +127,9 @@ public class PauseMenu : MonoBehaviour
 
     // ===== My methods =====
 
-    // Not on top of another menu, and not in the frame Esc closed one (the inventory, a chest's panel...).
-    bool CanOpen() => !MenuState.AnyOpen && !menuOpenLastFrame;
+    // Not on top of another menu, not in the frame Esc closed one (the inventory, a chest's panel...), and not while
+    // building or the frame Esc stopped building (since 23/11/2026 Esc stops build mode: BlueprintPlacer).
+    bool CanOpen() => !MenuState.AnyOpen && !menuOpenLastFrame && !BlueprintPlacer.IsPlacing && !BlueprintPlacer.JustStopped;
 
     void Open()
     {

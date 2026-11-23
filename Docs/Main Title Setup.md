@@ -58,7 +58,7 @@ today's game. These values are read from GameScene and kept in `NewGameDefaults.
 
 | Option | What it changes in the game | Default |
 |---|---|---|
-| **Map** (WORLD) | **Old world** = GameScene, the hand-made map; **New world** = ProceduralGenerateScene, a new random endless world every game (made by **Tools > World > Build New World Scene**, guide `Docs/New World Setup.md`). START GAME loads TitleMenu's **Game Scene** or **New World Scene** | Old world |
+| **Map** (WORLD) | **Old world** = GameScene, the hand-made map; **New world** = ProceduralGenerateScene, a new random endless world every game (made by **Tools > World > Build New World Scene**, guide `Docs/New World Setup.md`). START GAME loads TitleMenu's **Game Scene** or **New World Scene** | **New world** (since 23/11/2026; NewGamePanel > **New World By Default**, untick it for Old world) |
 | **Days to win** (1 - 30) | GameEndCanvas > VictoryScreen > Days To Win | from GameScene |
 | **Win at** | VictoryScreen > Win Time (Dawn, Morning, Midday, Afternoon, Dusk, Night, Midnight; times from the sun) | from GameScene |
 | **Day length** | the sun's Day Length Minutes: Short = half, Normal = as now, Long = double | Normal |

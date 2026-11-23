@@ -461,3 +461,38 @@ body, legs, boots, gauntlets, cape; plain `cloth_00` and bare `naked_00` body / 
 Amplify that recolor by masks (armor: metal 1 - 3, leather, cloth, gems, feathers, skin, hair, coat of arms; weapons:
 metal 1 - 4, wood, leather, paint...). Weapons: Sword, Longsword, Mace, Short Waraxe, Pike, 3 shields, a bow, an arrow
 and a quiver (no colliders). Only a pose clip comes with the bodies. Guide: `Docs/Human Enemies Setup.md`.
+
+## 11. Traps for the build menu (searched on 23/11/2026)
+
+Tony's plan: traps built with **B** (the build menu) that kill or stun monsters, so the player can get ready during
+the day. Free trap packs are rare: most trap packs on the Asset Store are paid, and there's no free bear trap there.
+OpenGameArt, CGTrader and Free3D refused the page reader, so rows marked "search result" come from the search
+engine's copy of the page: check the licence on the page itself before downloading.
+
+### Free
+
+| Asset | Author | Price / licence | Inside | Checked | Notes |
+|---|---|---|---|---|---|
+| [Dungeon - Low Poly Toon Battle Arena / Tower Defense Pack](https://assetstore.unity.com/packages/3d/environments/dungeons/dungeon-low-poly-toon-battle-arena-tower-defense-pack-109791) (also [on OpenGameArt](https://opengameart.org/content/dungeon-low-poly-toon-battle-arena-tower-defense-pack) as CC0) | BenjaTheMaker | **Free** (Asset Store EULA; CC0 on OpenGameArt) | spike blocks, an animated floor spear trap, animated blade traps, animated trap doors (search result) | Store page opened: free, 966 KB, v1.1 27/8/2019, made with Unity 2017.3 (before URP existed, so its materials are Built-in); its content list didn't load | The best free **spike trap**; toon low poly like our world |
+| [Free Modular Low Poly Dungeon Pack](https://rgsdev.itch.io/free-modular-low-poly-dungeon-pack-by-rgsdev) | RGS_Dev | **$0** (name your own price), **CC0** ("Credit is not needed") | walls, doors, floors, stairs, **traps**, chest, props: one 6.7 MB zip | Page opened | No textures: its colors come from materials (flat low poly, like ours). Formats aren't listed |
+| [3D Spiked Trap Animated](https://opengameart.org/content/3d-spiked-trap-animated) | marlene | **CC0** | spikes that go up and down | Search result | |
+| [Spyke trap Low poly (updated)](https://opengameart.org/content/spyke-trap-low-poly-updated) | Danimal | **CC-BY 3.0**: credit the author | a low-poly spike trap (5 MB zip) | Search result | Needs a credit in the game |
+| ["Metalic Bear trap Rigged Free low-poly"](https://cgtrader.com/3d-models/industrial/tool/beartrap-21e3e898-8858-4c0b-92ef-68013d9b07d5) | a CGTrader user | **Free** (a free CGTrader account); licence not seen | a **bear trap** made in Blender, rigged to snap shut, UV mapped, rough metal | Search result | The only free rigged bear trap found. **Downloaded 23/11/2026** into `Assets/Imported3D/CGTraderBearTrap` (`beartrap.fbx`: one mesh of about 4,000 triangles, 9 bones for the jaws, material "metal" with no texture; its 2 animations are single still frames, so there's no snap to play: the jaws have to be turned by code or animated in Unity; exported 4.6 m wide) |
+| [Bear Trap](https://free3d.com/3d-model/bear-trap-2931.html) | a Free3D user | Free; licence not seen (Free3D models are often personal use only) | FBX (about 2 MB), not low poly | Search result | |
+| [Low Poly Traps](https://www.cgtrader.com/free-3d-models/various/various-models/low-poly-traps-b0fc4b29-fbd5-42a6-9a6a-cc9187385237) | a CGTrader user | Free, royalty-free licence (search result) | not known | Page didn't load | |
+
+### Paid (to compare)
+
+| Asset | Price | Notes |
+|---|---|---|
+| [Simple Bear Trap](https://assetstore.unity.com/packages/3d/props/simple-bear-trap-289244) | $4.99 | v1.0.2 (8/2024), 30 MB |
+| [Animal Traps](https://assetstore.unity.com/packages/3d/props/tools/animal-traps-108915) (Rowntec Assets) | €4.60 | v0.1 (2018), 34.5 MB; its content list didn't load |
+| [Low-Poly Spikes Traps](https://tridentcorp.itch.io/low-poly-spikes-traps) (TridentCorp) | $5 or more | also on the Asset Store |
+| [Timber Traps Pack](https://assetstore.unity.com/packages/templates/packs/timber-traps-pack-62604) (Lumighost) | €7.35 | 2016 |
+| [Dungeon Trap Pack](https://assetstore.unity.com/packages/3d/props/dungeon-trap-pack-85942) (Adventure Forge) | €13.80 | 224 MB |
+| [Traps Pack](https://assetstore.unity.com/packages/3d/props/traps-pack-257557) (AK STUDIO ART) | €18.39 | Built-in ✓; its keywords name a bear trap, spike trap, saw blades and a swinging axe |
+
+**Result:** for **spikes** (damage or kill), BenjaTheMaker's free pack is the easiest: a Unity package with animated
+traps, Built-in. For a **bear trap** (stun), the only free rigged one found is the CGTrader model (check its licence).
+Otherwise a simple low-poly bear trap can be made by an Editor tool from simple shapes (like the berry bunches), or
+the $4.99 Simple Bear Trap.

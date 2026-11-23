@@ -171,3 +171,6 @@ Packages/packages-lock.json linguist-generated
 LightingData.asset     binary
 New[[:space:]]Terrain*.asset  binary -eol
 Assets/TerrainData/**  binary -eol
+# WebGL build hosted on GitHub Pages (https://m-zubaj.github.io/QM-Gamedev-Project/Webgl_New/):
+# plain files, not LFS, because GitHub Pages can't serve LFS files (the loading bar and logo showed as pointer text).
+Webgl_New/** !filter !diff !merge

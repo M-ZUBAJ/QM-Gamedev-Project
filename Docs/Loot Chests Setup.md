@@ -118,7 +118,8 @@ The tool:
 - **Roll pop-up:** builds `Assets/Prefabs/UI/Perks/PerkRollCanvas.prefab` (the same as **Tools > UI > Build Perk Roll
   Popup**).
 - **Each game scene** (the Build Settings scenes with Sanyam's ObjectScatter: GameScene and ProceduralGenerateScene):
-  - Sanyam's chest rules, **twice as many boxes as before**: **ChestsForest** 20, **Rare Chests Grass** 6,
+  - Sanyam's chest rules, **twice as many boxes as before**: **ChestsForest** 35, **Rare Chests Grass** 10 (since
+    23/11/2026, both on ground up to 15 degrees steep like the desert's; 20 and 6 before),
     **ChestsDesert** 30 (on the **sand** layer: it used the grass layer, so every chest spawned on grass), **Rare Chests
     Desert** 12, **Epic Chests Desert** 4 and **Legendary Chests Desert** 2 (new rules are copies of the common ones,
     right after them); all chest rules share the spacing group **Chests** (20 m between any two boxes). Counts only go

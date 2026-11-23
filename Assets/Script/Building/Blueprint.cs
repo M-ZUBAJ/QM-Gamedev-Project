@@ -1,11 +1,13 @@
 /*
 First Date: 5/10/2026
-Date: 2/11/2026
+Date: 23/11/2026
 Author: Tony
 Use by: Nothing to set up. BlueprintPlacer makes blueprints with Blueprint.Create(...).
 Purpose: A building that is planned but not built yet: a see-through blue copy of the building's prefab.
          - While placing: no collisions, blue = can be placed, green = snapped onto a built piece, red = can't.
          - Placed: its colliders are triggers, so the crosshair can aim at it but nothing bumps into it.
+         - A trap (Piece Type Trap, 23/11/2026) lies on the ground: the terrain under it doesn't count as in the way,
+           so it can be placed on a slope too (the built trap then lies flat on it with StandOnGround).
          - Build() swaps the blueprint for the real building (e.g. once the recipe is paid) and marks it with
            BuiltPiece, so later blueprints can snap to it.
          The copy's own scripts are removed, so e.g. a blueprint of an InteractionMachine
@@ -149,6 +151,7 @@ public class Blueprint : MonoBehaviour
     bool Blocks(Collider other, bool ignoreBuilt)
     {
         if (other.transform.IsChildOf(transform)) return false;                       // our own shape
+        if (other is TerrainCollider && data.Piece == PieceType.Trap) return false;   // a trap lies on the ground (its box dips into a slope)
         if (ignoreBuilt && other.GetComponentInParent<BuiltPiece>() != null) return false;   // a built piece we snap to
         if (other.isTrigger) return other.GetComponentInParent<Blueprint>() != null; // only other blueprints' triggers
         return true;
