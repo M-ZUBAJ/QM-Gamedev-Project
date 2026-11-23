@@ -63,6 +63,7 @@ public static class MenuOrder
     public const int BuildDesertContent = 235;  // the new world's desert: gold ore, hard sandstone rock, sandstone caves (and the turtle, a night monster)
     public const int BuildLootChests = 236;     // common / rare / epic loot boxes: prices, new perks, where they spawn
     public const int BuildSnowContent = 237;    // the new world's snow: diamond ore, frosty rocks, icy caves, snowy pines, diamond tools
+    public const int FixGrassInBuilds = 239;    // the new world's grass drawn right in a built game (Unity 2023.1 bug with terrain made while playing)
     public const int BuildBerryBushes = 238;    // Turki's berry bush -> a Yughues bush with red berries you pick with E (they grow back)
 
     // ===== Tools > Player =====

@@ -1,6 +1,6 @@
 /*
 First Date: 20/11/2026
-Date: 22/11/2026
+Date: 23/11/2026
 Author: Tony
 Use by: An empty object in the new world's scene (Assets/Scenes/ProceduralGenerateScene, "World Generator").
         Tools > World > Build New World Scene puts it there, filled in.
@@ -242,6 +242,16 @@ public class WorldGenerator : MonoBehaviour
     [Range(20f, 250f)]
     [SerializeField] float grassDistance = 80f;
 
+    [Tooltip("An empty terrain made in the Editor (Tools > World > Fix Grass In Builds makes it): every chunk's terrain " +
+             "starts as a copy of it. Unity 2023.1 bug (UUM-25114): a terrain made from nothing while the game runs draws " +
+             "its grass with the wrong shader in a built game (green squares, no wind). Empty = made from nothing (fine " +
+             "in the Editor only).")]
+    [SerializeField] TerrainData chunkTemplate;
+
+    [Tooltip("Off = no grass tufts in a built game (the Editor still shows them). For when the built game's grass looks " +
+             "wrong.")]
+    [SerializeField] bool grassInBuilds = true;
+
     [Header("Caves")]
     [Tooltip("The grassland's caves to pick from (Tools > World > Build Rock Caves makes them). Each has children named " +
              "OreSpot where the rocks go.")]
@@ -349,6 +359,7 @@ public class WorldGenerator : MonoBehaviour
     bool startingNewWorld;              // the player died and a new world is loading (it starts only once)
     Vector2 noiseAt;                    // where in the noise this world is (moves with the seed)
     Vector2 patchSeed;                  // where the forests' patch pattern starts (like ObjectScatter's)
+    bool warnedGrass;                   // the "grass picture isn't readable" warning was shown
     Vector3 spawn;                      // where the player starts (on the ground)
     float spawnLevel;                   // the start clearing's height, in meters
     Transform worldRoot;                // "Generated World": every chunk is under it
@@ -411,6 +422,9 @@ public class WorldGenerator : MonoBehaviour
     void Start()
     {
         ShowOrHide(PlayerPosition(), true);
+        if (!Application.isEditor && grassInBuilds && grassTexture != null && chunkTemplate == null)
+            Debug.LogWarning("World Generator: no Chunk Template, so the grass shows as green squares in this built game " +
+                             "(a Unity 2023.1 bug). Run Tools > World > Fix Grass In Builds, then build again.");
     }
 
     void Update()
@@ -808,7 +822,10 @@ public class WorldGenerator : MonoBehaviour
     // (Pause), so making a chunk never stops the game for long in one go.
     IEnumerator MakingTerrain(Chunk chunk, Ground ground, float[,,] paint, int[,] tufts)
     {
-        TerrainData data = new TerrainData { name = "World Chunk " + chunk.coord.x + ", " + chunk.coord.y };
+        // A copy of the Editor-made template, not a TerrainData made from nothing: in a built game Unity 2023.1 gives one
+        // made from nothing the wrong grass shader (green squares). Everything below overwrites the template's settings.
+        TerrainData data = chunkTemplate != null ? Instantiate(chunkTemplate) : new TerrainData();
+        data.name = "World Chunk " + chunk.coord.x + ", " + chunk.coord.y;
         data.heightmapResolution = ground.res;   // first: changing it also changes the size
         data.size = new Vector3(chunkSize, maxHeight, chunkSize);
         data.SetHeights(0, 0, ground.Heights01());
@@ -1171,6 +1188,7 @@ public class WorldGenerator : MonoBehaviour
     int[,] GrassCounts(float[,,] paint, Vector3 corner, float step)
     {
         if (grassTexture == null || grassDensity <= 0 || grassLayer < 0 || grassLayer >= paint.GetLength(2)) return null;
+        if (!grassInBuilds && !Application.isEditor) return null;   // Grass In Builds off: none in a built game
         int size = paint.GetLength(0);
         int[,] counts = new int[size, size];
         float perSpot = grassDensity * step * step / 4f;   // Grass Density is per 2 x 2 m; a spot is step x step meters
@@ -1192,6 +1210,15 @@ public class WorldGenerator : MonoBehaviour
     // camera only (Grass Distance).
     void AddGrass(TerrainData data, int[,] counts)
     {
+        // Unity packs the grass picture into its grass sheet by reading its pixels: in a built game that needs Read/Write
+        // on, or the grass shows as black squares (the web build of 23/11/2026). The Editor reads it either way.
+        if (!grassTexture.isReadable && !warnedGrass)
+        {
+            warnedGrass = true;
+            Debug.LogWarning("World Generator: the grass picture " + grassTexture.name + " isn't Read/Write enabled, so " +
+                             "in a built game the grass shows as black squares. Select it, tick Advanced > Read/Write " +
+                             "in the Inspector and Apply (Tools > World > Build New World Scene does it too).");
+        }
         int size = counts.GetLength(0);
         data.SetDetailResolution(size, 16);                                  // one count per texture spot (about 2 x 2 m)
         data.SetDetailScatterMode(DetailScatterMode.InstanceCountMode);      // the map says how many tufts, not "how much"

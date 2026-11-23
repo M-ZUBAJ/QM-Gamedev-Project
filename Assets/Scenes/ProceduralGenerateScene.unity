@@ -1491,6 +1491,8 @@ MonoBehaviour:
   grassHealthy: {r: 0.82, g: 1, b: 0.7, a: 1}
   grassDry: {r: 0.86, g: 0.88, b: 0.55, a: 1}
   grassDistance: 80
+  chunkTemplate: {fileID: 15600000, guid: 3015e71771e85ac4b84b17932246e998, type: 2}
+  grassInBuilds: 1
   cavePrefabs:
   - {fileID: 7537836816699140433, guid: b2d1ef6b0195ad64b814ec602b044e46, type: 3}
   - {fileID: 3482727551194880824, guid: 0a29d22101066e44f92bb3d91e79576e, type: 3}
@@ -1815,6 +1817,7 @@ MonoBehaviour:
   player: {fileID: 1576947588}
   sensitivity: 3
   invertY: 0
+  thirdPersonDistance: 5
   minPitch: 10
   maxPitch: 80
   firstPerson: 1
@@ -2744,6 +2747,7 @@ MonoBehaviour:
   maxHunger: 100
   hunger: 100
   drainPerSecond: 0.1
+  extraDrainPercentPerDay: 5
   walkMultiplier: 2
   sprintMultiplier: 3
   levitateExtra: 1
@@ -2837,6 +2841,8 @@ MonoBehaviour:
   directions: 32
   startMode: 0
   snapDistance: 1.5
+  keepBuilding: 1
+  upgradeReach: 1.2
 --- !u!114 &1576947598
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3115,6 +3121,9 @@ MonoBehaviour:
   knockbackSeconds: 0.25
   knockbackLift: 0.15
   criticalColor: {r: 1, g: 0.15, b: 0.1, a: 1}
+  lungeReach: 3
+  reachSlack: 0.3
+  lungeAngle: 60
 --- !u!114 &1576947615
 MonoBehaviour:
   m_ObjectHideFlags: 0
