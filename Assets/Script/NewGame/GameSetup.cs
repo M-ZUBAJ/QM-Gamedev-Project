@@ -1,6 +1,6 @@
 /*
 First Date: 7/11/2026
-Date: 22/11/2026
+Date: 23/11/2026
 Author: Tony
 Use by: Nothing to set up (code only, no component). The New Game page fills it; it works by itself in the game.
 Unity Editor: Nothing to set. Pressing Play straight in GameScene (testing) changes nothing: the choices are only used
@@ -20,7 +20,9 @@ Purpose: Remembers the player's New Game choices and puts them into the game whe
                                                       Iron sets)
            Testing: Old chests / New chests        -> GameRules New Chests (ChestTier: the two chest systems)
            Map: Old world / New world              -> NewWorld: TitleMenu loads GameScene or ProceduralGenerateScene
-                                                      (WorldGenerator: a new random world every game)
+                                                      (WorldGenerator: a new random world every game). New world is
+                                                      the page's default since 23/11/2026, so NewGamePanel always
+                                                      sets it (true or false)
            Starting coins                          -> PlayerCoins.SetStartCoins (Marko's script, Tony's [Tony] lines):
                                                       the coins now, and what dying puts them back to
          Other scripts can read what was chosen, e.g. if (GameSetup.ChosenDifficulty == GameSetup.Difficulty.Hard).
@@ -61,7 +63,7 @@ public static class GameSetup
     public static bool? PauseGame;             // Rules: the Esc pause menu stops the game (GameRules > Pause Game)
     public static bool? StartWithAllTools;     // Testing: one of every tier tool from the start
     public static bool? StartWithAllArmor;     // Testing: every armor piece (the Copper and Iron sets) from the start
-    public static bool? NewWorld;              // Map: true = the new world (a new random one every game), null = the old
+    public static bool? NewWorld;              // Map: true = the new world (a new random one every game), false / null = the old
     public static bool? NewChests;             // Testing: true = the new chest system, false = the old one
     public static int? StartCoins;             // Difficulty: the coins the player starts with (PlayerCoins > Starting Coins)
 
