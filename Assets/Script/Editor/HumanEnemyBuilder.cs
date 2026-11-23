@@ -20,16 +20,26 @@ Purpose: Step 1 of the human enemies (Docs/Human Enemies Plan.md): survivors tha
              measured: Swing At); the three attacks by what it holds (fists, one-handed, two-handed; measured when
              they land and end), which also serve as its punches at a tree or rock it has no tool for; Gathering for
              picking berries (measured when the hand picks); GetHit; Death;
-           - for each human type so far (Type 1) a man and a woman, Assets/Prefabs/Enemy/Human/Human Type 1 Male /
-             Female: the Polytope body as Model (1.8 m tall, like the player's character: the Human Spawner makes
-             each one a little taller or shorter), a capsule and physics, Marko's EnemyCombat for health (so every attack
+           - for each human type so far (Type 1, Type 2, Type 3) a man and a woman, Assets/Prefabs/Enemy/Human/Human
+             Type N Male / Female (a new or reset HumanBrain gets its type's behaviour: Type 1 Fight Back, Type 2 Judge
+             and Notices Player, Type 3 Fight Back with Damage Times 0.8): the Polytope body as Model (1.8 m tall, like
+             the player's character, Type 3 0.75 x that: the Human Spawner makes each one a little taller or shorter),
+             a capsule and physics, Marko's EnemyCombat for health (so every attack
              of the player hurts it; its own coins off, Coin Multiplier 0: HumanLoot pays by its gear), EnemyAnimator,
              DeathEffect, HumanGear (every armor piece, head, hair, beard and cape of the body, its weapon and shield
              slots, Polytope's melee weapons and shields, the game's Wooden ... Diamond axes and pickaxes),
              HumanLoot (the Copper / Iron / Gold / Diamond / Wood / Stone items) and HumanBrain;
-           - the new world's Human Spawner, with each type and where it lives (Type 1: grassland, desert, snow).
+           - Polytope's male prefab: its four bare-skin parts (naked_00_body, _boots, _gauntlets, _legs) point at meshes
+             its FBX no longer has under those names (there: naked_body_01, naked_boots_01, naked_gauntlets_S_01,
+             naked_legs_01), so they had nothing to draw: a man dressed partly bare-skinned was missing those pieces
+             (only a hood floating, or no torso and arms, 23/11/2026). Each human prefab gives every part without a mesh
+             the FBX's matching part (same style and piece): its mesh, its bones in its own order, its root bone and box
+             (FixMissingMeshes, an override on the prefab; Polytope's files stay as they are); a part it can't fix is
+             switched off and left out of HumanGear's lists;
+           - the new world's Human Spawner, with each type and where it lives (Type 1: grassland, desert, snow;
+             Type 2: grassland, hills, desert, snow; Type 3: everywhere, 3 at a time, rarely 2).
          SetUpScene is also what Tools > World > Build New World Scene uses, so a rebuilt new world keeps its humans.
-Requirement: HumanEnemyBuilder.cs x-> HumanGear.cs, HumanBrain.cs, HumanLoot.cs, HumanSpawner.cs, EnemyCombat.cs, EnemyAnimator.cs, AnimatorBuildHelper.cs, DeathEffectBuilder.cs, RockCaveBuilder.cs, UIBuildHelper.cs, MenuOrder.cs, ItemData.cs
+Requirement: HumanEnemyBuilder.cs x-> HumanGear.cs, HumanBrain.cs, HumanLoot.cs, HumanSpawner.cs, HumanTag.cs, EnemyCombat.cs, EnemyAnimator.cs, AnimatorBuildHelper.cs, DeathEffectBuilder.cs, RockCaveBuilder.cs, UIBuildHelper.cs, MenuOrder.cs, ItemData.cs
              HumanEnemyBuilder.cs <-x NewWorldBuilder.cs
 */
 
@@ -51,6 +61,8 @@ public static class HumanEnemyBuilder
     const string PrefabFolder = "Assets/Prefabs/Enemy/Human";
     const string ControllerPath = "Assets/Animation/Enemy/Human/HumanEnemy.controller";
     const string MaskPath = "Assets/Animation/Enemy/Human/HumanUpperBody.mask";   // the attacks move only the upper body
+    const string MeshFolder = "Assets/Prefabs/Enemy/Human/Meshes";               // Type 2's hood, one per body
+    const string HoodMaterialPath = "Assets/Materials/Humans/Hood.mat";
     const string ActionLayerName = "Actions";
     const string NoFrictionPath = "Assets/Prefabs/Enemy/EnemyNoFriction.physicMaterial";   // the monsters' (EnemyBuilder): slides along walls
     const string NewWorldPath = "Assets/Scenes/ProceduralGenerateScene.unity";
@@ -147,10 +159,23 @@ public static class HumanEnemyBuilder
         public bool grassland, hills, desert, snow;
         public int groupMin, groupMax;
         public float weight;
+        public HumanBrain.WhenHit whenHit;   // what a new prefab's HumanBrain does when hit
+        public bool notices;                 // ... and whether it notices the player (Type 2)
+        public bool hood;                    // it wears a hood instead of a helmet (Type 2's look)
+        public Color tagColor;               // its test name tag's color (HumanTag)
+        public float smallerGroupChance;     // the Human Spawner line: a group comes one smaller this often (Type 3: rarely 2)
+        public float damageTimes;            // a new prefab's HumanBrain > Damage Times (Type 3, small: 0.8)
 
         public Kind(string name, HumanBrain.Kind type, float size, float health, bool grassland, bool hills, bool desert,
-                    bool snow, int groupMin, int groupMax, float weight)
+                    bool snow, int groupMin, int groupMax, float weight, HumanBrain.WhenHit whenHit, bool notices,
+                    bool hood, Color tagColor, float smallerGroupChance = 0f, float damageTimes = 1f)
         {
+            this.smallerGroupChance = smallerGroupChance;
+            this.damageTimes = damageTimes;
+            this.whenHit = whenHit;
+            this.notices = notices;
+            this.hood = hood;
+            this.tagColor = tagColor;
             this.name = name;
             this.type = type;
             this.size = size;
@@ -165,12 +190,23 @@ public static class HumanEnemyBuilder
         }
     }
 
-    // The human types made so far (the plan's step 1).
+    // The human types made so far (the plan's steps 1 - 3).
     static readonly Kind[] Kinds =
     {
-        // Type 1: a loner as big as the player that never attacks and runs away when hit; grassland, desert and snow.
-        // (Sizes are times the player's size: type 3 will be 0.75, type 4 1.4.)
-        new Kind("Type 1", HumanBrain.Kind.Type1, 1f, 80f, true, false, true, true, 1, 1, 1f),
+        // Type 1: a loner as big as the player that never attacks first and fights back when hit; grassland, desert
+        // and snow. (Sizes are times the player's size: type 3 is 0.75, type 4 will be 1.4.)
+        new Kind("Type 1", HumanBrain.Kind.Type1, 1f, 80f, true, false, true, true, 1, 1, 1f, HumanBrain.WhenHit.FightBack, false,
+                 false, new Color(0.55f, 0.85f, 1f)),
+        // Type 2: a smarter loner (health 100): it notices the player at first sight (ignores them or walks over to
+        // look), may attack a player walking at it with a sword, and when hit does the fight-or-flee math (Judge);
+        // grassland, hills, desert and snow. It always wears a hood (its look: no helmet).
+        new Kind("Type 2", HumanBrain.Kind.Type2, 1f, 100f, true, true, true, true, 1, 1, 1f, HumanBrain.WhenHit.Judge, true,
+                 true, new Color(1f, 0.65f, 0.2f)),
+        // Type 3: small (0.75 x, health 60 each), in groups of 3, rarely 2; never attacks first; hit one and the whole
+        // group comes at the player, none of them runs (Fight Back + HumanBrain's Defends Group); its hits do 80 % of
+        // its weapon's damage. Everywhere: grassland, hills, desert and snow. Green name tag.
+        new Kind("Type 3", HumanBrain.Kind.Type3, 0.75f, 60f, true, true, true, true, 3, 3, 1f, HumanBrain.WhenHit.FightBack, false,
+                 false, new Color(0.55f, 1f, 0.5f), 0.2f, 0.8f),
     };
 
     // ===== Menu (Unity calls this) =====
@@ -192,10 +228,12 @@ public static class HumanEnemyBuilder
         }
         bool hasWorld = AssetDatabase.LoadAssetAtPath<SceneAsset>(NewWorldPath) != null;
         if (!EditorUtility.DisplayDialog(ToolName,
-                "This makes the first human enemies for the new world (Type 1: a survivor that never attacks, walks as " +
-                "fast as you, chops trees, mines rocks and picks berries for real, and runs away when hit):\n\n" +
+                "This makes the human enemies for the new world (Type 1: a survivor that never attacks first, chops, " +
+                "mines and picks for real and fights back when hit; Type 2: smarter, it notices you, may attack you " +
+                "if you walk at it with a sword, and runs or fights by the odds; Type 3: small, in groups of 3: hit one " +
+                "and the whole group attacks):\n\n" +
                 "- " + ControllerPath + " (Blink's animations)\n" +
-                "- " + PrefabFolder + "/Human Type 1 Male and Female: Polytope bodies with random armor, a weapon and " +
+                "- " + PrefabFolder + "/Human Type 1, 2 and 3, Male and Female: Polytope bodies with random armor, a weapon and " +
                 "sometimes a shield, tinted by tier; killed, they give you what they wore (1 of its material a piece) " +
                 "and what they gathered, straight into your inventory, and coins by tier\n" +
                 (hasWorld
@@ -308,6 +346,7 @@ public static class HumanEnemyBuilder
                 line.FindPropertyRelative("snow").boolValue = kind.snow;
                 line.FindPropertyRelative("groupMin").intValue = kind.groupMin;
                 line.FindPropertyRelative("groupMax").intValue = kind.groupMax;
+                line.FindPropertyRelative("smallerGroupChance").floatValue = kind.smallerGroupChance;
             }
             SerializedProperty prefabs = line.FindPropertyRelative("bodies");
             prefabs.arraySize = bodies.Count;
@@ -493,6 +532,7 @@ public static class HumanEnemyBuilder
             string gearSettings = Settings<HumanGear>(root);
             if (!CurrentSettings(gearSettings, HumanGear.SettingsVersion)) gearSettings = null;
             string lootSettings = Settings<HumanLoot>(root);
+            string tagSettings = Settings<HumanTag>(root);
             if (existed) Empty(root);
             root.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
             root.transform.localScale = Vector3.one;
@@ -507,6 +547,8 @@ public static class HumanEnemyBuilder
             Animator animator = model.GetComponentInChildren<Animator>(true);
             if (animator == null) return title + ": " + bodyPrefab.name + " has no Animator, skipped.";
             string slots = AddMissingSlots(model);
+            string meshes = FixMissingMeshes(model);   // Polytope's man: his bare-skin parts have no meshes
+            GameObject hood = kind.hood ? AddHood(model, body) : null;   // Type 2's look
             animator.runtimeAnimatorController = controller;
             animator.applyRootMotion = false;   // HumanBrain moves it: the animations stay on the spot
             animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;   // off screen its bones aren't posed every frame
@@ -534,7 +576,7 @@ public static class HumanEnemyBuilder
             root.AddComponent<EnemyAnimator>();
             HumanGear gear = root.AddComponent<HumanGear>();
             Restore(gearSettings, gear);
-            string gearReport = FillGear(gear, model, weapons, shields, tools);
+            string gearReport = FillGear(gear, model, weapons, shields, tools, hood, kind.hood);
             HumanLoot loot = root.AddComponent<HumanLoot>();
             Restore(lootSettings, loot);
             FillLoot(loot, items);
@@ -542,6 +584,12 @@ public static class HumanEnemyBuilder
             Restore(brainSettings, brain);
             SerializedObject brainFields = new SerializedObject(brain);   // the names in quotes must match HumanBrain's fields
             brainFields.FindProperty("kind").enumValueIndex = (int)kind.type;
+            if (brainSettings == null)   // fresh numbers (a new prefab, or older defaults): this type's behaviour
+            {
+                brainFields.FindProperty("whenHit").enumValueIndex = (int)kind.whenHit;
+                brainFields.FindProperty("noticesPlayer").boolValue = kind.notices;
+                brainFields.FindProperty("damageTimes").floatValue = kind.damageTimes;
+            }
             if (swingAt.HasValue) brainFields.FindProperty("swingAt").floatValue = swingAt.Value;   // when its tool lands
             if (gather.measured)   // when its hand picks a berry bush
             {
@@ -557,10 +605,21 @@ public static class HumanEnemyBuilder
                 timing.FindPropertyRelative("done").floatValue = strikes[i].done;
             }
             brainFields.ApplyModifiedPropertiesWithoutUndo();
+
+            // The test name tag over its head (only while GameRules > Human Tags is on): its type, in its color.
+            HumanTag nameTag = root.AddComponent<HumanTag>();
+            Restore(tagSettings, nameTag);
+            SerializedObject tagFields = new SerializedObject(nameTag);   // the names in quotes must match HumanTag's fields
+            tagFields.FindProperty("label").stringValue = kind.name;
+            tagFields.FindProperty("color").colorValue = kind.tagColor;
+            tagFields.ApplyModifiedPropertiesWithoutUndo();
+
             string effect = DeathEffectBuilder.AddTo(root);   // it turns into particles during its death animation
 
             PrefabUtility.SaveAsPrefabAsset(root, path);
-            return title + ": " + (slots.Length > 0 ? slots + "; " : "") + gearReport + "; " + effect + ".";
+            string hoodReport = kind.hood ? (hood != null ? "a hood; " : "NO hood (no head bone or head mesh found); ") : "";
+            return title + ": " + (slots.Length > 0 ? slots + "; " : "") + (meshes.Length > 0 ? meshes + "; " : "") +
+                   hoodReport + gearReport + "; " + effect + ".";
         }
         finally
         {
@@ -572,7 +631,7 @@ public static class HumanEnemyBuilder
     // Lists the body's pieces for HumanGear by their names (PT_Male_Armor_01_A_helmet, ..._cloth_00_body,
     // ..._naked_00_boots, ..._hair_01...), its two slot bones, and Polytope's weapons and shields. Returns a short report.
     static string FillGear(HumanGear gear, GameObject model, List<(GameObject prefab, bool twoHanded, float damage)> weapons, List<GameObject> shields,
-                           (List<GameObject> axes, List<GameObject> pickaxes) tools)
+                           (List<GameObject> axes, List<GameObject> pickaxes) tools, GameObject hood, bool wearsHood)
     {
         SerializedObject so = new SerializedObject(gear);   // the names in quotes must match HumanGear's fields
         SerializedProperty parts = so.FindProperty("parts");
@@ -583,10 +642,17 @@ public static class HumanEnemyBuilder
         List<GameObject> capes = new List<GameObject>();
         int armor = 0;
         int plain = 0;
+        int noMesh = 0;
 
         foreach (SkinnedMeshRenderer skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
         {
             GameObject part = skin.gameObject;
+            if (skin.sharedMesh == null)   // nothing to draw (FixMissingMeshes couldn't give it one): never worn
+            {
+                part.SetActive(false);
+                noMesh++;
+                continue;
+            }
             string n = part.name.ToLower();
             if (n.Contains("_head")) { heads.Add(part); continue; }
             if (n.Contains("_hair")) { hairs.Add(part); continue; }
@@ -637,12 +703,96 @@ public static class HumanEnemyBuilder
         SetList(so.FindProperty("shields"), shields);
         SetList(so.FindProperty("axes"), tools.axes);
         SetList(so.FindProperty("pickaxes"), tools.pickaxes);
+        so.FindProperty("hood").objectReferenceValue = hood;
+        so.FindProperty("wearsHood").boolValue = wearsHood && hood != null;
         so.ApplyModifiedPropertiesWithoutUndo();
 
         return armor + " armor pieces, " + plain + " plain, " + heads.Count + " heads, " + hairs.Count + " hairs, " +
                beards.Count + " beards, " + capes.Count + " capes, " + weapons.Count + " weapons, " + shields.Count + " shields" +
+               (noMesh > 0 ? ", " + noMesh + " parts WITHOUT A MESH left out" : "") +
                (weaponSlot == null ? ", NO weapon slot found" : "") + (shieldSlot == null ? ", NO shield slot found" : "");
     }
+
+    // Polytope's male prefab points its four bare-skin parts (naked_00_body, _boots, _gauntlets, _legs) at meshes its
+    // FBX no longer has under those names (there they're naked_body_01, naked_boots_01, naked_gauntlets_S_01,
+    // naked_legs_01), so those parts had nothing to draw: a man dressed partly bare-skinned was missing those pieces
+    // (23/11/2026). Gives each part without a mesh the matching part of the FBX the body's other meshes come from (the
+    // same style and piece): its mesh, its bones in that part's own order (found by name in this body, so they fit the
+    // mesh's bind poses), its root bone and its box. Returns what it did, for the report ("" = nothing was missing).
+    static string FixMissingMeshes(GameObject model)
+    {
+        List<SkinnedMeshRenderer> broken = new List<SkinnedMeshRenderer>();
+        string source = null;
+        foreach (SkinnedMeshRenderer skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+        {
+            if (skin.sharedMesh == null) broken.Add(skin);
+            else if (source == null) source = AssetDatabase.GetAssetPath(skin.sharedMesh);   // the FBX its meshes come from
+        }
+        if (broken.Count == 0) return "";
+        GameObject fbx = string.IsNullOrEmpty(source) ? null : AssetDatabase.LoadAssetAtPath<GameObject>(source);
+        if (fbx == null) return broken.Count + " parts have NO MESH (no FBX found to take them from)";
+
+        SkinnedMeshRenderer[] originals = fbx.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+        Dictionary<string, Transform> bodyBones = new Dictionary<string, Transform>();
+        foreach (Transform t in model.GetComponentsInChildren<Transform>(true))
+        {
+            if (!bodyBones.ContainsKey(t.name)) bodyBones.Add(t.name, t);
+        }
+        List<string> done = new List<string>();
+        List<string> failed = new List<string>();
+        foreach (SkinnedMeshRenderer skin in broken)
+        {
+            SkinnedMeshRenderer original = MatchingPart(skin.name, originals);
+            Transform[] bones = original != null ? SameBones(original.bones, bodyBones) : null;
+            if (bones == null)
+            {
+                failed.Add(Short(skin.name));
+                continue;
+            }
+            skin.sharedMesh = original.sharedMesh;
+            skin.bones = bones;
+            if (original.rootBone != null && bodyBones.TryGetValue(original.rootBone.name, out Transform root)) skin.rootBone = root;
+            skin.localBounds = original.localBounds;
+            done.Add(Short(skin.name) + " <- " + Short(original.sharedMesh.name));
+        }
+        return (done.Count > 0 ? "gave " + done.Count + " parts without a mesh the FBX's (" + string.Join(", ", done) + ")" : "") +
+               (done.Count > 0 && failed.Count > 0 ? "; " : "") +
+               (failed.Count > 0 ? failed.Count + " parts still WITHOUT A MESH (" + string.Join(", ", failed) + ")" : "");
+    }
+
+    // The FBX's part for a part of the body: the same name, else the same piece and style ("naked_00_body" =
+    // "naked_body_01": both bare skin, both the body). Null = none.
+    static SkinnedMeshRenderer MatchingPart(string name, SkinnedMeshRenderer[] originals)
+    {
+        string n = name.ToLower();
+        foreach (SkinnedMeshRenderer o in originals)
+        {
+            if (o.sharedMesh != null && o.name.ToLower() == n) return o;
+        }
+        if (!PieceOf(n, out HumanGear.Piece piece, out string word)) return null;
+        string style = StyleOf(n, word);
+        foreach (SkinnedMeshRenderer o in originals)
+        {
+            string on = o.name.ToLower();
+            if (o.sharedMesh == null || !PieceOf(on, out HumanGear.Piece p, out string w) || p != piece) continue;
+            if (StyleOf(on, w) == style) return o;
+        }
+        return null;
+    }
+
+    // The body's own bones with the same names, in the same order (null if one is missing).
+    static Transform[] SameBones(Transform[] originalBones, Dictionary<string, Transform> bodyBones)
+    {
+        Transform[] bones = new Transform[originalBones.Length];
+        for (int i = 0; i < originalBones.Length; i++)
+        {
+            if (originalBones[i] == null || !bodyBones.TryGetValue(originalBones[i].name, out bones[i])) return null;
+        }
+        return bones;
+    }
+
+    // "PT_Male_Armor_naked_00_body" -> "naked_00_body"
+    static string Short(string name) => name.Replace("PT_Male_Armor_", "").Replace("PT_Female_Armor_", "");
 
     // Which armor piece a part is, by a word in its name.
     static bool PieceOf(string name, out HumanGear.Piece piece, out string word)
@@ -813,6 +963,148 @@ public static class HumanEnemyBuilder
             graph.Destroy();
             Object.DestroyImmediate(copy);
         }
+    }
+
+    // ----- Type 2's hood -----
+
+    // A low-poly cloth hood made to fit this body's head (Polytope's free pack has none): an open face, a soft peak at
+    // the back and a short cape over the shoulders, drawn on both sides (its inside shows round the face). Its mesh is
+    // saved as Assets/Prefabs/Enemy/Human/Meshes/Hood <body>.asset (refilled in place) and it goes on the head bone as
+    // a switched-off child "Hood", so it moves with the head (HumanGear switches it on and colors it). Null = no head
+    // bone or head mesh found.
+    static GameObject AddHood(GameObject model, string body)
+    {
+        Animator animator = model.GetComponentInChildren<Animator>(true);
+        Transform headBone = animator != null && animator.isHuman ? animator.GetBoneTransform(HumanBodyBones.Head) : null;
+        if (headBone == null) headBone = FindDeep(model.transform, "PT_Head");
+        SkinnedMeshRenderer headMesh = null;
+        foreach (SkinnedMeshRenderer skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+        {
+            if (skin.sharedMesh == null || !skin.name.ToLower().Contains("_head")) continue;
+            headMesh = skin;
+            break;
+        }
+        if (headBone == null || headMesh == null || !BakedBounds(headMesh, out Bounds head)) return null;
+
+        MakeFolders(MeshFolder);
+        string path = MeshFolder + "/Hood " + body + ".asset";
+        Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(path);
+        bool isNew = mesh == null;
+        if (isNew) mesh = new Mesh();
+        else mesh.Clear();   // refilled in place: the prefab's link to it stays
+        mesh.name = "Hood " + body;
+        FillHood(mesh, head, headBone);
+        if (isNew) AssetDatabase.CreateAsset(mesh, path);
+        else EditorUtility.SetDirty(mesh);
+
+        GameObject hood = new GameObject("Hood");
+        hood.transform.SetParent(headBone, false);
+        hood.AddComponent<MeshFilter>().sharedMesh = mesh;
+        hood.AddComponent<MeshRenderer>().sharedMaterial = HoodMaterial();
+        hood.SetActive(false);
+        return hood;
+    }
+
+    // The box around a skinned part in the world, as its bones hold it now (the body's pose in the prefab).
+    static bool BakedBounds(SkinnedMeshRenderer skin, out Bounds box)
+    {
+        box = default;
+        Mesh posed = new Mesh();
+        try
+        {
+            skin.BakeMesh(posed, true);   // true = without the renderer's scale, so toWorld scales it once (see MeshBounds)
+            Vector3[] corners = posed.vertices;
+            if (corners.Length == 0) return false;
+            Matrix4x4 toWorld = skin.transform.localToWorldMatrix;
+            box = new Bounds(toWorld.MultiplyPoint3x4(corners[0]), Vector3.zero);
+            foreach (Vector3 corner in corners) box.Encapsulate(toWorld.MultiplyPoint3x4(corner));
+            return true;
+        }
+        finally
+        {
+            Object.DestroyImmediate(posed);
+        }
+    }
+
+    // The hood's shape around the head (rows from the shoulders up over the top, corners round it), in the head
+    // bone's own space; flat faces, each one twice (outside and inside); no faces where the face is.
+    static void FillHood(Mesh mesh, Bounds head, Transform headBone)
+    {
+        const int Around = 16;   // corners round the head
+        const int Rows = 8;      // rows from the shoulders to the top
+        Vector3 center = head.center + new Vector3(0f, head.extents.y * 0.06f, -head.extents.z * 0.08f);
+        float side = head.extents.x * 1.3f + 0.01f;   // a little bigger than the head all round
+        float tall = head.extents.y * 1.1f + 0.01f;
+        float deep = head.extents.z * 1.2f + 0.01f;
+
+        float UpOf(float row) => Mathf.Lerp(-50f, 90f, row / Rows);   // degrees: -50 = on the shoulders, 90 = the top
+        float RoundOf(float col) => col * 360f / Around;              // degrees: 0 = the face's side (+Z)
+
+        Vector3 Point(int row, int col)
+        {
+            float up = UpOf(row) * Mathf.Deg2Rad;
+            float round = RoundOf(col) * Mathf.Deg2Rad;
+            float cape = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(-15f, -50f, UpOf(row)));   // the lower rows spread over the shoulders
+            float cos = Mathf.Cos(up);
+            float sin = Mathf.Sin(up);
+            float x = side * (1f + 1.6f * cape) * cos * Mathf.Sin(round);   // the bottom edge about 24 cm out each side
+            float z = deep * (1f + 0.8f * cape) * cos * Mathf.Cos(round);
+            float y = tall * sin * (sin < 0f ? 1.25f : 1f);   // reaches down to the top of the shoulders
+            float back = Mathf.Max(0f, -Mathf.Cos(round));    // 1 at the back of the head
+            float peakRow = (UpOf(row) - 45f) / 25f;
+            float peak = back * Mathf.Exp(-peakRow * peakRow) * 0.22f * deep;   // a soft point at the back
+            return center + new Vector3(x, y + peak * 0.5f, z - peak);
+        }
+
+        List<Vector3> corners = new List<Vector3>();
+        List<int> faces = new List<int>();
+        void Add(Vector3 a, Vector3 b, Vector3 c)
+        {
+            int start = corners.Count;
+            corners.Add(headBone.InverseTransformPoint(a));
+            corners.Add(headBone.InverseTransformPoint(b));
+            corners.Add(headBone.InverseTransformPoint(c));
+            faces.Add(start);
+            faces.Add(start + 1);
+            faces.Add(start + 2);
+        }
+        void Face(Vector3 a, Vector3 b, Vector3 c)
+        {
+            Vector3 normal = Vector3.Cross(b - a, c - a);
+            if (normal.sqrMagnitude < 1e-10f) return;   // at the very top two corners meet: no face
+            if (Vector3.Dot(normal, (a + b + c) / 3f - center) < 0f) (b, c) = (c, b);   // the outside faces out
+            Add(a, b, c);   // seen from outside
+            Add(a, c, b);   // the same face turned round: seen from inside, round the face
+        }
+
+        for (int row = 0; row < Rows; row++)
+        {
+            for (int col = 0; col < Around; col++)
+            {
+                float round = Mathf.DeltaAngle(0f, RoundOf(col + 0.5f));
+                float up = UpOf(row + 0.5f);
+                if (Mathf.Abs(round) < 50f && up > -30f && up < 40f) continue;   // the face: open from the chin to the brow
+                Vector3 p00 = Point(row, col), p01 = Point(row, col + 1), p10 = Point(row + 1, col), p11 = Point(row + 1, col + 1);
+                Face(p00, p10, p11);
+                Face(p00, p11, p01);
+            }
+        }
+        mesh.SetVertices(corners);
+        mesh.SetTriangles(faces, 0);
+        mesh.RecalculateNormals();   // every face has its own corners: flat shading, like Polytope's low-poly look
+        mesh.RecalculateBounds();
+    }
+
+    // The hood's material: plain Standard, white (HumanGear gives each hood one of its Hood Colors). Made only if missing.
+    static Material HoodMaterial()
+    {
+        Material material = AssetDatabase.LoadAssetAtPath<Material>(HoodMaterialPath);
+        if (material != null) return material;
+        MakeFolders(FolderOf(HoodMaterialPath));
+        material = new Material(Shader.Find("Standard")) { name = "Hood", color = Color.white };
+        material.SetFloat("_Glossiness", 0.1f);   // cloth: hardly shiny
+        AssetDatabase.CreateAsset(material, HoodMaterialPath);
+        return material;
     }
 
     // The attacks' mask: the upper body only (no root, legs or feet), so the legs keep running under a swing. Refilled

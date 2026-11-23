@@ -10,7 +10,7 @@ plan; `Docs/Human Enemies Setup.md` explains what's built so far and how to use 
 | Type | Size | Lives | Normally | When the player hits it | Attacks the player first? |
 |---|---|---|---|---|---|
 | 1 | Normal (the player's size) | Alone | Works, never attacks first | Fights back; stops following beyond 10 m, but remembers and attacks again when the player comes within 8 m | No |
-| 2 | Normal | Alone | Works, never attacks | Runs, unless its health is low and it judges it can't escape: then it fights | No |
+| 2 | Normal, wears a hood | Alone | Works, never attacks first; notices the player at first sight (ignores them or walks over to look), may attack a player walking at it with a sword | Runs, unless it judges it can't escape and its health is low (or it would win): then it fights | Only a player coming at it with a sword (a chance) |
 | 3 | Small (0.75x) | Group of 3, rarely 2 | Works, never attacks | The whole group attacks, not afraid to die | No |
 | 4 | Big (1.4x) | Alone | Works | Fights if it can't escape or the player is weaker, else runs | Yes, when its health is low and it judges the player is weaker |
 | 5 | Normal | Group of 2 - 3 | Attacks the player | Fights to the death | Always |
@@ -113,8 +113,11 @@ Each step is playable on its own:
 2. Melee fighting (built for type 1 on 23/11/2026: attacks by weapon, weapon damage, armor protection, and fighting
    like a player: facing, sprinting with stamina, timed swings that follow a player walking away, running attacks,
    circling, no stun-lock), the fight-or-flee math: types 2 and 4. Also built: punching without a tool, picking
-   berries by hand, the caves' invisible trail (CaveTrail).
-3. Groups: types 3 and 5.
+   berries by hand, the caves' invisible trail (CaveTrail). Type 2 built on 23/11/2026 (noticing the player, the sword
+   threat, the fight-or-flee math with Judgement); type 4 still to do.
+3. Groups: types 3 and 5. Type 3 built on 23/11/2026 (0.75 x, health 60, groups of 3 rarely 2 that stay near
+   their leader, the whole group fights when one is hurt and never runs, hits 80 % of its weapon's damage); type 5
+   still to do.
 4. Archers and enemy arrows.
 5. Night: humans and night monsters fighting both ways, the 50 / 50 leave-or-stay roll, and only the player's kills
    paying.

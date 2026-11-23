@@ -934,7 +934,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7494012006072683705, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 465.19003
+      value: 465.19
       objectReference: {fileID: 0}
     - target: {fileID: 8070574319609505244, guid: b4a07cecea4fa4f119c3d94a9aa24c81, type: 3}
       propertyPath: m_Name
@@ -1081,6 +1081,31 @@ MonoBehaviour:
     snow: 1
     groupMin: 1
     groupMax: 1
+    smallerGroupChance: 0
+  - name: Type 2
+    bodies:
+    - {fileID: 1815479699664868322, guid: 00535be65d37eee42b588ea83aa4ae70, type: 3}
+    - {fileID: 5740385269463185406, guid: c8f4c1f26095a1447a78a3866fe27c84, type: 3}
+    weight: 1
+    grassland: 1
+    hills: 1
+    desert: 1
+    snow: 1
+    groupMin: 1
+    groupMax: 1
+    smallerGroupChance: 0
+  - name: Type 3
+    bodies:
+    - {fileID: 4113036633049436399, guid: 5de9542795e30624aa8b482284cce1d4, type: 3}
+    - {fileID: 2332855634565496847, guid: 658597d40760f7147b4ce3840c5fb4be, type: 3}
+    weight: 1
+    grassland: 1
+    hills: 1
+    desert: 1
+    snow: 1
+    groupMin: 3
+    groupMax: 3
+    smallerGroupChance: 0.2
   grassland:
     none: 40
     copper: 40
@@ -3220,6 +3245,9 @@ MonoBehaviour:
   knockbackSeconds: 0.25
   knockbackLift: 0.15
   criticalColor: {r: 1, g: 0.15, b: 0.1, a: 1}
+  lungeReach: 3
+  reachSlack: 0.3
+  lungeAngle: 60
 --- !u!114 &1576947615
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3459,6 +3487,7 @@ MonoBehaviour:
   toolTest: 0
   armorTest: 0
   newChests: 1
+  humanTags: 0
   pauseGame: 1
 --- !u!4 &1690935958
 Transform:

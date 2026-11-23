@@ -1,6 +1,6 @@
 /*
 First Date: 11/10/2026
-Date: 21/11/2026
+Date: 23/11/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerController and PlayerJump).
 Unity Editor: The StaminaBar (StatBar, Stat = Stamina) finds this by itself.
@@ -13,7 +13,7 @@ Purpose: Holds the player's stamina. Sprinting (PlayerController) and jumping (P
          sprinting cheaper (SetSprintCost: the Sprinter perk). The Night Power perk raises max stamina at night
          (SetMaxBoost); stamina keeps its share of the bar.
 Requirement: PlayerStamina.cs <-x PerkChest.cs, PerkManager.cs, PlayerCombat.cs
-             PlayerStamina.cs <-o BowShooter.cs, ItemConsumer.cs, PerkEffects.cs, PlayerController.cs, PlayerInfoPage.cs, PlayerJump.cs, PlayerPerks.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
+             PlayerStamina.cs <-o BowShooter.cs, HumanBrain.cs, ItemConsumer.cs, PerkEffects.cs, PlayerController.cs, PlayerInfoPage.cs, PlayerJump.cs, PlayerPerks.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
 */
 
 using UnityEngine;
@@ -77,6 +77,7 @@ public class PlayerStamina : MonoBehaviour
     public float RegenBoost => regenBoost;             // how much faster it comes back now: 1 = normal, 1.5 = 50 % faster
     public float RegenPerSecond => regenPerSecond * regenBoost;   // stamina gained back per second while resting, boosts included
     public bool IsTired => tired;
+    public float SprintDrain => sprintDrainPerSecond * sprintCost;   // stamina a second while sprinting (the Sprinter perk lowers it)
     public bool CanSprint => !tired && stamina > 0f;
     public bool CanJump => !tired && stamina > 0f;
 

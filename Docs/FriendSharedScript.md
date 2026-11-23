@@ -556,6 +556,9 @@ axe and pickaxe.
 |---|---|
 | `HumanBrain.Type` | which of the five types it is (`HumanBrain.Kind.Type1` ... `Type5`) |
 | `HumanBrain.IsFleeing`, `IsWorking` | running away from the player; chopping, mining or picking (for real: what it breaks is gone) |
+| `HumanBrain.HasSeenPlayer`, `Judgement` | Type 2 has seen the player once; its last fight-or-flee decision and why (When Hit = Judge) |
+| `HumanBrain.InGroup`, `IsLeader` | it belongs to a group (Type 3: 2 or 3 small humans that stay near the first one and all fight when one is hurt); it's the one the others follow |
+| `HumanBrain.Defend(position)` | makes it join a fight its group mate at `position` started (within its Group Help Range): the Human Spawner's groups call it on each other |
 | `HumanBrain.IsFighting`, `HoldsGrudge` | after the player (it fights back when hit); the player hit it before (it attacks when the player comes within 8 m). Its blows hurt the player with `PlayerHealth.TakeDamage` and trigger Thorns (`PerkEffects.Reflect`), like Marko's EnemyAttack |
 | `HumanGear.WornTier(piece)`, `WeaponTier`, `ShieldTier` | what it wears and holds: `HumanGear.Tier` None / Copper / Iron / Gold / Diamond (the number is its coins per piece) |
 | `HumanGear.AxeTier`, `PickaxeTier` | what it chops / mines with, as a `ToolTier` for the player's tool rules (its axe or a war axe; only a pickaxe mines). None = bare hands |
@@ -758,6 +761,7 @@ Get it: nothing to find, write `GameRules.KeepInventory` etc. directly
 | `GameRules.PerkIcons` | on | on = the HUD shows the perks as icons (x2 for stacks); off = boxes with each perk's name and stats (PerkBar) |
 | `GameRules.ToolTest` | off | on = the player gets one of every tool (ToolTestKit, for testing) |
 | `GameRules.ArmorTest` | off | on = the player gets one of every armor piece: the Copper and Iron sets (ArmorTestKit, for testing; its own rule since 20/11/2026, Tool Test no longer gives armor) |
+| `GameRules.HumanTags` | off | on = a test name tag over every human enemy's head with its type ("Type 1" / "Type 2" / "Type 3") and what it's doing (HumanTag); players never see it while it's off |
 | `GameRules.NewChests` | on | the new chest system (random common / epic boxes, a legendary box, REROLL everywhere once the player has the Reroll perk); off = the old one. The New Game page's Testing row sets it (`GameSetup.NewChests`) |
 | `GameRules.ShowNotifications` + `GameRules.NotificationSide` | on / Left | on = "+3 Wood" / "+2 Coins" messages show on the **Left** or **Right** side of the screen (NotificationFeed); off = no messages. Change the side from code: `GameRules.SetNotificationSide(NotificationSide.Right)` |
 

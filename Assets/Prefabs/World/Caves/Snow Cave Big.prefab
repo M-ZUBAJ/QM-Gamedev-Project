@@ -146,6 +146,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4329208298022750270}
+  - component: {fileID: 3325199246097999090}
   m_Layer: 0
   m_Name: Snow Cave Big
   m_TagString: Untagged
@@ -172,6 +173,19 @@ Transform:
   - {fileID: 1139450922782648043}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3325199246097999090
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1021783066964483606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca3f85b139563ed4ebdde1f2a36195f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  radius: 8.5
 --- !u!1 &1044686598385228809
 GameObject:
   m_ObjectHideFlags: 0

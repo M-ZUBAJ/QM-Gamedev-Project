@@ -15,6 +15,13 @@ Unity Editor: Kind = which human type it is. The numbers can be changed while pl
               following, but it remembers: come within Notice Range (8 m) again and it attacks again. Shoot it with an
               arrow from afar: it comes after you for Chase After Hit (8 s). One that walked into a cave walks out
               through the entrance (the cave's CaveTrail).
+              Type 2 (Notices Player on, When Hit = Judge): walk into its view: the first time it sees you it ignores
+              you or walks over and looks at you (Doing: "Watching the player"), then goes back to its work. Walk at
+              it with a sword selected: it may attack first, else it stops and watches you. Hit it: it does the math
+              (Judgement shows it): it runs if it can get away, and fights when it can't and its health is low or it
+              would win.
+              Type 3 (small, in groups of 3, rarely 2): they walk and work near the first one (Doing of the others:
+              "Following its group" when they hurry back to it). Hit one: the whole group comes at you and none runs.
 Purpose: How a human enemy behaves, the first type (Docs/Human Enemies Plan.md): a survivor like the player that never
          attacks first:
            - it walks around its home as fast as the player walks (the Player's PlayerController > Speed), resting now
@@ -47,16 +54,30 @@ Purpose: How a human enemy behaves, the first type (Docs/Human Enemies Plan.md):
              and goes back to its life, but it remembers (Holds Grudge): when the player comes within Notice Range
              again, it attacks again;
            - When Hit = Run Away: it runs off instead (faster than the player walks), for a while, also when shot from
-             afar.
+             afar;
+           - When Hit = Judge (Type 2, the plan's fight-or-flee math): each time it's hurt it works out whether it can
+             get away (its running speed against the player's sprint while their stamina lasts, and how far away they
+             are) and who would win (how long each needs to kill the other: weapons, armor, health, attack speed). It
+             runs if it can get away; when it can't, it fights if its health is low (a cornered animal) or it would
+             win, else it tries to run anyway;
+           - Notices Player (Type 2): the first time it sees the player (in front of it within See Angle, closer than
+             See Distance, nothing in the way) it ignores them or walks over to look at them (Approach Chance) for a
+             few seconds, then goes back to its work. A player walking at it with a sword selected (within Threat
+             Range) may be attacked first (Threat Chance, asked once, then not again for Threat Cooldown); if not, it
+             stops and watches them.
          It moves with its Rigidbody (it walks up slopes and bumps into things), looking ahead for trunks, rocks and
          walls and going around them. A punch's push (Knockback) plays out first. It stops for good when it dies
          (EnemyAnimator).
-         The other types (fight or flee by the odds, groups, archers) come in the next steps of the plan; until then
-         every Kind acts like Type 1.
-Requirement: HumanBrain.cs x-> EnemyCombat.cs, HumanLoot.cs, ResourceNode.cs, ToolRules.cs, ToolStats.cs, Rigidbody (Unity)
-             HumanBrain.cs o-> HumanGear.cs, EnemyAnimator.cs, Knockback.cs, PlayerController.cs, PlayerHealth.cs, PunchEffect.cs, PerkEffects.cs, CaveTrail.cs, Animator (Unity), CapsuleCollider (Unity)
+           - in a group (Type 3; the Human Spawner links the members, the first one leads): the others walk and work
+             near the leader (within Group Spread; one left behind hurries back: "Following its group"), and when one
+             of them is hurt or starts a fight (also one killed with a single blow), every member within Group Help
+             Range joins in with the same grudge (Defends Group). The leader is the first member still alive.
+         Damage Times scales its hits (Type 3, small: 0.8 = its weapon's damage x 0.8). The other types (4, 5) and the
+         archers come in the next steps of the plan.
+Requirement: HumanBrain.cs x-> EnemyCombat.cs, HumanLoot.cs, ItemData.cs, ResourceNode.cs, ToolRules.cs, ToolStats.cs, Rigidbody (Unity)
+             HumanBrain.cs o-> HumanGear.cs, EnemyAnimator.cs, Knockback.cs, PlayerController.cs, PlayerHealth.cs, PlayerStamina.cs, PlayerCombat.cs, PlayerInventory.cs, PlayerArmor.cs, PunchEffect.cs, PerkEffects.cs, CaveTrail.cs, Animator (Unity), CapsuleCollider (Unity)
              HumanBrain.cs <-x HumanEnemyBuilder.cs
-             HumanBrain.cs <-o MonsterBounty.cs
+             HumanBrain.cs <-o HumanSpawner.cs, HumanTag.cs, MonsterBounty.cs
 */
 
 using System.Collections.Generic;
@@ -68,11 +89,13 @@ using UnityEngine;
 [RequireComponent(typeof(EnemyCombat))]
 public class HumanBrain : MonoBehaviour
 {
-    // The five human types of the plan. So far every one acts like Type 1.
+    // The five human types of the plan. Built so far: 1, 2 and 3 (Kind is a label: how it acts comes from its settings,
+    // which Build Human Enemies sets for each type).
     public enum Kind { Type1, Type2, Type3, Type4, Type5 }
 
-    // What it does when the player hurts it.
-    public enum WhenHit { FightBack, RunAway }
+    // What it does when the player hurts it: fight back (Type 1), run away, or judge each time (Type 2: run if it can
+    // get away; fight when it can't and its health is low or it would win).
+    public enum WhenHit { FightBack, RunAway, Judge }
 
     // When an attack (or a punch, or a pick) lands and when its move is over, in seconds from its start.
     [System.Serializable]
@@ -114,16 +137,16 @@ public class HumanBrain : MonoBehaviour
 
     // Raised when the default numbers change, so Build Human Enemies gives old prefabs the new ones once.
     // 3 (23/11/2026): Work Search Radius 50. 4: Work Reach 1.2 for a human the player's size, times its size.
-    // 5: fighting like a player (Attack Every 0.9, sprinting, strafing, Flinch Every).
-    public const int SettingsVersion = 5;
+    // 5: fighting like a player (Attack Every 0.9, sprinting, strafing, Flinch Every). 6: Type 2 (Notices Player, Judge).
+    public const int SettingsVersion = 6;
 
-    enum Mood { Resting, Walking, GoingToWork, Working, Fleeing, Fighting }
+    enum Mood { Resting, Walking, GoingToWork, Working, Fleeing, Fighting, Approaching, Watching, Following }
 
     enum Job { Chop, Mine, Pick }   // a tree, a rock, a berry bush
 
     // ===== Fields =====
     [Header("Who")]
-    [Tooltip("Which human type it is (the plan's 1 - 5). For now every type acts like Type 1: never attacks first, works, fights back when hit.")]
+    [Tooltip("Which human type it is (the plan's 1 - 5). Only a label: how it acts comes from the settings below (Build Human Enemies sets them for each type).")]
     [SerializeField] Kind kind = Kind.Type1;
 
     [Header("Moving")]
@@ -211,7 +234,7 @@ public class HumanBrain : MonoBehaviour
     [SerializeField] float giveUpSeconds = 12f;
 
     [Header("When the player hits it")]
-    [Tooltip("Fight Back: it attacks the player (Type 1). Run Away: it runs off instead (the numbers under Running Away).")]
+    [Tooltip("Fight Back: it attacks the player (Type 1). Run Away: it runs off instead (the numbers under Running Away). Judge: it works out each time whether it can get away and who would win (Type 2; the numbers under Fight Or Flee).")]
     [SerializeField] WhenHit whenHit = WhenHit.FightBack;
 
     [Range(2f, 60f)]
@@ -233,10 +256,74 @@ public class HumanBrain : MonoBehaviour
     [Tooltip("Its running speed while chasing the player: the player's walking speed x this (it sprints faster while its stamina lasts).")]
     [SerializeField] float chaseTimesPlayer = 1.2f;
 
+    [Header("Noticing the player (Type 2)")]
+    [Tooltip("On: the first time it sees the player it ignores them or walks over to look at them, then goes back to its work; and a player walking at it with a sword selected may be attacked first. Build Human Enemies turns it on for Type 2.")]
+    [SerializeField] bool noticesPlayer;
+
+    [Range(3f, 60f)]
+    [Tooltip("How far it sees the player (meters): in front of it (See Angle) with nothing in the way.")]
+    [SerializeField] float seeDistance = 20f;
+
+    [Range(30f, 360f)]
+    [Tooltip("How wide it sees, in degrees (140 = the player must be in front of it, not behind; 360 = all round).")]
+    [SerializeField] float seeAngle = 140f;
+
+    [Range(0f, 1f)]
+    [Tooltip("The first time it sees the player: the chance it walks over to look at them (else it ignores them).")]
+    [SerializeField] float approachChance = 0.5f;
+
+    [Range(1.5f, 10f)]
+    [Tooltip("How close it comes to look at the player (meters).")]
+    [SerializeField] float approachDistance = 3f;
+
+    [Tooltip("Seconds it looks at the player before it goes back to its work (a random number in this range).")]
+    [SerializeField] Vector2 watchSeconds = new Vector2(2f, 4f);
+
+    [Range(0f, 1f)]
+    [Tooltip("A player walking at it with a sword selected: the chance it attacks first (asked once, then not again for Threat Cooldown; if not, it stops and watches them).")]
+    [SerializeField] float threatChance = 0.35f;
+
+    [Range(2f, 30f)]
+    [Tooltip("How close (meters) a player with a sword must be, coming at it, to count as a threat.")]
+    [SerializeField] float threatRange = 10f;
+
+    [Range(0f, 10f)]
+    [Tooltip("How fast (meters a second) the player must be coming toward it to count as walking at it (the player walks at 7.8).")]
+    [SerializeField] float threatSpeed = 1.5f;
+
+    [Range(1f, 60f)]
+    [Tooltip("Seconds before a player with a sword can make it think about attacking first again.")]
+    [SerializeField] float threatCooldown = 8f;
+
+    [Header("Group (Type 3)")]
+    [Tooltip("On: when a member of its group is hurt or starts a fight, it fights the player too (with the same grudge). Only humans the Human Spawner made as a group have a group.")]
+    [SerializeField] bool defendsGroup = true;
+
+    [Range(5f, 200f)]
+    [Tooltip("Members farther than this (meters) from the one that called don't join the fight.")]
+    [SerializeField] float groupHelpRange = 60f;
+
+    [Range(3f, 40f)]
+    [Tooltip("The members that aren't the leader walk and work within this many meters of it; one left farther behind hurries back.")]
+    [SerializeField] float groupSpread = 12f;
+
+    [Header("Fight or flee (When Hit = Judge)")]
+    [Range(0f, 1f)]
+    [Tooltip("Its health counts as low below this share of its most (0.4 = 40 %).")]
+    [SerializeField] float lowHealthShare = 0.4f;
+
+    [Range(0.3f, 1f)]
+    [Tooltip("It counts as winning only if it would kill the player in less than this share of the time the player needs to kill it (0.8 = clearly faster).")]
+    [SerializeField] float winMargin = 0.8f;
+
     [Header("Fighting like a player")]
     [Range(1f, 100f)]
     [Tooltip("One punch with bare hands. With a weapon it hits for the weapon's own damage instead (HumanGear > Weapons > Damage at copper, each tier above +25 %). The player's armor takes its share off.")]
     [SerializeField] float fistDamage = 5f;
+
+    [Range(0.1f, 3f)]
+    [Tooltip("Its hits do its weapon's damage (or Fist Damage) times this. 1 = as the weapon says; Type 3, being small, 0.8.")]
+    [SerializeField] float damageTimes = 1f;
 
     [Range(0.5f, 4f)]
     [Tooltip("How close it gets to hit (meters from its middle to the player's), with a one-handed weapon; fists reach 70 % of it, a two-handed weapon (longsword, pike) 130 %.")]
@@ -299,6 +386,9 @@ public class HumanBrain : MonoBehaviour
     [Tooltip("What it's doing (only to read).")]
     [SerializeField] string doing = "";
 
+    [Tooltip("Its last fight-or-flee decision and why (When Hit = Judge; only to read).")]
+    [SerializeField] string judgement = "";
+
     [SerializeField, HideInInspector] int settingsVersion = SettingsVersion;   // which defaults this prefab was made with
 
     const float LookEvery = 0.15f;      // seconds between looks ahead for trunks, rocks and walls
@@ -326,6 +416,15 @@ public class HumanBrain : MonoBehaviour
     const float HandPause = 0.25f;      // seconds between two punches at a tree or rock
     const float TrailReach = 1.5f;      // a trail point counts as reached this close (meters)
     const float TrailCheckEvery = 0.5f; // seconds between checks whether a fight goes through a cave entrance
+    const float NoticeEvery = 0.25f;    // seconds between looks for the player (Notices Player)
+    const float EyeHeight = 1.6f;       // its eyes, meters above its feet (times its size)
+    const float ApproachGiveUp = 12f;   // seconds before a walk over to the player is given up
+    const float WaryWatch = 2.5f;       // seconds it watches a player with a sword that it didn't attack
+    const float EscapeMargin = 1f;      // meters to spare beyond the player's reach to count as getting away
+    const float GroupCheckEvery = 1f;   // seconds between "is my group's leader still near?" checks
+    const float FollowSpot = 3f;        // a follower aims for a spot this close to its leader (not all on one spot)
+    const float FollowArrive = 2f;      // ... and is back once it's this close to that spot
+    const float FollowGiveUp = 15f;     // seconds before a walk back to the leader is given up (it checks again after)
 
     static readonly int WorkHash = Animator.StringToHash(WorkName);
     static readonly int StrideHash = Animator.StringToHash(StrideName);
@@ -349,6 +448,13 @@ public class HumanBrain : MonoBehaviour
     Transform player;
     Rigidbody playerBody;      // the player's body: how fast they move (it times its swings by it)
     PlayerHealth playerHealth; // the player's health: hurt by its attacks, and no fighting a dead player
+    PlayerController playerLegs;   // the player's speed and sprint (can it get away?)
+    PlayerStamina playerBreath;    // ... and how long their sprint lasts
+    PlayerCombat playerAttack;     // Marko's attack script: the player's damage, attack speed and reach (who would win?)
+    bool seenPlayer;           // it has seen the player once (Notices Player: the first sight is the only one it reacts to)
+    float nextNotice;
+    float nextThreatRoll;      // Time.time a player with a sword can make it think about attacking first again
+    float nextGrudgeCheck;     // Time.time it looks again whether the player it holds a grudge against is near
     System.Action<ItemData, int> gathered;   // what a broken tree / rock / bush gives goes into the bag
     bool hasWork;              // the Animator's controller has the Work parameter
     bool hasWorkState;         // ... and the Work state (else its swings are timed by Swing Every)
@@ -388,6 +494,10 @@ public class HumanBrain : MonoBehaviour
     bool handLanded;           // ... and it has landed
     float nextHand;            // Time.time the next punch or pick may start
 
+    List<HumanBrain> group;    // its group, shared by every member (the Human Spawner links them; null = a loner)
+    float nextGroupCheck;
+    Vector3 followOffset;      // where it walks to, next to its leader
+
     readonly List<Vector3> trail = new List<Vector3>();   // waypoints through cave entrances before its goal (CaveTrail)
     float nextTrailCheck;
 
@@ -412,8 +522,13 @@ public class HumanBrain : MonoBehaviour
     public bool HoldsGrudge => grudge;   // the player hit it before: it attacks when the player comes near
     public bool IsWorking => mood == Mood.Working;
     public bool IsSprinting => sprinting;
+    public bool HasSeenPlayer => seenPlayer;
+    public string Doing => doing;           // what it's doing now, in words (HumanTag shows it)
+    public string Judgement => judgement;
     public float Stamina => stamina;
     public int MadeWithSettings => settingsVersion;
+    public bool InGroup => group != null && group.Count > 1;
+    public bool IsLeader => Leader() == this;   // the first member still alive leads its group
 
     // ===== Unity messages (Unity calls these) =====
 
@@ -465,6 +580,9 @@ public class HumanBrain : MonoBehaviour
             player = controller.transform;
             playerBody = controller.GetComponent<Rigidbody>();
             playerHealth = controller.GetComponent<PlayerHealth>();
+            playerLegs = controller;
+            playerBreath = controller.GetComponent<PlayerStamina>();
+            playerAttack = controller.GetComponent<PlayerCombat>();
         }
         walkNow = walkSpeed;
         fleeNow = fleeSpeed;
@@ -489,6 +607,7 @@ public class HumanBrain : MonoBehaviour
     {
         if (Dead())
         {
+            if (combat.currentHealth < lastHealth) CallGroup();   // killed with one blow: its group still saw who did it
             SetWorking(false);
             enabled = false;   // dying: EnemyAnimator holds it still and Marko's EnemyCombat removes it
             return;
@@ -501,8 +620,16 @@ public class HumanBrain : MonoBehaviour
         }
         lastHealth = combat.currentHealth;
 
-        // It remembers who hit it: that player coming near again gets attacked again.
-        if (grudge && mood != Mood.Fighting && mood != Mood.Fleeing && PlayerWithin(noticeRange)) Fight();
+        // It remembers who hit it: that player coming near again gets attacked again (Judge: only if the math still
+        // says fight, else it gets away).
+        if (grudge && mood != Mood.Fighting && mood != Mood.Fleeing && Time.time >= nextGrudgeCheck && PlayerWithin(noticeRange))
+        {
+            nextGrudgeCheck = Time.time + NoticeEvery;
+            if (whenHit != WhenHit.Judge || ShouldFight()) Fight();
+            else Flee();
+        }
+        if (noticesPlayer) Notice();
+        if (group != null && Time.time >= nextGroupCheck) StayWithGroup();
 
         FollowTrail();
         switch (mood)
@@ -531,6 +658,18 @@ public class HumanBrain : MonoBehaviour
             case Mood.Fighting:
                 Fighting();
                 break;
+            case Mood.Approaching:   // walking over to look at the player
+                if (!PlayerWithin(seeDistance * 2f) || Time.time >= moodUntil) Rest();
+                else if (Flat(player.position - transform.position) <= approachDistance)
+                    Watch(Random.Range(watchSeconds.x, Mathf.Max(watchSeconds.x, watchSeconds.y)));
+                break;
+            case Mood.Watching:      // looking at the player, then back to its work
+                if (Time.time >= moodUntil || !PlayerWithin(seeDistance * 2f)) Resume();
+                break;
+            case Mood.Following:     // back to its group's leader
+                if (!Follower(out HumanBrain leader) || Time.time >= moodUntil ||
+                    Flat(leader.transform.position + followOffset - transform.position) < FollowArrive) Rest();
+                break;
         }
         CheckStuck();
         Breathe();
@@ -549,7 +688,7 @@ public class HumanBrain : MonoBehaviour
         {
             body.velocity = new Vector3(0f, body.velocity.y, 0f);   // stands (gravity still works)
             if (mood == Mood.Working && workShape != null) Face(workShape.bounds.center - transform.position);
-            else if (facePlayer) Face(player.position - transform.position);
+            else if (facePlayer || (mood == Mood.Watching && player != null)) Face(player.position - transform.position);
             return;
         }
 
@@ -565,20 +704,32 @@ public class HumanBrain : MonoBehaviour
 
     // ===== My methods =====
 
-    // Hurt by something (so far only the player can hurt humans): it fights back (and holds a grudge), or runs away.
+    // Hurt by something (so far only the player can hurt humans): it fights back (and holds a grudge), runs away, or
+    // (Judge) works out which each time.
     void Hurt()
     {
         SetWorking(false);
         workNode = null;
         workShape = null;
-        if (whenHit == WhenHit.FightBack && player != null)
+        WhenHit reaction = whenHit;
+        if (reaction == WhenHit.Judge) reaction = ShouldFight() ? WhenHit.FightBack : WhenHit.RunAway;
+        if (reaction == WhenHit.FightBack && player != null)
         {
             if (holdsGrudge) grudge = true;
             chaseUntil = Time.time + chaseAfterHit;   // it knows who hurt it: after them, however far (an arrow from afar)
             Fight();
             return;
         }
+        Flee();
+    }
+
+    // Runs away from the player (out of a cave first), for a while (Running Away).
+    void Flee()
+    {
         if (attackStarted >= 0f) EndAttack();
+        SetWorking(false);
+        workNode = null;
+        workShape = null;
         mood = Mood.Fleeing;
         fleeStarted = Time.time;
         if (player != null) PlanTrail(transform.position + Level(transform.position - player.position) * 20f);   // out of a cave first
@@ -607,6 +758,7 @@ public class HumanBrain : MonoBehaviour
         if (player != null) PlanTrail(player.position);
         nextTrailCheck = Time.time + TrailCheckEvery;
         StartMoving();
+        CallGroup();   // its group fights with it (Type 3: the whole group attacks)
     }
 
     // Fighting, every frame: a swing plays out first; a dead or far-away player ends the fight (Give Up Range: it goes
@@ -694,8 +846,9 @@ public class HumanBrain : MonoBehaviour
         PerkEffects.Reflect(this, damage);
     }
 
-    // One hit's damage: its weapon's (by kind and tier: HumanGear.WeaponDamage), or Fist Damage with bare hands.
-    float AttackDamage() => gear != null && gear.HasWeapon ? gear.WeaponDamage : fistDamage;
+    // One hit's damage: its weapon's (by kind and tier: HumanGear.WeaponDamage), or Fist Damage with bare hands, times
+    // Damage Times (a small Type 3 hits 80 % as hard).
+    float AttackDamage() => (gear != null && gear.HasWeapon ? gear.WeaponDamage : fistDamage) * damageTimes;
 
     // How close it gets to hit: Attack Reach for a one-handed weapon, fists less, a two-handed weapon more; a bigger
     // body reaches farther.
@@ -792,6 +945,160 @@ public class HumanBrain : MonoBehaviour
         return Flat(player.position - transform.position) <= range;
     }
 
+    // ----- Type 2: noticing the player, and the fight-or-flee math -----
+
+    // Its eyes, a few times a second: the first time it sees the player it ignores them or walks over to look (Approach
+    // Chance); a player walking at it with a sword selected may be attacked first (Threat Chance), else it stops and
+    // watches them. Not while it fights or runs away.
+    void Notice()
+    {
+        if (mood == Mood.Fighting || mood == Mood.Fleeing || player == null) return;
+        if (Time.time < nextNotice) return;
+        nextNotice = Time.time + NoticeEvery;
+        if (!PlayerWithin(seeDistance) || !SeesPlayer()) return;
+
+        if (!seenPlayer)   // the first time
+        {
+            seenPlayer = true;
+            if (Random.value < approachChance) Approach();
+            return;
+        }
+        if (!SwordComing() || Time.time < nextThreatRoll) return;
+        nextThreatRoll = Time.time + threatCooldown;
+        if (Random.value < threatChance)
+        {
+            judgement = "attacked first: the player came at it with a sword";
+            if (holdsGrudge) grudge = true;
+            Fight();
+        }
+        else
+        {
+            Watch(WaryWatch);   // keeps an eye on them
+        }
+    }
+
+    // The player is in front of it (See Angle), closer than See Distance, and the first thing a look from its eyes
+    // meets is the player (not a tree, a rock or a hill).
+    bool SeesPlayer()
+    {
+        Vector3 eye = transform.position + Vector3.up * (EyeHeight * size);
+        Vector3 to = player.position - eye;
+        float distance = to.magnitude;
+        if (distance > seeDistance || distance < 0.01f) return false;
+        Vector3 flat = to;
+        flat.y = 0f;
+        if (seeAngle < 360f && flat.sqrMagnitude > 0.0001f && Vector3.Angle(transform.forward, flat) > seeAngle * 0.5f) return false;
+        if (!Physics.Raycast(eye, to / distance, out RaycastHit hit, distance, ~0, QueryTriggerInteraction.Ignore)) return true;
+        return hit.collider.transform.IsChildOf(player);
+    }
+
+    // The player has a sword selected and is coming toward it (at Threat Speed or faster), within Threat Range.
+    bool SwordComing()
+    {
+        PlayerInventory hands = PlayerInventory.Instance;
+        if (hands == null || !ToolRules.IsSword(hands.ActiveItem)) return false;
+        Vector3 fromPlayer = transform.position - player.position;
+        fromPlayer.y = 0f;
+        float gap = fromPlayer.magnitude;
+        if (gap > threatRange || gap < 0.01f) return false;
+        return Vector3.Dot(PlayerVelocity(), fromPlayer / gap) >= threatSpeed;
+    }
+
+    // Walks over to look at the player (it stops Approach Distance away and watches them).
+    void Approach()
+    {
+        SetWorking(false);
+        workNode = null;
+        workShape = null;
+        mood = Mood.Approaching;
+        moodUntil = Time.time + ApproachGiveUp;
+        PlanTrail(player.position);
+        StartMoving();
+    }
+
+    // Stands and looks at the player for this many seconds.
+    void Watch(float seconds)
+    {
+        SetWorking(false);
+        workNode = null;
+        workShape = null;
+        trail.Clear();
+        mood = Mood.Watching;
+        moodUntil = Time.time + seconds;
+    }
+
+    // Back to its work (or a walk) after looking at the player.
+    void Resume()
+    {
+        if (Random.value < workChance && GoToWork()) return;
+        Walk();
+    }
+
+    // The fight-or-flee math (the plan's Type 2): can it get away from this player, and who would win? It runs if it
+    // can get away; when it can't, it fights if its health is low (a cornered animal) or it would win, else it tries to
+    // run anyway. Judgement shows the decision and the numbers.
+    bool ShouldFight()
+    {
+        if (player == null) return false;
+        float gap = Flat(player.position - transform.position);
+        bool getAway = CanEscape(gap);
+        bool low = combat.currentHealth <= combat.maxHealth * lowHealthShare;
+        float mine = SecondsToKillPlayer();
+        float theirs = SecondsToBeKilled();
+        bool win = mine < theirs * winMargin;
+        bool fight = !getAway && (low || win);
+        judgement = (fight ? "fights: " : "runs: ") + (getAway ? "it can get away" : "it can't get away") +
+                    (low ? ", its health is low" : "") + (win ? ", it would win" : ", it would lose") +
+                    " (it kills the player in " + Seconds(mine) + ", the player kills it in " + Seconds(theirs) + ")";
+        return fight;
+    }
+
+    // Its running speed against the player's: a sprinting player closes the gap while their stamina lasts, then walks.
+    // It gets away if it's faster than the player walks and the player can't reach it before their sprint runs out.
+    bool CanEscape(float gap)
+    {
+        float walk = playerLegs != null ? playerLegs.Speed : walkNow;
+        if (fleeNow <= walk) return false;   // even a walking player keeps up
+        float sprint = playerLegs != null ? walk * playerLegs.SprintMultiplier : walk * 2f;
+        float sprintSeconds = playerBreath == null ? 5f : playerBreath.IsTired ? 0f : playerBreath.Stamina / Mathf.Max(0.1f, playerBreath.SprintDrain);
+        float caught = Mathf.Max(0f, sprint - fleeNow) * sprintSeconds;   // meters the player gains while sprinting
+        float reach = playerAttack != null ? playerAttack.AttackReach : 2.5f;
+        return gap - caught > reach + EscapeMargin;
+    }
+
+    // How long it needs to kill the player: its weapon's hit after the player's armor, its attack speed, their health.
+    float SecondsToKillPlayer()
+    {
+        float armor = PlayerArmor.Current != null ? PlayerArmor.Current.Protection : 0f;
+        float hit = AttackDamage() * (1f - armor);
+        float every = Mathf.Max(attackEvery, StrikeNow().done);
+        float health = playerHealth != null ? playerHealth.Health : 100f;
+        return hit <= 0f ? float.MaxValue : Mathf.Ceil(health / hit) * every;
+    }
+
+    // How long the player needs to kill it: the player's hit with what they hold (Marko's PlayerCombat numbers, the
+    // tool tier, Night Power) after its own armor, the player's attack speed, its health.
+    float SecondsToBeKilled()
+    {
+        float hit = PlayerHitDamage();
+        if (gear != null) hit = gear.Reduce(hit);
+        float every = playerAttack != null ? playerAttack.attackCooldown / PerkEffects.AttackSpeedMultiplier : 0.5f;
+        return hit <= 0f ? float.MaxValue : Mathf.Ceil(combat.currentHealth / hit) * every;
+    }
+
+    float PlayerHitDamage()
+    {
+        if (playerAttack == null) return 10f;
+        PlayerInventory hands = PlayerInventory.Instance;
+        ToolStats tool = ToolRules.ToolIn(hands != null ? hands.ActiveItem : null);
+        string weapon = ToolRules.WeaponName(tool);
+        float damage = weapon == "Sword" ? playerAttack.swordDamage : weapon == "Axe" ? playerAttack.axeDamage
+                     : weapon == "PickAxe" ? playerAttack.pickAxeDamage : playerAttack.handDamage;
+        return damage * ToolRules.Boost(tool, ToolKind.Sword) * PerkEffects.DamageMultiplier;
+    }
+
+    static string Seconds(float s) => s >= 9999f ? "never" : s.ToString("0.#") + " s";
+
     // Far enough away: it stops running and lives here now.
     void CalmDown()
     {
@@ -816,6 +1123,11 @@ public class HumanBrain : MonoBehaviour
         SetWorking(false);
         Vector2 spot = Random.insideUnitCircle * wanderRadius;
         goal = home + new Vector3(spot.x, 0f, spot.y);
+        if (Follower(out HumanBrain leader))   // in a group: a spot near its leader (they walk around together)
+        {
+            spot = Random.insideUnitCircle * (groupSpread * 0.5f);
+            goal = leader.transform.position + new Vector3(spot.x, 0f, spot.y);
+        }
         PlanTrail(goal);
         mood = Mood.Walking;
         moodUntil = Time.time + WalkGiveUp;
@@ -1045,9 +1357,17 @@ public class HumanBrain : MonoBehaviour
 
     // The nearest trees, rocks and berry bushes it can break (with its tools), the preferred kind first (any kind when
     // there's none of it), and one of the closest few.
+    // In a group (not the leader): only around its leader, within Group Spread.
     bool FindWork(Job prefer, out ResourceNode node, out Collider shape)
     {
-        int count = Physics.OverlapSphereNonAlloc(transform.position, workSearchRadius, nearby, ~0, QueryTriggerInteraction.Ignore);
+        Vector3 center = transform.position;
+        float radius = workSearchRadius;
+        if (Follower(out HumanBrain leader))
+        {
+            center = leader.transform.position;
+            radius = Mathf.Min(workSearchRadius, groupSpread);
+        }
+        int count = Physics.OverlapSphereNonAlloc(center, radius, nearby, ~0, QueryTriggerInteraction.Ignore);
         return PickNear(count, prefer, out node, out shape) || PickNear(count, null, out node, out shape);
     }
 
@@ -1107,6 +1427,86 @@ public class HumanBrain : MonoBehaviour
     // Meters from it to the edge of its tree or rock (the collider's box: rocks have mesh colliders).
     float DistanceToWork() => Flat(workShape.bounds.ClosestPoint(transform.position) - transform.position);
 
+    // ----- Groups (Type 3) -----
+
+    // The Human Spawner links the members of a group when they appear (the first one leads). Every member gets the
+    // same list.
+    public void JoinGroup(List<HumanBrain> members)
+    {
+        group = members;
+        nextGroupCheck = Time.time + GroupCheckEvery;
+    }
+
+    // A member of its group is fighting the player (it was hurt, or its grudge made it attack): it joins in, holding
+    // the same grudge and chasing however far for Chase After Hit, like being hit itself. Not if it doesn't defend its
+    // group (Defends Group), is dying, or was farther than Group Help Range from the one that called.
+    public void Defend(Vector3 mateAt)
+    {
+        if (!defendsGroup || !enabled || Dead() || player == null || (playerHealth != null && playerHealth.IsDead)) return;
+        if (Flat(mateAt - transform.position) > groupHelpRange) return;
+        if (holdsGrudge) grudge = true;
+        chaseUntil = Mathf.Max(chaseUntil, Time.time + chaseAfterHit);
+        Fight();   // (already fighting: it just keeps at it)
+    }
+
+    // Every other member of its group joins the fight (each one that's fighting already isn't asked again: no loop).
+    void CallGroup()
+    {
+        if (group == null) return;
+        foreach (HumanBrain mate in group)
+        {
+            if (mate != null && mate != this) mate.Defend(transform.position);
+        }
+    }
+
+    // Its group's leader: the first member still alive (it may be itself). Null = a loner.
+    HumanBrain Leader()
+    {
+        if (group == null) return null;
+        foreach (HumanBrain mate in group)
+        {
+            if (mate != null && mate.enabled && !mate.Dead()) return mate;
+        }
+        return null;
+    }
+
+    // True for a member that follows (in a group, not the leader), with its leader.
+    bool Follower(out HumanBrain leader)
+    {
+        leader = Leader();
+        return leader != null && leader != this;
+    }
+
+    // Once a second, for a follower: its leader is in a fight it didn't hear (it was too far): it joins in once it's
+    // near enough (Group Help Range); else, resting, walking or working farther than Group Spread from its leader, it
+    // goes back to it.
+    void StayWithGroup()
+    {
+        nextGroupCheck = Time.time + GroupCheckEvery;
+        if (!Follower(out HumanBrain leader)) return;
+        bool calm = mood == Mood.Resting || mood == Mood.Walking || mood == Mood.GoingToWork || mood == Mood.Working;
+        if ((calm || mood == Mood.Following) && leader.IsFighting)
+        {
+            Defend(leader.transform.position);
+            if (mood == Mood.Fighting) return;
+        }
+        if (calm && Flat(leader.transform.position - transform.position) > groupSpread) Follow(leader);
+    }
+
+    // Back to its leader, to a spot next to it (through a cave's entrance if one of them is in a cave).
+    void Follow(HumanBrain leader)
+    {
+        SetWorking(false);
+        workNode = null;
+        workShape = null;
+        Vector2 spot = Random.insideUnitCircle * FollowSpot;
+        followOffset = new Vector3(spot.x, 0f, spot.y);
+        mood = Mood.Following;
+        moodUntil = Time.time + FollowGiveUp;
+        PlanTrail(leader.transform.position);
+        StartMoving();
+    }
+
     // ----- Caves: the invisible trail through the entrance (CaveTrail) -----
 
     // The trail to a target: out of the cave it's in by the entrance, and into the target's cave by its entrance.
@@ -1132,6 +1532,7 @@ public class HumanBrain : MonoBehaviour
     {
         if (mood == Mood.Walking) return goal;
         if (mood == Mood.GoingToWork && workShape != null) return workShape.bounds.center;
+        if (mood == Mood.Following && Follower(out HumanBrain leader)) return leader.transform.position;
         return transform.position + transform.forward * 20f;
     }
 
@@ -1157,6 +1558,14 @@ public class HumanBrain : MonoBehaviour
                 break;
             case Mood.Fighting:
                 return FightingMove(out speed);
+            case Mood.Approaching:
+                speed = walkNow;
+                to = player != null ? player.position - transform.position : Vector3.zero;
+                break;
+            case Mood.Following:   // back to its leader: it hurries while it's far behind
+                to = Follower(out HumanBrain leader) ? leader.transform.position + followOffset - transform.position : Vector3.zero;
+                speed = Flat(to) > groupSpread ? chaseNow : walkNow;
+                break;
             default:
                 speed = 0f;
                 return Vector3.zero;
@@ -1224,7 +1633,8 @@ public class HumanBrain : MonoBehaviour
     // cave it takes the way out through the entrance; else it tries something else.
     void CheckStuck()
     {
-        bool moving = mood == Mood.Walking || mood == Mood.GoingToWork || mood == Mood.Fleeing;
+        bool moving = mood == Mood.Walking || mood == Mood.GoingToWork || mood == Mood.Fleeing || mood == Mood.Approaching ||
+                      mood == Mood.Following;
         if (!moving || Time.time < nextStuckCheck) return;
         nextStuckCheck = Time.time + StuckEvery;
         bool stuck = Flat(transform.position - stuckFrom) < StuckDistance;
@@ -1284,6 +1694,9 @@ public class HumanBrain : MonoBehaviour
             case Mood.GoingToWork: return "Walking to " + target + cave;
             case Mood.Walking: return "Walking" + cave;
             case Mood.Fleeing: return "Running away" + cave;
+            case Mood.Approaching: return "Walking over to look at the player" + cave;
+            case Mood.Watching: return "Watching the player";
+            case Mood.Following: return "Following its group" + cave;
             case Mood.Fighting:
                 if (attackStarted >= 0f) return "Attacking the player";
                 if (player != null && Flat(player.position - transform.position) > Reach())

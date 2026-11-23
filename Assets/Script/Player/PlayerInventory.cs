@@ -22,7 +22,7 @@ Purpose: Stores the player's items. Items with the same Item Id stack in one slo
          e.g. GainNotifier shows "+3 Wood". Items only moving inside the inventory don't fire it.
 Requirement: PlayerInventory.cs x-> IHand.cs, ItemData.cs
              PlayerInventory.cs <-x ArmorBuilder.cs, ArmorSlotUI.cs, ArmorTestKit.cs, ArrowProjectile.cs, AutoCollector.cs, BlueprintPlacer.cs, BowBuilder.cs, BowShooter.cs, BuildingButton.cs, BuildingData.cs, CraftingMenu.cs, CraftingRow.cs, CraftingSetPanels.cs, DroppedStack.cs, EquippedWeaponDisplay.cs, GainNotifier.cs, GiveSwordForTesting.cs, HeldItemUI.cs, HeldItemView.cs, HotbarSelector.cs, HumanLoot.cs, ItemConsumer.cs, ItemData.cs, ItemDropper.cs, ItemGrabber.cs, ItemIconRules.cs, ItemTooltip.cs, LootChestBuilder.cs, PlayerAnimationSetup.cs, PlayerArmor.cs, PlayerCombat.cs, PlayerFireball.cs, PunchCombo.cs, Recipe.cs, ResourceNode.cs, SlotGroup.cs, SlotUI.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs, UIBuildHelper.cs
-             PlayerInventory.cs <-o FirstPersonHands.cs, PerkEffects.cs
+             PlayerInventory.cs <-o FirstPersonHands.cs, HumanBrain.cs, PerkEffects.cs
 */
 
 using System.Collections.Generic;

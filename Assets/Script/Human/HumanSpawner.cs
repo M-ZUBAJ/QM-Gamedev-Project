@@ -6,22 +6,33 @@ Use by: An empty GameObject in the new world (ProceduralGenerateScene). Tools > 
         ("Human Spawner") and fills in Kinds. The Player needs PlayerSight. It only works with the World Generator
         (the new world): in the old world it does nothing.
 Unity Editor: Kinds = the human types and where they live (Bodies = a man and a woman prefab; Grassland / Hills /
-              Desert / Snow = the biomes it appears in). Gear By Area = how rich the humans of each biome are (none,
+              Desert / Snow = the biomes it appears in; Group Min / Max and Smaller Group Chance = how many come
+              together: Type 3 comes 3 at a time, rarely 2). Gear By Area = how rich the humans of each biome are (none,
               copper, iron, gold, diamond: weights). Height Variation = how much taller or shorter than its prefab
               each human may be.
               Testing: Play in the new world. The Console says how many humans came. Select this object to see where
               they may appear (yellow rings around the player) and where they're taken away (red). ⋮ > Test: Spawn One
-              Now (out of sight, so turn around).
+              Now (out of sight, so turn around). The humans are top-level objects in the Hierarchy ("Human Type 2
+              Female(Clone)"...), not children of this object (see Purpose).
 Purpose: Keeps a few human enemies around the player in the new world, like the animals: only where the player can't
          see (PlayerSight), never too close, never on steep ground or right against a trunk or rock. The biome under
          the spot decides which types may come (the plan: grassland types 1 - 3, hills 2 - 3, desert and snow 1 - 5;
-         so far only Type 1 exists) and how rich they are (HumanGear.Dress with that area's odds: the grassland is mostly
+         Types 1 - 3 exist so far) and how rich they are (HumanGear.Dress with that area's odds: the grassland is mostly
          poor with a rare diamond, the snow mostly gold and diamond). New ones only come in the daytime (Only In Day).
+         A group (Type 3) comes whole, within a few meters of the first one, all of its type and dressed with the same
+         odds, and only when Population has room for it (never a Type 3 alone); its members are linked
+         (HumanBrain.JoinGroup: they stay near the first one and defend each other).
          Ones left far behind and out of sight are taken away (no loot: nobody killed them), so they follow the player
          around the endless world. Each new human is a little taller or shorter than its prefab (Height Variation:
          people aren't all the same height), most of them near the middle.
+         Each human is dressed BEFORE it switches on: it's made inside a switched-off "Dressing Room" child, HumanGear
+         dresses it there (armor, weapon, tools and hood on, the unused body parts deleted at once), then it's let out
+         as a top-level object of its own, with room in its hierarchy for later additions, and switched on. So its
+         animator and its skinned body parts start once, with only what it wears, nothing in its body changes while
+         they run, and humans coming and going don't change each other's hierarchy (Unity also runs separate top-level
+         objects faster than one big hierarchy).
 Requirement: HumanSpawner.cs x-> PlayerSight.cs, WorldGenerator.cs, HumanGear.cs
-             HumanSpawner.cs o-> DaylightCycle.cs, Terrain (Unity), CapsuleCollider (Unity)
+             HumanSpawner.cs o-> HumanBrain.cs, DaylightCycle.cs, Terrain (Unity), CapsuleCollider (Unity)
              HumanSpawner.cs <-x HumanEnemyBuilder.cs
 */
 
@@ -56,6 +67,13 @@ public class HumanSpawner : MonoBehaviour
         public int groupMin = 1;
         [Min(1)]
         public int groupMax = 1;
+
+        [Tooltip("The chance a group comes with one member fewer (Type 3: groups of 3, rarely 2 = 0.2). A loner always comes alone.")]
+        [Range(0f, 1f)]
+        public float smallerGroupChance;
+
+        // The fewest that may come together (one fewer than Group Min with Smaller Group Chance).
+        public int SmallestGroup => Mathf.Max(1, groupMin - (smallerGroupChance > 0f ? 1 : 0));
 
         public bool LivesIn(WorldGenerator.Biome biome)
         {
@@ -132,6 +150,7 @@ public class HumanSpawner : MonoBehaviour
     [SerializeField] float clearance = 1.5f;
 
     const int Tries = 30;             // random spots tried before giving up until the next check
+    const int SpareTransforms = 32;   // room kept in each human's hierarchy for things added later (a stuck arrow, a name tag)
     const float GroupRadius = 5f;     // a group's members appear within this many meters of the first one
     const float DefaultHeight = 1.9f; // a human's height when its prefab has no capsule to measure
 
@@ -142,6 +161,7 @@ public class HumanSpawner : MonoBehaviour
     bool warnedSight;       // told the Console that PlayerSight is missing
     float tallest = DefaultHeight;   // the tallest human that may come, with Height Variation: its head must be out of sight too
     bool warnedWorld;       // told the Console that this isn't the new world
+    Transform dressingRoom; // the switched-off child new humans are dressed in (made the first time it's needed)
     static readonly Collider[] overlaps = new Collider[8];
 
     public int Alive => alive.Count;
@@ -199,48 +219,64 @@ public class HumanSpawner : MonoBehaviour
     // ===== My methods =====
 
     // One loner or group at a spot the player can't see, of a type that lives in that biome. False = none this time.
+    // A group's members come within Group Radius of the first one (who leads) and are linked to each other.
     bool SpawnGroup()
     {
         tallest = TallestHuman();
-        if (!FindSpot(out Vector3 leader, out WorldGenerator.Biome biome)) return false;
-        Kind kind = PickKind(biome);
-        if (kind == null) return false;   // no type lives in this biome (yet)
+        int room = population - alive.Count;   // how many more may come now
+        if (room <= 0 || !FindSpot(out Vector3 leader, out WorldGenerator.Biome biome)) return false;
+        Kind kind = PickKind(biome, room);
+        if (kind == null) return false;   // no type lives in this biome (yet), or its group doesn't fit
 
         int size = Random.Range(kind.groupMin, Mathf.Max(kind.groupMin, kind.groupMax) + 1);
-        size = Mathf.Min(size, Mathf.Max(1, population - alive.Count));
+        if (size > 1 && Random.value < kind.smallerGroupChance) size--;   // Type 3: rarely 2 instead of 3
+        size = Mathf.Min(size, room);
         HumanGear.TierOdds odds = OddsFor(biome);
-        Spawn(kind, leader, odds);
+        List<HumanBrain> group = new List<HumanBrain>();
+        AddTo(group, Spawn(kind, leader, odds));
         for (int i = 1; i < size; i++)
         {
             for (int t = 0; t < 8; t++)
             {
                 Vector2 r = Random.insideUnitCircle * GroupRadius;
                 if (!Usable(leader + new Vector3(r.x, 0f, r.y), out Vector3 feet)) continue;
-                Spawn(kind, feet, odds);
+                AddTo(group, Spawn(kind, feet, odds));
                 break;
             }
+        }
+        if (group.Count > 1)
+        {
+            foreach (HumanBrain member in group) member.JoinGroup(group);   // they stick together and defend each other
         }
         return true;
     }
 
-    // A random type that lives in this biome, by weight (null = none does).
-    Kind PickKind(WorldGenerator.Biome biome)
+    static void AddTo(List<HumanBrain> group, GameObject human)
+    {
+        HumanBrain brain = human != null ? human.GetComponent<HumanBrain>() : null;
+        if (brain != null) group.Add(brain);
+    }
+
+    // A random type that lives in this biome and whose smallest group fits in "room", by weight (null = none).
+    Kind PickKind(WorldGenerator.Biome biome, int room)
     {
         float total = 0f;
         foreach (Kind k in kinds)
         {
-            if (Ready(k) && k.LivesIn(biome)) total += k.weight;
+            if (Fits(k, biome, room)) total += k.weight;
         }
         if (total <= 0f) return null;
         float roll = Random.value * total;
         foreach (Kind k in kinds)
         {
-            if (!Ready(k) || !k.LivesIn(biome)) continue;
+            if (!Fits(k, biome, room)) continue;
             roll -= k.weight;
             if (roll < 0f) return k;
         }
         return null;
     }
+
+    static bool Fits(Kind k, WorldGenerator.Biome biome, int room) => Ready(k) && k.LivesIn(biome) && k.SmallestGroup <= room;
 
     static bool Ready(Kind k) => k != null && k.weight > 0f && k.bodies.Exists(b => b != null);
 
@@ -255,17 +291,39 @@ public class HumanSpawner : MonoBehaviour
         }
     }
 
-    // A human of this type (a man or a woman), dressed for its area at once (before anything on it starts).
-    void Spawn(Kind kind, Vector3 feet, HumanGear.TierOdds odds)
+    // A human of this type (a man or a woman), dressed for its area before it switches on: made inside the switched-off
+    // Dressing Room (nothing on it wakes up there), sized and dressed, then let out as a top-level object of its own,
+    // which switches it on with only what it wears (see Purpose).
+    GameObject Spawn(Kind kind, Vector3 feet, HumanGear.TierOdds odds)
     {
         List<GameObject> ready = kind.bodies.FindAll(b => b != null);
         GameObject prefab = ready[Random.Range(0, ready.Count)];
-        GameObject human = Instantiate(prefab, feet + Vector3.up * 0.05f, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f), transform);
+        GameObject human = Instantiate(prefab, feet + Vector3.up * 0.05f, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f), DressingRoom());
         if (heightVariation > 0f)   // a bit taller or shorter (two random numbers added: most land near the middle)
             human.transform.localScale = prefab.transform.localScale * (1f + heightVariation * (Random.value + Random.value - 1f));
         HumanGear gear = human.GetComponent<HumanGear>();
         if (gear != null) gear.Dress(odds);
+
+        // Out on its own, still switched off: first room in its hierarchy for things added later (a stuck arrow), so
+        // Unity never has to move the whole hierarchy while it runs; then it switches on, already dressed.
+        human.SetActive(false);
+        human.transform.SetParent(null, true);
+        Transform root = human.transform;
+        root.hierarchyCapacity = Mathf.Max(root.hierarchyCapacity, root.hierarchyCount + SpareTransforms);
+        human.SetActive(true);
         alive.Add(human.transform);
+        return human;
+    }
+
+    // The switched-off child new humans are dressed in. Made the first time it's needed (it isn't saved with the scene).
+    Transform DressingRoom()
+    {
+        if (dressingRoom != null) return dressingRoom;
+        GameObject room = new GameObject("Dressing Room (new humans)");
+        room.SetActive(false);   // what's made inside it stays asleep until it's taken out
+        dressingRoom = room.transform;
+        dressingRoom.SetParent(transform, false);
+        return dressingRoom;
     }
 
     // A random spot around the player, between Min Distance and the spawn reach, that is free and out of sight.

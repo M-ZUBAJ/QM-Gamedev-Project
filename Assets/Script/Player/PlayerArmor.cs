@@ -42,7 +42,7 @@ Purpose: The armor the player wears: one piece per slot (Helmet, Shoulders, Ches
          When the player dies, ItemDropper takes the armor off with the items (GameRules Keep Inventory off).
 Requirement: PlayerArmor.cs x-> PlayerInventory.cs, ItemData.cs, ArmorStats.cs
              PlayerArmor.cs <-x ArmorBuilder.cs, ArmorLook.cs, ArmorPicker.cs, ArmorSlotUI.cs, CraftingMenu.cs, CraftingSetPanels.cs, GearPage.cs, LootChestBuilder.cs
-             PlayerArmor.cs <-o ArmorTestKit.cs, ChestTier.cs, CraftingRow.cs, ItemDropper.cs, MonsterBounty.cs, PlayerHealth.cs, PlayerInfoPage.cs
+             PlayerArmor.cs <-o ArmorTestKit.cs, ChestTier.cs, CraftingRow.cs, HumanBrain.cs, ItemDropper.cs, MonsterBounty.cs, PlayerHealth.cs, PlayerInfoPage.cs
 */
 
 using System.Collections.Generic;

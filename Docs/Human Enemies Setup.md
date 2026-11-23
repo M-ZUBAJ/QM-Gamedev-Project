@@ -16,6 +16,22 @@ The new world has **human enemies**: survivors who live there by the same rules 
   armor's numbers (a full copper set 10 %, iron 15 %, gold 25 %, diamond 40 %). Get more than **10 m** away and it stops following and goes back to its life,
   but it **remembers**: come within **8 m** of it again and it attacks again. It always knows who hurt it: **shoot it
   with an arrow from afar and it comes after you** for 8 s whatever the distance (then the 10 m rule again).
+- **Type 2:** a **smarter** loner (health 100), the same size, gear, work and fighting skills. **It always wears a
+  hood** (instead of a helmet, in forest green, brown, slate blue or wine red), so you can tell it from Type 1 at a
+  glance. **It notices you:** the
+  first time it sees you (in front of it, within 20 m, nothing in the way) it either ignores you or **walks over and
+  looks at you** for a few seconds, then goes back to its work. **Walk at it with a sword selected** and it may
+  **attack you first** (a 35 % chance each time, at most every 8 s); if it doesn't, it stops and watches you. **When
+  you hit it, it does the math** like a player weighing a fight: can it get away (its running speed against your
+  sprint and how long your stamina lasts, and how far away you are), and who would win (how long each of you needs to
+  kill the other: weapons, armor, health, attack speed)? It **runs if it can get away**; when it can't, it fights if
+  its health is low (cornered) or it would win, else it tries to run anyway. If it fought you once, it judges again
+  when you come near later.
+- **Type 3:** **small** (three quarters of your size, health 60 each) and never alone: **groups of 3, rarely 2**. Like
+  Type 1 it works and never attacks first, but the group sticks together (the others walk and work near the first
+  one, and one left behind hurries back) and **hit one and the whole group comes at you**, none of them runs (a
+  member killed with one blow counts too). Each one hits 80 % as hard as its weapon would (they make up for it in
+  numbers), and they all hold the grudge: come near again later and the group attacks again.
 - **Gear by area:** each human is dressed when it appears, by how rich its biome is. The grassland's are mostly poor
   (plain clothes, some copper, rarely iron, gold or even diamond), the desert's mostly iron and gold, the snow's gold
   and diamond. Its armor's metal shows the tier (copper, steel, gold, ice blue). The richer ones hold a weapon
@@ -38,9 +54,13 @@ The new world has **human enemies**: survivors who live there by the same rules 
 - **Caves:** every cave has an **invisible trail** through its entrance (CaveTrail). A human that walked into a cave
   to mine walks out through the entrance, one going to an ore inside walks in through it (round the side if it comes
   from behind), and one stuck inside takes the way out.
+- **Test name tags:** tick **GameRules > Human Tags** (Testing) and a tag floats over every human's head: "Type 1"
+  in blue, "Type 2" in orange or "Type 3" in green, with what it's doing under it. Players never see it while the rule
+  is off.
 - **Humans killed:** the victory and death pages count them apart from monsters.
 - **Where:** the new world only (Map: New world on the NEW GAME page): type 1 lives in the grassland, the desert and
-  the snow. New ones come in the daytime, out of your sight, a few around you at a time.
+  the snow, types 2 and 3 in the grassland, the hills, the desert and the snow. New ones come in the daytime, out of
+  your sight, a few around you at a time (a group counts as 2 or 3 of them).
 
 ## Quick way: one click
 
@@ -61,8 +81,10 @@ tools (**Tools > Items > Build Tier Tools** made them; the box says if some are 
 | What | Where | What it is |
 |---|---|---|
 | The animations | `Assets/Animation/Enemy/Human/HumanEnemy.controller` | Blink's Humanoid clips. **Legs by direction, like yours:** a 2D blend on MoveX / MoveZ (its speed to its right and forward, m/s, set by HumanBrain): Idle, RunForward slowed down for starting, the runs forward / backward / left / right / back diagonals at your walking speed (7.8 m/s), StrafeLeft / Right for circling, Sprint at your sprint. MiningLoop for chopping and mining with a tool, Gathering for picking berries, GetHit, Death. **An Actions layer for the upper body only** (`HumanUpperBody.mask`) with three attacks by what it holds: PunchRight (fists; also its punches at a tree or rock), MeleeAttack_OneHanded (sword, mace, war axe), MeleeAttack_TwoHanded (longsword, pike), played 1.2 times as fast and left as soon as the move is over (the tool measures when each blow lands and ends), so it swings while its legs run, strafe or step in. The walk and run play faster for a smaller body (**StrideSpeed**) |
+| Type 2's hood | `Assets/Prefabs/Enemy/Human/Meshes/Hood Male.asset` / `Hood Female.asset`, `Assets/Materials/Humans/Hood.mat` | a low-poly cloth hood made to fit each body's head (Polytope's free pack has none): open from the chin to the brow, a soft peak at the back, a short cape over the shoulders, drawn on both sides; on the head bone as a switched-off child **Hood** of the Type 2 prefabs. The material is plain white Standard: HumanGear colors each hood |
+| Name tags | `HumanTag` on every human | its type's name and color (Type 1 blue, Type 2 orange, Type 3 green) |
 | Cave trails | every cave prefab in `Assets/Prefabs/World/Caves` | a **CaveTrail** with the cave's floor radius (the tool adds it to caves made before; **Tools > World > Build Rock Caves** puts it on new ones) |
-| The humans | `Assets/Prefabs/Enemy/Human/Human Type 1 Male` and `... Female` | the Polytope body (Model) at its own size: 1.8 m tall, **the same as your character** (the Human Spawner makes each one a little taller or shorter), a capsule collider and a Rigidbody, and the scripts below |
+| The humans | `Assets/Prefabs/Enemy/Human/Human Type 1 Male` / `... Female`, `Human Type 2 Male` / `... Female` (Type 2: health 100, HumanBrain's **When Hit** = Judge and **Notices Player** on) and `Human Type 3 Male` / `... Female` (Type 3: the body at 0.75 x, health 60, **Damage Times** 0.8; the spawner's Type 3 line: groups of 3, **Smaller Group Chance** 0.2) | the Polytope body (Model) at its own size: 1.8 m tall, **the same as your character** (the Human Spawner makes each one a little taller or shorter), a capsule collider and a Rigidbody, and the scripts below |
 | The spawner | ProceduralGenerateScene > **Human Spawner** | keeps a few humans around the player |
 
 ## How it works
@@ -72,11 +94,12 @@ tools (**Tools > Items > Build Tier Tools** made them; the box says if some are 
 | **EnemyCombat** (Marko's) | on each human | its health (80 for type 1), so every attack you have hurts it: punches, tools, arrows, the fireball, Thorns, critical hits, damage numbers. Its **Coin Multiplier** is 0 on humans: HumanLoot pays by the gear instead of Marko's 3 - 6 coins |
 | **EnemyAnimator** | on each human | walking / running speed for the animations, the flinch when hurt (not while it swings), the attack (`PlayAttack`), the death animation, then the body is removed |
 | **DeathEffect** | on each human | its body turns into (green) particles while it dies, like the monsters' |
-| **HumanGear** | on each human | dresses it once when it appears: rolls its wealth tier from the area's odds, wears each armor piece with Piece Chance at that tier (sometimes one lower), the rest plain clothes or bare skin, one armor style, the metal tinted by tier, a random head, hair (none under a helmet), beard and sometimes a cape; a weapon in the right hand's slot bone and sometimes a shield in the left (Polytope made those two slot bones only for the man's body: the tool copies them onto the woman's hands); with **Tool Chance** an axe and a pickaxe of its wealth's tier in the same hand, hidden until it works; removes the pieces it doesn't wear. **Outfit** shows what it got |
+| **HumanGear** | on each human | dresses it once when it appears: rolls its wealth tier from the area's odds, wears each armor piece with Piece Chance at that tier (sometimes one lower), the rest plain clothes or bare skin, one armor style, the metal tinted by tier, a random head, hair (none under a helmet), beard and sometimes a cape; a weapon in the right hand's slot bone and sometimes a shield in the left (Polytope made those two slot bones only for the man's body: the tool copies them onto the woman's hands); with **Tool Chance** an axe and a pickaxe of its wealth's tier in the same hand, hidden until it works; removes the pieces it doesn't wear. **Outfit** shows what it got. **Check Body**: about once a second, while it's on screen near the camera, it checks that the body parts it wears are drawn; if none is (only the hood floating), it mends them and the Console says what it found |
 | **HumanLoot** | on each human | keeps what it gathered (**Carried**); when it dies, puts the materials of its gear and what it carried into your inventory (what doesn't fit falls next to the body) and gives the coins |
-| **HumanBrain** | on each human | rests, walks around its home at your walking speed, walks to a nearby tree, rock or berry bush it can break (a rock first with **Rock Share**; your tool rules: its axe, war axe or pickaxe), takes out the axe or the pickaxe and swings at it until it breaks, each swing landing when the tool comes down in the animation (**Swing At**) with your wind burst (PunchEffect); without a tool for it, it punches (the fist attack, each punch landing when the fist does), and it picks berries by hand (Turki's ResourceNode gives the drop to its bag: a `[Tony]` addition). Through a cave's entrance by the cave's trail (CaveTrail). Hurt by you, it fights like a player: faces you, runs at you and sprints with its own stamina, starts a swing when you'll be within reach as the blow lands and keeps running in while it winds up, circles you between attacks, flinches at most once in Flinch Every; each blow hurts you only if you're still within reach and in front of it (your armor and Last Stand count, Thorns hits it back); farther than Give Up Range it stops, but it holds a grudge and attacks again when you come within Notice Range. Looks ahead and goes around trunks, rocks and walls. **Doing** shows what it's doing ("Punching TreeNode", "Sprinting at the player | stamina 60", "Circling the player") |
+| **HumanTag** | on each human | while **GameRules > Human Tags** is on: a tag over its head with its type (in its color) and what it's doing (HumanBrain's Doing), turned toward the camera, the same size on screen near or far, through walls (Through Walls), up to 60 m |
+| **HumanBrain** | on each human | rests, walks around its home at your walking speed, walks to a nearby tree, rock or berry bush it can break (a rock first with **Rock Share**; your tool rules: its axe, war axe or pickaxe), takes out the axe or the pickaxe and swings at it until it breaks, each swing landing when the tool comes down in the animation (**Swing At**) with your wind burst (PunchEffect); without a tool for it, it punches (the fist attack, each punch landing when the fist does), and it picks berries by hand (Turki's ResourceNode gives the drop to its bag: a `[Tony]` addition). Through a cave's entrance by the cave's trail (CaveTrail). Hurt by you, it fights like a player: faces you, runs at you and sprints with its own stamina, starts a swing when you'll be within reach as the blow lands and keeps running in while it winds up, circles you between attacks, flinches at most once in Flinch Every; each blow hurts you only if you're still within reach and in front of it (your armor and Last Stand count, Thorns hits it back); farther than Give Up Range it stops, but it holds a grudge and attacks again when you come within Notice Range. Looks ahead and goes around trunks, rocks and walls. In a group (Type 3) the first one leads: the others walk and work within **Group Spread** of it, one left behind hurries back ("Following its group"), and when one of them is hurt or starts a fight every member within **Group Help Range** joins in (**Defends Group**). **Doing** shows what it's doing ("Punching TreeNode", "Sprinting at the player | stamina 60", "Circling the player") |
 | **CaveTrail** | on each cave | the cave's invisible trail: the door just inside the entrance, the spot in front of it, and a spot at each side (select a cave to see them). `CaveTrail.Around(point)` = the cave a point is in |
-| **Human Spawner** | the new world | every few seconds: takes away humans left far behind (out of sight), and in the daytime brings a new one where you can't see it, of a type that lives in that biome, dressed with that biome's odds |
+| **Human Spawner** | the new world | every few seconds: takes away humans left far behind (out of sight), and in the daytime brings a new one (or a whole group, linked to each other, only when Population has room for it) where you can't see it, of a type that lives in that biome, dressed with that biome's odds. Each one is dressed while it's still switched off (inside the spawner's switched-off **Dressing Room (new humans)** child), then let out as a top-level object of its own, so its animator and body parts start once with only what it wears |
 | **MonsterBounty** | (code) | when a human dies, the armor set's coins per kill and Bounty Hunter's coins, and "Humans killed" instead of "Monsters killed" (Marko's EnemyCombat now passes who died: a `[Tony]` line) |
 
 ## By hand (instead of the tool)
@@ -111,6 +134,9 @@ The tool is much easier; this is what it does, if you want to see it.
 5. HumanLoot: drag the Copper, Iron, Gold, Diamond, Wood and Stone items from `Assets/Config/Items` in.
 6. Save it as a prefab. In ProceduralGenerateScene: Create Empty "Human Spawner", add **HumanSpawner**, add a line to
    **Kinds** with your prefab in Bodies and Grassland / Desert / Snow ticked.
+7. **Type 3:** the same, with the Model's scale 0.75, the capsule 1.35 high, radius 0.225, center y 0.675, Max /
+   Current Health 60, HumanBrain's Kind Type 3 and **Damage Times** 0.8. Its Kinds line: Group Min 3, Group Max 3,
+   **Smaller Group Chance** 0.2, all four biomes ticked.
 
 ## Settings
 
@@ -132,9 +158,16 @@ The tool is much easier; this is what it does, if you want to see it.
 | | **Fist Damage** (5), **Attack Reach** (2 m), **Attack Every** (0.9 s) | one punch with bare hands (with a weapon it's the weapon's Damage below; your armor takes its share), how close it gets to hit (fists 70 % of it, a two-handed weapon 130 %), seconds between its attacks (at least the attack's move) |
 | | **Sprints** (on), **Sprint From** (4 m), **Sprint Drain** (20), **Stamina Regen** (15), **Recover To** (30) | like your stamina: it sprints at you (as fast as your sprint) when you're farther than Sprint From, using 20 of its 100 stamina a second (5 s), gets 15 a second back a second after, and out of stamina it can't sprint until it has 30 again |
 | | **Strafes** (on) | between attacks it circles you at reach, facing you, like a player strafing; off: it stands and waits |
+| | **Notices Player** (Type 2 on) | the first time it sees you it ignores you or walks over to look; a player walking at it with a sword may be attacked first |
+| | **See Distance** (20 m), **See Angle** (140) | how far and how wide it sees you (in front of it, nothing in the way) |
+| | **Approach Chance** (0.5), **Approach Distance** (3 m), **Watch Seconds** (2 - 4) | the chance it walks over the first time it sees you (else it ignores you), how close it comes, how long it looks |
+| | **Threat Chance** (0.35), **Threat Range** (10 m), **Threat Speed** (1.5), **Threat Cooldown** (8 s) | a player with a sword selected coming at it (within Threat Range, at Threat Speed m/s or faster): the chance it attacks first, asked once, then not again for Threat Cooldown; if it doesn't, it stops and watches you |
+| | **When Hit = Judge**, **Low Health Share** (0.4), **Win Margin** (0.8) | the fight-or-flee math (Type 2): it runs if it can get away; when it can't, it fights if its health is below 40 % or it would kill you in less than 80 % of the time you need to kill it. **Judgement** shows its last decision and the numbers ("runs: it can get away, it would lose (it kills the player in 9 s, the player kills it in 2 s)") |
 | | **Flinch Every** (2 s) | it flinches at most once in this many seconds (never mid-swing): you can't keep it stunned by hitting fast. 0 = every hit |
 | | **Fist / One Hand / Two Hand Strike**, **Gather Timing** (measured by the tool) | seconds from the start of each attack (or pick) until the blow lands (or the hand picks), and until the move is over |
 | | **Flee Seconds** (6), **Safe Distance** (40 m), **Flee Most Seconds** (15) | how long it runs away (When Hit = Run Away) |
+| | **Damage Times** (1; Type 3 0.8) | its hits do its weapon's damage (or Fist Damage) times this |
+| | **Defends Group** (on), **Group Help Range** (60 m), **Group Spread** (12 m) | in a group (Type 3): when one member is hurt or starts a fight, the others within Group Help Range of it fight too, with the same grudge; the members that aren't the leader walk and work within Group Spread of it and hurry back from farther. A loner has no group: these do nothing |
 | HumanGear | **Piece Chance** (0.6) | the chance it wears each armor piece once it has a tier (all 5 = a full set) |
 | | **Lower Chance** (0.25) | a piece, weapon or shield one tier below its wealth |
 | | **Shield Chance** (0.35), **Cape Chance** (0.3), **Beard Chance** (0.6), **Bare Chance** (0.3) | the looks |
@@ -143,10 +176,14 @@ The tool is much easier; this is what it does, if you want to see it.
 | | **Weapons > Damage** | one hit with that weapon at copper tier (sword 10, mace 12, war axe 11, longsword 15, pike 14); each tier above +25 % (iron x1.25, gold x1.56, diamond x1.95). The tool writes these only where they're still 0, so your numbers stay. **Outfit** shows the damage of the weapon it got |
 | | (its armor) | every hit you land is cut by its armor's share (**Outfit** > protection): the chestplate counts 28 % of a set, the other four pieces 18 % each; a full set 10 / 15 / 25 / 40 % for copper / iron / gold / diamond. Marko's EnemyCombat asks HumanGear (a `[Tony]` line) |
 | | **Weapon Offset / Turn**, **Shield Offset / Turn**, **Tool Offset / Turn** | moves the weapon, shield, axe and pickaxe in the hand if they don't sit right (Tool Turn 0, 0, 180 turns the game's tools to point the way Polytope's weapons do) |
+| | **Wears Hood** (Type 2 on), **Hood**, **Hood Colors** | Type 2 always wears its hood instead of a helmet (its hair goes under it), in one of the Hood Colors; the tool fills in Hood and sets Wears Hood for each type |
 | | **Axe Turn** (180) | axes only: spun around the handle after Tool Turn, so the sharp edge faces the tree (like your own ToolInHand > Axe Turn) |
+| | **Check Body** (on), **Check Distance** (40 m) | the body check: about once a second, while the human is on screen and closer than Check Distance, every worn body part whose box is in the camera's view must have been drawn; one that wasn't, two checks in a row, is mended (it works out its box from its real pose every frame, is linked to its bones again and restarted) and the Console says what it found (at most twice per human; a part with no mesh shows as "NO MESH": that can't be mended, rebuild with the tool). **⋮ > Test: Report Body** writes the same report for any human |
+| HumanTag | **Label**, **Color** (set by the tool), **Show Doing** (on), **Through Walls** (on), **Above** (0.35 m), **Show Distance** (60 m), **Size** (2.2) | the tag's text and color, the "doing" line under it, seen through walls, how high over the head, how far it shows, how big (it keeps the same size on screen) |
+| GameRules (in the scene) | **Human Tags** (Testing, off) | shows the name tags. Tick it while playing, or tick it in ProceduralGenerateScene and save the scene so games started from the title screen show them too |
 | HumanLoot | **Empty Coins** (3 - 5) | coins from one that has nothing to drop |
 | CaveTrail (on each cave) | **Radius** | the cave floor's radius (the tool sets it from the cave's design) |
-| Human Spawner | **Kinds** | each type: its prefabs (a man and a woman), weight, the biomes it lives in, group size |
+| Human Spawner | **Kinds** | each type: its prefabs (a man and a woman), weight, the biomes it lives in, group size (**Group Min / Max**; **Smaller Group Chance** = how often a group comes one smaller: Type 3 is 3 / 3 with 0.2 = groups of 3, rarely 2) |
 | | **Height Variation** (0.06) | each new human is up to 6 % taller or shorter than its prefab (about 11 cm), most near the middle; 0 = all the same |
 | | **Grassland / Hills / Desert / Snow** (under Gear By Area) | how rich the humans of each biome are (weights for none, copper, iron, gold, diamond) |
 | | **Population** (6), **Spawn Every Seconds** (8), **Only In Day** | how many at once, how often a missing one comes, daytime only |
@@ -157,7 +194,7 @@ The tool is much easier; this is what it does, if you want to see it.
 1. From the title screen: **NEW GAME > Map: New world > START GAME**. The Console says "Human Spawner: N human(s)
    around the player".
 2. Look around: humans walk, rest, and work on trees and rocks; press F5 to see that they're about as tall as you. Select one (Hierarchy:
-   Human Spawner > its children): HumanGear > **Outfit** says what it wears ("| tools: stone axe + pickaxe" when it
+   the top-level objects named "Human Type 1 Male(Clone)" and so on): HumanGear > **Outfit** says what it wears ("| tools: stone axe + pickaxe" when it
    carries some), HumanBrain > **Doing** what it's doing, HumanLoot > **Carried** what it gathered. It swaps its
    weapon for the axe at a tree and the pickaxe at a rock, and each time the tool comes down the grey wind bursts
    where it strikes (like your hits). Men and women both do it.
@@ -177,6 +214,16 @@ The tool is much easier; this is what it does, if you want to see it.
    entrance. Select a cave to see its trail (yellow spots).
 8. Die or win: the page shows **Humans killed**.
 9. Human Spawner's **⋮ > Test: Spawn One Now** makes one out of sight (turn around).
+10. **Type 2:** look for a hood, or tick the scene's **GameRules > Human Tags** (Testing) to see "Type 1" / "Type 2"
+    over every head. Walk into a Type 2's view: it ignores you or
+    walks over and looks at you (**Doing**: "Watching the player"), then goes back to work. Select a sword and walk at
+    it: sometimes it attacks first, else it stops and watches you. Hit it with your fists from close up while it's
+    healthy: it runs (**Judgement**: "runs: ... it would lose"). Keep hitting it: once its health is low and it can't
+    get away, it fights back.
+11. **Type 3:** look for small humans together (green "Type 3" tags with Human Tags on). Watch them a while: the others
+    stay near the first one and work near it ("Following its group" when one hurries back). Hit one (an arrow from
+    afar works too): all of them come at you, and none runs, even at low health. Get away (more than 10 m, after
+    8 s), then walk back within 8 m of any of them: the whole group attacks again.
 
 ## Problems
 
@@ -199,4 +246,14 @@ The tool is much easier; this is what it does, if you want to see it.
 | Killing one counts as a monster | Marko's EnemyCombat is older than 23/11/2026 (no `MonsterBounty.Killed(gameObject)` line). |
 | It gives only coins | It wore no armor and carried nothing; or the Copper / Iron / Gold / Diamond items are missing on HumanLoot (run the tool again). |
 | It never mines ore or chops the spruce | It has no pickaxe, or not a good enough one (your tool rules: copper and iron ore need a stone pickaxe or better, gold an iron one, diamond a gold one; the spruce an iron axe or a copper-or-better war axe). One without tools only takes plain trees, stone and berries. |
+| No Type 2 humans | The tool hasn't made them yet (run it again: the box lists "Human Type 2"), or the Human Spawner has no Type 2 line (the tool adds it). In the hills only Type 2 lives. |
+| Type 2 never comes over | Only the first time it sees you, and only half the time (Approach Chance). It must see you: in front of it, within 20 m, nothing in the way. |
+| Type 2 has no hood | A prefab built before 23/11/2026's hood: run the tool again (the box says "a hood" for each Type 2 prefab; "NO hood" = it found no head bone or head mesh). |
+| No name tags | Tick **Human Tags** on the scene's GameRules (Testing). They hide farther than 60 m (HumanTag > Show Distance) and while a human dies. |
+| No Type 3 humans | The tool hasn't made them yet (run it again: the box lists "Human Type 3"), or the Human Spawner has no Type 3 line (the tool adds it). A group only comes when Population has room for 2 or 3 more, so with many humans around it waits until some are gone. |
+| A Type 3 alone | One of its group died or was taken away (far behind you), or there was no free spot for the others when they came. The rest of the group still sticks together. |
+| Only the one you hit fights | The others were farther than Group Help Range (60 m) from it, or their HumanBrain > **Defends Group** is off. |
+| Type 3 humans wander apart | Group Spread is too big, or one of them is busy fighting or a grudge took it after you (the group check waits for calm moments). |
+| Type 2 always runs | It does the math (When Hit = Judge): healthy against a player who'd beat it, it runs. Read **Judgement**. Set **When Hit** to Fight Back for a fighter. |
+| A hood floats with no body, or a man's torso and arms (or legs, or feet) are missing while his weapon and shield float where his hands are | Found on 23/11/2026 with **⋮ > Test: Report Body** ("naked_00_body ... NO MESH"): Polytope's male prefab points its four bare-skin parts (naked_00_body, _boots, _gauntlets, _legs) at meshes its FBX no longer has under those names (there: naked_body_01, naked_boots_01, naked_gauntlets_S_01, naked_legs_01), so a man dressed partly in bare skin had nothing to draw there (the woman's body comes straight from her FBX: fine). Run the tool again: each male prefab gives those parts the FBX's meshes (the box says "gave 4 parts without a mesh the FBX's (naked_00_body <- naked_body_01, ...)"; Polytope's own files stay as they are). Until then HumanGear never puts on a part with nothing to draw (plain clothes there instead). If some body part still goes missing, the body check writes "N of its M worn body parts weren't drawn although they were in view ... Found: ..." in the Console: copy that line. |
 | They're slow, or the wrong size | A prefab built before 23/11/2026's changes: run the tool again (it gives them the new defaults once). |

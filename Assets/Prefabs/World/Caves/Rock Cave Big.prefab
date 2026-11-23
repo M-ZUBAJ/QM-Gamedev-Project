@@ -1237,6 +1237,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6707513203868840398}
+  - component: {fileID: 2669979841361977372}
   m_Layer: 0
   m_Name: Rock Cave Big
   m_TagString: Untagged
@@ -1263,6 +1264,19 @@ Transform:
   - {fileID: 6122266359417242450}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2669979841361977372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3602163153455789024}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca3f85b139563ed4ebdde1f2a36195f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  radius: 8.5
 --- !u!1 &3839857304195684223
 GameObject:
   m_ObjectHideFlags: 0
