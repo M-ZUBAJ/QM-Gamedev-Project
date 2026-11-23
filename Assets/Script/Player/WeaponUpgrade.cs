@@ -104,15 +104,43 @@ public class WeaponUpgradeSystem : MonoBehaviour
         {
             weapon.kills = 0;
 
+            // Remember the previous bonus so we can display the actual increase.
+            float previousBonus = weapon.bonusPercent;
+
             weapon.bonusPercent = Mathf.Min(
                 weapon.bonusPercent + damageIncreasePercent,
                 maxTotalBonusPercent
             );
 
-            Debug.Log(
-                weaponId + " upgraded! Damage bonus: +" +
-                weapon.bonusPercent + "%"
-            );
+            float actualIncrease = weapon.bonusPercent - previousBonus;
+
+            // Find the weapon's display name in the inventory.
+            string weaponName = weaponId;
+
+            PlayerInventory inventory = PlayerInventory.Instance;
+
+            if (inventory != null)
+            {
+                foreach (PlayerInventory.Slot slot in inventory.Slots)
+                {
+                    if (slot != null && !slot.IsEmpty && slot.id == weaponId)
+                    {
+                        weaponName = slot.ShownName;
+                        break;
+                    }
+                }
+            }
+
+            // Show the upgrade notification using the existing UI system.
+            string message = killsPerUpgrade + " kills! " +
+                            weaponName + " damage increased by +" +
+                            actualIncrease.ToString("0.##") +
+                            "% (total +" +
+                            weapon.bonusPercent.ToString("0.##") + "%).";
+
+            NotificationFeed.Show(message);
+
+            Debug.Log(message);
         }
     }
 }

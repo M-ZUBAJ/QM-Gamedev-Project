@@ -37,6 +37,16 @@ public class PlayerHunger : MonoBehaviour
     [Min(0f)]
     [SerializeField] float drainPerSecond = 0.1f;
 
+
+    [Header("Difficulty Scaling")] // ADDED BY MARKO
+    [Tooltip("Percentage increase in hunger drain for each day after Day 1. 5 = 5% faster per day.")]//
+    [Min(0f)]//
+    [SerializeField] float extraDrainPercentPerDay = 5f;//
+    ///
+    /// 
+    /// 
+    /// 
+
     [Tooltip("How many times faster food drains while walking.")]
     [Min(1f)]
     [SerializeField] float walkMultiplier = 2f;
@@ -120,8 +130,20 @@ public class PlayerHunger : MonoBehaviour
                          : 1f;
         if (IsLevitating()) multiplier += levitateExtra;   // added, not multiplied: walking 2x + 1x = 3x
 
-        // Time.deltaTime = seconds since last frame, so the drain is per second, not per frame.
-        LoseFood(drainPerSecond * multiplier * Time.deltaTime);
+
+        /// ADDED BY MARKO 
+        // Increase hunger drain as the days progress.
+        // Day 1 = normal, Day 2 = +5%, Day 3 = +10%, etc.
+        int currentDay = DaylightCycle.Current != null
+            ? Mathf.Max(1, DaylightCycle.Current.Day)
+            : 1;
+
+        float dayMultiplier = 1f +
+            (currentDay - 1) * (extraDrainPercentPerDay / 100f);
+
+        // Apply all multipliers to the normal hunger drain. The drain is per second not per frame
+        LoseFood(drainPerSecond * multiplier * dayMultiplier * Time.deltaTime);
+
     }
 
     // Food is gone: kill the player at once, or take health away over time.
