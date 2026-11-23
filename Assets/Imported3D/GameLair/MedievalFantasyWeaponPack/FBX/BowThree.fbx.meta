@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 2eab656d20854b74ab3c5c05b13d45b1
+guid: 5328850ac9204c04eab0d95959d29b1b
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -16,8 +16,6 @@ ModelImporter:
     optimizeGameObjects: 0
     removeConstantScaleCurves: 0
     motionNodeName: 
-    rigImportErrors: 
-    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
@@ -107,10 +105,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 286634
-  packageName: Medieval fantasy weapon pack
-  packageVersion: 1.0
-  assetPath: Assets/GameLair/MedievalFantasyWeaponPack/FBX/BowThree.fbx
-  uploadId: 673693

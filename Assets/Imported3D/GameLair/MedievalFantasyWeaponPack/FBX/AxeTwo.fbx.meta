@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: aeead2edd8ba8a44f885e6bfb060f861
+guid: 46a6e1c2ae7c7bd4482fbf194038cfce
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -16,8 +16,6 @@ ModelImporter:
     optimizeGameObjects: 0
     removeConstantScaleCurves: 0
     motionNodeName: 
-    rigImportErrors: 
-    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
@@ -107,10 +105,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 286634
-  packageName: Medieval fantasy weapon pack
-  packageVersion: 1.0
-  assetPath: Assets/GameLair/MedievalFantasyWeaponPack/FBX/AxeTwo.fbx
-  uploadId: 673693

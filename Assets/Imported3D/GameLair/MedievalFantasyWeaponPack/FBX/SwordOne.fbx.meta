@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 181e610c38ef3c941b6e260bcf187214
+guid: 8ebb92f5b5102e94e9df337fa7ac946b
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -16,8 +16,6 @@ ModelImporter:
     optimizeGameObjects: 0
     removeConstantScaleCurves: 0
     motionNodeName: 
-    rigImportErrors: 
-    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
@@ -107,10 +105,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 286634
-  packageName: Medieval fantasy weapon pack
-  packageVersion: 1.0
-  assetPath: Assets/GameLair/MedievalFantasyWeaponPack/FBX/SwordOne.fbx
-  uploadId: 673693

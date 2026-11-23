@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: afe61e68b5475104092ca8df3c863f35
+guid: 1f7f2eb5ec172354eaabec60bdea407e
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -16,8 +16,6 @@ ModelImporter:
     optimizeGameObjects: 0
     removeConstantScaleCurves: 0
     motionNodeName: 
-    rigImportErrors: 
-    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
@@ -107,10 +105,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 286634
-  packageName: Medieval fantasy weapon pack
-  packageVersion: 1.0
-  assetPath: Assets/GameLair/MedievalFantasyWeaponPack/FBX/QuiverTwo.fbx
-  uploadId: 673693

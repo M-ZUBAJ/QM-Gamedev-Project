@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 362a96d3029b55a4d8f4f37a23f4dcad
+guid: 9776650e31459cd45a16e3daf5d504d5
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -16,8 +16,6 @@ ModelImporter:
     optimizeGameObjects: 0
     removeConstantScaleCurves: 0
     motionNodeName: 
-    rigImportErrors: 
-    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
@@ -107,10 +105,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 286634
-  packageName: Medieval fantasy weapon pack
-  packageVersion: 1.0
-  assetPath: Assets/GameLair/MedievalFantasyWeaponPack/FBX/SwordTwo.fbx
-  uploadId: 673693

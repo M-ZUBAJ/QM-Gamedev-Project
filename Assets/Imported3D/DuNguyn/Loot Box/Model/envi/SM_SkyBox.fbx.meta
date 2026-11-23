@@ -1,14 +1,9 @@
 fileFormatVersion: 2
-guid: 0fc9009092f13f4469c669eb20d33919
+guid: 0fc74ad4de248984880ecdf2f0455947
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: lambert1
-    second: {fileID: 2100000, guid: 8349f745261a9c04b9e1fdc194721ba4, type: 2}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -21,8 +16,6 @@ ModelImporter:
     optimizeGameObjects: 0
     removeConstantScaleCurves: 0
     motionNodeName: 
-    rigImportErrors: 
-    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
@@ -112,10 +105,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 305240
-  packageName: Loot Box
-  packageVersion: 0.0.1
-  assetPath: Assets/DuNguyn/Loot Box/Model/envi/SM_SkyBox.fbx
-  uploadId: 717104
