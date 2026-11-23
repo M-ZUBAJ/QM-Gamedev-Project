@@ -17,7 +17,7 @@ Purpose: What a tool is: its kind (what it's good at) and its tier (how strong).
          - Bow: shoots arrows (BowShooter: hold the attack button to draw, let go to shoot); it doesn't hit up close.
          Each tier is 25 % stronger than the one before at the tool's own job. Not a bow: how strong a bow is comes from
          its own Bow section (BowStats: its damage, draw time and arrow speed); its tier only sorts the crafting list.
-Requirement: ToolStats.cs <-x BowBuilder.cs, CraftingMenuBuilder.cs, DesertBuilder.cs, FireballProjectile.cs, ItemData.cs, ItemDataEditor.cs, PlayerCombat.cs, SnowBuilder.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs
+Requirement: ToolStats.cs <-x BowBuilder.cs, CraftingMenuBuilder.cs, DesertBuilder.cs, FireballProjectile.cs, HumanBrain.cs, HumanGear.cs, HumanLoot.cs, ItemData.cs, ItemDataEditor.cs, PlayerCombat.cs, SnowBuilder.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs
 */
 
 using UnityEngine;

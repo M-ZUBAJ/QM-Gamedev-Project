@@ -1,6 +1,6 @@
 /*
 First Date: 9/10/2026
-Date: 20/11/2026
+Date: 23/11/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerInventory).
         Tools > UI > Add Inventory Scripts adds it for you.
@@ -22,6 +22,7 @@ Purpose: Like Minecraft: while the inventory is open and a stack is on the curso
 Requirement: ItemDropper.cs x-> PlayerInventory.cs, DroppedStack.cs, ItemPickup.cs, MenuState.cs, GameRules.cs
              ItemDropper.cs o-> PlayerHealth.cs, PlayerArmor.cs
              ItemDropper.cs <-x InventoryUIBuilder.cs
+             ItemDropper.cs <-o HumanLoot.cs
 */
 
 using UnityEngine;
@@ -83,6 +84,7 @@ public class ItemDropper : MonoBehaviour
     PlayerHealth health;   // can be missing: then nothing drops on death
 
     public DropStyle Style => dropStyle;
+    public DroppedStack.Look DropLook => CurrentLook();   // how a dropped stack looks (HumanLoot drops the same kind)
 
     // ===== Unity messages (Unity calls these) =====
 

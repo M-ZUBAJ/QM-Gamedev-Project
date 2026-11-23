@@ -1,6 +1,6 @@
 /*
 First Date: 20/11/2026
-Date: 21/11/2026
+Date: 23/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Menu Tools > World > Build New World Scene (it asks first). Run it again whenever GameScene changes
@@ -39,8 +39,10 @@ Purpose: Makes the "New world" of the title screen's NEW GAME page: Assets/Scene
            - its light from the sky is saved (like Tools > World > Set Up Sky Lighting), and it's added to Build
              Settings, so the title screen can load it;
            - Unity's terrain grass shaders go into Project Settings > Graphics > Always Included Shaders (no saved
-             scene has terrain grass, so a built game would leave them out).
-Requirement: NewWorldBuilder.cs x-> WorldGenerator.cs, RockCaveBuilder.cs, DesertBuilder.cs, SnowBuilder.cs, GrasslandTreeBuilder.cs, SkyLightingSetup.cs, ObjectScatter.cs, AnimalSpawner.cs, PlayerController.cs, ResourceNode.cs, PerkChest.cs, ItemPickup.cs, WildAnimal.cs, WorldBarrier.cs, ViewDistance.cs, UIBuildHelper.cs, MenuOrder.cs
+             scene has terrain grass, so a built game would leave them out);
+           - the human enemies' Human Spawner (23/11/2026), when Tools > Enemies > Build Human Enemies has made them
+             (HumanEnemyBuilder.SetUpScene), so a rebuilt new world keeps its humans.
+Requirement: NewWorldBuilder.cs x-> WorldGenerator.cs, RockCaveBuilder.cs, DesertBuilder.cs, SnowBuilder.cs, GrasslandTreeBuilder.cs, SkyLightingSetup.cs, ObjectScatter.cs, AnimalSpawner.cs, PlayerController.cs, ResourceNode.cs, PerkChest.cs, ItemPickup.cs, WildAnimal.cs, WorldBarrier.cs, ViewDistance.cs, UIBuildHelper.cs, MenuOrder.cs, HumanEnemyBuilder.cs
 */
 
 using System.Collections.Generic;
@@ -132,6 +134,7 @@ public static class NewWorldBuilder
         foreach (AnimalSpawner spawner in FindAll<AnimalSpawner>(scene)) SetField(spawner, "terrain", null);   // whichever terrain is there
         string monsters = "Night monsters: GameScene's EnemySpawner (and its NightMonsters: the turtle from night 2) came with the copy.";
         string view = AddViewDistance(scene);
+        string humans = HumanEnemyBuilder.SetUpScene(scene);   // the human enemies, if they've been built
 
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
@@ -144,6 +147,7 @@ public static class NewWorldBuilder
         Debug.Log(ToolName + ": " + NewScenePath + " made from GameScene. Removed the old map: " +
                   (removed.Count > 0 ? string.Join(", ", removed) : "nothing") + ". " + layerReport + " Caves: " + caveReport +
                   ". Desert: " + desert.report + ". Snow: " + snow.report + ". " + scatter + " " + monsters + " " + view +
+                  " " + humans +
                   " Sky light: " + light +
                   ". It's in Build Settings. Test: MainTitleScene > Play > " +
                   "NEW GAME > Map: New world > START GAME (rebuild the title screen first: Tools > UI > Build Main Title Scene).");

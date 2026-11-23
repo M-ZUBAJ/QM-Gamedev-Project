@@ -44,6 +44,12 @@ public class EnemyCombat : MonoBehaviour
             return;
         }
 
+        // [Tony] added (23/11/2026): a human enemy's armor (Tony's HumanGear) takes its share off the hit, like the
+        // player's armor does (a full copper set 10 %, iron 15 %, gold 25 %, diamond 40 %). Monsters have no HumanGear:
+        // their hits are unchanged. To undo: delete the two lines marked [Tony] added (23/11/2026).
+        // Log: Docs/TonyEditMate/Marko/23-11-2026 Human Armor Takes Damage Off.md
+        HumanGear armor = GetComponent<HumanGear>();                                  // [Tony] added (23/11/2026)
+        if (armor != null) damage = armor.Reduce(damage);                             // [Tony] added (23/11/2026)
 
         currentHealth -= damage;
 
@@ -85,7 +91,10 @@ public class EnemyCombat : MonoBehaviour
         // [Tony] added (21/11/2026): extra coins on top of yours, from Tony's armor set bonus (copper set +1, iron set
         // +2) and the rare box's Bounty Hunter perk (+1 each). To undo: delete this line.
         // Log: Docs/TonyEditMate/Marko/21-11-2026 Loot Boxes And New Perks.md
-        MonsterBounty.Killed();                                                       // [Tony] added
+        // [Tony] edited (23/11/2026): was MonsterBounty.Killed(); - now it also says who died, so a human enemy (Tony's
+        // HumanBrain) counts as "Humans killed" on the end pages instead of "Monsters killed". The coins are the same.
+        // To undo: put the line above back. Log: Docs/TonyEditMate/Marko/23-11-2026 Humans Killed Count Apart From Monsters.md
+        MonsterBounty.Killed(gameObject);                                             // [Tony] edited
 
         // [Tony] replaced (10/11/2026): Destroy(gameObject);
         // With Tony's EnemyAnimator on the enemy, the death animation plays first (and the enemy stops moving,

@@ -15,7 +15,7 @@ Purpose: Makes the death particles and gives them to the creatures:
            death animation it times the dissolve to that animation (it starts at 30 % and ends with it) and ticks
            Read/Write on its model, so the particles can come off the body's real surface.
 Requirement: DeathEffectBuilder.cs x-> DeathEffect.cs, WildAnimal.cs, EnemyAnimator.cs, UIBuildHelper.cs, MenuOrder.cs
-             DeathEffectBuilder.cs <-x EnemyBuilder.cs, WildAnimalBuilder.cs
+             DeathEffectBuilder.cs <-x EnemyBuilder.cs, HumanEnemyBuilder.cs, WildAnimalBuilder.cs
 */
 
 using System.Collections.Generic;

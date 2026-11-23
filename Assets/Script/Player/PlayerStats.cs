@@ -1,6 +1,6 @@
 /*
 First Date: 11/10/2026
-Date: 22/11/2026
+Date: 23/11/2026
 Author: Tony
 Use by: Drag this script onto the Player (next to PlayerController, PlayerHealth, PlayerHunger, PlayerStamina...).
 Unity Editor: Nothing to connect: it finds the other player scripts by itself.
@@ -8,7 +8,7 @@ Unity Editor: Nothing to connect: it finds the other player scripts by itself.
               Inspector (they are shown for checking; typing into them does nothing useful). Then VictoryScreen's
               ⋮ > Test: Win shows them as the victory page does.
 Purpose: Counts what the player did in this life (since the start, or since the last respawn), for the victory and death
-         pages: monsters killed, coins earned and spent, distance walked and run (walking + running = all of it), jumps,
+         pages: monsters killed, humans killed (the new world's human enemies, since 23/11/2026), coins earned and spent, distance walked and run (walking + running = all of it), jumps,
          stamina used, health lost / healed, food lost / eaten, items eaten and buildings built. Starts again from 0
          after each respawn.
          Health, food, stamina and coins are counted by watching the values go up and down, so every cause counts
@@ -35,6 +35,8 @@ public class PlayerStats : MonoBehaviour
     [Tooltip("Monsters the player killed (a punch, a weapon, an arrow, a fireball, Thorns...). Monsters that burn away " +
              "at dawn don't count.")]
     [SerializeField] int monstersKilled;
+    [Tooltip("Human enemies the player killed (the new world's survivors).")]
+    [SerializeField] int humansKilled;
     [Tooltip("Coins gained (from monsters, set bonuses, perks...). Coins spent on chests aren't taken off (see Coins Spent).")]
     [SerializeField] int coinsEarned;
     [Tooltip("Coins paid (chests, rerolls...). Coins lost by dying (they go back to the start) aren't counted.")]
@@ -73,6 +75,7 @@ public class PlayerStats : MonoBehaviour
     int lastCoins;
 
     public int MonstersKilled => monstersKilled;
+    public int HumansKilled => humansKilled;
     public int CoinsEarned => coinsEarned;
     public int CoinsSpent => coinsSpent;
     public float DistanceWalked => distanceWalked;   // without running
@@ -110,6 +113,7 @@ public class PlayerStats : MonoBehaviour
         if (placer != null) placer.Built += CountBuilt;
         if (respawn != null) respawn.Respawned += ResetStats;
         MonsterBounty.MonsterKilled += CountKill;
+        MonsterBounty.HumanKilled += CountHuman;
     }
 
     void OnDisable()
@@ -119,6 +123,7 @@ public class PlayerStats : MonoBehaviour
         if (placer != null) placer.Built -= CountBuilt;
         if (respawn != null) respawn.Respawned -= ResetStats;
         MonsterBounty.MonsterKilled -= CountKill;
+        MonsterBounty.HumanKilled -= CountHuman;
     }
 
     void Start()
@@ -193,7 +198,7 @@ public class PlayerStats : MonoBehaviour
     // Back to 0 for a new life. Also remembers the current values, so the refill on respawn isn't counted as "healed".
     public void ResetStats()
     {
-        monstersKilled = coinsEarned = coinsSpent = 0;
+        monstersKilled = humansKilled = coinsEarned = coinsSpent = 0;
         distanceWalked = distanceRun = 0f;
         jumps = itemsEaten = buildingsBuilt = 0;
         staminaUsed = healthLost = healthHealed = foodLost = foodEaten = 0f;
@@ -210,6 +215,7 @@ public class PlayerStats : MonoBehaviour
     public string Summary()
     {
         return "Monsters killed: " + Whole(monstersKilled) + "\n" +
+               "Humans killed: " + Whole(humansKilled) + "\n" +
                "Coins earned: " + Whole(coinsEarned) + "   spent: " + Whole(coinsSpent) + "\n" +
                "Distance walked: " + Distance(distanceWalked) + "\n" +
                "Distance run: " + Distance(distanceRun) + "\n" +
@@ -239,4 +245,5 @@ public class PlayerStats : MonoBehaviour
     void CountEaten(ItemData item) => itemsEaten++;
     void CountBuilt(BuildingData building) => buildingsBuilt++;
     void CountKill() => monstersKilled++;
+    void CountHuman() => humansKilled++;
 }

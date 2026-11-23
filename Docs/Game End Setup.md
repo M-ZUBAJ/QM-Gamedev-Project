@@ -163,3 +163,4 @@ can be left out (the page then works without that part).
 | Distance run: 0 m | Fixed 22/11/2026 (see the numbers above): running is counted now. |
 | A number hangs in the middle of the page | A damage number from the last hit; fixed 22/11/2026 (it fades away now). |
 | Monsters killed stays 0 | Only kills count (monsters burning away at dawn don't); Marko's EnemyCombat tells Tony's MonsterBounty about each kill. |
+| Humans killed stays 0 | Human enemies live in the new world only (Tools > Enemies > Build Human Enemies, `Docs/Human Enemies Setup.md`); a human you killed counts here, not under Monsters killed (since 23/11/2026). |

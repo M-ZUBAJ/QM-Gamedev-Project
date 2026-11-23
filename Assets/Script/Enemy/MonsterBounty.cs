@@ -1,6 +1,6 @@
 /*
 First Date: 21/11/2026
-Date: 22/11/2026
+Date: 23/11/2026
 Author: Tony
 Use by: Nothing to put on an object: Marko's EnemyCombat calls it when a monster dies.
 Unity Editor: The numbers are set elsewhere: the armor sets' Coins Per Kill on the Player's PlayerArmor (Set Bonuses:
@@ -12,8 +12,9 @@ Purpose: The extra coins for killing a monster, on top of the coins Marko's Enem
            - the rare box's Bounty Hunter perk: +1 for each one picked (PerkEffects.BountyCoins).
          Only killing counts: night monsters that burn away at dawn give nothing.
          MonsterKilled tells anyone listening that the player killed a monster (PlayerStats counts them for the
-         victory and death pages).
-Requirement: MonsterBounty.cs o-> PlayerArmor.cs, PerkEffects.cs, PlayerCoins.cs
+         victory and death pages). A human enemy (it has HumanBrain) fires HumanKilled instead (since 23/11/2026): the
+         end pages count it under "Humans killed". Its extra coins are the same as a monster's.
+Requirement: MonsterBounty.cs o-> PlayerArmor.cs, PerkEffects.cs, PlayerCoins.cs, HumanBrain.cs
              MonsterBounty.cs <-x EnemyCombat.cs, PlayerStats.cs
 */
 
@@ -27,6 +28,9 @@ public static class MonsterBounty
     // OnDisable: this class is static, so it outlives the scene.
     public static event System.Action MonsterKilled;
 
+    // Fired instead of MonsterKilled when the one killed was a human enemy (HumanBrain). Same rules for listeners.
+    public static event System.Action HumanKilled;
+
     // ===== Unity messages (Unity calls these) =====
 
     // Static values outlive Play sessions when domain reload is off: start clean every time.
@@ -34,17 +38,20 @@ public static class MonsterBounty
     static void ResetOnPlay()
     {
         MonsterKilled = null;
+        HumanKilled = null;
     }
 
     // ===== My methods =====
 
-    // A monster was killed: gives the extra coins (if any) and returns how many.
-    public static int Killed()
+    // A monster (or a human enemy) was killed: gives the extra coins (if any) and returns how many. "dead" = the one
+    // that died (Marko's EnemyCombat passes itself), so a human counts as a human; null = a monster.
+    public static int Killed(GameObject dead = null)
     {
         PlayerArmor armor = PlayerArmor.Current;
         int coins = (armor != null ? armor.CoinsPerKill : 0) + PerkEffects.BountyCoins;
         if (coins > 0 && PlayerCoins.Instance != null) PlayerCoins.Instance.AddCoins(coins);
-        MonsterKilled?.Invoke();
+        if (dead != null && dead.GetComponent<HumanBrain>() != null) HumanKilled?.Invoke();
+        else MonsterKilled?.Invoke();
         return coins;
     }
 }

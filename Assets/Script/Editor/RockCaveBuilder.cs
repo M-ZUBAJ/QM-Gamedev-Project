@@ -1,6 +1,6 @@
 /*
 First Date: 20/11/2026
-Date: 21/11/2026
+Date: 23/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Menu Tools > World > Build Rock Caves (Tools > World > Build New World Scene runs it too). Needs the rock
@@ -19,12 +19,15 @@ Purpose: Three walk-in rock caves for the new world (Assets/Prefabs/World/Caves:
            - Ore Spots: empty markers (OreSpot) on the floor, where WorldGenerator puts Stone, Copper and Iron rocks.
          Every rock has the rock material and a Mesh Collider of its own shape, so the walls and roof are solid.
          The floor is the terrain: WorldGenerator flattens the ground under each cave.
+         Each cave also gets a CaveTrail (its floor's radius): the invisible trail through its entrance that human
+         enemies follow to get out of it (or into it, to an ore). AddTrails puts one on caves built before it existed
+         without rebuilding their rocks (Tools > Enemies > Build Human Enemies calls it).
          BuildDesert makes the desert's two the same way, all of sandstone (Desert Cave Small, Desert Cave: wider and a
          little lower), for Tools > World > Build Desert Content; WorldGenerator puts gold in them.
          BuildSnow makes the snow's three, all of frosty rock (Snow Cave Small, Snow Cave, Snow Cave Big: a little
          taller), for Tools > World > Build Snow Content; WorldGenerator puts diamonds in them.
-Requirement: RockCaveBuilder.cs x-> UIBuildHelper.cs, MenuOrder.cs
-             RockCaveBuilder.cs <-x DesertBuilder.cs, NewWorldBuilder.cs, SnowBuilder.cs
+Requirement: RockCaveBuilder.cs x-> UIBuildHelper.cs, MenuOrder.cs, CaveTrail.cs
+             RockCaveBuilder.cs <-x DesertBuilder.cs, HumanEnemyBuilder.cs, NewWorldBuilder.cs, SnowBuilder.cs
 */
 
 using System.Collections.Generic;
@@ -178,6 +181,7 @@ public static class RockCaveBuilder
             MakeRoof(roof, d, shapes, material, random);
             MakeOutside(outside, d, shapes, material, random);
             MakeOreSpots(spots, d);
+            SetTrail(root, d);
 
             return PrefabUtility.SaveAsPrefabAsset(root, path);
         }
@@ -186,6 +190,43 @@ public static class RockCaveBuilder
             if (existed) PrefabUtility.UnloadPrefabContents(root);
             else Object.DestroyImmediate(root);
         }
+    }
+
+    // Puts a CaveTrail on every cave prefab that exists (rock, desert and snow caves) without rebuilding its rocks, or
+    // sets its radius again. Returns what it did, for a report.
+    public static string AddTrails()
+    {
+        int done = 0;
+        foreach (Design[] designs in new[] { Designs, DesertDesigns, SnowDesigns })
+        {
+            foreach (Design d in designs)
+            {
+                string path = CaveFolder + "/" + d.name + ".prefab";
+                if (AssetDatabase.LoadAssetAtPath<GameObject>(path) == null) continue;
+                GameObject root = PrefabUtility.LoadPrefabContents(path);
+                try
+                {
+                    SetTrail(root, d);
+                    PrefabUtility.SaveAsPrefabAsset(root, path);
+                    done++;
+                }
+                finally
+                {
+                    PrefabUtility.UnloadPrefabContents(root);
+                }
+            }
+        }
+        return done > 0 ? "cave trails on " + done + " caves" : "no caves yet (Tools > World > Build Rock Caves)";
+    }
+
+    // The cave's invisible trail through its entrance (CaveTrail), with its floor's radius.
+    static void SetTrail(GameObject root, Design d)
+    {
+        CaveTrail trail = root.GetComponent<CaveTrail>();
+        if (trail == null) trail = root.AddComponent<CaveTrail>();
+        SerializedObject so = new SerializedObject(trail);   // the name in quotes must match CaveTrail's field
+        so.FindProperty("radius").floatValue = d.radius;
+        so.ApplyModifiedPropertiesWithoutUndo();
     }
 
     // The ring of wall rocks, from just right of the entrance all the way round to just left of it. Each rock is wider

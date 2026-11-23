@@ -149,4 +149,27 @@ public class ResourceNode : MonoBehaviour
         if (!inv.Add(item.Id, item.DisplayName, item.GetIcon(), amount, item))
             Debug.Log("Inventory is full, the drop was lost.");
     }
+
+    // [Tony] added (23/11/2026): Tony's human enemies (HumanBrain) chop trees, mine rocks and pick berries like the
+    // player, but what breaks goes to the human who did it ("taker" = its bag), not into the player's inventory, and
+    // without the player's perk extras. A tree or rock loses health from each swing like the player's hits; a berry
+    // bush is picked at once. Your TakeDamage, Break and Give are unchanged.
+    // To undo: delete the lines marked [Tony] added (23/11/2026). Log: Docs/TonyEditMate/Turki/23-11-2026 Human Enemies Gather Like The Player.md
+    public bool CollectWithKey => collectWithKey;                                     // [Tony] added (23/11/2026): a berry bush
+
+    public void TakeDamageFor(float damage, System.Action<ItemData, int> taker)       // [Tony] added (23/11/2026)
+    {                                                                                 // [Tony] added
+        if (currentHealth <= 0f) return;                                              // [Tony] added: broken already
+        if (!collectWithKey) currentHealth -= damage;                                 // [Tony] added: a bush isn't hit, it's picked
+        if (collectWithKey || currentHealth <= 0f) BreakFor(taker);                   // [Tony] added
+    }                                                                                 // [Tony] added
+
+    void BreakFor(System.Action<ItemData, int> taker)                                 // [Tony] added (23/11/2026)
+    {                                                                                 // [Tony] added
+        currentHealth = 0f;                                                           // [Tony] added: broken (a second call does nothing)
+        if (dropItem != null) taker?.Invoke(dropItem, Random.Range(dropMin, dropMax + 1));   // [Tony] added: the normal drop
+        if (bonusItem != null && Random.value < bonusChance)                          // [Tony] added: the bonus (an apple...)
+            taker?.Invoke(bonusItem, Random.Range(bonusMin, bonusMax + 1));           // [Tony] added
+        Destroy(gameObject);                                                          // [Tony] added
+    }                                                                                 // [Tony] added
 }

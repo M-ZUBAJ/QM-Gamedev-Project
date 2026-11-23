@@ -131,7 +131,12 @@ public class PlayerCombat : MonoBehaviour
 
         // [Tony] replaced (21/11/2026): if (Physics.Raycast(ray, out hit, attackRange))
         // The Long Reach perk makes the attack reach farther (AttackReach, at the top). To undo: put the line above back.
-        if (Physics.Raycast(ray, out hit, AttackReach))                                           // [Tony] replaced
+        // [Tony] edited (23/11/2026): + PunchEffect.LungeReach. The ray looks a bit past the reach, so walking into reach
+        // before the blow lands still hits: Tony's PunchEffect checks the reach again when the fist or tool lands, and a
+        // target still out of reach then is missed. Targets in reach at the click are hit as before. Was:
+        // if (Physics.Raycast(ray, out hit, AttackReach))
+        // Log: Docs/TonyEditMate/Marko/23-11-2026 Walking Into Reach Still Hits.md
+        if (Physics.Raycast(ray, out hit, AttackReach + PunchEffect.LungeReach))                  // [Tony] replaced
         {
             EnemyCombat enemy =
                 hit.collider.GetComponentInParent<EnemyCombat>();

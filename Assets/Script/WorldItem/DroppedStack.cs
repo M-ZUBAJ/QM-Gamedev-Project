@@ -14,7 +14,7 @@ Purpose: A dropped stack lying in the world, made in code (no prefab needed). Tw
          Two stacks of the same item that lie close together merge into one (like Minecraft).
          It can disappear by itself after a while (Despawn), like Minecraft's 5 minutes.
 Requirement: DroppedStack.cs x-> ItemPickup.cs, PlayerInventory.cs
-             DroppedStack.cs <-x ItemDropper.cs
+             DroppedStack.cs <-x HumanLoot.cs, ItemDropper.cs
 */
 
 using TMPro;

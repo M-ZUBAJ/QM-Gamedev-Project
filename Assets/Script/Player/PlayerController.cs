@@ -29,7 +29,7 @@ Purpose: Move the player with W A S D (or the arrow keys, both set in KeyBinding
 Requirement: PlayerController.cs x-> KeyBindings.cs, MenuState.cs, Rigidbody (Unity)
              PlayerController.cs o-> PlayerStamina.cs, PlayerJump.cs
              PlayerController.cs <-x NewWorldBuilder.cs, PerkChest.cs, PerkManager.cs, PlayerCharacterBuilder.cs, ResourceNode.cs
-             PlayerController.cs <-o ArrowProjectile.cs, BowShooter.cs, EnemyAggro.cs, FirstPersonHands.cs, InteractOutline.cs, NightMonsters.cs, NoKeyNavigation.cs, PerkEffects.cs, PlayerAnimator.cs, PlayerGlide.cs, PlayerHunger.cs, PlayerInfoPage.cs, PlayerJump.cs, PlayerPerks.cs, PlayerStats.cs, TreeFall.cs, WildAnimal.cs, WorldBarrier.cs, WorldGenerator.cs
+             PlayerController.cs <-o ArrowProjectile.cs, BowShooter.cs, EnemyAggro.cs, FirstPersonHands.cs, HumanBrain.cs, InteractOutline.cs, NightMonsters.cs, NoKeyNavigation.cs, PerkEffects.cs, PlayerAnimator.cs, PlayerGlide.cs, PlayerHunger.cs, PlayerInfoPage.cs, PlayerJump.cs, PlayerPerks.cs, PlayerStats.cs, TreeFall.cs, WildAnimal.cs, WorldBarrier.cs, WorldGenerator.cs
 */
 
 using UnityEngine;

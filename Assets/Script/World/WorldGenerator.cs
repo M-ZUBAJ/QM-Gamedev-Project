@@ -46,7 +46,7 @@ Purpose: Makes the new world while its scene loads, and then keeps making it, en
          (inventory, armor, perks, coins), like a new game; the New Game page's choices stay.
 Requirement: WorldGenerator.cs x-> Terrain (Unity)
              WorldGenerator.cs o-> ObjectScatter.cs, PlayerController.cs, PlayerRespawn.cs, ViewDistance.cs, ScreenFader.cs, PerkChest.cs, Rigidbody (Unity)
-             WorldGenerator.cs <-x LootChestBuilder.cs, NewWorldBuilder.cs, WorldBarrierBuilder.cs
+             WorldGenerator.cs <-x HumanSpawner.cs, LootChestBuilder.cs, NewWorldBuilder.cs, WorldBarrierBuilder.cs
              WorldGenerator.cs <-o PlayerRespawn.cs
 */
 

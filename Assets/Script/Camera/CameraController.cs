@@ -1,8 +1,10 @@
 /*
 First Date: 29/9/2026
-Date: 21/11/2026
+Date: 23/11/2026
 Author: Tony
 Use by: Drag this script onto the Main Camera, then drag the Player sphere into the "Player" slot.
+Unity Editor: Third Person Distance = how far behind the ball the camera stays after F5 (it can be changed while
+              playing).
 Purpose: Move the mouse to turn the camera.
          Press F5 to switch between third person (orbit around the ball) and first person (view from the ball).
          Press Esc to show the cursor again, click in the Game view to hide it. With a pause menu in the scene
@@ -38,6 +40,10 @@ public class CameraController : MonoBehaviour
     [SerializeField] bool invertY = false;
  
     [Header("Third person")]
+    [Tooltip("How far behind the ball the camera stays in third person (meters). It can be changed while playing.")]
+    [Range(1f, 20f)]
+    [SerializeField] float thirdPersonDistance = 5f;
+
     [Tooltip("Lowest angle: 0 = level with the ball.")]
     [Range(-89f, 89f)]
     [SerializeField] float minPitch = 10f;
@@ -63,7 +69,6 @@ public class CameraController : MonoBehaviour
  
     float yaw;        // left/right angle
     float pitch;      // up/down angle
-    float distance;   // third person: how far the camera stays from the ball
 
     public bool IsFirstPerson => firstPerson;   // other scripts can read it (e.g. HeldItemView hides in third person)
  
@@ -71,8 +76,10 @@ public class CameraController : MonoBehaviour
  
     void Start()
     {
-        // Keep the same distance and angle the camera had when the game started.
-        distance = (transform.position - player.position).magnitude;
+        // Start at the angle the camera has in the scene. (The third-person distance used to be measured here too,
+        // from the camera to the ball, but in the new world the World Generator moves the ball to the start before
+        // this runs, while the camera still stands where it was saved: the camera ended up about 2 km behind the ball,
+        // out of sight. Now it's Third Person Distance.)
         yaw = transform.eulerAngles.y;
         pitch = transform.eulerAngles.x;
         if (pitch > 180f) pitch -= 360f;   // e.g. 350° really means -10°
@@ -121,7 +128,7 @@ public class CameraController : MonoBehaviour
         else
         {
             // Stand at the ball, then step back along the direction the camera is facing.
-            transform.position = player.position - rotation * Vector3.forward * distance;
+            transform.position = player.position - rotation * Vector3.forward * thirdPersonDistance;
         }
     }
  

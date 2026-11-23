@@ -451,3 +451,13 @@ results' copy of the listing text.
 **Result:** no free Asset Store armor fits Blink's body. Blink's own extra armor is paid. The plate set already in
 the project is the free armor that fits. The best free pack from another artist is Polytope's, but it means changing
 the player's whole look.
+
+**Used since 23/11/2026 for the human enemies** (not the player): Polytope's Lowpoly Modular Armors Free and Lowpoly
+Weapons are in `Assets/Imported3D/Polytope Studio`. Checked from the files: a male and a female body, each one model
+(`PT_Lowpoly_Armors_<Male|Female>_Moduar_Free`) with every piece as a child (male: 2 armor sets `01_A` / `05_C` x helmet,
+body, legs, boots, gauntlets, cape; plain `cloth_00` and bare `naked_00` body / legs / boots / gauntlets; 2 heads, 2 hairs,
+2 beards = 26 skinned parts), a **Humanoid** rig (Blink's and Mixamo's clips play on it), slot bones for held things
+(`PT_Right_Hand_Weapon_slot`, `PT_Left_Hand_Shield_slot`, back and hip slots), and Built-in surface shaders made with
+Amplify that recolor by masks (armor: metal 1 - 3, leather, cloth, gems, feathers, skin, hair, coat of arms; weapons:
+metal 1 - 4, wood, leather, paint...). Weapons: Sword, Longsword, Mace, Short Waraxe, Pike, 3 shields, a bow, an arrow
+and a quiver (no colliders). Only a pose clip comes with the bodies. Guide: `Docs/Human Enemies Setup.md`.

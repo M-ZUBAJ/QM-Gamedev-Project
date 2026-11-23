@@ -51,7 +51,7 @@ Purpose: Does what the loot boxes' new perks do. Marko's PerkManager hands every
 Requirement: PerkEffects.cs x-> PerkData.cs, PlayerPerks.cs, ResourceNode.cs, DamageNumbers.cs
              PerkEffects.cs o-> PlayerHealth.cs, PlayerStamina.cs, PlayerJump.cs, PlayerController.cs, PlayerGlide.cs, PlayerInventory.cs, NotificationFeed.cs, EnemyCombat.cs, DaylightCycle.cs, PlayerCombat.cs
              PerkEffects.cs <-x ArrowProjectile.cs, ChestTier.cs, EnemyAttack.cs, FireballProjectile.cs, LootChestBuilder.cs, PerkManager.cs, PlayerCombat.cs, ResourceNode.cs
-             PerkEffects.cs <-o BowShooter.cs, Crosshair.cs, ItemConsumer.cs, MonsterBounty.cs, PlayerHealth.cs, PlayerInfoPage.cs, PlayerPerks.cs, PunchEffect.cs
+             PerkEffects.cs <-o BowShooter.cs, Crosshair.cs, HumanBrain.cs, ItemConsumer.cs, MonsterBounty.cs, PlayerHealth.cs, PlayerInfoPage.cs, PlayerPerks.cs, PunchEffect.cs
 */
 
 using System.Collections;

@@ -21,7 +21,7 @@ Purpose: How tools work, in one place. Marko's PlayerCombat asks it on every att
          - A bow (IsBow, BowInHand): BowShooter shoots it; Marko's PlayerCombat doesn't hit with it. A bow gets no tier
            bonus: its arrows hurt by the bow's own Damage + the arrow's (its Item Data's Bow section, since 22/11/2026).
 Requirement: ToolRules.cs x-> ToolStats.cs, ItemData.cs, PlayerInventory.cs, ResourceNode.cs, PlayerAnimator.cs, NotificationFeed.cs
-             ToolRules.cs <-x BowShooter.cs, Crosshair.cs, FireballProjectile.cs, FirstPersonHands.cs, PlayerCombat.cs, PlayerFireball.cs, PunchCombo.cs, TierToolBuilder.cs
+             ToolRules.cs <-x BowShooter.cs, Crosshair.cs, FireballProjectile.cs, FirstPersonHands.cs, HumanBrain.cs, HumanGear.cs, PlayerCombat.cs, PlayerFireball.cs, PunchCombo.cs, TierToolBuilder.cs
 */
 
 using UnityEngine;

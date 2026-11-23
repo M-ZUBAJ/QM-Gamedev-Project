@@ -11,7 +11,7 @@ Purpose: The small building blocks for making an Animator Controller in code, ke
          - add a state, a transition that happens at once, and one that waits for the animation to finish.
          - find the project's Humanoid animation clips by name.
          A tool writes "using static AnimatorBuildHelper;" and can then call e.g. EmptyController(path) directly.
-Requirement: AnimatorBuildHelper.cs <-x EnemyBuilder.cs, FirstPersonHandsBuilder.cs, PlayerAnimationSetup.cs, PlayerCharacterBuilder.cs, WildAnimalBuilder.cs
+Requirement: AnimatorBuildHelper.cs <-x EnemyBuilder.cs, FirstPersonHandsBuilder.cs, HumanEnemyBuilder.cs, PlayerAnimationSetup.cs, PlayerCharacterBuilder.cs, WildAnimalBuilder.cs
 */
 
 using System.Collections.Generic;

@@ -14,6 +14,7 @@ Purpose: Marks an object as an item. Its Item Data says which item it is and how
          GameRule Auto Pickup Drops is on.
 Requirement: ItemPickup.cs x-> ItemData.cs, IconCapture.cs
              ItemPickup.cs <-x ArmorBuilder.cs, AutoCollector.cs, BowBuilder.cs, BuildingTools.cs, Crosshair.cs, DesertBuilder.cs, DroppedStack.cs, ItemDropper.cs, ItemGrabber.cs, ItemTools.cs, NewWorldBuilder.cs, TierToolBuilder.cs
+             ItemPickup.cs <-o HumanLoot.cs
 */
 
 using System.Text.RegularExpressions;   // Regex: find and replace text by a pattern

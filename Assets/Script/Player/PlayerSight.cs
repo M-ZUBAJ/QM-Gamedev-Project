@@ -16,7 +16,7 @@ Purpose: What the player can see (line of sight). Something counts as seen when 
          out of view (AnimalSpawner does this for the deer). A sight perk or buff calls AddRange: everything that asks
          follows the new range at once.
 Requirement: PlayerSight.cs o-> Camera (Unity), PlayerHealth.cs, ViewDistance.cs
-             PlayerSight.cs <-x AnimalSpawner.cs, DesertMonsterSpawner.cs, WorldSpawnSetup.cs
+             PlayerSight.cs <-x AnimalSpawner.cs, DesertMonsterSpawner.cs, HumanSpawner.cs, WorldSpawnSetup.cs
              PlayerSight.cs <-o NightMonsters.cs
 */
 
