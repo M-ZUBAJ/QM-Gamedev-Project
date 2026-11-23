@@ -11,7 +11,7 @@ Purpose: The order of every item in our Tools menu, in ONE place.
          - Numbers more than 10 apart = a separator line between them (a new group).
          - A submenu (UI, Building, Items...) sits where its smallest number is.
          Each tool's [MenuItem] uses one of these numbers, e.g. [MenuItem("Tools/UI/Build Inventory UI", false, MenuOrder.BuildInventoryUI)].
-Requirement: MenuOrder.cs <-x ArmorBuilder.cs, BowBuilder.cs, BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, ChestSetup.cs, CraftingMenuBuilder.cs, DeathEffectBuilder.cs, DeathScreenBuilder.cs, DesertBuilder.cs, EnemyBuilder.cs, FirstPersonHandsBuilder.cs, GameEndUIBuilder.cs, GearPageBuilder.cs, GrasslandTreeBuilder.cs, HUDBuilder.cs, HumanEnemyBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, LootChestBuilder.cs, NewWorldBuilder.cs, NightMonsterBuilder.cs, NotificationUIBuilder.cs, PauseMenuBuilder.cs, PerkPanelBuilder.cs, PerkRollBuilder.cs, PlayerAnimationSetup.cs, PlayerCharacterBuilder.cs, PunchEffectBuilder.cs, RockBreakBuilder.cs, RockBuilder.cs, RockCaveBuilder.cs, ScriptMapTool.cs, SkyLightingSetup.cs, SnowBuilder.cs, TierToolBuilder.cs, TitleSceneBuilder.cs, TreeFallBuilder.cs, WildAnimalBuilder.cs, WorldBarrierBuilder.cs, WorldSpawnSetup.cs
+Requirement: MenuOrder.cs <-x ArmorBuilder.cs, BerryBushBuilder.cs, BowBuilder.cs, BuildingTools.cs, BuildMenuUIBuilder.cs, BuildModeUIBuilder.cs, ChestSetup.cs, CraftingMenuBuilder.cs, DeathEffectBuilder.cs, DeathScreenBuilder.cs, DesertBuilder.cs, EnemyBuilder.cs, FirstPersonHandsBuilder.cs, GameEndUIBuilder.cs, GearPageBuilder.cs, GrasslandTreeBuilder.cs, HUDBuilder.cs, HumanEnemyBuilder.cs, InventoryUIBuilder.cs, ItemTools.cs, LootChestBuilder.cs, NewWorldBuilder.cs, NightMonsterBuilder.cs, NotificationUIBuilder.cs, PauseMenuBuilder.cs, PerkPanelBuilder.cs, PerkRollBuilder.cs, PlayerAnimationSetup.cs, PlayerCharacterBuilder.cs, PunchEffectBuilder.cs, RockBreakBuilder.cs, RockBuilder.cs, RockCaveBuilder.cs, ScriptMapTool.cs, SkyLightingSetup.cs, SnowBuilder.cs, TierToolBuilder.cs, TitleSceneBuilder.cs, TreeFallBuilder.cs, WildAnimalBuilder.cs, WorldBarrierBuilder.cs, WorldSpawnSetup.cs
 */
 
 public static class MenuOrder
@@ -62,6 +62,7 @@ public static class MenuOrder
     public const int BuildDesertContent = 235;  // the new world's desert: gold ore, hard sandstone rock, sandstone caves (and the turtle, a night monster)
     public const int BuildLootChests = 236;     // common / rare / epic loot boxes: prices, new perks, where they spawn
     public const int BuildSnowContent = 237;    // the new world's snow: diamond ore, frosty rocks, icy caves, snowy pines, diamond tools
+    public const int BuildBerryBushes = 238;    // Turki's berry bush -> a Yughues bush with red berries you pick with E (they grow back)
 
     // ===== Tools > Player =====
     public const int AddCharacterModel = 250;   // the animated character on the Player's ball

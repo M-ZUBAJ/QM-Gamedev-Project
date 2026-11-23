@@ -58,11 +58,21 @@ public class ResourceNode : MonoBehaviour
     // copper and iron need a Stone pickaxe). Read only. Log: Docs/TonyEditMate/Turki/12-11-2026 Tier Tools.md
     public ItemData DropItem => dropItem; // [Tony] added
 
+    // [Tony] added (23/11/2026): Tony's BerryBush (on the berry bush; Tools > World > Build Berry Bushes puts it there)
+    // makes E pick the berries without removing the bush (they grow back), and lets the bush be hit and broken (then it
+    // gives the berries still on it). Your Update, TakeDamage and Break ask it first; a node without one works exactly
+    // as before. CollectRange lets Tony's HUD prompt ("E  Pick berries") use your Collect Range.
+    // To undo: delete the lines marked [Tony] (23/11/2026) and put back the lines in their comments.
+    // Log: Docs/TonyEditMate/Turki/23-11-2026 Berry Bushes You Pick With E.md
+    BerryBush bush;                                                                   // [Tony] added (23/11/2026): Tony's, on the berry bush (null on other nodes)
+    public float CollectRange => collectRange;                                        // [Tony] added (23/11/2026)
+
     // ===== Unity messages (Unity calls these) =====
 
     void Start()
     {
         currentHealth = maxHealth;
+        bush = GetComponent<BerryBush>();                                             // [Tony] added (23/11/2026)
 
         // [Tony] added (22/11/2026): only a berry bush (Collect With Key) needs Update below (it watches for the key).
         // Every other node (trees, rocks, ores, deer) switches its Update off here, after its health is set: the new
@@ -101,7 +111,8 @@ public class ResourceNode : MonoBehaviour
             }
         }
 
-        if (lookingAtThis) Break();                    // gives the drop and removes the bush
+        // if (lookingAtThis) Break();                    // gives the drop and removes the bush   // [Tony] replaced (23/11/2026)
+        if (lookingAtThis) { if (bush != null) bush.Pick(); else Break(); }   // [Tony] replaced: Tony's BerryBush picks the berries, the bush stays
     }
 
     // ===== My methods =====
@@ -109,7 +120,8 @@ public class ResourceNode : MonoBehaviour
     // The player's attack calls this (same name as EnemyCombat.TakeDamage).
     public void TakeDamage(float damage)
     {
-        if (collectWithKey) return;   // NEW: berries are picked with a key, not hit
+        // if (collectWithKey) return;   // NEW: berries are picked with a key, not hit   // [Tony] replaced (23/11/2026)
+        if (collectWithKey && bush == null) return;   // [Tony] replaced: a bush with Tony's BerryBush can be hit and broken
 
         currentHealth -= damage;
         Debug.Log(name + " took " + damage + " damage. Current Health: " + currentHealth);
@@ -120,6 +132,7 @@ public class ResourceNode : MonoBehaviour
     // Gives the drop to the player, then removes the node, the drops go straight to the inventory.
     void Break()
     {
+        if (bush != null) { bush.GiveLeft(); Destroy(gameObject); return; }          // [Tony] added (23/11/2026): a broken berry bush gives only the berries still on it
         PlayerInventory inv = PlayerInventory.Instance;
         if (inv == null || dropItem == null)
         {

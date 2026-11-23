@@ -78,6 +78,9 @@ While the crosshair is on a perk chest within its reach (where E opens it), `E  
 the crosshair: the chest's key, what it does and its price. The price is red while you have fewer coins than that
 (looking inside is free; the coins are paid when a perk is picked). Hidden while a menu is open, while dead, and once
 the chest is used. **Open Text**, the two colors and **Fade Seconds** are on HUDCanvas > ChestPrompt.
+On a berry bush within reach (since 23/11/2026) it says `E  Pick berries  x4` (no coin), or on a picked bush
+`E  Berries grow back in  0:42`, counting down to the next berry (**Pick Text**, **Growing Text**, **Wait Color**).
+Berry bush guide: `Docs/Berry Bush Setup.md`.
 Perk panel guide: `Docs/Perk Panel Setup.md`.
 
 ### Perks (Perks, PerkBar)

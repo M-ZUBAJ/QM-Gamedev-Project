@@ -2852,6 +2852,7 @@ MonoBehaviour:
   player: {fileID: 1576947588}
   sensitivity: 3
   invertY: 0
+  thirdPersonDistance: 5
   minPitch: 10
   maxPitch: 80
   firstPerson: 1
@@ -5372,6 +5373,9 @@ MonoBehaviour:
   knockbackSeconds: 0.25
   knockbackLift: 0.15
   criticalColor: {r: 1, g: 0.15, b: 0.1, a: 1}
+  lungeReach: 3
+  reachSlack: 0.3
+  lungeAngle: 60
 --- !u!114 &1576947615
 MonoBehaviour:
   m_ObjectHideFlags: 0
