@@ -1884,11 +1884,11 @@ MonoBehaviour:
   rules:
   - name: ChestsForest
     prefab: {fileID: 8644458751390724045, guid: caebce93f6b77cd43aed49b2216edb87, type: 3}
-    count: 20
+    count: 35
     yOffset: 0.6
     terrainLayer: 0
     minStrength: 0.6
-    maxSlope: 10
+    maxSlope: 15
     minSpacing: 20
     spacingGroup: Chests
     clearance: 3
@@ -1898,11 +1898,11 @@ MonoBehaviour:
     maxSize: 1
   - name: Rare Chests Grass
     prefab: {fileID: 5508622133717038746, guid: 046bd5d07fbdfdb488db4fca94657675, type: 3}
-    count: 6
+    count: 10
     yOffset: 0.6
     terrainLayer: 0
     minStrength: 0.6
-    maxSlope: 10
+    maxSlope: 15
     minSpacing: 20
     spacingGroup: Chests
     clearance: 3

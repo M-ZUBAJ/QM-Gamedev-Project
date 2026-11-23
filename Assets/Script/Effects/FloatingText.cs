@@ -12,7 +12,7 @@ Purpose: A short word in the world that pops up, rises and fades away, always fa
          Its outline and overlay make TextMeshPro copy the font's material for it; TextMeshPro doesn't remove that copy,
          so it does (OnDestroy): before 22/11/2026 every damage number left one behind until the scene changed.
 Requirement: FloatingText.cs x-> TextMeshPro (Unity)
-             FloatingText.cs <-x DamageNumbers.cs
+             FloatingText.cs <-x BearTrap.cs, DamageNumbers.cs
              FloatingText.cs <-o ShellDefense.cs
 */
 

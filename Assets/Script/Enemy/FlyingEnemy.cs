@@ -24,6 +24,7 @@ Purpose: Makes an enemy fly. Marko's EnemyMovement still steers it toward the pl
 Requirement: FlyingEnemy.cs x-> Knockback.cs, ResourceNode.cs, Rigidbody (Unity)
              FlyingEnemy.cs o-> EnemyMovement.cs, EnemyAnimator.cs
              FlyingEnemy.cs <-x EnemyBuilder.cs
+             FlyingEnemy.cs <-o BearTrap.cs
 */
 
 using UnityEngine;

@@ -1,6 +1,6 @@
 /*
 First Date: 5/10/2026
-Date: 2/11/2026
+Date: 23/11/2026
 Author: Tony
 Use by: This is an ASSET (a config file in the Project window), not a script you put on an object.
 Unity Editor: Easiest: select the building (in the scene, or its prefab) > menu Tools > Building > Make Building From Selection,
@@ -19,16 +19,21 @@ Unity Editor: Easiest: select the building (in the scene, or its prefab) > menu 
               4. It appears in the build menu (B) by itself (BuildMenuAutoList).
               Piece Type (Snapping) says how it snaps to other pieces while placing (Snap mode, middle click):
               Auto = guessed from the file name ("...Floor..." = Floor, "...Wall..." = Wall, "...Roof..." = Roof,
-              anything else = Other = furniture). Choose it by hand if the name doesn't say.
+              "...Trap..." = Trap, anything else = Other = furniture). Choose it by hand if the name doesn't say.
+              Category (Build menu) = which tab of the build menu it's in: Auto = from its Piece Type (Trap = Traps,
+              anything else = Building). Upgrade Of = it's built ON a placed building of that kind and replaces it
+              (e.g. the Iron Bear Trap on a Copper Bear Trap): its Recipe is only the extra. Description shows in the build menu's info box (rest the mouse on the
+              building for 1 second), with the numbers its prefab's scripts give (IBuildingInfo, e.g. a trap's damage).
               Full steps: Docs/Build Menu Setup.md
 Purpose: One thing the player can build: its name, description, picture, prefab and recipe.
          The recipe is what it costs, in items from the inventory (each line points to the material's Item Data).
          It doesn't have to match the shapes of the prefab.
          Its Piece Type decides how it snaps to built pieces (BuildSnap): floors side by side, walls on floors and
          next to / on top of walls, roofs and second floors on top of a floor's walls, furniture on floors and
-         against walls.
-Requirement: BuildingData.cs x-> IconCapture.cs, IconSource.cs, Recipe.cs, PlayerInventory.cs
-             BuildingData.cs <-x Blueprint.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingTools.cs, BuildMenu.cs, BuildMenuAutoList.cs, BuildMenuUIBuilder.cs, BuildSnap.cs, BuiltPiece.cs, ItemTools.cs, PlayerStats.cs
+         against walls, traps on the ground or on a floor (since 23/11/2026: the ground under a trap doesn't count as
+         in the way, and nothing snaps onto a trap).
+Requirement: BuildingData.cs x-> IconCapture.cs, IconSource.cs, Recipe.cs, PlayerInventory.cs, IBuildingInfo.cs
+             BuildingData.cs <-x Blueprint.cs, BlueprintPlacer.cs, BuildingButton.cs, BuildingTools.cs, BuildMenu.cs, BuildMenuAutoList.cs, BuildMenuUIBuilder.cs, BuildSnap.cs, BuiltPiece.cs, ItemTools.cs, PlayerStats.cs, TrapBuilder.cs
 */
 
 using System.Collections.Generic;
@@ -43,6 +48,15 @@ public enum PieceType
     Wall,    // on floors (along an edge or across the middle), next to floors, on top of and next to walls (L, T)
     Roof,    // over a floor with walls, on top of the walls; next to other roofs
     Other,   // furniture (e.g. a crafting table): on floors and furniture, against walls, next to floors and furniture
+    Trap,    // lies on the ground or on a floor (23/11/2026, e.g. the iron trap): the ground under it isn't "in the way", nothing snaps onto it
+}
+
+// Which tab of the build menu a building is in (23/11/2026). Add new ones at the end (the files save the number).
+public enum BuildCategory
+{
+    Auto,       // from the Piece Type: Trap = Traps, anything else = Building
+    Building,   // floors, walls, roofs, furniture
+    Traps,      // traps (e.g. the iron trap)
 }
 
 // CreateAssetMenu adds this to the right click > Create menu in the Project window.
@@ -75,11 +89,37 @@ public class BuildingData : ScriptableObject
              "(furniture: sits on floors and against walls).")]
     [SerializeField] PieceType pieceType = PieceType.Auto;
 
+    [Header("Build menu")]
+    [Tooltip("Which tab of the build menu it's in. Auto = from its Piece Type: Trap = Traps, anything else = Building.")]
+    [SerializeField] BuildCategory category = BuildCategory.Auto;
+
+    [Header("Upgrade")]
+    [Tooltip("Built ON a placed building of this kind, which it replaces (like upgrading a tool), e.g. the Iron Bear " +
+             "Trap on a Copper Bear Trap. Its Recipe is then only the extra. Empty = it's built anywhere.")]
+    [SerializeField] BuildingData upgradeOf;
+
     public string DisplayName => string.IsNullOrEmpty(displayName) ? name : displayName;
     public string Description => description;
     public GameObject Prefab => prefab;
     public IReadOnlyList<Ingredient> Recipe => recipe;
     public IconSource Icon => icon;   // where the picture comes from (Capture / Static / Animated)
+
+    public BuildingData UpgradeOf => upgradeOf;   // null = not an upgrade (built anywhere)
+
+    // Its name with "a" or "an" in front (by its first letter): "a Copper Bear Trap", "an Iron Bear Trap".
+    public string NameWithArticle
+    {
+        get
+        {
+            string shown = DisplayName;
+            bool vowel = !string.IsNullOrEmpty(shown) && "AEIOU".IndexOf(char.ToUpperInvariant(shown[0])) >= 0;
+            return (vowel ? "an " : "a ") + shown;
+        }
+    }
+
+    // The build menu tab it's in: the one chosen, or (Auto) Traps for a trap and Building for anything else.
+    public BuildCategory Category => category != BuildCategory.Auto ? category
+                                   : Piece == PieceType.Trap ? BuildCategory.Traps : BuildCategory.Building;
 
     // The piece type really used: the one chosen, or (Auto) the one the file name says.
     public PieceType Piece => pieceType == PieceType.Auto ? GuessPiece(name) : pieceType;
@@ -110,13 +150,29 @@ public class BuildingData : ScriptableObject
     public string Missing(PlayerInventory inv) => global::Recipe.Missing(recipe, inv);   // e.g. "3 Stone", null = enough
     public bool TakeFrom(PlayerInventory inv) => global::Recipe.TakeFrom(recipe, inv);
 
-    // Floor / Wall / Roof from a name like "WoodenWall" or "Stone Floor"; anything else = Other.
+    // The lines for the build menu's info box from its prefab's own scripts (IBuildingInfo, e.g. a trap's "Damage 20"),
+    // one per line; "" = none.
+    public string InfoLines()
+    {
+        if (prefab == null) return "";
+        List<string> lines = new List<string>();
+        if (upgradeOf != null) lines.Add("Built on " + upgradeOf.NameWithArticle + " (it replaces it)");
+        foreach (IBuildingInfo info in prefab.GetComponentsInChildren<IBuildingInfo>(true))
+        {
+            string text = info.InfoLines();
+            if (!string.IsNullOrEmpty(text)) lines.Add(text);
+        }
+        return string.Join("\n", lines);
+    }
+
+    // Floor / Wall / Roof / Trap from a name like "WoodenWall", "Stone Floor" or "Bear Trap"; anything else = Other.
     public static PieceType GuessPiece(string buildingName)
     {
         string n = buildingName.ToLowerInvariant();
         if (n.Contains("floor") || n.Contains("foundation")) return PieceType.Floor;
         if (n.Contains("wall")) return PieceType.Wall;
         if (n.Contains("roof")) return PieceType.Roof;
+        if (n.Contains("trap")) return PieceType.Trap;
         return PieceType.Other;
     }
 }

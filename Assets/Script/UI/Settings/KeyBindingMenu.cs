@@ -1,6 +1,6 @@
 /*
 First Date: 7/11/2026
-Date: 21/11/2026
+Date: 23/11/2026
 Author: Tony
 Use by: Put this on the Key Bindings page (Tools > UI > Build Main Title Scene does it: SettingsPage > TabPages >
         KeyBindingsPage). It needs, by NAME: "Content" (the scroll list's content, with a Vertical Layout Group),
@@ -85,7 +85,7 @@ public class KeyBindingMenu : MonoBehaviour
         new Row("ITEMS", "Hotbar 1 - 8", When.Playing, null),
         new Row("BUILDING", "Build menu", When.Playing, new[] { KeyAction.Build }),
         new Row("BUILDING", "Place building", When.Building, new[] { KeyAction.PlaceBuilding }),
-        new Row("BUILDING", "Cancel building", When.Building, new[] { KeyAction.CancelBuilding }),
+        new Row("BUILDING", "Back to build menu", When.Building, new[] { KeyAction.CancelBuilding }),
         new Row("BUILDING", "Snap / Surface", When.Building, new[] { KeyAction.AutoPlace }),
         new Row("CAMERA", "Change view", When.Playing, new[] { KeyAction.ToggleView }),
         new Row("GAME", "Pause menu", When.Playing, new[] { KeyAction.UnlockCursor }),   // Esc: the pause menu (it frees the mouse)

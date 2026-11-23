@@ -1,6 +1,6 @@
 /*
 First Date: 21/11/2026
-Date: 22/11/2026
+Date: 23/11/2026
 Author: Tony
 Use by: Nothing to set up. It's an Editor tool (it's in an "Editor" folder, so it is not part of the game).
 Unity Editor: Menu Tools > World > Build Loot Chests. It asks first, saves your open scenes, changes both game scenes and
@@ -30,7 +30,8 @@ Purpose: Four kinds of loot box and both chest systems (GameRules > New Chests, 
              gets these new-system settings once;
            - the perk panel (PerkPanelBuilder.UpdatePrefab) and the roll pop-up (PerkRollBuilder);
            - each game scene (the Build Settings scenes with Sanyam's ObjectScatter: GameScene, ProceduralGenerateScene):
-             its chest rules, twice the first build's boxes: grassland (ChestsForest) 20 common + 6 rare, desert
+             its chest rules, twice the first build's boxes: grassland (ChestsForest) 35 common + 10 rare (since
+             23/11/2026; 20 + 6 before), desert
              (ChestsDesert, on the sand layer: it used the grass one) 30 common + 12 rare + 4 epic + 2 legendary, all in one
              spacing group (counts only go up); the roll pop-up; PerkEffects and PlayerGlide (switched off) on the Player;
              PlayerArmor's set bonuses brought up to date. Then it's saved.
@@ -662,7 +663,7 @@ public static class LootChestBuilder
         if (grassRule >= 0)
         {
             SerializedProperty grass = rules.GetArrayElementAtIndex(grassRule);
-            RaiseCount(grass, 20);
+            RaiseCount(grass, 35);   // 23/11/2026: was 20 (Tony: more forest chests)
             grass.FindPropertyRelative("spacingGroup").stringValue = SpacingGroup;
         }
         if (desertRule >= 0)
@@ -677,7 +678,7 @@ public static class LootChestBuilder
         prefabs.TryGetValue(LootTier.Epic, out GameObject epic);
         prefabs.TryGetValue(LootTier.Legendary, out GameObject legendary);
         List<string> rulesMade = new List<string>();
-        if (rare != null && grassRule >= 0) AddRuleAfter(rules, "ChestsForest", "Rare Chests Grass", rare, 6, -1, rulesMade);
+        if (rare != null && grassRule >= 0) AddRuleAfter(rules, "ChestsForest", "Rare Chests Grass", rare, 10, -1, rulesMade);   // was 6
         if (rare != null && desertRule >= 0) AddRuleAfter(rules, "ChestsDesert", "Rare Chests Desert", rare, 12, sand, rulesMade);
         string after = FindRule(rules, "Rare Chests Desert") >= 0 ? "Rare Chests Desert" : "ChestsDesert";
         if (epic != null && desertRule >= 0) AddRuleAfter(rules, after, "Epic Chests Desert", epic, 4, sand, rulesMade);

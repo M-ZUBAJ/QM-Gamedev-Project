@@ -1,6 +1,6 @@
 /*
 First Date: 5/10/2026
-Date: 10/11/2026
+Date: 23/11/2026
 Author: Tony
 Use by: Hierarchy: select PlayerSphere > Add Component > BlueprintPlacer (only one, on the player).
 Unity Editor: Nothing to connect: the build menu (B) starts it with BlueprintPlacer.Begin(buildingData).
@@ -12,8 +12,15 @@ Unity Editor: Nothing to connect: the build menu (B) starts it with BlueprintPla
               Unity's Move / Rotate tools then appear in the middle of the selected shapes, the same point this script uses.
               This is only a view setting and changes nothing in the game.
 Purpose: Moves a new blueprint with the crosshair until the player puts it down.
-         Left click = place, right click = cancel, middle click = switch between Snap and Surface
-         (keys set in KeyBindings), mouse wheel = turn it.
+         Left click = place, middle click = switch between Snap and Surface (keys set in KeyBindings), mouse
+         wheel = turn it. Since 23/11/2026 (build mode): after placing one, the next one of the same building follows
+         the crosshair straight away, turned the same way (Keep Building), so a row of walls or traps is quick to
+         build; right click = back to the build menu (BuildMenu opens again: BackToMenuRequested); B (BuildMenu) or
+         Esc = stop building. Esc then doesn't also open the pause menu (it asks JustStopped).
+         An upgrade (a Building Data with Upgrade Of, e.g. the Iron Bear Trap) sits exactly on the placed building of
+         that kind nearest the crosshair (within Upgrade Reach) and shows green; building it replaces that one (its
+         recipe is only the extra). With none near the crosshair it's red, and a click says so at the bottom left
+         (NotificationFeed): "Place it on a Copper Bear Trap".
          Snap (the start mode): near a built piece, the blueprint locks into the spot where it fits against it
          (BuildSnap: walls on floors, floors and roofs on top of walls, furniture against walls...) and turns
          green. Nowhere to snap: it sits on the surface, as in Surface mode.
@@ -26,7 +33,9 @@ Purpose: Moves a new blueprint with the crosshair until the player puts it down.
          Placing it takes the materials from the inventory and builds the real building right away.
          Placing stops by itself when every menu is told to close (MenuState.CloseAll, e.g. the player died).
 Requirement: BlueprintPlacer.cs x-> Blueprint.cs, BuildingData.cs, BuildSnap.cs, BuiltPiece.cs, BoundsUtil.cs, ClickClaim.cs, InteractionGate.cs, KeyBindings.cs, MenuState.cs, PlayerInventory.cs
+             BlueprintPlacer.cs o-> NotificationFeed.cs
              BlueprintPlacer.cs <-x BuildMenu.cs, BuildMenuUIBuilder.cs, BuildModeHUD.cs, PlayerStats.cs
+             BlueprintPlacer.cs <-o PauseMenu.cs
 */
 
 using UnityEngine;
@@ -61,7 +70,17 @@ public class BlueprintPlacer : MonoBehaviour
              "Bigger = locks from further away.")]
     [SerializeField] float snapDistance = 1.5f;
 
+    [Tooltip("On: after placing a building, the next one of the same building follows the crosshair straight away " +
+             "(right click = back to the build menu, B or Esc = stop building). Off: placing one ends building.")]
+    [SerializeField] bool keepBuilding = true;
+
+    [Range(0.3f, 3f)]
+    [Tooltip("An upgrade (e.g. the Iron Bear Trap): how close (meters) the crosshair must point to the placed building " +
+             "it replaces (e.g. a Copper Bear Trap).")]
+    [SerializeField] float upgradeReach = 1.2f;
+
     static BlueprintPlacer instance;   // the one on the player
+    static int stoppedFrame = -10;     // the frame building last stopped
 
     Camera cam;
     Blueprint ghost;                   // the blueprint being placed (null = not placing)
@@ -75,6 +94,9 @@ public class BlueprintPlacer : MonoBehaviour
     bool turnedByPlayer;               // the wheel was used: Snap keeps the player's direction instead of choosing one
     bool valid;                        // can it be placed where it is now?
     string problem;                    // why not (shown on screen when the player tries)
+    bool wasLocked;                    // the mouse was locked last frame (the browser frees it itself on Esc)
+    bool menuWasOpen;                  // a menu was open last frame (the Esc that closed it isn't for building)
+    BuiltPiece upgradeTarget;          // an upgrade: the placed building it sits on and will replace (null = none)
 
     // While placing, this script owns the mouse through ClickClaim, so other scripts using the same buttons
     // (levitate, swing, hotbar wheel) step aside without knowing about building.
@@ -86,6 +108,12 @@ public class BlueprintPlacer : MonoBehaviour
 
     // Fired each time a building is really built (paid for and placed), with its Building Data. E.g. PlayerStats counts them.
     public event System.Action<BuildingData> Built;
+
+    // Right click while building: the build menu (BuildMenu) opens again to pick something else.
+    public static event System.Action BackToMenuRequested;
+
+    // Building stopped this frame or the last one: the Esc that stopped it must not also open the pause menu.
+    public static bool JustStopped => Time.frameCount - stoppedFrame <= 1;
 
     // ===== Unity messages (Unity calls these) =====
 
@@ -117,6 +145,14 @@ public class BlueprintPlacer : MonoBehaviour
         IsPlacing = false;
     }
 
+    // Play without reloading the code keeps static values: start clean.
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetOnPlay()
+    {
+        BackToMenuRequested = null;
+        stoppedFrame = -10;
+    }
+
     // Unity calls this when a value is changed in the Inspector: Directions only allows 4, 8, 16 or 32.
     void OnValidate()
     {
@@ -130,11 +166,25 @@ public class BlueprintPlacer : MonoBehaviour
         if (!IsPlacing) return;
         if (ghost == null) { Stop(); return; }   // destroyed by something else
 
+        // Esc (or the browser freeing the mouse, which it does on Esc) stops building. Not while another menu is
+        // open on top: then Esc is that menu's.
+        if (!MenuState.AnyOpen && !menuWasOpen &&
+            (Input.GetKeyDown(KeyBindings.UnlockCursor) || (wasLocked && Cursor.lockState != CursorLockMode.Locked)))
+        {
+            Cancel();
+            return;
+        }
+
         // A menu is open (the cursor is free): wait.
         if (MenuState.AnyOpen || Cursor.lockState != CursorLockMode.Locked) return;
         if (Time.frameCount == startFrame) return;   // the click that chose the building
 
-        if (CancelPressed()) { Cancel(); return; }
+        if (CancelPressed())   // right click: back to the build menu to pick something else
+        {
+            Cancel();
+            BackToMenuRequested?.Invoke();
+            return;
+        }
         if (ModePressed()) ToggleMode();
 
         float scroll = Input.mouseScrollDelta.y;
@@ -147,6 +197,8 @@ public class BlueprintPlacer : MonoBehaviour
     // LateUpdate: the camera has moved this frame, so the blueprint follows the crosshair exactly.
     void LateUpdate()
     {
+        wasLocked = Cursor.lockState == CursorLockMode.Locked;
+        menuWasOpen = MenuState.AnyOpen;
         if (!IsPlacing || ghost == null || cam == null) return;
 
         Move();
@@ -178,16 +230,7 @@ public class BlueprintPlacer : MonoBehaviour
         if (data == null || data.Prefab == null) return;
         Cancel();   // only one at a time
 
-        ghost = Blueprint.Create(data);
-
-        // Measure where the building really is compared to its pivot (the prefab's root can be off to one side
-        // of the shapes). Measured once at position 0 with no turn; Move() turns these with the blueprint.
-        ghost.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
-        Bounds b = BoundsUtil.Of(ghost.gameObject);
-        pivotToCenter = b.center;
-        pivotToBottom = new Vector3(b.center.x, b.min.y, b.center.z);
-        ghostBox = BuiltPiece.MeasureLocalBox(ghost.transform);
-
+        MakeGhost(data);
         yaw = Snap(cam != null ? cam.transform.eulerAngles.y : 0f);   // start at the direction closest to where you look
         snapped = false;
         turnedByPlayer = false;   // Snap chooses the best fitting direction until the wheel is used
@@ -196,11 +239,32 @@ public class BlueprintPlacer : MonoBehaviour
         ClickClaim.Take(this);   // the mouse buttons and wheel are ours until placing ends
     }
 
+    // A new blueprint of this building, measured: where the building really is compared to its pivot (the prefab's
+    // root can be off to one side of the shapes). Measured once at position 0 with no turn; Move() turns these with
+    // the blueprint.
+    void MakeGhost(BuildingData data)
+    {
+        ghost = Blueprint.Create(data);
+        ghost.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+        Bounds b = BoundsUtil.Of(ghost.gameObject);
+        pivotToCenter = b.center;
+        pivotToBottom = new Vector3(b.center.x, b.min.y, b.center.z);
+        ghostBox = BuiltPiece.MeasureLocalBox(ghost.transform);
+    }
+
     void TryPlace()
     {
         if (!valid)
         {
             Debug.Log("Can't place here: " + problem);
+            // An upgrade away from the building it goes on: say why on screen (the red alone doesn't tell).
+            if (ghost.Data.UpgradeOf != null && upgradeTarget == null) NotificationFeed.Show(problem);
+            return;
+        }
+        // An upgrade whose building went away since the last frame (e.g. a trap used up just now): nothing to replace.
+        if (ghost.Data.UpgradeOf != null && upgradeTarget == null)
+        {
+            Debug.Log("Can't place here: Place it on " + ghost.Data.UpgradeOf.NameWithArticle);
             return;
         }
 
@@ -215,8 +279,25 @@ public class BlueprintPlacer : MonoBehaviour
         BuildingData built = ghost.Data;
         ghost.Build();
         ghost = null;
-        Stop();
+        if (upgradeTarget != null)   // an upgrade: the old one goes, the new one takes its place
+        {
+            // Switched off at once (Destroy waits for the end of the frame): it leaves BuiltPiece.All now, so the
+            // next blueprint (build mode carries on) can't pick it in this frame's LateUpdate.
+            upgradeTarget.gameObject.SetActive(false);
+            Destroy(upgradeTarget.gameObject);
+        }
+        upgradeTarget = null;
         Built?.Invoke(built);
+
+        if (keepBuilding)   // build mode carries on: the same building again, turned the same way, same mode
+        {
+            MakeGhost(built);
+            startFrame = Time.frameCount;   // the click that built the last one doesn't place this one
+        }
+        else
+        {
+            Stop();
+        }
     }
 
     void Cancel()
@@ -229,6 +310,7 @@ public class BlueprintPlacer : MonoBehaviour
     void Stop()
     {
         IsPlacing = false;
+        stoppedFrame = Time.frameCount;
         ClickClaim.Release(this);   // the click that ended placing still counts as used this frame
     }
 
@@ -265,6 +347,20 @@ public class BlueprintPlacer : MonoBehaviour
         Vector3 pos = Vector3.zero;
         Quaternion rot = Quaternion.identity;
 
+        // An upgrade (e.g. the Iron Bear Trap) sits exactly on the placed building it replaces, near the crosshair.
+        upgradeTarget = null;
+        if (ghost.Data.UpgradeOf != null)
+        {
+            Vector3 aim = hits ? hit.point : ray.origin + ray.direction * placeRange;
+            upgradeTarget = UpgradeTargetNear(ghost.Data.UpgradeOf, aim);
+            if (upgradeTarget != null)
+            {
+                snapped = true;   // green; the support and overlap checks are skipped, as for a snapped piece
+                ghost.transform.SetPositionAndRotation(upgradeTarget.transform.position, upgradeTarget.transform.rotation);
+                return;
+            }
+        }
+
         // Snap mode: the closest spot where it fits against a built piece (BuildSnap), if the aim is near one.
         snapped = mode == PlaceMode.Snap &&
                   BuildSnap.Find(ghost.Data.Piece, ghostBox, ray, placeRange, hits, hit, snapDistance,
@@ -289,12 +385,30 @@ public class BlueprintPlacer : MonoBehaviour
         ghost.transform.SetPositionAndRotation(pos, rot);
     }
 
+    // The placed building of this kind nearest the aim point, within Upgrade Reach (null = none).
+    BuiltPiece UpgradeTargetNear(BuildingData kind, Vector3 aim)
+    {
+        BuiltPiece best = null;
+        float bestDistance = upgradeReach;
+        foreach (BuiltPiece piece in BuiltPiece.All)
+        {
+            if (piece == null || piece.Data != kind) continue;
+            float distance = Vector3.Distance(piece.transform.position, aim);
+            if (distance > bestDistance) continue;
+            bestDistance = distance;
+            best = piece;
+        }
+        return best;
+    }
+
     // Can it be placed here? If not, says why.
     bool Check(out string why)
     {
         why = null;
 
-        if (!InteractionGate.CanInteractWith(BoundsUtil.Of(ghost.gameObject)))
+        if (ghost.Data.UpgradeOf != null && upgradeTarget == null)
+            why = "Place it on " + ghost.Data.UpgradeOf.NameWithArticle;   // e.g. "Place it on an Iron Bear Trap"
+        else if (!InteractionGate.CanInteractWith(BoundsUtil.Of(ghost.gameObject)))
             why = "No Interaction Machine in range";
         else if (ghost.Overlaps(snapped))   // snapped: touching the built pieces it locks onto is fine
             why = "Something is in the way";

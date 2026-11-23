@@ -29,7 +29,7 @@ Purpose: One kind of item (a material like Wood or Stone, or food like an Apple)
          Armor is worn, one piece per slot (PlayerArmor), from the inventory's Gear tab.
 Requirement: ItemData.cs <-> Recipe.cs
              ItemData.cs x-> Consumable.cs, ToolStats.cs, BowStats.cs, ArmorStats.cs, AmmoStats.cs, IconCapture.cs, IconSource.cs, PlayerInventory.cs
-             ItemData.cs <-x ArmorBuilder.cs, ArmorLook.cs, ArmorPicker.cs, ArmorSlotUI.cs, ArmorTestKit.cs, ArrowProjectile.cs, AutoCollector.cs, BerryBush.cs, BowBuilder.cs, BowHUD.cs, BowShooter.cs, CraftingMenu.cs, CraftingMenuBuilder.cs, CraftingRow.cs, CraftingSetPanels.cs, CraftingTabs.cs, Crosshair.cs, DesertBuilder.cs, GrasslandTreeBuilder.cs, HeldItemView.cs, ItemConsumer.cs, ItemDataEditor.cs, ItemIconRules.cs, ItemPickup.cs, ItemTools.cs, PlayerArmor.cs, PlayerInventory.cs, PlayerStats.cs, ResourceNode.cs, SnowBuilder.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs
+             ItemData.cs <-x ArmorBuilder.cs, ArmorLook.cs, ArmorPicker.cs, ArmorSlotUI.cs, ArmorTestKit.cs, ArrowProjectile.cs, AutoCollector.cs, BerryBush.cs, BowBuilder.cs, BowHUD.cs, BowShooter.cs, CraftingMenu.cs, CraftingMenuBuilder.cs, CraftingRow.cs, CraftingSetPanels.cs, CraftingTabs.cs, Crosshair.cs, DesertBuilder.cs, GrasslandTreeBuilder.cs, HeldItemView.cs, ItemConsumer.cs, ItemDataEditor.cs, ItemIconRules.cs, ItemPickup.cs, ItemTools.cs, PlayerArmor.cs, PlayerInventory.cs, PlayerStats.cs, ResourceNode.cs, SnowBuilder.cs, TierToolBuilder.cs, ToolInHand.cs, ToolRules.cs, ToolTestKit.cs, TrapBuilder.cs
              ItemData.cs <-o BuffDisplay.cs, FoodBuff.cs
 */
 

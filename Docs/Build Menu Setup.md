@@ -7,10 +7,23 @@ What you will get:
 
 - Press **B**: a window shows every building you can build, with its picture, name and **recipe**
   (e.g. "Stone 2/3" = you have 2, it needs 3; red = not enough).
+- **Tabs** at the top: **All**, **Building** (floors, walls, roofs, furniture) and **Traps** (e.g. the Bear Traps).
+  Each Building Data's **Category** decides its tab (Auto = Traps for a trap, else Building).
+- **Rest the mouse** on a building for **1 second**: an **info box** shows its name, its Description and its numbers
+  (e.g. the Iron Bear Trap: built on a Copper Bear Trap, damage 20, stun 3 s, one time use, hurts you too). It works on
+  grey buttons too.
+- **Upgrades** (a Building Data with **Upgrade Of** set, e.g. the Iron Bear Trap, Upgrade Of = Copper Bear Trap): its
+  recipe starts with "on a Copper Bear Trap". Its blueprint jumps onto the placed building of that kind nearest the
+  crosshair (within BlueprintPlacer's **Upgrade Reach**, 1.2 m) and turns green; building it replaces that one, and you
+  pay only its own Recipe (the extra). With none near the crosshair it's red, and a click says "Place it on a Copper
+  Bear Trap".
 - A building you can't afford is greyed out.
-- Click a building: the window closes and a see-through **blueprint** follows your crosshair.
-  - **Left click** = build it here (takes the materials from your inventory)
-  - **Right click** or **B** = cancel
+- Click a building: the window closes and **build mode** starts: a see-through **blueprint** follows your crosshair.
+  - **Left click** = build it here (takes the materials from your inventory). You **stay in build mode**: the next
+    one of the same building follows your crosshair, turned the same way, so a row of walls or traps is quick.
+    (BlueprintPlacer's **Keep Building**; untick it to stop after each one.)
+  - **Right click** = back to the build menu, to pick something else
+  - **B** or **Esc** = stop building (Esc doesn't open the pause menu then)
   - **Mouse wheel** = turn it. **Snap** mode: 90° per step. **Surface** mode: to the next fixed direction,
     lined up with the world (BlueprintPlacer's **Directions**: 4, 8, 16 or 32; 16 = every 22.5°)
   - **Middle click** = switch between **Snap** (the start mode) and **Surface**
@@ -25,7 +38,9 @@ What you will get:
 ## Quick way: one click
 
 1. Open the scene you want the menu in (e.g. `Assets/Scenes/GameScene`).
-2. Menu **Tools > UI > Build Build Menu UI**.
+2. Menu **Tools > UI > Build Build Menu UI**. If the menu exists already it asks, then **rebuilds it in the same file**:
+   every scene that has it follows, your building list is kept, and nothing new is put in the scene (use this once to
+   get the tabs and the info box).
    (If it asks for TMP Essentials: **Window > TextMeshPro > Import TMP Essential Resources**, Import, then try again.)
 3. Make at least one building config (next part). It appears in the menu by itself.
 4. Press **Play**, pick up the materials, press **B**.
@@ -83,7 +98,7 @@ Every object with ItemPickup pointing to the same Item Data counts as that mater
    | **Prefab** | Drag in the building prefab from step 1. |
    | Icon | Choose **one**: **Capture** = a photo of the prefab. **Static** = a PNG (empty = name only). **Animated** = an **.aseprite** file (it plays on the button). Only the chosen one's field shows. |
    | **Recipe** | Click **+** once per material. **Item** = drag in the material's **Item Data** from Assets/Config/Items. **Amount** = how many. |
-   | Piece Type | How it snaps (see [Snap building](#snap-building)). **Auto** = guessed from the file name ("...Floor..." = Floor, "...Wall..." = Wall, "...Roof..." = Roof, anything else = Other). Choose by hand if the name doesn't say. |
+   | Piece Type | How it snaps (see [Snap building](#snap-building)). **Auto** = guessed from the file name ("...Floor..." = Floor, "...Wall..." = Wall, "...Roof..." = Roof, "...Trap..." = Trap, anything else = Other). Choose by hand if the name doesn't say. |
 
 3. That's it: the build menu lists every Building Data by itself (when it's made, deleted or moved, and each time scripts compile). **Tools > Building > Update Build Menu List** does the same by hand if you ever need it.
 
@@ -101,6 +116,7 @@ Building Data's **Piece Type** decides the rules:
 | **Wall** | on a floor (along any edge, or across the middle); next to a floor; on top of a wall (taller wall); next to a wall: in line (longer wall), at its end (**L** corner) or on its side (**T**) |
 | **Roof** | over a floor that has walls, resting on top of the walls; next to another roof |
 | **Other** | furniture (e.g. a crafting table): on a floor or on other furniture (middle, an edge or a corner); against a wall; next to a floor or other furniture |
+| **Trap** | (23/11/2026, e.g. the Bear Traps) on a floor; nothing snaps onto or next to a trap. Away from floors it lies on the ground, and the ground under it never counts as "in the way" (so it can go on a slope). Guide: `Docs/Trap Setup.md` |
 
 - "Next to" = touching it, standing at the same height, lined up with one end, the middle or the other end.
 - Aim at the spot you want (within BlueprintPlacer's **Snap Distance**, 1.5 m): the blueprint jumps there and
@@ -123,10 +139,13 @@ Building Data's **Piece Type** decides the rules:
 
 ```
 BuildMenuCanvas                Canvas (Sort Order 10) + BuildMenu script
-└── BuildWindow            shown / hidden with B
+└── BuildWindow            shown / hidden with B (1200 x 860)
     ├── Title              Text "Build"
+    ├── Tabs               Horizontal Layout Group: one button per tab, named All, Building, Traps
+    │   └── All ...        Image + Button + Canvas Group, child Label (Text)
     ├── List               Grid Layout Group: the building buttons are made in here when the game starts
-    └── Hint               Text: the placing keys
+    ├── Hint               Text: the placing keys
+    └── Info               HIDDEN info box (Vertical Layout Group + Content Size Fitter): InfoTitle, InfoText, InfoStats
 
 Player                     BlueprintPlacer script (+ PlayerInventory...)
 ```
@@ -144,14 +163,21 @@ BuildingButton             Image + Button + BuildingButton script (250 x 300)
 ```
 
 The names **Icon**, **Name**, **Recipe**, **Ingredient** and **Count** matter: the script finds the parts by them.
+So do **Tabs** (and each tab's name: All, or a Build Category's name) and **Info** with **InfoTitle**, **InfoText** and
+**InfoStats**: BuildMenu finds them by name, and works without them.
+
+The info box's numbers come from the building's prefab: any script on it that is an **IBuildingInfo** (like the Iron
+Trap's BearTrap) gives lines such as "Damage 20". Its words come from the Building Data's **Description**.
 
 ## By hand (instead of the tool)
 
 1. **Canvas**: right click > **UI > Canvas**, name it **BuildMenuCanvas**. Canvas: Sort Order **10**.
    Canvas Scaler: Scale With Screen Size, **1920 x 1080**, Match **0.5**.
-2. **BuildWindow**: right click BuildMenuCanvas > **UI > Image**. Width **1200**, Height **800**, Pos Y **60**.
+2. **BuildWindow**: right click BuildMenuCanvas > **UI > Image**. Width **1200**, Height **860**, Pos Y **60**.
 3. **Title**: right click BuildWindow > **UI > Text - TextMeshPro**, text "Build", at the top.
-4. **List**: right click BuildWindow > **Create Empty**. Alt + Shift + stretch stretch, then Left/Right **30**, Top **90**, Bottom **70**.
+   **Tabs** (optional): an empty under the title (Top **86**, Height **46**) with a **Horizontal Layout Group**; in it
+   one **UI > Button - TextMeshPro** per tab, named **All**, **Building** and **Traps** (+ a Canvas Group each).
+4. **List**: right click BuildWindow > **Create Empty**. Alt + Shift + stretch stretch, then Left/Right **30**, Top **146**, Bottom **70**.
    Add Component > **Grid Layout Group**: Cell Size **250 x 300**, Spacing **20 x 20**,
    Child Alignment **Upper Center**, Constraint **Fixed Column Count**, Count **4**.
 5. **BuildingButton prefab**: make the hierarchy above (Button: **UI > Button - TextMeshPro**, delete its own text child),
@@ -161,6 +187,9 @@ The names **Icon**, **Name**, **Recipe**, **Ingredient** and **Count** matter: t
    Window = **BuildWindow**, List = **List**, Button Prefab = the **BuildingButton** prefab,
    Buildings = your Building Data files (+ for each).
 7. Select the **Player** > Add Component > **BlueprintPlacer**.
+8. **Info** (optional): an Image named **Info** under BuildWindow (width 400, Raycast Target off) with a **Vertical
+   Layout Group** (Control Child Size ticked) and a **Content Size Fitter** (Vertical Fit: Preferred Size), and three
+   TextMeshPro texts in it named **InfoTitle**, **InfoText** and **InfoStats** (Raycast Target off). Untick Info.
 
 ## Build mode hints (BuildModeCanvas)
 
@@ -210,14 +239,19 @@ A PNG must be imported as a Sprite: click it in the Project window, **Texture Ty
 
 1. Press **Play**. Press **B**: the window opens with your buildings. Without the materials they are greyed out.
 2. Pick up the materials (F, or touch AutoPickup items). The amounts update and the button lights up.
-3. Click the building, aim at the ground: the blueprint is blue. Left click: it's built, and the materials are gone.
-4. Press **B** or **Esc** with the window open: it closes.
+3. Click a tab: only its buildings show. Rest the mouse on a building for 1 second: its info box shows.
+4. Click the building, aim at the ground: the blueprint is blue. Left click: it's built, the materials are gone, and the
+   next blueprint follows the crosshair. Right click: the build menu opens again. **B** or **Esc**: building stops.
+5. Press **B** or **Esc** with the window open: it closes.
 
 ### If something doesn't work
 
 | Problem | Fix |
 |---|---|
 | B does nothing | Is **BuildMenu** on **BuildMenuCanvas** with **Window** filled in? Is the inventory open (close it first)? |
+| No tabs, or no info box | Run **Tools > UI > Build Build Menu UI** again (Rebuild): older menus were made before them. |
+| A building is in the wrong tab | Set its Building Data's **Category** (Auto = Traps for Piece Type Trap, else Building). |
+| Building stops after each one | BlueprintPlacer's **Keep Building** is off: tick it. |
 | The window is empty / a building is missing | A Building Data without a **Prefab** is skipped. Still missing: **Tools > Building > Update Build Menu List**, and check the Console for red errors. |
 | Clicking a building does nothing | Is there a **BlueprintPlacer** on the Player? (Console: "add it to the PlayerSphere".) |
 | Button stays grey with the items | The recipe's **Item** must be the same **Item Data** that the picked-up objects' ItemPickup points to. |

@@ -37,7 +37,7 @@ Purpose: Everything the new world's snow needs, in one click:
          with MakeDiamond when it's missing), and Spruce Wood the Spruce Bow (Tools > Items > Build Bow And Arrows,
          which makes the Spruce Wood item itself with MakeSpruceWood when it's missing).
 Requirement: SnowBuilder.cs x-> DesertBuilder.cs, RockCaveBuilder.cs, GrasslandTreeBuilder.cs, TreeFallBuilder.cs, RockBreakBuilder.cs, TierToolBuilder.cs, ItemData.cs, ToolStats.cs, UIBuildHelper.cs, MenuOrder.cs
-             SnowBuilder.cs <-x ArmorBuilder.cs, BowBuilder.cs, NewWorldBuilder.cs
+             SnowBuilder.cs <-x ArmorBuilder.cs, BowBuilder.cs, NewWorldBuilder.cs, TrapBuilder.cs
 */
 
 using System.Collections.Generic;
