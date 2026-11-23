@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 6d839de873ff3f147925307c98da4cc8
+guid: 86b75d06a8e78ee43a4e32ff3a3a7c67
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -16,6 +16,8 @@ ModelImporter:
     optimizeGameObjects: 0
     removeConstantScaleCurves: 0
     motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
@@ -105,3 +107,10 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 305240
+  packageName: Loot Box
+  packageVersion: 0.0.1
+  assetPath: Assets/DuNguyn/Loot Box/Model/Loot box/SM_LootBox_02.fbx
+  uploadId: 717104

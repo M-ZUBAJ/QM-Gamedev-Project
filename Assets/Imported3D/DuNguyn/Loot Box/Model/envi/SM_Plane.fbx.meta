@@ -1,9 +1,14 @@
 fileFormatVersion: 2
-guid: 11f44481290109448a60b35808d14f16
+guid: 983c005942804164999074b9c87909af
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: lambert1
+    second: {fileID: 2100000, guid: 9580bf064d05f4f42b8c9bbef7293612, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -16,6 +21,8 @@ ModelImporter:
     optimizeGameObjects: 0
     removeConstantScaleCurves: 0
     motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
@@ -105,3 +112,10 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 305240
+  packageName: Loot Box
+  packageVersion: 0.0.1
+  assetPath: Assets/DuNguyn/Loot Box/Model/envi/SM_Plane.fbx
+  uploadId: 717104

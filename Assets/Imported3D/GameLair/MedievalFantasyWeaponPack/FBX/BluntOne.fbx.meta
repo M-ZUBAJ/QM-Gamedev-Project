@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 954c067f5ebe59f45bd91296371fb668
+guid: 99d6e65ebdee8634ab60baebe54d2534
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -16,6 +16,8 @@ ModelImporter:
     optimizeGameObjects: 0
     removeConstantScaleCurves: 0
     motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
@@ -105,3 +107,10 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 286634
+  packageName: Medieval fantasy weapon pack
+  packageVersion: 1.0
+  assetPath: Assets/GameLair/MedievalFantasyWeaponPack/FBX/BluntOne.fbx
+  uploadId: 673693
