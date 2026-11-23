@@ -1,6 +1,6 @@
 /*
 First Date: 3/10/2026
-Date: 20/11/2026
+Date: 23/11/2026
 Author: Tony
 Use by: Drag this script onto the Player sphere (next to PlayerController, PlayerHealth and ObjectLevitator).
 Unity Editor: The HungerBar (StatBar) finds this by itself. "On Changed" is only for extra things
@@ -13,7 +13,9 @@ Purpose: Holds the player's food (full = not hungry). It goes down over time:
          At 0 the player starves (if a PlayerHealth is on the same object):
          dies at once ("Instant Death" on) or loses health over time (off).
          The New Game page's difficulty can change how fast it drains (SetDrainPerSecond, used by GameSetup).
-Requirement: PlayerHunger.cs o-> PlayerController.cs, PlayerHealth.cs, ObjectLevitator.cs
+         Marko added (23/11/2026, "ADDED BY MARKO"): it also drains faster each day, Extra Drain Percent Per Day
+         (5 = Day 2 drains 5 % faster, Day 3 10 %...), read from the DaylightCycle (Day 1 without one).
+Requirement: PlayerHunger.cs o-> PlayerController.cs, PlayerHealth.cs, ObjectLevitator.cs, DaylightCycle.cs
              PlayerHunger.cs <-x GameSetup.cs, NewGameDefaultsSync.cs
              PlayerHunger.cs <-o ItemConsumer.cs, PassiveRegen.cs, PlayerInfoPage.cs, PlayerRespawn.cs, PlayerStats.cs, StatBar.cs
 */

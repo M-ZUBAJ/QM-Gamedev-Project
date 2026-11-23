@@ -11,7 +11,7 @@ Purpose: Puts the object on the floor under it when the game starts, so it never
          down for the nearest solid thing (the terrain, a built floor, a rock; not itself, and not the player or
          anything else physics moves), stands its bottom there, sinks a hair in so no gap shows on bumpy ground, and on
          a slope tilts to lie flat (up to Max Tilt) while still facing the same way.
-Requirement: StandOnGround.cs <-x ChestSetup.cs, LootChestBuilder.cs, RockBuilder.cs
+Requirement: StandOnGround.cs <-x BerryBushBuilder.cs, ChestSetup.cs, LootChestBuilder.cs, RockBuilder.cs
 */
 
 using UnityEngine;
