@@ -61,6 +61,8 @@ PunchWindBurst   the top: plays its parts together, makes no particles itself
 2. Walk up to a tree or a stone, or spawn a slime: select **EnemySpawner**, click the **⋮** on its EnemySpawner
    component, then **Test Spawn Enemy**.
 3. Look at it from up close (closer than 2.5 m) and left-click. The burst pops when the fist lands.
+   **Walking into reach:** stand about 4 m away, left-click and walk straight at it: the fist still lands. Click from
+   there and stand still: a miss (no burst).
 4. **Without punching anything:** click the **⋮** on the Player's **PunchEffect**, then **Test: Burst In Front**.
    A burst appears 1.5 m in front of the camera, with no delay.
 
@@ -77,6 +79,8 @@ view, click **Play** (or **Restart**).
 | **Push Out** (0.15) | Meters in front of the hit spot where the burst starts, so the enemy or tree doesn't hide half of it. |
 | **Left Jab / Left Hook / Heavy Punch Delay** | When PunchCombo's other punches land (the right jab uses Impact Delay). Measured by Tools > Player > Set Up Player Animations. |
 | **Heavy Burst Size** (1.5) | How much bigger a heavy punch's burst is. |
+| **Lunge Reach** (3) | How much farther than the attack's reach (2.5 m) a click looks for its target. A target found past the reach is hit only if you've walked into reach (+ Reach Slack) by the time the blow lands, and it's still in front of you (Lunge Angle); else it's a miss. Targets in reach at the click are hit as before. 0 = only what's in reach at the click. |
+| **Reach Slack** (0.3), **Lunge Angle** (60) | Meters past the reach that still count when the blow lands (the fist sweeps a little), and how far off the middle of the view the target may be by then. |
 | **Tool Burst Size** (1) | How big the burst is when a sword, axe or pickaxe hits (1 = like a jab, 0 = none). |
 
 - **Switch it off:** untick the PunchEffect component.

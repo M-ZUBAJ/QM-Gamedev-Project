@@ -1,6 +1,6 @@
 /*
 First Date: 12/11/2026
-Date: 21/11/2026
+Date: 23/11/2026
 Author: Tony
 Use by: The Player. Tools > Effects > Build Punch Wind Burst puts it there and fills it in.
         By hand: drag this script onto the Player, then drag Assets/Prefabs/Effects/PunchWindBurst.prefab into Burst Prefab.
@@ -26,8 +26,12 @@ Purpose: A grey burst of wind (dust clouds, wind lines, a shock ring and a few s
          numbers on: DISPLAY page); a critical hit's number is big, orange-red and says CRITICAL.
          A swing that lands on a turtle hiding in its shell (ShellDefense.Blocks) bounces off: no damage, no wind burst,
          no push; the shell hurts the player instead, with sparks and "BLOCKED!" (ShellDefense.Deflect).
+         Walking into reach: Marko's PlayerCombat looks Lunge Reach farther than its reach when the player clicks. A
+         target found past the reach is hit only if, when the blow lands, the spot aimed at is within the reach (+ Reach
+         Slack) and in front of the camera: click a little early while walking up to it and it still lands; stand
+         still and it's a miss (no damage, no burst). A target in reach at the click is hit as before.
 Requirement: PunchEffect.cs x-> PlayerAnimator.cs, PunchCombo.cs, Knockback.cs, DamageNumbers.cs
-             PunchEffect.cs o-> PerkEffects.cs, ShellDefense.cs
+             PunchEffect.cs o-> PerkEffects.cs, ShellDefense.cs, PlayerCombat.cs
              PunchEffect.cs <-x PlayerAnimationSetup.cs, PlayerCombat.cs, PunchEffectBuilder.cs, TierToolBuilder.cs
 */
 
@@ -106,11 +110,29 @@ public class PunchEffect : MonoBehaviour
     [Tooltip("The burst's color on a critical hit (the Critical Strike perk: double damage).")]
     [SerializeField] Color criticalColor = new Color(1f, 0.15f, 0.1f);
 
+    [Header("Walking into reach")]
+    [Tooltip("How much farther than the attack's reach a swing looks for its target when you click (meters). Walk into reach before the blow lands and it still hits; still out of reach then, it misses. 0 = only what's in reach at the click (as before 23/11/2026).")]
+    [Range(0f, 6f)]
+    [SerializeField] float lungeReach = 3f;
+
+    [Tooltip("Such a target is hit if, when the blow lands, the spot it was aimed at is within the attack's reach plus this many meters (the fist or tool sweeps a little).")]
+    [Range(0f, 1.5f)]
+    [SerializeField] float reachSlack = 0.3f;
+
+    [Tooltip("... and no more than this many degrees off the middle of the view (turned away from it = a miss).")]
+    [Range(10f, 90f)]
+    [SerializeField] float lungeAngle = 60f;
+
     float lifetime;          // seconds until a burst's last particle is gone (worked out from the prefab)
+    PlayerCombat combat;     // Marko's attack script on the same Player: its reach and camera (found when first needed)
     GameObject lifetimeOf;   // the prefab that lifetime belongs to (worked out again if Burst Prefab changes)
 
     // The one on the Player (null if none), so Play works without searching.
     public static PunchEffect Current { get; private set; }
+
+    // How much farther than its reach Marko's PlayerCombat looks for a target (Lunge Reach). 0 without a working
+    // PunchEffect: then a hit lands at once and can't be checked again when the blow lands.
+    public static float LungeReach => Current != null && Current.isActiveAndEnabled ? Current.lungeReach : 0f;
 
     // ===== Unity messages (Unity calls these) =====
 
@@ -152,7 +174,8 @@ public class PunchEffect : MonoBehaviour
         {
             float burst = PunchCombo.IsHeavy(swing) ? Current.heavyBurstSize : PunchCombo.IsPunch(swing) ? 1f : Current.toolBurstSize;   // 0 = no burst
             if (critical && burst <= 0f) burst = 1f;   // a critical hit always shows
-            Current.StartCoroutine(Current.Land(target, hit.point, hit.normal, hurt, Current.DelayFor(swing), burst, swing, critical));
+            bool lunge = Current.PastReach(hit);   // found past the reach: it lands only if the player gets close enough first
+            Current.StartCoroutine(Current.Land(target, hit.point, hit.normal, hurt, Current.DelayFor(swing), burst, swing, critical, lunge));
         }
         else if (ShellDefense.Blocks(target))
         {
@@ -201,9 +224,10 @@ public class PunchEffect : MonoBehaviour
         }
     }
 
-    // burst = the size of the wind burst (1 = normal, 0 = none: a tool swing). critical = a red burst.
+    // burst = the size of the wind burst (1 = normal, 0 = none: a tool swing). critical = a red burst. lunge = aimed at
+    // from past the reach: it only lands if the player is close enough by then.
     IEnumerator Land(Component target, Vector3 point, Vector3 normal, System.Action hurt, float delay, float burst,
-                     PlayerAction swing = PlayerAction.Punch, bool critical = false)
+                     PlayerAction swing = PlayerAction.Punch, bool critical = false, bool lunge = false)
     {
         // Where on the target it was hit, in the target's own space, so the burst stays on it if it moves or turns.
         Transform body = target != null ? target.transform : null;
@@ -217,6 +241,7 @@ public class PunchEffect : MonoBehaviour
             point = body.TransformPoint(spot);
             normal = body.TransformDirection(facing);
         }
+        if (lunge && !InReach(point)) yield break;   // aimed at from too far and still out of reach: the swing hits air
         // A turtle in its shell (ShellDefense): the hit bounces off. No damage, no wind burst, no push: sparks,
         // "BLOCKED!" and the shell hurts the player instead.
         if (target != null && ShellDefense.Blocks(target))
@@ -232,6 +257,30 @@ public class PunchEffect : MonoBehaviour
             if (PunchCombo.IsPunch(swing)) PushAway(target, swing);
         }
         if (burst > 0f) Spawn(point, normal, burst, critical);   // the wind bursts where it landed
+    }
+
+    // True if the click found it past the attack's reach (Marko's PlayerCombat looked Lunge Reach farther).
+    bool PastReach(RaycastHit hit)
+    {
+        PlayerCombat attack = Combat();
+        return attack != null && hit.distance > attack.AttackReach;
+    }
+
+    // The spot is within the attack's reach (+ Reach Slack) of the camera and in front of it (within Lunge Angle).
+    bool InReach(Vector3 point)
+    {
+        PlayerCombat attack = Combat();
+        if (attack == null || attack.playerCamera == null) return true;   // can't tell: let it land
+        Transform eye = attack.playerCamera.transform;
+        Vector3 to = point - eye.position;
+        float reach = attack.AttackReach + reachSlack;
+        return to.sqrMagnitude <= reach * reach && Vector3.Angle(eye.forward, to) <= lungeAngle;
+    }
+
+    PlayerCombat Combat()
+    {
+        if (combat == null) combat = GetComponent<PlayerCombat>();
+        return combat;
     }
 
     // A punch pushes a monster straight away from the player (Knockback): a heavy punch harder, Brawler farther.
